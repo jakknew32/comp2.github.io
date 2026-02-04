@@ -277,6 +277,7 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -322,6 +323,7 @@
         let row2Photos = [];
         let photosPerRow = 3;
         let pageText = '';
+        let ocrTexts = [];
 
         document.getElementById('photoInput').addEventListener('change', handleFileSelect);
         document.getElementById('photosPerRow').addEventListener('change', function() {
@@ -368,6 +370,7 @@
                             reader.onload = function(event) {
                                 row1Photo = event.target.result;
                                 renderPhotos();
+                                runOCRAndSave();
                             };
                             reader.readAsDataURL(file);
                         }
@@ -386,6 +389,7 @@
                         reader.onload = function(event) {
                             row1Photo = event.target.result;
                             renderPhotos();
+                            runOCRAndSave();
                         };
                         reader.readAsDataURL(blob);
                         break;
@@ -459,6 +463,7 @@
                             reader.onload = function(event) {
                                 row1Photo = event.target.result;
                                 renderPhotos();
+                                runOCRAndSave();
                             };
                             reader.readAsDataURL(file);
                         }
@@ -518,6 +523,39 @@
             document.getElementById('photoInput').value = '';
             document.getElementById('imageUrl').value = '';
             renderPhotos();
+        }
+
+        async function runOCR(imageSrc) {
+            try {
+                const { data: { text } } = await Tesseract.recognize(imageSrc, 'tha+eng', {
+                    logger: m => console.log(m)
+                });
+                return text.trim();
+            } catch (error) {
+                console.error('OCR Error:', error);
+                return '';
+            }
+        }
+
+        function saveToText() {
+            const textContent = ocrTexts.join('\n');
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'souce.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function runOCRAndSave() {
+            if (row1Photo) {
+                const text = await runOCR(row1Photo);
+                if (text) {
+                    ocrTexts.push(text);
+                    saveToText();
+                }
+            }
         }
 
         function createShippingLabel() {
