@@ -1,855 +1,695 @@
-<!doctype html>
-<html lang="th" class="h-full">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A4 Photo Printer + Shipping Label</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="/_sdk/element_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
-  <style>
-        label {
-          font-family: Helvetica, Arial, sans-serif !important;
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Print & Shipping Label - Chiangmai Freshmilk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    html, body {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    body {
-      box-sizing: border-box;
-    }
-    
-    * {
-      font-family: 'Sarabun', sans-serif;
-    }
-    
-    @media print {
-      html, body {
-        width: 210mm !important;
-        height: 297mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-        overflow: hidden !important;
-      }
-      .no-print {
-        display: none !important;
-      }
-      .print-area {
-        width: 210mm !important;
-        height: 297mm !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        border: none !important;
-        background: white !important;
-        display: flex !important;
-        flex-direction: column !important;
-        position: relative !important;
-        overflow: hidden !important;
-        page-break-after: avoid !important;
-        page-break-before: avoid !important;
-        page-break-inside: avoid !important;
-      }
-      .top-image-section, .bottom-section, .small-image-section, .text-section {
-        box-shadow: none !important;
-        border: none !important;
-        background: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        page-break-after: avoid !important;
-        page-break-before: avoid !important;
-        page-break-inside: avoid !important;
-      }
-      .print-image {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain !important;
-        max-height: 100% !important;
-        max-width: 100% !important;
-      }
-      @page {
-        size: A4;
-        margin: 0;
-      }
-    }
-    
-    .upload-zone {
-      border: 3px dashed #cbd5e1;
-      transition: all 0.3s ease;
-    }
-    
-    .upload-zone:hover,
-    .upload-zone.dragover {
-      border-color: #6366f1;
-      background: #eef2ff;
-    }
 
-    .top-image-section {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background: #f9fafb;
-    }
-
-    .bottom-section {
-      flex: 1;
-      display: flex;
-      flex-wrap: wrap;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    .small-image-section {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background: #f9fafb;
-      flex: 1;
-      min-width: 0;
-      min-height: 0;
-      border-right: 1px solid #e5e7eb;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .small-image-section:nth-child(3n) {
-      border-right: none;
-    }
-
-    .text-section {
-      flex: 0 0 auto;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: auto;
-      background: white;
-    }
-
-    .text-section p {
-      margin: 0;
-      word-wrap: break-word;
-      word-break: break-word;
-      font-size: 1.2rem;
-      padding: 0;
-    }
-
-    .fit-contain {
-      object-fit: contain;
-    }
-    
-    .fit-cover {
-      object-fit: cover;
-    }
-
-    .link-input {
-      font-size: 0.875rem;
-      padding: 0.5rem;
-    }
-
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 0.5rem;
-    }
-
-    .gallery-item {
-      position: relative;
-      overflow: hidden;
-      border-radius: 0.5rem;
-      background: white;
-    }
-
-    .gallery-item img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-    }
-
-    .delete-btn {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      background: rgba(239, 68, 68, 0.9);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .gallery-item:hover .delete-btn {
-      opacity: 1;
-    }
-
-    .delete-btn:hover {
-      background: rgba(220, 38, 38, 1);
-    }
-
-    .print-area {
-      width: 210mm;
-      height: 297mm;
-      padding: 0.2in;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      border: 1px dashed #999;
-    }
-  </style>
-  <style>@view-transition { navigation: auto; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
- </head>
- <body class="h-full bg-gradient-to-br from-slate-100 via-indigo-50 to-purple-50">
-  <div class="h-full w-full overflow-auto"><!-- Control Panel -->
-   <div class="no-print sticky top-0 z-10 bg-white/90 backdrop-blur-sm shadow-md">
-    <div class="max-w-6xl mx-auto px-4 py-4">
-     <div class="flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-       <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-        </svg>
-       </div>
-       <div>
-        <h1 class="text-xl font-bold text-gray-800">ปริ้นชดเชย Shopee/Lazada/Tiktok</h1>
-        <p class="text-sm text-gray-500">โลโก้ + รูปเล็ก + ที่อยู่</p>
-       </div>
-      </div>
-      <div class="flex flex-wrap items-center gap-3"><!-- Fit Mode -->
-       <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-         <button id="fit-contain" class="fit-btn px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-white shadow text-indigo-600" data-mode="contain"> พอดี </button>
-         <button id="fit-cover" class="fit-btn px-3 py-1.5 rounded-md text-sm font-medium transition-all text-gray-600 hover:bg-white/50" data-mode="cover"> เต็ม </button>
-       </div>
-       <!-- Print Button A4 -->
-       <button id="print-btn" class="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
-         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-         </svg> พิมพ์ A4
-       </button>
-       <!-- Shipping Label Button -->
-       <button id="shipping-label-btn" class="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-         </svg> ฉลากจัดส่ง
-       </button>
-      </div>
-     </div>
-    </div>
-   </div><!-- Main Content -->
-   <div class="max-w-6xl mx-auto px-4 py-8"><!-- Text Input -->
-    <div class="no-print mb-6 bg-white rounded-xl p-4 shadow-sm"><label class="block text-sm font-semibold text-gray-700 mb-2">📝 ข้อความท้ายหน้า / ที่อยู่ผู้รับ</label> <textarea id="manual-text-input" placeholder="กรอกข้อความท้ายหน้า A4 (จะใช้เป็นที่อยู่ในฉลากจัดส่งด้วย)" rows="2" class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none transition-colors"></textarea>
-    </div><!-- Upload Zones -->
-    <div class="no-print space-y-4 mb-8"><!-- Image 1 Upload (Logo) -->
-     <div><label class="block text-sm font-semibold text-gray-700 mb-2">📸 รูปที่ 1 (โลโก้ / ครึ่งบน A4)</label>
-      <div id="upload-zone-1" class="upload-zone rounded-xl p-6 text-center cursor-pointer bg-white/50"><input type="file" id="file-input-1" accept="image/*" class="hidden">
-       <div class="flex flex-col items-center gap-2">
-        <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <p class="text-sm font-medium text-gray-700">คลิก / ลาก / Paste</p>
-        <p class="text-xs text-gray-500">รูป Link วางได้</p>
-       </div>
-      </div>
-      <div id="preview-thumb-1" class="hidden mt-2 rounded-lg overflow-hidden border-2 border-indigo-300"><img id="preview-image-thumb-1" class="w-full h-24 object-cover">
-      </div><input type="text" id="link-input-1" placeholder="หรือวาง Link รูป" class="link-input mt-2 w-full border rounded-lg">
-     </div><!-- Images 2+ Upload -->
-     <div><label class="block text-sm font-semibold text-gray-700 mb-2">📸 รูปที่ 2+ (ครึ่งล่าง A4 - เพิ่มได้เรื่อย ๆ)</label>
-      <div id="upload-zone-multi" class="upload-zone rounded-xl p-6 text-center cursor-pointer bg-white/50"><input type="file" id="file-input-multi" accept="image/*" multiple class="hidden">
-       <div class="flex flex-col items-center gap-2">
-        <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <p class="text-sm font-medium text-gray-700">คลิก / ลาก / Paste</p>
-        <p class="text-xs text-gray-500">หลายรูปพร้อมกันได้</p>
-       </div>
-      </div>
-      <div id="gallery-container" class="mt-4 gallery-grid"></div>
-      <div id="link-input-multi-container" class="mt-2 space-y-2"><input type="text" id="link-input-multi" placeholder="หรือวาง Link รูป (กด Enter)" class="link-input w-full border rounded-lg">
-      </div>
-     </div>
-    </div><!-- A4 Preview -->
-    <div id="preview-container" class="flex justify-center mb-8">
-     <div id="a4-preview" class="print-area bg-white shadow-2xl rounded-lg"><!-- Image 1 Section (Top 50%) -->
-      <div class="top-image-section">
-       <div id="empty-state-1" class="text-center text-gray-400">
-        <svg class="w-16 h-16 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <p class="text-xs">รูปที่ 1</p>
-       </div><img id="preview-image-1" class="print-image hidden fit-contain" alt="Image 1">
-      </div><!-- Images 2+ Section (Bottom 50%, 3 columns) -->
-      <div id="bottom-section" class="bottom-section"><!-- Will be filled with preview images -->
-      </div><!-- Text Section -->
-      <div class="text-section">
-       <div id="empty-state-text" class="text-gray-300 text-xs px-2">
-        <p>ข้อความท้ายหน้า</p>
-       </div>
-       <p id="footer-text" class="hidden text-gray-800 px-2 text-sm"></p>
-      </div>
-     </div>
-    </div>
-   </div><!-- Footer -->
-   <div class="no-print text-center py-6 text-gray-500 text-sm">
-    <p>💡 เคล็ดลับ: วาง Screenshot หรือ Link รูป ได้เลย • ตั้งค่าเครื่องพิมพ์เป็น "พิมพ์ไร้ขอบ"</p>
-   </div>
-  </div>
-  <script>
-    const defaultConfig = {
-      footer_text: '',
-      primary_color: '#6366f1',
-      secondary_color: '#ffffff',
-      text_color: '#1f2937',
-      accent_color: '#8b5cf6',
-      border_color: '#e2e8f0'
-    };
-    
-    let config = { ...defaultConfig };
-    let fitMode = 'contain';
-    let image1 = null;
-    let multiImages = [];
-    let footerTextValue = '';
-    
-    // DOM Elements
-    const uploadZone1 = document.getElementById('upload-zone-1');
-    const uploadZoneMulti = document.getElementById('upload-zone-multi');
-    const fileInput1 = document.getElementById('file-input-1');
-    const fileInputMulti = document.getElementById('file-input-multi');
-    const linkInput1 = document.getElementById('link-input-1');
-    const linkInputMulti = document.getElementById('link-input-multi');
-    const previewImage1 = document.getElementById('preview-image-1');
-    const previewThumb1 = document.getElementById('preview-thumb-1');
-    const previewImageThumb1 = document.getElementById('preview-image-thumb-1');
-    const emptyState1 = document.getElementById('empty-state-1');
-    const emptyStateText = document.getElementById('empty-state-text');
-    const footerText = document.getElementById('footer-text');
-    const printBtn = document.getElementById('print-btn');
-    const shippingLabelBtn = document.getElementById('shipping-label-btn');
-    const fitBtns = document.querySelectorAll('.fit-btn');
-    const manualTextInput = document.getElementById('manual-text-input');
-    const galleryContainer = document.getElementById('gallery-container');
-    const bottomSection = document.getElementById('bottom-section');
-
-    // Upload handlers - Image 1
-        // Paste image from clipboard for รูปที่ 1
-        uploadZone1.addEventListener('paste', (e) => {
-          const items = e.clipboardData.items;
-          for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-              const file = items[i].getAsFile();
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                image1 = event.target.result;
-                previewImage1.src = image1;
-                previewImage1.classList.remove('hidden');
-                emptyState1.classList.add('hidden');
-                previewImageThumb1.src = image1;
-                previewThumb1.classList.remove('hidden');
-                updatePrintBtn();
-              };
-              reader.readAsDataURL(file);
-              break;
-            }
-          }
-        });
-    uploadZone1.addEventListener('click', () => fileInput1.click());
-    uploadZone1.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadZone1.classList.add('dragover');
-    });
-    uploadZone1.addEventListener('dragleave', () => {
-      uploadZone1.classList.remove('dragover');
-    });
-    uploadZone1.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadZone1.classList.remove('dragover');
-      handleFile1(e.dataTransfer.files[0]);
-    });
-    fileInput1.addEventListener('change', (e) => {
-      if (e.target.files[0]) {
-        handleFile1(e.target.files[0]);
-      }
-    });
-
-    // Upload handlers - Multiple Images
-    uploadZoneMulti.addEventListener('click', () => fileInputMulti.click());
-    uploadZoneMulti.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadZoneMulti.classList.add('dragover');
-    });
-    uploadZoneMulti.addEventListener('dragleave', () => {
-      uploadZoneMulti.classList.remove('dragover');
-    });
-    uploadZoneMulti.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadZoneMulti.classList.remove('dragover');
-      handleMultipleFiles(e.dataTransfer.files);
-    });
-    fileInputMulti.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        handleMultipleFiles(e.target.files);
-      }
-    });
-
-    linkInput1.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        const url = linkInput1.value.trim();
-        if (url.startsWith('http')) {
-          loadImageFromLink(url, 1);
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
-      }
-    });
 
-    linkInputMulti.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        const url = linkInputMulti.value.trim();
-        if (url.startsWith('http')) {
-          loadImageFromLink(url, 0);
-          linkInputMulti.value = '';
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
-      }
-    });
 
-    function loadImageFromLink(url, position) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        
-        if (position === 1) {
-          image1 = dataUrl;
-          previewImage1.src = image1;
-          previewImage1.classList.remove('hidden');
-          emptyState1.classList.add('hidden');
-          previewImageThumb1.src = image1;
-          previewThumb1.classList.remove('hidden');
-        } else {
-          addMultiImage(dataUrl);
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
-        updatePrintBtn();
-      };
-      img.onerror = () => {
-        console.error('ไม่สามารถโหลดรูป:', url);
-      };
-      img.src = url;
-    }
-    
-    function handleFile1(file) {
-      if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          image1 = e.target.result;
-          previewImage1.src = image1;
-          previewImage1.classList.remove('hidden');
-          emptyState1.classList.add('hidden');
-          previewImageThumb1.src = image1;
-          previewThumb1.classList.remove('hidden');
-          updatePrintBtn();
-        };
-        reader.readAsDataURL(file);
-      }
-    }
 
-    function handleMultipleFiles(files) {
-      Array.from(files).forEach(file => {
-        if (file && file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            addMultiImage(e.target.result);
-            updatePrintBtn();
-          };
-          reader.readAsDataURL(file);
+        .controls {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
         }
-      });
-    }
 
-    function addMultiImage(imageData) {
-      const id = 'img-' + Date.now() + Math.random();
-      multiImages.push({ id, src: imageData });
-      renderGallery();
-      updatePreview();
-    }
-
-    function removeMultiImage(id) {
-      multiImages = multiImages.filter(img => img.id !== id);
-      renderGallery();
-      updatePreview();
-      updatePrintBtn();
-    }
-
-    function renderGallery() {
-      galleryContainer.innerHTML = multiImages.map(img => `
-        <div class="gallery-item">
-          <img src="${img.src}" alt="gallery image">
-          <button class="delete-btn" onclick="removeMultiImage('${img.id}')" title="ลบ">✕</button>
-        </div>
-      `).join('');
-    }
-
-    function updatePreview() {
-      bottomSection.innerHTML = '';
-
-      if (multiImages.length === 0) {
-        bottomSection.innerHTML = `
-          <div class="small-image-section" style="flex: 1;">
-            <div class="text-center text-gray-400">
-              <svg class="w-12 h-12 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              <p class="text-xs">รูปที่ 2+</p>
-            </div>
-          </div>
-        `;
-      } else {
-        multiImages.forEach((img, idx) => {
-          const section = document.createElement('div');
-          section.className = 'small-image-section';
-          section.style.flex = '1';
-          section.innerHTML = `<img src="${img.src}" class="print-image fit-${fitMode}" alt="Image ${idx + 2}">`;
-          bottomSection.appendChild(section);
-        });
-      }
-    }
-
-    function updatePrintBtn() {
-      printBtn.disabled = !image1 || multiImages.length === 0;
-    }
-    
-    fitBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        fitMode = btn.dataset.mode;
-        updateFitMode();
-      });
-    });
-    
-    function updateFitMode() {
-      fitBtns.forEach(btn => {
-        if (btn.dataset.mode === fitMode) {
-          btn.classList.add('bg-white', 'shadow', 'text-indigo-600');
-          btn.classList.remove('text-gray-600');
-        } else {
-          btn.classList.remove('bg-white', 'shadow', 'text-indigo-600');
-          btn.classList.add('text-gray-600');
+        .upload-section {
+            margin-bottom: 20px;
         }
-      });
-      
-      previewImage1.classList.remove('fit-contain', 'fit-cover');
-      previewImage1.classList.add(`fit-${fitMode}`);
 
-      document.querySelectorAll('#bottom-section .print-image').forEach(img => {
-        img.classList.remove('fit-contain', 'fit-cover');
-        img.classList.add(`fit-${fitMode}`);
-      });
-    }
-    
-    printBtn.addEventListener('click', () => {
-      window.print();
-    });
+        .upload-label {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
 
-    shippingLabelBtn.addEventListener('click', () => {
-      const address = footerTextValue || 'ไม่มีที่อยู่';
-      const newWin = window.open('', 'ShippingLabel', 'width=600,height=750');
-      newWin.document.write(createShippingLabelHTML(address));
-      newWin.document.close();
-    });
+        .upload-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
 
-    function createShippingLabelHTML(address) {
-      return `
-        <!DOCTYPE html>
-        <html lang="th">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>ฉลากจัดส่ง 4x6</title>
-          <style>
-            * {
-              font-family: Helvetica, Arial, sans-serif;
-              box-sizing: border-box;
-            }
+        #photoInput {
+            display: none;
+        }
+
+        .photos-per-row {
+            margin-bottom: 20px;
+        }
+
+        .photos-per-row label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .photos-per-row input,
+        .photos-per-row textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .url-input-section {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .url-input-section input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .url-input-section button {
+            flex: none;
+            min-width: 120px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-print {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .print-area {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 20mm;
+            background: white;
+            padding: 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            page-break-after: always;
+        }
+
+        .photo-row {
+            display: flex;
+            gap: 1mm;
+            margin-bottom: 1mm;
+            justify-content: center;
+        }
+
+        .photo-container {
+            position: relative;
+            flex: 1;
+            max-width: 210mm;
+            height: calc((297mm - 8mm) / 2.5);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f9fafb;
+        }
+
+        .photo-container.full-width {
+            max-width: 100%;
+            height: calc(((297mm - 8mm) / 2.5) * 1.4);
+            cursor: pointer;
+            border: 2px dashed #ccc;
+        }
+
+        .photo-container.full-width.drag-over {
+            background: #e0e7ff;
+            border-color: #667eea;
+        }
+
+        .photo-container.full-width .photo-placeholder {
+            pointer-events: none;
+        }
+
+        .photo-container.full-width img {
+            border: none;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-container.full-width img {
+            object-fit: contain;
+        }
+
+        .photo-placeholder {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .page-text {
+            margin-top: 2mm;
+            padding: 2mm;
+            text-align: center;
+            font-size: 12px;
+            color: #333;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        @media print {
             body {
-              margin: 0;
-              padding: 1rem;
-              background: white;
-            }
-            @media print {
-              .no-print {
-                display: none !important;
-              }
-              body {
+                background: white;
                 padding: 0;
-              }
-              @page {
-                size: 4in 6in;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            h1 {
+                display: none;
+            }
+
+            .controls {
+                display: none;
+            }
+
+            .print-area {
+                padding: 0;
+                box-shadow: none;
+            }
+
+            .a4-page {
+                width: 210mm;
+                height: 297mm;
                 margin: 0;
-              }
-              .slip-area {
-                width: 4in !important;
-                height: 6in !important;
-                padding: 0.15in !important;
-                margin: 0 !important;
-              }
+                padding: 0;
+                box-shadow: none;
+                page-break-after: always;
             }
-            .no-print {
-              background: white;
-              padding: 1rem;
-              border-bottom: 2px solid #ddd;
-              display: flex;
-              gap: 0.5rem;
-              margin-bottom: 1rem;
-              flex-wrap: wrap;
-            }
-            .no-print button {
-              background: #6366f1;
-              color: white;
-              border: none;
-              padding: 0.7rem 1.2rem;
-              border-radius: 0.5rem;
-              cursor: pointer;
-              font-family: Helvetica, Arial, sans-serif;
-              font-size: 1rem;
-              font-weight: 500;
-              transition: background 0.2s;
-            }
-            .no-print button:hover {
-              background: #4f46e5;
-            }
-            .content-wrapper {
-              display: flex;
-              justify-content: center;
-            }
-            .slip-area {
-              width: 4in;
-              height: 6in;
-              padding: 0.15in;
-              background: white;
-              display: flex;
-              flex-direction: column;
-              gap: 0.06in;
-              font-size: 10pt;
-              line-height: 1.2;
-              border: 2px solid #000;
-              page-break-after: always;
-              font-family: Helvetica, Arial, sans-serif;
-            }
-            .slip-header {
-              text-align: center;
-              font-weight: bold;
-              font-size: 13pt;
-              margin-bottom: 0.08in;
-              border-bottom: 2px solid #000;
-              padding-bottom: 0.05in;
-            }
-            .sender-section {
-              background: #f5f5f5;
-              border: 1px solid #ddd;
-              padding: 0.08in;
-              margin-bottom: 0.08in;
-              display: flex;
-              gap: 0.08in;
-              align-items: flex-start;
-            }
-            .sender-logo {
-              width: 0.6in;
-              height: 0.6in;
-              background: white;
-              border: 1px solid #ccc;
-              border-radius: 0.05in;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-shrink: 0;
-              overflow: hidden;
-            }
-            .sender-logo img {
-              width: 100%;
-              height: 100%;
-              object-fit: contain;
-            }
-            .sender-info {
-              flex: 1;
-              min-width: 0;
-            }
-            .sender-name {
-              font-weight: bold;
-              font-size: 9pt;
-              margin: 0;
-              word-break: break-word;
-            }
-            .sender-detail {
-              font-size: 7.5pt;
-              margin: 0.02in 0 0 0;
-              color: #555;
-              word-break: break-word;
-              line-height: 1.1;
-            }
-            .recipient-section {
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              border: 2px solid #000;
-              padding: 0.1in;
-              background: white;
-            }
-            .recipient-label {
-              font-weight: bold;
-              font-size: 8pt;
-              margin: 0 0 0.04in 0;
-            }
-            .recipient-content {
-              flex: 1;
-              font-size: 10pt;
-              margin: 0;
-              word-wrap: break-word;
-              word-break: break-word;
-              overflow: hidden;
-            }
-            .footer-section {
-              display: flex;
-              justify-content: space-between;
-              padding-top: 0.05in;
-              border-top: 1px solid #ddd;
-              font-size: 8pt;
-            }
-            .footer-item {
-              margin: 0;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="no-print">
-            <button onclick="window.print()">🖨️ พิมพ์ฉลาก</button>
-            <button onclick="window.close()">✕ ปิด</button>
-          </div>
-          
-          <div class="content-wrapper">
-            <div class="slip-area">
-              <div class="slip-header" style="font-size: 42px;">ใบจัดส่งสินค้า</div>
-              <!-- Sender Section -->
-              <div class="sender-section">
-                <div class="sender-logo">
-                  <img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" alt="logo" loading="lazy" onerror="console.error('Image failed to load:', this.src); this.style.background='#10b981'; this.alt='Logo unavailable';">
-                </div>
-                <div class="sender-info">
-		  <b style="font-size: 20px;">ผู้ส่ง</b>
-                  <p class="sender-name" style="font-size: 18px;">บริษัท เชียงใหม่เฟรชมิลค์ จำกัด</p>
-                  <p class="sender-detail" style="font-size: 16px;">57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่</p>
-                  <p class="sender-detail" style="font-size: 16px;">โทร. 089-6354687</p>
-                </div>
-              </div>
 
-              <!-- Recipient Section -->
-              <div class="recipient-section">
-                <p class="recipient-label" style="font-size: 20px;">📍 ที่อยู่ผู้รับ :</p>
-                <p class="recipient-content">${address.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-		<img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="My picture">
-              </div>
+            .a4-page:last-child {
+                page-break-after: auto;
+            }
 
-              <!-- Footer -->
-              <div class="footer-section">
-                <p class="footer-item">วันที่: ${new Date().toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' })}</p>
-                <p class="footer-item">เลขที่: _______</p>
-              </div>
+            .photo-container {
+                border: none;
+                background: transparent;
+            }
+
+            .photo-container.full-width {
+                border: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .a4-page {
+                width: 100%;
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Photo Print & Shipping Label</h1>
+        
+        <div class="controls">
+            <div class="upload-section">
+                <label class="upload-label" for="photoInput">
+                    📁 Upload Photos (Row 1: Drop or Click)
+                </label>
+                <input type="file" id="photoInput" accept="image/*" multiple>
             </div>
-          </div>
-        </body>
-        </html>
-      `;
-    }
-    
-    manualTextInput.addEventListener('input', (e) => {
-      footerTextValue = e.target.value.trim();
-      if (footerTextValue) {
-        footerText.textContent = footerTextValue;
-        footerText.classList.remove('hidden');
-        emptyStateText.classList.add('hidden');
-        
-        const maxLength = 80;
-        if (footerTextValue.length > maxLength) {
-          const ratio = maxLength / footerTextValue.length;
-          const newSize = Math.max(0.7, 1.2 * ratio);
-          footerText.style.fontSize = newSize + 'rem';
-        } else {
-          footerText.style.fontSize = '1.2rem';
-        }
-      } else {
-        footerText.classList.add('hidden');
-        emptyStateText.classList.remove('hidden');
-        footerText.style.fontSize = '1.2rem';
-      }
-    });
-    
-    async function onConfigChange(newConfig) {
-      config = { ...defaultConfig, ...newConfig };
-      
-      if (config.footer_text) {
-        const textElement = document.getElementById('footer-text');
-        footerTextValue = config.footer_text;
-        textElement.textContent = config.footer_text;
-        textElement.classList.remove('hidden');
-        emptyStateText.classList.add('hidden');
-        manualTextInput.value = config.footer_text;
-        
-        const maxLength = 80;
-        if (config.footer_text.length > maxLength) {
-          const ratio = maxLength / config.footer_text.length;
-          const newSize = Math.max(0.7, 1.2 * ratio);
-          textElement.style.fontSize = newSize + 'rem';
-        } else {
-          textElement.style.fontSize = '1.2rem';
-        }
-      } else {
-        document.getElementById('footer-text').classList.add('hidden');
-        emptyStateText.classList.remove('hidden');
-        document.getElementById('footer-text').style.fontSize = '1.2rem';
-      }
-    }
-    
-    function mapToCapabilities(cfg) {
-      return {
-        recolorables: [
-          {
-            get: () => cfg.primary_color || defaultConfig.primary_color,
-            set: (value) => {
-              cfg.primary_color = value;
-              window.elementSdk.setConfig({ primary_color: value });
-            }
-          }
-        ],
-        borderables: [],
-        fontEditable: undefined,
-        fontSizeable: undefined
-      };
-    }
-    
-    function mapToEditPanelValues(cfg) {
-      return new Map([
-        ['footer_text', cfg.footer_text || defaultConfig.footer_text]
-      ]);
-    }
-    
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig,
-        onConfigChange,
-        mapToCapabilities,
-        mapToEditPanelValues
-      });
-    }
-    
-    updateFitMode();
-    updatePreview();
-    updatePrintBtn();
 
-    window.removeMultiImage = removeMultiImage;
-  </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c67036b13ffd016',t:'MTc2OTgzOTQ4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+            <div class="url-input-section">
+                <input type="text" id="imageUrl" placeholder="Enter image URL for row 2">
+                <button onclick="addImageFromUrl()" style="background: #3b82f6; color: white;">Add from URL</button>
+            </div>
+
+            <div class="photos-per-row">
+                <label for="photosPerRow">Photos in row 2:</label>
+                <input type="number" id="photosPerRow" min="1" max="6" value="3">
+            </div>
+
+            <div class="photos-per-row">
+                <label for="pageText">Text below page:</label>
+                <input type="text" id="pageText" placeholder="Enter text to display below photos">
+            </div>
+
+            <div class="button-group">
+                <button class="btn-print" onclick="window.print()">🖨️ Print</button>
+                <button class="btn-clear" onclick="clearPhotos()">🗑️ Clear All</button>
+                <button onclick="createShippingLabel()" style="background: #f59e0b; color: white;">📦 สร้างฉลาก</button>
+            </div>
+        </div>
+
+        <div class="print-area" id="printArea">
+            <!-- Pages will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        let row1Photo = null;
+        let row2Photos = [];
+        let photosPerRow = 3;
+        let pageText = '';
+
+        document.getElementById('photoInput').addEventListener('change', handleFileSelect);
+        document.getElementById('photosPerRow').addEventListener('change', function() {
+            photosPerRow = parseInt(this.value);
+            renderPhotos();
+        });
+        document.getElementById('pageText').addEventListener('input', function() {
+            pageText = this.value;
+            renderPhotos();
+        });
+
+        // Drag and drop for row 1
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDragAndDrop();
+            setupPaste();
+        });
+
+        function setupDragAndDrop() {
+            document.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('.photo-container.full-width');
+                if (target) {
+                    target.classList.add('drag-over');
+                }
+            });
+
+            document.addEventListener('dragleave', function(e) {
+                const target = e.target.closest('.photo-container.full-width');
+                if (target) {
+                    target.classList.remove('drag-over');
+                }
+            });
+
+            document.addEventListener('drop', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('.photo-container.full-width');
+                if (target) {
+                    target.classList.remove('drag-over');
+                    
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        const file = e.dataTransfer.files[0];
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                row1Photo = event.target.result;
+                                renderPhotos();
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                }
+            });
+        }
+
+        function setupPaste() {
+            document.addEventListener('paste', function(e) {
+                const items = e.clipboardData.items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            row1Photo = event.target.result;
+                            renderPhotos();
+                        };
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            });
+        }
+
+        function addImageFromUrl() {
+            const url = document.getElementById('imageUrl').value.trim();
+            if (url) {
+                row2Photos.push(url);
+                document.getElementById('imageUrl').value = '';
+                renderPhotos();
+            }
+        }
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        row2Photos.push(e.target.result);
+                        renderPhotos();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function renderPhotos() {
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = '';
+
+            const totalPages = Math.max(1, Math.ceil(row2Photos.length / photosPerRow));
+
+            for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+                const page = createPage();
+                const startIdx = pageNum * photosPerRow;
+                const endIdx = Math.min(startIdx + photosPerRow, row2Photos.length);
+
+                // Row 1: Single full-width photo with drag/drop support
+                const row1 = document.createElement('div');
+                row1.className = 'photo-row';
+                
+                const photo1Container = document.createElement('div');
+                photo1Container.className = 'photo-container full-width';
+                
+                if (row1Photo) {
+                    const img = document.createElement('img');
+                    img.src = row1Photo;
+                    photo1Container.appendChild(img);
+                } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'photo-placeholder';
+                    placeholder.innerHTML = 'Drop image, Paste (Ctrl+V), or Click to upload';
+                    photo1Container.appendChild(placeholder);
+                }
+                
+                // Click to upload for row 1
+                photo1Container.addEventListener('click', function() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                row1Photo = event.target.result;
+                                renderPhotos();
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    };
+                    input.click();
+                });
+                
+                row1.appendChild(photo1Container);
+                page.appendChild(row1);
+
+                // Row 2: Multiple photos based on photosPerRow
+                const row2 = document.createElement('div');
+                row2.className = 'photo-row';
+
+                for (let i = 0; i < photosPerRow; i++) {
+                    const photoIdx = startIdx + i;
+                    const photoContainer = document.createElement('div');
+                    photoContainer.className = 'photo-container';
+
+                    if (photoIdx < endIdx) {
+                        const img = document.createElement('img');
+                        img.src = row2Photos[photoIdx];
+                        photoContainer.appendChild(img);
+                    } else {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'photo-placeholder';
+                        placeholder.textContent = 'Empty';
+                        photoContainer.appendChild(placeholder);
+                    }
+
+                    row2.appendChild(photoContainer);
+                }
+
+                page.appendChild(row2);
+
+                // Add text below page if provided
+                if (pageText.trim() !== '') {
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'page-text';
+                    textDiv.textContent = pageText;
+                    page.appendChild(textDiv);
+                }
+
+                printArea.appendChild(page);
+            }
+        }
+
+        function createPage() {
+            const page = document.createElement('div');
+            page.className = 'a4-page';
+            return page;
+        }
+
+        function clearPhotos() {
+            row1Photo = null;
+            row2Photos = [];
+            document.getElementById('photoInput').value = '';
+            document.getElementById('imageUrl').value = '';
+            renderPhotos();
+        }
+
+        function createShippingLabel() {
+            const address = document.getElementById('pageText').value.trim();
+            showShippingLabelModal(address);
+        }
+
+        function showShippingLabelModal(receiverAddress) {
+            // Remove existing modal if any
+            const existingModal = document.getElementById('shippingLabelModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.id = 'shippingLabelModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                padding: 20px;
+            `;
+            
+            const defaultSender = `บริษัท เชียงใหม่เฟรชมิลค์ จำกัด
+57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่
+โทร. 089-6354687`;
+
+            let displayReceiver = receiverAddress || 'กรุณากรอกข้อมูลผู้รับ';
+            if (receiverAddress && !receiverAddress.startsWith('คุณ')) {
+                displayReceiver = 'คุณ ' + receiverAddress;
+            }
+
+            const now = new Date();
+            const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+                               'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const day = now.getDate();
+            const month = thaiMonths[now.getMonth()];
+            const year = now.getFullYear() + 543;
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const timestamp = `พิมพ์: ${day} ${month} ${year} เวลา ${hours}:${minutes} น. | Chiangmai Freshmilk`;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0; color: #333; font-family: 'Sarabun', sans-serif;">📦 ฉลากจัดส่งสินค้า</h2>
+                        <button onclick="closeShippingLabelModal()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Sarabun', sans-serif;">✕ ปิด</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-family: 'Sarabun', sans-serif;">📥 แก้ไขข้อมูลผู้รับ:</label>
+                        <textarea id="modalReceiverInfo" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; font-family: 'Sarabun', 'Tahoma', sans-serif; min-height: 100px; box-sizing: border-box;">${receiverAddress || ''}</textarea>
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div id="labelPreview" style="width: 101.6mm; height: 152.4mm; border: 2px solid #333; background: white; padding: 3mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box;">
+                            <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 2mm; margin-bottom: 3mm;">
+                                <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;">ฉลากจัดส่งสินค้า</h2>
+                            </div>
+                            
+                            <div style="margin-bottom: 3mm; padding-bottom: 3mm; border-bottom: 1px dashed #999;">
+                                <div style="font-weight: bold; font-size: 14px; margin-bottom: 2mm; color: #000;">ผู้ส่ง (FROM):</div>
+                                <div style="font-size: 12px; line-height: 1.4; color: #333; white-space: pre-line;">${defaultSender}</div>
+                            </div>
+                            
+                            <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 3mm;">
+                                <div style="font-weight: bold; font-size: 16px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px;">ผู้รับ (TO):</div>
+                                <div id="modalReceiverDisplay" style="font-size: 14px; line-height: 1.6; color: #000; white-space: pre-line; flex: 1;">${displayReceiver}</div>
+                            </div>
+                            
+                            <div style="margin-top: auto; padding-top: 2mm; border-top: 2px solid #333; text-align: center;">
+                                <div style="margin-bottom: 2mm;">
+                                    <img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="Warning" style="width: 95mm; height: auto; max-width: 100%;" onerror="this.style.display='none'">
+                                </div>
+                                <div style="font-size: 10px; color: #666;">${timestamp}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="printShippingLabel()" style="flex: 1; background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: 'Sarabun', sans-serif;">🖨️ พิมพ์ฉลาก</button>
+                        <button onclick="closeShippingLabelModal()" style="flex: 1; background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: 'Sarabun', sans-serif;">ยกเลิก</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Update receiver display when typing
+            setTimeout(() => {
+                const modalReceiverInfo = document.getElementById('modalReceiverInfo');
+                if (modalReceiverInfo) {
+                    modalReceiverInfo.addEventListener('input', function() {
+                        let receiver = this.value.trim();
+                        if (receiver && !receiver.startsWith('คุณ')) {
+                            receiver = 'คุณ ' + receiver;
+                        }
+                        const displayEl = document.getElementById('modalReceiverDisplay');
+                        if (displayEl) {
+                            displayEl.textContent = receiver || 'กรุณากรอกข้อมูลผู้รับ';
+                        }
+                    });
+                }
+            }, 100);
+        }
+
+        window.closeShippingLabelModal = function() {
+            const modal = document.getElementById('shippingLabelModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        window.printShippingLabel = function() {
+            const labelPreview = document.getElementById('labelPreview');
+            if (!labelPreview) return;
+            
+            const printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>ฉลากจัดส่ง - Chiangmai Freshmilk</title>
+                    <style>
+                        @page {
+                            size: 4in 6in;
+                            margin: 0;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            font-family: 'Sarabun', 'Tahoma', sans-serif;
+                        }
+                        .label {
+                            width: 101.6mm;
+                            height: 152.4mm;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="label">${labelPreview.innerHTML}</div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                            }, 500);
+                        }
+                        window.onafterprint = function() {
+                            window.close();
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // Initialize with empty page
+        renderPhotos();
+    </script>
+</body>
 </html>
