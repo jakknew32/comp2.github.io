@@ -224,6 +224,11 @@
             border-top: 1px solid #e0e0e0;
         }
 
+        @page {
+            margin: 2mm;
+            size: A4;
+        }
+
         @media print {
             body {
                 background: white;
@@ -258,15 +263,6 @@
 
             .a4-page:last-child {
                 page-break-after: auto;
-            }
-
-            .photo-container {
-                border: none;
-                background: transparent;
-            }
-
-            .photo-container.full-width {
-                border: none;
             }
         }
 
@@ -582,14 +578,13 @@
                     </div>
                     
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <div id="labelPreview" style="width: 101.6mm; height: 152.4mm; border: 2px solid #333; background: white; padding: 3mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box;">
-                            <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 2mm; margin-bottom: 3mm;">
-                                <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;">Chiangmai Freshmilk</h2>
+                        <div id="labelPreview" style="width: 101.6mm; height: 152.4mm; border: 3mm solid #333; background: white; padding: 6mm 6mm 3mm 6mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box;">
+                            <div style="text-align: center; border-bottom: 2px solid #333; padding: 3mm 0 2mm 0; margin-bottom: 3mm;">
+                                <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;"><img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 5px;">Chiangmai Freshmilk</h2>
                             </div>
                             
                             <div style="margin-bottom: 3mm; padding-bottom: 3mm; border-bottom: 1px dashed #999;">
-                                <div style="font-weight: bold; font-size: 14px; margin-bottom: 2mm; color: #000;">ผู้ส่ง (FROM):</div>
-                                <div style="font-size: 12px; line-height: 1.4; color: #333;">${defaultSender}</div>
+                                <div style="font-size: 14px; line-height: 1.4; color: #333;">${defaultSender}</div>
                             </div>
                             
                             <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 3mm;">
@@ -662,8 +657,8 @@
                             font-family: 'Sarabun', 'Tahoma', sans-serif;
                         }
                         .label {
-                            width: 101.6mm;
-                            height: 152.4mm;
+                            width: 100mm;
+                            height: 150mm;
                         }
                     </style>
                 </head>
