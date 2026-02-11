@@ -5,6 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Print & Shipping Label - Chiangmai Freshmilk</title>
     <style>
+                @page {
+                    size: 4in 6in;
+                    margin: 0;
+                }
+                @media print {
+                    body, html {
+                        background: white !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    #labelPreview, .label {
+                        display: block !important;
+                        margin: 0 auto !important;
+                        box-shadow: none !important;
+                        border: 3mm solid #333 !important;
+                        background: white !important;
+                        width: 101.6mm !important;
+                        height: 152.4mm !important;
+                        padding: 6mm 6mm 3mm 6mm !important;
+                        page-break-after: always;
+                    }
+                }
+                .label {
+                    width: 100mm;
+                    height: 150mm;
+                    background: white;
+                    border: 3mm solid #333;
+                    margin: 0 auto;
+                    display: flex;
+                    flex-direction: column;
+                    font-family: 'Sarabun', 'Tahoma', sans-serif;
+                    box-sizing: border-box;
+                }
         * {
             margin: 0;
             padding: 0;
@@ -702,6 +735,7 @@
                     phone: phone,
                     address: address,
                     notes: notes,
+                    originalText: fullText, // บันทึกข้อความเดิมจาก Text below page
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                     source: 'auto-from-print-page',
@@ -879,6 +913,45 @@
 
         // Check if there's receiver address from database page
         window.addEventListener('DOMContentLoaded', () => {
+            // Check for recreate photos from receiver-db.html
+            const recreateData = sessionStorage.getItem('recreatePhotos');
+            if (recreateData) {
+                try {
+                    const data = JSON.parse(recreateData);
+                    
+                    // Restore photos
+                    if (data.row1Photo) {
+                        row1Photo = data.row1Photo;
+                    }
+                    if (data.row2Photos && data.row2Photos.length > 0) {
+                        row2Photos = data.row2Photos;
+                    }
+                    
+                    // Restore page text
+                    if (data.pageText) {
+                        document.getElementById('pageText').value = data.pageText;
+                        pageText = data.pageText;
+                    }
+                    
+                    // Restore document number
+                    if (data.documentNumber) {
+                        document.getElementById('documentNumber').value = data.documentNumber;
+                        currentDocumentNumber = data.documentNumber;
+                    }
+                    
+                    // Render the recreated page
+                    renderPhotos();
+                    
+                    // Clear the session storage
+                    sessionStorage.removeItem('recreatePhotos');
+                    
+                    alert('✅ โหลดรูปภาพและข้อมูลสำเร็จ!');
+                } catch (e) {
+                    console.error('Error loading recreate data:', e);
+                }
+            }
+            
+            // Check for receiver address from photo modal
             const savedAddress = sessionStorage.getItem('receiverAddress');
             if (savedAddress) {
                 document.getElementById('pageText').value = savedAddress;

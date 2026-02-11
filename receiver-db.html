@@ -5,6 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ฐานข้อมูลผู้รับสินค้า - Chiangmai Freshmilk</title>
     <style>
+                @page {
+                    size: 4in 6in;
+                    margin: 0;
+                }
+                @media print {
+                    body, html {
+                        background: white !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    .modal, .modal-content, .button-group, .controls, .stats-row, .stat-card, .form-grid, .form-group, .search-bar, .table-container, .empty-state, .no-print, header, nav, footer, .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+                        display: none !important;
+                    }
+                    #labelPreview, .label {
+                        display: block !important;
+                        margin: 0 auto !important;
+                        box-shadow: none !important;
+                        border: 3mm solid #333 !important;
+                        background: white !important;
+                        width: 101.6mm !important;
+                        height: 152.4mm !important;
+                        padding: 6mm 6mm 3mm 6mm !important;
+                        page-break-after: always;
+                    }
+                }
+                .label {
+                    width: 100mm;
+                    height: 150mm;
+                    background: white;
+                    border: 3mm solid #333;
+                    margin: 0 auto;
+                    display: flex;
+                    flex-direction: column;
+                    font-family: 'Sarabun', 'Tahoma', sans-serif;
+                    box-sizing: border-box;
+                }
         * {
             margin: 0;
             padding: 0;
@@ -341,37 +377,6 @@
             </div>
         </div>
 
-        <!-- Add/Edit Form -->
-        <div class="controls no-print">
-            <h2 style="margin-bottom: 20px; color: #333;">➕ เพิ่ม/แก้ไขผู้รับสินค้า</h2>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>ชื่อผู้รับ *</label>
-                    <input type="text" id="receiverName" placeholder="เช่น นายสมชาย ใจดี">
-                </div>
-                <div class="form-group">
-                    <label>เบอร์โทรศัพท์ *</label>
-                    <input type="tel" id="receiverPhone" placeholder="เช่น 081-234-5678">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>ที่อยู่ *</label>
-                <textarea id="receiverAddress" placeholder="เช่น 123 ถนนนิมมานเหมินทร์ ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>หมายเหตุ</label>
-                <textarea id="receiverNotes" placeholder="เช่น ส่งช่วงบ่าย, ฝากยามหรือ แจ้งล่วงหน้า"></textarea>
-            </div>
-
-            <div class="button-group">
-                <button class="btn-primary" onclick="saveReceiver()">💾 บันทึกข้อมูล</button>
-                <button class="btn-secondary" onclick="clearForm()">🔄 ล้างฟอร์ม</button>
-            </div>
-        </div>
-
         <!-- Search and Actions -->
         <div class="controls no-print">
             <h2 style="margin-bottom: 15px; color: #333;">🔍 ค้นหาและจัดการ</h2>
@@ -397,9 +402,8 @@
                         <tr>
                             <th>ลำดับ</th>
                             <th>เลขที่เอกสาร</th>
-                            <th>ชื่อผู้รับ</th>
+                            <th>ชื่อที่อยู่</th>
                             <th>เบอร์โทร</th>
-                            <th>ที่อยู่</th>
                             <th>หมายเหตุ</th>
                             <th>เพิ่มเมื่อ</th>
                             <th>แหล่งที่มา</th>
@@ -449,22 +453,20 @@
             </div>
             <div style="text-align: center; margin-bottom: 20px;">
                 <div id="labelPreview" style="width: 101.6mm; height: 152.4mm; border: 3mm solid #333; background: white; padding: 6mm 6mm 3mm 6mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box;">
-                    <div style="text-align: center; border-bottom: 2px solid #333; padding: 3mm 0 2mm 0; margin-bottom: 3mm;">
-                        <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;"><img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 5px;">Chiangmai Freshmilk</h2>
+                    <div style="text-align: center; border-bottom: 2px solid #333; padding: 2mm 0 2mm 0; margin-bottom: 2mm;">
+                        <img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 32px; height: 32px; vertical-align: middle; margin-bottom: 2px;">
+                        <span style="font-size: 22px; font-weight: bold; color: #111; font-family: 'Sarabun', 'Tahoma', sans-serif; margin-left: 6px;">Chiangmai Freshmilk</span>
                     </div>
-                    <div style="margin-bottom: 3mm; padding-bottom: 3mm; border-bottom: 1px dashed #999;">
-                        <div style="font-size: 14px; line-height: 1.4; color: #333;">บริษัท เชียงใหม่เฟรชมิลค์ จำกัด 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687</div>
+                    <div style="font-size: 13px; color: #222; margin-bottom: 2mm; text-align: center; line-height: 1.4;">บริษัท เชียงใหม่เฟรชมิลค์ จำกัด สำนักงาน 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687</div>
+                    <div style="border-bottom: 1px dashed #999; margin-bottom: 2mm;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 2mm;">
+                        <div style="font-weight: bold; font-size: 15px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px; text-align: center;">ผู้รับ (TO):</div>
+                        <div id="modalReceiverDisplay" style="font-size: 14px; line-height: 1.7; color: #000; white-space: pre-line; flex: 1; text-align: center;">กรุณากรอกข้อมูลผู้รับ</div>
                     </div>
-                    <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 3mm;">
-                        <div style="font-weight: bold; font-size: 16px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px;">ผู้รับ (TO):</div>
-                        <div id="modalReceiverDisplay" style="font-size: 14px; line-height: 1.6; color: #000; white-space: pre-line; flex: 1;"></div>
+                    <div style="margin-bottom: 2mm; text-align: center;">
+                        <img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="Warning" style="width: 80mm; height: auto; max-width: 100%; margin-bottom: 2mm;" onerror="this.style.display='none'">
                     </div>
-                    <div style="margin-top: auto; padding-top: 2mm; border-top: 2px solid #333; text-align: center;">
-                        <div style="margin-bottom: 2mm;">
-                            <img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="Warning" style="width: 95mm; height: auto; max-width: 100%;" onerror="this.style.display='none'">
-                        </div>
-                        <div id="labelTimestamp" style="font-size: 10px; color: #666;"></div>
-                    </div>
+                    <div id="labelTimestamp" style="font-size: 10px; color: #666; text-align: center; margin-top: auto;"></div>
                 </div>
             </div>
             <div class="button-group" style="margin-top: 20px; display: flex; gap: 10px;">
@@ -501,7 +503,6 @@
     <script>
         // Data storage
         let receivers = [];
-        let editingId = null;
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', () => {
@@ -509,62 +510,6 @@
             renderReceivers();
             updateStats();
         });
-
-        // Save receiver
-        function saveReceiver() {
-            const name = document.getElementById('receiverName').value.trim();
-            const phone = document.getElementById('receiverPhone').value.trim();
-            const address = document.getElementById('receiverAddress').value.trim();
-            const notes = document.getElementById('receiverNotes').value.trim();
-
-            if (!name || !phone || !address) {
-                alert('⚠️ กรุณากรอกข้อมูลที่จำเป็น (ชื่อ, เบอร์โทร, ที่อยู่)');
-                return;
-            }
-
-            const receiver = {
-                id: editingId || Date.now().toString(),
-                name,
-                phone,
-                address,
-                notes,
-                createdAt: editingId ? receivers.find(r => r.id === editingId).createdAt : new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                source: editingId ? receivers.find(r => r.id === editingId).source : 'manual',
-                documentNumber: editingId ? receivers.find(r => r.id === editingId).documentNumber : '-'
-            };
-
-            if (editingId) {
-                const index = receivers.findIndex(r => r.id === editingId);
-                receivers[index] = receiver;
-                editingId = null;
-            } else {
-                receivers.push(receiver);
-            }
-
-            saveToLocalStorage();
-            renderReceivers();
-            updateStats();
-            clearForm();
-            
-            alert('✅ บันทึกข้อมูลสำเร็จ!');
-        }
-
-        // Edit receiver
-        function editReceiver(id) {
-            const receiver = receivers.find(r => r.id === id);
-            if (!receiver) return;
-
-            document.getElementById('receiverName').value = receiver.name;
-            document.getElementById('receiverPhone').value = receiver.phone;
-            document.getElementById('receiverAddress').value = receiver.address;
-            document.getElementById('receiverNotes').value = receiver.notes || '';
-            
-            editingId = id;
-            
-            // Scroll to form
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
 
         // Delete receiver
         function deleteReceiver(id) {
@@ -576,15 +521,6 @@
             updateStats();
             
             alert('✅ ลบข้อมูลสำเร็จ!');
-        }
-
-        // Clear form
-        function clearForm() {
-            document.getElementById('receiverName').value = '';
-            document.getElementById('receiverPhone').value = '';
-            document.getElementById('receiverAddress').value = '';
-            document.getElementById('receiverNotes').value = '';
-            editingId = null;
         }
 
         // Filter receivers
@@ -622,16 +558,15 @@
                     <td><strong style="color: #667eea;">${r.documentNumber || '-'}</strong></td>
                     <td><strong>${r.name}</strong></td>
                     <td>${r.phone}</td>
-                    <td>${r.address}</td>
                     <td>${r.notes || '-'}</td>
                     <td>${formatDate(r.createdAt)}</td>
                     <td>${getSourceLabel(r.source)}</td>
                     <td class="no-print">
                         <div class="actions">
                             ${hasImages ? `<button class="btn-primary btn-icon" onclick="viewImages('${r.id}')" title="ดูรูปภาพ">🖼️</button>` : ''}
+                            ${hasImages ? `<button class="btn-success btn-icon" onclick="recreatePhotoPage('${r.id}')" title="สร้างหน้ารูปภาพใหม่">📄</button>` : ''}
                             <button class="btn-success btn-icon" onclick="showPhotoModal('${r.id}')" title="พิมพ์รูปใหม่">📸</button>
                             <button class="btn-primary btn-icon" onclick="showShippingModal('${r.id}')" title="สร้างฉลาก">📦</button>
-                            <button class="btn-secondary btn-icon" onclick="editReceiver('${r.id}')" title="แก้ไข">✏️</button>
                             <button class="btn-danger btn-icon" onclick="deleteReceiver('${r.id}')" title="ลบ">🗑️</button>
                         </div>
                     </td>
@@ -710,17 +645,32 @@
             const modal = document.getElementById('shippingLabelModal');
             modal.classList.add('active');
 
-            // Fill textarea with receiver info
+            // Fill textarea with receiver info (ใช้ originalText ถ้ามี ไม่งั้นใช้การรวมข้อมูล)
             const modalReceiverInfo = document.getElementById('modalReceiverInfo');
-            let receiverText = `${receiver.name}\n${receiver.phone}\n${receiver.address}`;
-            if (receiver.notes) {
-                receiverText += `\nหมายเหตุ: ${receiver.notes}`;
+            let receiverText;
+            
+            if (receiver.originalText) {
+                // ใช้ข้อความเดิมจาก Text below page ของ index.html
+                receiverText = receiver.originalText;
+            } else {
+                // ถ้าไม่มี originalText (ข้อมูลเก่า) ให้รวมข้อมูลแบบเดิม
+                receiverText = `${receiver.name}\n${receiver.address}`;
+                if (receiver.notes) {
+                    receiverText += `\nหมายเหตุ: ${receiver.notes}`;
+                }
             }
+            
+            // แสดงใน textarea (ข้อความเดิมตามที่เป็น)
             modalReceiverInfo.value = receiverText;
 
-            // Set label preview and timestamp
+            // Set label preview and timestamp (เพิ่มคำว่า "คุณ" นำหน้าเสมอ)
             const modalReceiverDisplay = document.getElementById('modalReceiverDisplay');
-            modalReceiverDisplay.textContent = receiverText;
+            let displayText = receiverText;
+            // เพิ่ม "คุณ" นำหน้าถ้ายังไม่มี
+            if (displayText && !displayText.startsWith('คุณ')) {
+                displayText = 'คุณ ' + displayText;
+            }
+            modalReceiverDisplay.textContent = displayText || 'กรุณากรอกข้อมูลผู้รับ';
 
             const now = new Date();
             const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
@@ -733,10 +683,22 @@
             const timestamp = `พิมพ์: ${day} ${month} ${year} เวลา ${hours}:${minutes} น. | Chiangmai Freshmilk`;
             document.getElementById('labelTimestamp').textContent = timestamp;
 
-            // Update preview on textarea input
-            modalReceiverInfo.addEventListener('input', function() {
+            // Remove old event listener by cloning the element
+            const newModalReceiverInfo = modalReceiverInfo.cloneNode(true);
+            modalReceiverInfo.parentNode.replaceChild(newModalReceiverInfo, modalReceiverInfo);
+            
+            // Update preview on textarea input (เพิ่ม "คุณ" นำหน้าเสมอ)
+            newModalReceiverInfo.addEventListener('input', function() {
                 let val = this.value.trim();
-                document.getElementById('modalReceiverDisplay').textContent = val || 'กรุณากรอกข้อมูลผู้รับ';
+                if (val) {
+                    // เพิ่ม "คุณ" นำหน้าถ้ายังไม่มี (เฉพาะในการแสดงผลบนฉลาก)
+                    if (!val.startsWith('คุณ')) {
+                        val = 'คุณ ' + val;
+                    }
+                    document.getElementById('modalReceiverDisplay').textContent = val;
+                } else {
+                    document.getElementById('modalReceiverDisplay').textContent = 'กรุณากรอกข้อมูลผู้รับ';
+                }
             });
         }
 
@@ -798,9 +760,16 @@
             const modal = document.getElementById('photoPrintModal');
             const addressField = document.getElementById('photoAddress');
 
-            let fullAddress = `${receiver.name}\n${receiver.phone}\n${receiver.address}`;
-            if (receiver.notes) {
-                fullAddress += `\nหมายเหตุ: ${receiver.notes}`;
+            let fullAddress;
+            if (receiver.originalText) {
+                // ใช้ข้อความเดิมจาก Text below page
+                fullAddress = receiver.originalText;
+            } else {
+                // ถ้าไม่มี originalText ให้รวมข้อมูลแบบเดิม
+                fullAddress = `${receiver.name}\n${receiver.address}`;
+                if (receiver.notes) {
+                    fullAddress += `\nหมายเหตุ: ${receiver.notes}`;
+                }
             }
 
             addressField.value = fullAddress;
@@ -832,13 +801,12 @@
                 return;
             }
 
-            const headers = ['ลำดับ', 'เลขที่เอกสาร', 'ชื่อผู้รับ', 'เบอร์โทร', 'ที่อยู่', 'หมายเหตุ', 'เพิ่มเมื่อ', 'แหล่งที่มา'];
+            const headers = ['ลำดับ', 'เลขที่เอกสาร', 'ชื่อที่อยู่', 'เบอร์โทร', 'หมายเหตุ', 'เพิ่มเมื่อ', 'แหล่งที่มา'];
             const rows = receivers.map((r, index) => [
                 index + 1,
                 r.documentNumber || '-',
                 r.name,
                 r.phone,
-                r.address,
                 r.notes || '',
                 formatDate(r.createdAt),
                 getSourceLabel(r.source)
@@ -869,9 +837,39 @@
             saveToLocalStorage();
             renderReceivers();
             updateStats();
-            clearForm();
             
             alert('✅ ลบข้อมูลทั้งหมดสำเร็จ!');
+        }
+
+        // Recreate photo page from saved images
+        function recreatePhotoPage(id) {
+            const receiver = receivers.find(r => r.id === id);
+            if (!receiver) return;
+            
+            if (!receiver.row1Photo && (!receiver.row2Photos || receiver.row2Photos.length === 0)) {
+                alert('⚠️ ไม่มีรูปภาพที่บันทึกไว้');
+                return;
+            }
+            
+            // Save receiver data to sessionStorage for index.html to recreate the page
+            let pageText;
+            if (receiver.originalText) {
+                // ใช้ข้อความเดิมจาก Text below page
+                pageText = receiver.originalText;
+            } else {
+                // ถ้าไม่มี originalText ให้รวมข้อมูลแบบเดิม
+                pageText = `${receiver.name}\n${receiver.address}${receiver.notes ? '\nหมายเหตุ: ' + receiver.notes : ''}`;
+            }
+            
+            sessionStorage.setItem('recreatePhotos', JSON.stringify({
+                row1Photo: receiver.row1Photo,
+                row2Photos: receiver.row2Photos || [],
+                pageText: pageText,
+                documentNumber: receiver.documentNumber
+            }));
+            
+            // Open index.html
+            window.open('index.html', '_blank');
         }
 
         // LocalStorage functions
