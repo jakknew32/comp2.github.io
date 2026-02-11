@@ -438,17 +438,38 @@
 
     <!-- Shipping Label Modal -->
     <div id="shippingLabelModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🏷️ พิมพ์ฉลากจัดส่ง</h2>
+        <div class="modal-content" style="max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border-radius: 15px; padding: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #333; font-family: 'Sarabun', sans-serif;">📦 Chiangmai Freshmilk</h2>
                 <button class="btn-danger btn-icon" onclick="closeShippingModal()">✕</button>
             </div>
-            
-            <div id="labelPreviewContainer"></div>
-            
-            <div class="button-group" style="margin-top: 20px;">
-                <button class="btn-success" onclick="printLabel()">🖨️ พิมพ์ฉลาก</button>
-                <button class="btn-secondary" onclick="closeShippingModal()">ยกเลิก</button>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-family: 'Sarabun', sans-serif;">📥 แก้ไขข้อมูลผู้รับ:</label>
+                <textarea id="modalReceiverInfo" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; font-family: 'Sarabun', 'Tahoma', sans-serif; min-height: 100px; box-sizing: border-box;"></textarea>
+            </div>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div id="labelPreview" style="width: 101.6mm; height: 152.4mm; border: 3mm solid #333; background: white; padding: 6mm 6mm 3mm 6mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box;">
+                    <div style="text-align: center; border-bottom: 2px solid #333; padding: 3mm 0 2mm 0; margin-bottom: 3mm;">
+                        <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;"><img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 5px;">Chiangmai Freshmilk</h2>
+                    </div>
+                    <div style="margin-bottom: 3mm; padding-bottom: 3mm; border-bottom: 1px dashed #999;">
+                        <div style="font-size: 14px; line-height: 1.4; color: #333;">บริษัท เชียงใหม่เฟรชมิลค์ จำกัด 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687</div>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 3mm;">
+                        <div style="font-weight: bold; font-size: 16px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px;">ผู้รับ (TO):</div>
+                        <div id="modalReceiverDisplay" style="font-size: 14px; line-height: 1.6; color: #000; white-space: pre-line; flex: 1;"></div>
+                    </div>
+                    <div style="margin-top: auto; padding-top: 2mm; border-top: 2px solid #333; text-align: center;">
+                        <div style="margin-bottom: 2mm;">
+                            <img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="Warning" style="width: 95mm; height: auto; max-width: 100%;" onerror="this.style.display='none'">
+                        </div>
+                        <div id="labelTimestamp" style="font-size: 10px; color: #666;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group" style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn-success" style="flex:1;" onclick="printLabel()">🖨️ พิมพ์ฉลาก</button>
+                <button class="btn-secondary" style="flex:1;" onclick="closeShippingModal()">ยกเลิก</button>
             </div>
         </div>
     </div>
@@ -685,14 +706,21 @@
             const receiver = receivers.find(r => r.id === id);
             if (!receiver) return;
 
+            // Show modal
             const modal = document.getElementById('shippingLabelModal');
-            const container = document.getElementById('labelPreviewContainer');
+            modal.classList.add('active');
 
-            const defaultSender = `บริษัท เชียงใหม่เฟรชมิลค์ จำกัด 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687`;
-            let displayReceiver = `${receiver.name}\n${receiver.phone}\n${receiver.address}`;
+            // Fill textarea with receiver info
+            const modalReceiverInfo = document.getElementById('modalReceiverInfo');
+            let receiverText = `${receiver.name}\n${receiver.phone}\n${receiver.address}`;
             if (receiver.notes) {
-                displayReceiver += `\nหมายเหตุ: ${receiver.notes}`;
+                receiverText += `\nหมายเหตุ: ${receiver.notes}`;
             }
+            modalReceiverInfo.value = receiverText;
+
+            // Set label preview and timestamp
+            const modalReceiverDisplay = document.getElementById('modalReceiverDisplay');
+            modalReceiverDisplay.textContent = receiverText;
 
             const now = new Date();
             const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
@@ -703,32 +731,13 @@
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const timestamp = `พิมพ์: ${day} ${month} ${year} เวลา ${hours}:${minutes} น. | Chiangmai Freshmilk`;
+            document.getElementById('labelTimestamp').textContent = timestamp;
 
-            container.innerHTML = `
-                <div id="labelToPrint" style="width: 101.6mm; height: 152.4mm; border: 3mm solid #333; background: white; padding: 6mm 6mm 3mm 6mm; margin: 0 auto; display: flex; flex-direction: column; font-family: 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box;">
-                    <div style="text-align: center; border-bottom: 2px solid #333; padding: 3mm 0 2mm 0; margin-bottom: 3mm;">
-                        <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;"><img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 5px;">Chiangmai Freshmilk</h2>
-                    </div>
-                    
-                    <div style="margin-bottom: 3mm; padding-bottom: 3mm; border-bottom: 1px dashed #999;">
-                        <div style="font-size: 14px; line-height: 1.4; color: #333;">${defaultSender}</div>
-                    </div>
-                    
-                    <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 3mm;">
-                        <div style="font-weight: bold; font-size: 16px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px;">ผู้รับ (TO):</div>
-                        <div style="font-size: 14px; line-height: 1.6; color: #000; white-space: pre-line; flex: 1;">${displayReceiver}</div>
-                    </div>
-                    
-                    <div style="margin-top: auto; padding-top: 2mm; border-top: 2px solid #333; text-align: center;">
-                        <div style="margin-bottom: 2mm;">
-                            <img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="Warning" style="width: 95mm; height: auto; max-width: 100%;" onerror="this.style.display='none'">
-                        </div>
-                        <div style="font-size: 10px; color: #666;">${timestamp}</div>
-                    </div>
-                </div>
-            `;
-
-            modal.classList.add('active');
+            // Update preview on textarea input
+            modalReceiverInfo.addEventListener('input', function() {
+                let val = this.value.trim();
+                document.getElementById('modalReceiverDisplay').textContent = val || 'กรุณากรอกข้อมูลผู้รับ';
+            });
         }
 
         // Close shipping modal
@@ -738,9 +747,8 @@
 
         // Print label
         function printLabel() {
-            const labelToPrint = document.getElementById('labelToPrint');
-            if (!labelToPrint) return;
-
+            const labelPreview = document.getElementById('labelPreview');
+            if (!labelPreview) return;
             const printWindow = window.open('', '', 'width=800,height=600');
             printWindow.document.write(`
                 <!DOCTYPE html>
@@ -758,10 +766,14 @@
                             padding: 0;
                             font-family: 'Sarabun', 'Tahoma', sans-serif;
                         }
+                        .label {
+                            width: 100mm;
+                            height: 150mm;
+                        }
                     </style>
                 </head>
                 <body>
-                    ${labelToPrint.outerHTML}
+                    <div class="label">${labelPreview.innerHTML}</div>
                     <script>
                         window.onload = function() {
                             setTimeout(function() {
