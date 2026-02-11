@@ -143,6 +143,16 @@
             transform: translateY(-2px);
         }
 
+        .btn-database {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-database:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
         .print-area {
             background: white;
             padding: 20px;
@@ -306,10 +316,16 @@
                 <input type="text" id="pageText" placeholder="Enter text to display below photos">
             </div>
 
+            <div class="photos-per-row">
+                <label>เลขที่เอกสาร:</label>
+                <input type="text" id="documentNumber" readonly style="background: #f9fafb; font-weight: bold; color: #667eea; font-size: 18px;">
+            </div>
+
             <div class="button-group">
                 <button class="btn-print" onclick="window.print()">🖨️ Print</button>
                 <button class="btn-clear" onclick="clearPhotos()">🗑️ Clear All</button>
                 <button onclick="createShippingLabel()" style="background: #f59e0b; color: white;">📦 สร้างฉลาก</button>
+                <button class="btn-database" onclick="window.location.href='receiver-db.html'">📋 ฐานข้อมูลผู้รับ</button>
             </div>
         </div>
 
@@ -323,6 +339,27 @@
         let row2Photos = [];
         let photosPerRow = 3;
         let pageText = '';
+
+        // Generate document number
+        function generateDocumentNumber() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            
+            // Get counter from localStorage
+            const dateKey = `${day}${month}${year}`;
+            const counterKey = `docCounter_${dateKey}`;
+            let counter = parseInt(localStorage.getItem(counterKey) || '0') + 1;
+            localStorage.setItem(counterKey, counter.toString());
+            
+            const counterStr = String(counter).padStart(3, '0');
+            return `CFM${day}${month}${year}${counterStr}`;
+        }
+
+        // Initialize document number
+        currentDocumentNumber = generateDocumentNumber();
+        document.getElementById('documentNumber').value = currentDocumentNumber;
 
         document.getElementById('photoInput').addEventListener('change', handleFileSelect);
         document.getElementById('photosPerRow').addEventListener('change', function() {
@@ -498,6 +535,18 @@
 
                 page.appendChild(row2);
 
+                // Add document number at top
+                const docNumDiv = document.createElement('div');
+                docNumDiv.style.cssText = `
+                    text-align: center;
+                    padding: 3mm 0;
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #667eea;
+                    border-bottom: 1px solid #e0e0e0;
+                    margin-bottom: 2mm;
+                `;
+
                 // Add text below page if provided
                 if (pageText.trim() !== '') {
                     const textDiv = document.createElement('div');
@@ -559,7 +608,115 @@
 
         function createShippingLabel() {
             const address = document.getElementById('pageText').value.trim();
+            
+            // Save to database with images
+            if (address) {
+                saveToReceiverDatabase(address);
+            }
+            
             showShippingLabelModal(address);
+        }
+
+        function saveToReceiverDatabase(fullText) {
+            // Parse the text to extract name, phone, address
+            const lines = fullText.split('\n').map(line => line.trim()).filter(line => line);
+            
+            if (lines.length === 0) return;
+            
+            // Try to extract phone number
+            let phone = '';
+            let name = '';
+            let address = '';
+            let notes = '';
+            
+            // Look for phone pattern
+            const phonePattern = /(\d{3}[-\s]?\d{3}[-\s]?\d{4}|\d{10}|0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{4})/;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const phoneMatch = line.match(phonePattern);
+                
+                if (phoneMatch && !phone) {
+                    phone = phoneMatch[0];
+                    // Name is usually before or after phone
+                    if (i > 0 && !name) {
+                        name = lines[i - 1].replace(/^(คุณ|นาย|นาง|นางสาว)\s*/i, '');
+                    }
+                    // Address is usually after phone
+                    if (i < lines.length - 1) {
+                        address = lines.slice(i + 1).join(' ');
+                    }
+                    break;
+                }
+            }
+            
+            // If no phone found, try other pattern
+            if (!phone) {
+                // First line might be name
+                name = lines[0].replace(/^(คุณ|นาย|นาง|นางสาว)\s*/i, '');
+                // Rest is address
+                if (lines.length > 1) {
+                    // Check if second line looks like phone
+                    const secondLinePhone = lines[1].match(phonePattern);
+                    if (secondLinePhone) {
+                        phone = secondLinePhone[0];
+                        address = lines.slice(2).join(' ');
+                    } else {
+                        address = lines.slice(1).join(' ');
+                    }
+                }
+            }
+            
+            // Look for notes (lines starting with หมายเหตุ or Note)
+            const notesPattern = /(หมายเหตุ|note|notes|โน้ต)[:：]?\s*(.+)/i;
+            const notesMatch = fullText.match(notesPattern);
+            if (notesMatch) {
+                notes = notesMatch[2];
+                // Remove notes from address
+                address = address.replace(notesPattern, '').trim();
+            }
+            
+            // Default values if parsing failed
+            if (!name) name = lines[0] || 'ไม่ระบุชื่อ';
+            if (!phone) phone = '-';
+            if (!address) address = fullText;
+            
+            // Load existing receivers from localStorage
+            let receivers = [];
+            const saved = localStorage.getItem('receiversDB');
+            if (saved) {
+                receivers = JSON.parse(saved);
+            }
+            
+            // Check if this receiver already exists (by phone or similar address)
+            const exists = receivers.some(r => 
+                (r.phone === phone && phone !== '-') || 
+                (r.address.toLowerCase().includes(address.toLowerCase().substring(0, 20)) && address.length > 20)
+            );
+            
+            if (!exists) {
+                // Create new receiver entry with images
+                const newReceiver = {
+                    id: Date.now().toString(),
+                    name: name,
+                    phone: phone,
+                    address: address,
+                    notes: notes,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: 'auto-from-print-page',
+                    documentNumber: currentDocumentNumber,
+                    row1Photo: row1Photo,
+                    row2Photos: row2Photos.slice() // copy array
+                };
+                
+                receivers.push(newReceiver);
+                localStorage.setItem('receiversDB', JSON.stringify(receivers));
+                
+                console.log('✅ Auto-saved to receiver database with images:', newReceiver);
+            } else {
+                console.log('ℹ️ Receiver already exists in database');
+            }
         }
 
         function showShippingLabelModal(receiverAddress) {
@@ -719,6 +876,17 @@
 
         // Initialize with empty page
         renderPhotos();
+
+        // Check if there's receiver address from database page
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedAddress = sessionStorage.getItem('receiverAddress');
+            if (savedAddress) {
+                document.getElementById('pageText').value = savedAddress;
+                pageText = savedAddress;
+                renderPhotos();
+                sessionStorage.removeItem('receiverAddress');
+            }
+        });
     </script>
 </body>
 </html>
