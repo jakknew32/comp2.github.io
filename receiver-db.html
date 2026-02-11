@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ฐานข้อมูลผู้รับสินค้า - Chiangmai Freshmilk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-2px);
+        }
+
+        .btn-icon {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .data-area {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
+        .image-preview {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .image-preview img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .image-preview img:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 ฐานข้อมูลผู้รับสินค้า</h1>
+
+        <!-- Statistics -->
+        <div class="stats-row no-print">
+            <div class="stat-card">
+                <div class="stat-number" id="totalReceivers">0</div>
+                <div class="stat-label">จำนวนผู้รับทั้งหมด</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayReceivers">0</div>
+                <div class="stat-label">เพิ่มวันนี้</div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Form -->
+        <div class="controls no-print">
+            <h2 style="margin-bottom: 20px; color: #333;">➕ เพิ่ม/แก้ไขผู้รับสินค้า</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>ชื่อผู้รับ *</label>
+                    <input type="text" id="receiverName" placeholder="เช่น นายสมชาย ใจดี">
+                </div>
+                <div class="form-group">
+                    <label>เบอร์โทรศัพท์ *</label>
+                    <input type="tel" id="receiverPhone" placeholder="เช่น 081-234-5678">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>ที่อยู่ *</label>
+                <textarea id="receiverAddress" placeholder="เช่น 123 ถนนนิมมานเหมินทร์ ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>หมายเหตุ</label>
+                <textarea id="receiverNotes" placeholder="เช่น ส่งช่วงบ่าย, ฝากยามหรือ แจ้งล่วงหน้า"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="saveReceiver()">💾 บันทึกข้อมูล</button>
+                <button class="btn-secondary" onclick="clearForm()">🔄 ล้างฟอร์ม</button>
+            </div>
+        </div>
+
+        <!-- Search and Actions -->
+        <div class="controls no-print">
+            <h2 style="margin-bottom: 15px; color: #333;">🔍 ค้นหาและจัดการ</h2>
+            
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="🔍 ค้นหาด้วยชื่อ, เบอร์โทร, ที่อยู่ หรือเลขที่เอกสาร..." oninput="filterReceivers()">
+            </div>
+
+            <div class="button-group">
+                <button class="btn-success" onclick="exportToCSV()">📥 ส่งออก CSV</button>
+                <button class="btn-danger" onclick="clearAllData()">🗑️ ลบข้อมูลทั้งหมด</button>
+                <button class="btn-primary" onclick="window.location.href='index.html'">🔙 กลับหน้าพิมพ์รูป</button>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="data-area">
+            <h2 style="margin-bottom: 20px; color: #333;">📋 รายการผู้รับสินค้า</h2>
+            
+            <div class="table-container">
+                <table id="receiversTable">
+                    <thead>
+                        <tr>
+                            <th>ลำดับ</th>
+                            <th>เลขที่เอกสาร</th>
+                            <th>ชื่อผู้รับ</th>
+                            <th>เบอร์โทร</th>
+                            <th>ที่อยู่</th>
+                            <th>หมายเหตุ</th>
+                            <th>เพิ่มเมื่อ</th>
+                            <th>แหล่งที่มา</th>
+                            <th class="no-print">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receiversBody">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📭</div>
+                <h3>ยังไม่มีข้อมูลผู้รับสินค้า</h3>
+                <p>เริ่มต้นเพิ่มข้อมูลผู้รับสินค้าของคุณได้เลย</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Images Modal -->
+    <div id="viewImagesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🖼️ รูปภาพ</h2>
+                <button class="btn-danger btn-icon" onclick="closeImagesModal()">✕</button>
+            </div>
+            
+            <div id="imagesContainer"></div>
+            
+            <div class="button-group" style="margin-top: 20px;">
+                <button class="btn-secondary" onclick="closeImagesModal()">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Label Modal -->
+    <div id="shippingLabelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏷️ พิมพ์ฉลากจัดส่ง</h2>
+                <button class="btn-danger btn-icon" onclick="closeShippingModal()">✕</button>
+            </div>
+            
+            <div id="labelPreviewContainer"></div>
+            
+            <div class="button-group" style="margin-top: 20px;">
+                <button class="btn-success" onclick="printLabel()">🖨️ พิมพ์ฉลาก</button>
+                <button class="btn-secondary" onclick="closeShippingModal()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Print Modal -->
+    <div id="photoPrintModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📸 พิมพ์รูปภาพ</h2>
+                <button class="btn-danger btn-icon" onclick="closePhotoModal()">✕</button>
+            </div>
+            
+            <p style="margin-bottom: 15px; color: #666;">
+                คุณจะถูกนำไปยังหน้าพิมพ์รูปพร้อมข้อมูลที่อยู่ผู้รับ
+            </p>
+
+            <div class="form-group">
+                <label>ที่อยู่ผู้รับ (จะถูกนำไปยังหน้าพิมพ์)</label>
+                <textarea id="photoAddress" readonly style="background: #f9fafb;"></textarea>
+            </div>
+            
+            <div class="button-group" style="margin-top: 20px;">
+                <button class="btn-success" onclick="goToPhotoPrint()">🖨️ ไปหน้าพิมพ์รูป</button>
+                <button class="btn-secondary" onclick="closePhotoModal()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let receivers = [];
+        let editingId = null;
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadReceivers();
+            renderReceivers();
+            updateStats();
+        });
+
+        // Save receiver
+        function saveReceiver() {
+            const name = document.getElementById('receiverName').value.trim();
+            const phone = document.getElementById('receiverPhone').value.trim();
+            const address = document.getElementById('receiverAddress').value.trim();
+            const notes = document.getElementById('receiverNotes').value.trim();
+
+            if (!name || !phone || !address) {
+                alert('⚠️ กรุณากรอกข้อมูลที่จำเป็น (ชื่อ, เบอร์โทร, ที่อยู่)');
+                return;
+            }
+
+            const receiver = {
+                id: editingId || Date.now().toString(),
+                name,
+                phone,
+                address,
+                notes,
+                createdAt: editingId ? receivers.find(r => r.id === editingId).createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                source: editingId ? receivers.find(r => r.id === editingId).source : 'manual',
+                documentNumber: editingId ? receivers.find(r => r.id === editingId).documentNumber : '-'
+            };
+
+            if (editingId) {
+                const index = receivers.findIndex(r => r.id === editingId);
+                receivers[index] = receiver;
+                editingId = null;
+            } else {
+                receivers.push(receiver);
+            }
+
+            saveToLocalStorage();
+            renderReceivers();
+            updateStats();
+            clearForm();
+            
+            alert('✅ บันทึกข้อมูลสำเร็จ!');
+        }
+
+        // Edit receiver
+        function editReceiver(id) {
+            const receiver = receivers.find(r => r.id === id);
+            if (!receiver) return;
+
+            document.getElementById('receiverName').value = receiver.name;
+            document.getElementById('receiverPhone').value = receiver.phone;
+            document.getElementById('receiverAddress').value = receiver.address;
+            document.getElementById('receiverNotes').value = receiver.notes || '';
+            
+            editingId = id;
+            
+            // Scroll to form
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Delete receiver
+        function deleteReceiver(id) {
+            if (!confirm('⚠️ คุณแน่ใจหรือไม่ที่จะลบข้อมูลนี้?')) return;
+
+            receivers = receivers.filter(r => r.id !== id);
+            saveToLocalStorage();
+            renderReceivers();
+            updateStats();
+            
+            alert('✅ ลบข้อมูลสำเร็จ!');
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('receiverName').value = '';
+            document.getElementById('receiverPhone').value = '';
+            document.getElementById('receiverAddress').value = '';
+            document.getElementById('receiverNotes').value = '';
+            editingId = null;
+        }
+
+        // Filter receivers
+        function filterReceivers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = receivers.filter(r => 
+                r.name.toLowerCase().includes(searchTerm) ||
+                r.phone.toLowerCase().includes(searchTerm) ||
+                r.address.toLowerCase().includes(searchTerm) ||
+                (r.notes && r.notes.toLowerCase().includes(searchTerm)) ||
+                (r.documentNumber && r.documentNumber.toLowerCase().includes(searchTerm))
+            );
+            renderReceivers(filtered);
+        }
+
+        // Render receivers table
+        function renderReceivers(data = receivers) {
+            const tbody = document.getElementById('receiversBody');
+            const emptyState = document.getElementById('emptyState');
+
+            if (data.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            tbody.innerHTML = data.map((r, index) => {
+                const hasImages = r.row1Photo || (r.row2Photos && r.row2Photos.length > 0);
+                
+                return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong style="color: #667eea;">${r.documentNumber || '-'}</strong></td>
+                    <td><strong>${r.name}</strong></td>
+                    <td>${r.phone}</td>
+                    <td>${r.address}</td>
+                    <td>${r.notes || '-'}</td>
+                    <td>${formatDate(r.createdAt)}</td>
+                    <td>${getSourceLabel(r.source)}</td>
+                    <td class="no-print">
+                        <div class="actions">
+                            ${hasImages ? `<button class="btn-primary btn-icon" onclick="viewImages('${r.id}')" title="ดูรูปภาพ">🖼️</button>` : ''}
+                            <button class="btn-success btn-icon" onclick="showPhotoModal('${r.id}')" title="พิมพ์รูปใหม่">📸</button>
+                            <button class="btn-primary btn-icon" onclick="showShippingModal('${r.id}')" title="สร้างฉลาก">📦</button>
+                            <button class="btn-secondary btn-icon" onclick="editReceiver('${r.id}')" title="แก้ไข">✏️</button>
+                            <button class="btn-danger btn-icon" onclick="deleteReceiver('${r.id}')" title="ลบ">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalReceivers').textContent = receivers.length;
+            
+            const today = new Date().toDateString();
+            const todayCount = receivers.filter(r => 
+                new Date(r.createdAt).toDateString() === today
+            ).length;
+            document.getElementById('todayReceivers').textContent = todayCount;
+        }
+
+        // Format date
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear() + 543;
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        // Get source label
+        function getSourceLabel(source) {
+            if (source === 'auto-from-print-page') {
+                return '🤖 อัตโนมัติ';
+            }
+            return '✋ กรอกเอง';
+        }
+
+        // View images
+        function viewImages(id) {
+            const receiver = receivers.find(r => r.id === id);
+            if (!receiver) return;
+
+            const modal = document.getElementById('viewImagesModal');
+            const container = document.getElementById('imagesContainer');
+
+            let html = '<h3 style="margin-bottom: 15px;">รูปภาพที่บันทึก</h3>';
+            html += '<div class="image-preview">';
+
+            if (receiver.row1Photo) {
+                html += `<img src="${receiver.row1Photo}" alt="Row 1 Photo" onclick="window.open(this.src, '_blank')">`;
+            }
+
+            if (receiver.row2Photos && receiver.row2Photos.length > 0) {
+                receiver.row2Photos.forEach((photo, i) => {
+                    html += `<img src="${photo}" alt="Row 2 Photo ${i+1}" onclick="window.open(this.src, '_blank')">`;
+                });
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        // Close images modal
+        function closeImagesModal() {
+            document.getElementById('viewImagesModal').classList.remove('active');
+        }
+
+        // Show shipping label modal
+        function showShippingModal(id) {
+            const receiver = receivers.find(r => r.id === id);
+            if (!receiver) return;
+
+            const modal = document.getElementById('shippingLabelModal');
+            const container = document.getElementById('labelPreviewContainer');
+
+            const defaultSender = `บริษัท เชียงใหม่เฟรชมิลค์ จำกัด 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687`;
+            let displayReceiver = `${receiver.name}\n${receiver.phone}\n${receiver.address}`;
+            if (receiver.notes) {
+                displayReceiver += `\nหมายเหตุ: ${receiver.notes}`;
+            }
+
+            const now = new Date();
+            const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+                               'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const day = now.getDate();
+            const month = thaiMonths[now.getMonth()];
+            const year = now.getFullYear() + 543;
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const timestamp = `พิมพ์: ${day} ${month} ${year} เวลา ${hours}:${minutes} น. | Chiangmai Freshmilk`;
+
+            container.innerHTML = `
+                <div id="labelToPrint" style="width: 101.6mm; height: 152.4mm; border: 3mm solid #333; background: white; padding: 6mm 6mm 3mm 6mm; margin: 0 auto; display: flex; flex-direction: column; font-family: 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box;">
+                    <div style="text-align: center; border-bottom: 2px solid #333; padding: 3mm 0 2mm 0; margin-bottom: 3mm;">
+                        <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;"><img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 5px;">Chiangmai Freshmilk</h2>
+                    </div>
+                    
+                    <div style="margin-bottom: 3mm; padding-bottom: 3mm; border-bottom: 1px dashed #999;">
+                        <div style="font-size: 14px; line-height: 1.4; color: #333;">${defaultSender}</div>
+                    </div>
+                    
+                    <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 3mm;">
+                        <div style="font-weight: bold; font-size: 16px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px;">ผู้รับ (TO):</div>
+                        <div style="font-size: 14px; line-height: 1.6; color: #000; white-space: pre-line; flex: 1;">${displayReceiver}</div>
+                    </div>
+                    
+                    <div style="margin-top: auto; padding-top: 2mm; border-top: 2px solid #333; text-align: center;">
+                        <div style="margin-bottom: 2mm;">
+                            <img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="Warning" style="width: 95mm; height: auto; max-width: 100%;" onerror="this.style.display='none'">
+                        </div>
+                        <div style="font-size: 10px; color: #666;">${timestamp}</div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        // Close shipping modal
+        function closeShippingModal() {
+            document.getElementById('shippingLabelModal').classList.remove('active');
+        }
+
+        // Print label
+        function printLabel() {
+            const labelToPrint = document.getElementById('labelToPrint');
+            if (!labelToPrint) return;
+
+            const printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>ฉลากจัดส่ง - Chiangmai Freshmilk</title>
+                    <style>
+                        @page {
+                            size: 4in 6in;
+                            margin: 0;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            font-family: 'Sarabun', 'Tahoma', sans-serif;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${labelToPrint.outerHTML}
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                            }, 500);
+                        }
+                        window.onafterprint = function() {
+                            window.close();
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // Show photo print modal
+        function showPhotoModal(id) {
+            const receiver = receivers.find(r => r.id === id);
+            if (!receiver) return;
+
+            const modal = document.getElementById('photoPrintModal');
+            const addressField = document.getElementById('photoAddress');
+
+            let fullAddress = `${receiver.name}\n${receiver.phone}\n${receiver.address}`;
+            if (receiver.notes) {
+                fullAddress += `\nหมายเหตุ: ${receiver.notes}`;
+            }
+
+            addressField.value = fullAddress;
+            modal.classList.add('active');
+        }
+
+        // Close photo modal
+        function closePhotoModal() {
+            document.getElementById('photoPrintModal').classList.remove('active');
+        }
+
+        // Go to photo print page
+        function goToPhotoPrint() {
+            const address = document.getElementById('photoAddress').value;
+            
+            // Save address to sessionStorage for index.html to read
+            sessionStorage.setItem('receiverAddress', address);
+            
+            // Open index.html in new tab or redirect
+            window.open('index.html', '_blank');
+            
+            closePhotoModal();
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if (receivers.length === 0) {
+                alert('⚠️ ไม่มีข้อมูลให้ส่งออก');
+                return;
+            }
+
+            const headers = ['ลำดับ', 'เลขที่เอกสาร', 'ชื่อผู้รับ', 'เบอร์โทร', 'ที่อยู่', 'หมายเหตุ', 'เพิ่มเมื่อ', 'แหล่งที่มา'];
+            const rows = receivers.map((r, index) => [
+                index + 1,
+                r.documentNumber || '-',
+                r.name,
+                r.phone,
+                r.address,
+                r.notes || '',
+                formatDate(r.createdAt),
+                getSourceLabel(r.source)
+            ]);
+
+            let csvContent = '\uFEFF'; // UTF-8 BOM for Thai characters
+            csvContent += headers.join(',') + '\n';
+            csvContent += rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `receivers_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            alert('✅ ส่งออกข้อมูลสำเร็จ!');
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (!confirm('⚠️ คุณแน่ใจหรือไม่ที่จะลบข้อมูลทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้!')) return;
+            
+            if (!confirm('⚠️⚠️⚠️ ยืนยันอีกครั้ง: ข้อมูลทั้งหมดจะถูกลบถาวร!')) return;
+
+            receivers = [];
+            saveToLocalStorage();
+            renderReceivers();
+            updateStats();
+            clearForm();
+            
+            alert('✅ ลบข้อมูลทั้งหมดสำเร็จ!');
+        }
+
+        // LocalStorage functions
+        function saveToLocalStorage() {
+            localStorage.setItem('receiversDB', JSON.stringify(receivers));
+        }
+
+        function loadReceivers() {
+            const saved = localStorage.getItem('receiversDB');
+            if (saved) {
+                receivers = JSON.parse(saved);
+            }
+        }
+    </script>
+</body>
+</html>
