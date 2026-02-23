@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎉 จับฉลากของรางวัล</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;900&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #FFD700;
+    --gold2: #FFA500;
+    --deep: #0a0a1a;
+    --card: rgba(255,255,255,0.05);
+    --glow: 0 0 30px rgba(255,215,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Kanit', sans-serif;
+    background: var(--deep);
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+    background-image: 
+      radial-gradient(ellipse at 20% 20%, rgba(255,165,0,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(255,50,100,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(100,50,255,0.05) 0%, transparent 60%);
+  }
+
+  .stars {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
+  }
+  .star {
+    position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%;
+    animation: twinkle 3s infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.5); }
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 1400px; margin: 0 auto; padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    grid-template-rows: auto 1fr;
+    gap: 24px;
+    min-height: 100vh;
+  }
+
+  header {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 30px 0 10px;
+  }
+
+  header h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #FFD700, #FF6B6B, #FFD700);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+    letter-spacing: -0.02em;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  header p {
+    font-family: 'Sarabun', sans-serif;
+    color: rgba(255,255,255,0.5);
+    font-size: 1rem;
+    margin-top: 4px;
+  }
+
+  /* === LEFT PANEL === */
+  .left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Setup Card */
+  .setup-card {
+    background: var(--card);
+    border: 1px solid rgba(255,215,0,0.15);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+  }
+
+  .setup-card h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .setup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .input-group label {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    font-family: 'Sarabun', sans-serif;
+  }
+
+  .input-group input, .input-group textarea {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #fff;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+
+  .input-group input:focus, .input-group textarea:focus {
+    border-color: rgba(255,215,0,0.5);
+  }
+
+  .input-group textarea { height: 80px; }
+
+  .btn-add {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    border: none;
+    border-radius: 12px;
+    color: #000;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255,165,0,0.4);
+  }
+
+  .btn-add:active { transform: translateY(0); }
+
+  /* Participants + Prizes */
+  .lists-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .list-card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  .list-card h3 {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .badge {
+    background: rgba(255,215,0,0.2);
+    color: var(--gold);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+  }
+
+  .item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .item-list::-webkit-scrollbar { width: 4px; }
+  .item-list::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 2px; }
+
+  .list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-family: 'Sarabun', sans-serif;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .list-item.used {
+    opacity: 0.35;
+    text-decoration: line-through;
+  }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: rgba(255,80,80,0.6);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.15s;
+  }
+
+  .del-btn:hover { color: #ff4040; }
+
+  .empty-hint {
+    text-align: center;
+    color: rgba(255,255,255,0.2);
+    font-size: 0.8rem;
+    font-family: 'Sarabun', sans-serif;
+    padding: 20px 0;
+  }
+
+  /* === WHEEL AREA === */
+  .wheel-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .wheel-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 1;
+  }
+
+  .wheel-pointer {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 36px solid var(--gold);
+    filter: drop-shadow(0 4px 8px rgba(255,215,0,0.6));
+    z-index: 10;
+  }
+
+  canvas#wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 60px rgba(255,215,0,0.2), 0 0 120px rgba(255,165,0,0.1);
+  }
+
+  .wheel-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px; height: 50px;
+    background: radial-gradient(circle, #FFD700, #FF8C00);
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(255,215,0,0.8);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+  }
+
+  .spin-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 16px;
+    background: linear-gradient(135deg, #FF416C, #FF4B2B);
+    border: none;
+    border-radius: 16px;
+    color: #fff;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    box-shadow: 0 8px 30px rgba(255,65,108,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .spin-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -60%;
+    width: 40%; height: 200%;
+    background: rgba(255,255,255,0.2);
+    transform: skewX(-20deg);
+    transition: left 0.4s;
+  }
+
+  .spin-btn:hover::before { left: 120%; }
+  .spin-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(255,65,108,0.5); }
+  .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* === RIGHT PANEL === */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Result Modal */
+  .result-banner {
+    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.05));
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 20px;
+    padding: 24px;
+    text-align: center;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-banner .winner-icon {
+    font-size: 3rem;
+    margin-bottom: 8px;
+  }
+
+  .result-banner .winner-name {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1.2;
+  }
+
+  .result-banner .arrow {
+    font-size: 1.5rem;
+    color: rgba(255,255,255,0.4);
+    margin: 4px 0;
+  }
+
+  .result-banner .prize-name {
+    font-size: 1.1rem;
+    color: #ff9944;
+    font-weight: 600;
+  }
+
+  .result-banner .waiting-text {
+    color: rgba(255,255,255,0.3);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.9rem;
+  }
+
+  .confetti-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    animation: confettiFall 1.5s ease-out forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(160px) rotate(720deg); opacity: 0; }
+  }
+
+  /* Report */
+  .report-card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .report-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .report-header h3 {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-export {
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-export:hover {
+    background: rgba(255,215,0,0.15);
+    border-color: rgba(255,215,0,0.4);
+    color: var(--gold);
+  }
+
+  .btn-reset {
+    padding: 6px 14px;
+    background: rgba(255,50,50,0.1);
+    border: 1px solid rgba(255,50,50,0.2);
+    border-radius: 8px;
+    color: rgba(255,120,120,0.7);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-reset:hover {
+    background: rgba(255,50,50,0.2);
+    color: #ff6060;
+  }
+
+  .report-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+    padding-right: 4px;
+  }
+
+  .report-list::-webkit-scrollbar { width: 4px; }
+  .report-list::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.2); border-radius: 2px; }
+
+  .report-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popIn {
+    0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .report-num {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #FFD700, #FF8C00);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #000;
+    flex-shrink: 0;
+  }
+
+  .report-info { flex: 1; }
+  .report-winner { font-size: 0.95rem; font-weight: 600; color: #fff; }
+  .report-prize { font-size: 0.8rem; color: #ff9944; font-family: 'Sarabun', sans-serif; }
+  .report-time { font-size: 0.7rem; color: rgba(255,255,255,0.3); font-family: 'Sarabun', sans-serif; }
+
+  .report-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.2);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 40px 0;
+  }
+
+  /* === CSV IMPORT === */
+  .csv-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .csv-drop {
+    position: relative;
+    border: 2px dashed rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .csv-drop:hover, .csv-drop.dragover {
+    border-color: rgba(255,215,0,0.5);
+    background: rgba(255,215,0,0.05);
+  }
+
+  .csv-drop input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .csv-drop .csv-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .csv-drop .csv-label {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.5);
+    font-family: 'Sarabun', sans-serif;
+    line-height: 1.4;
+  }
+
+  .csv-drop .csv-type {
+    font-size: 0.7rem;
+    color: rgba(255,215,0,0.6);
+    margin-top: 4px;
+  }
+
+  .csv-drop.loaded {
+    border-color: rgba(80,220,120,0.5);
+    background: rgba(80,220,120,0.05);
+  }
+
+  .csv-drop.loaded .csv-icon { filter: grayscale(0); }
+
+  .csv-hint {
+    grid-column: 1 / -1;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.25);
+    font-family: 'Sarabun', sans-serif;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .csv-hint code {
+    background: rgba(255,255,255,0.08);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: rgba(255,215,0,0.7);
+    font-size: 0.7rem;
+  }
+
+  /* Toast notification */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: linear-gradient(135deg, #20BF6B, #0be881);
+    color: #000;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 12px 28px;
+    border-radius: 50px;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: linear-gradient(135deg, #FF416C, #ff6b6b); color: #fff; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .container {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+    }
+    .right-panel { grid-row: 2; }
+    .wheel-wrapper { max-width: 300px; }
+  }
+
+  @media (max-width: 600px) {
+    .setup-grid, .lists-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Winner popup overlay */
+  .popup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+  }
+
+  .popup-overlay.show { display: flex; }
+
+  .popup-box {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 2px solid var(--gold);
+    border-radius: 28px;
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 0 80px rgba(255,215,0,0.3);
+    animation: popupIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+  }
+
+  @keyframes popupIn {
+    from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .popup-trophy { font-size: 5rem; margin-bottom: 12px; animation: bounce 0.5s ease 0.3s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+
+  .popup-title { font-size: 0.9rem; color: rgba(255,255,255,0.5); font-family: 'Sarabun', sans-serif; margin-bottom: 4px; }
+  .popup-winner { font-size: 2.5rem; font-weight: 900; color: var(--gold); line-height: 1.1; margin-bottom: 12px; }
+  .popup-gets { font-size: 0.9rem; color: rgba(255,255,255,0.4); font-family: 'Sarabun', sans-serif; margin-bottom: 6px; }
+  .popup-prize { font-size: 1.5rem; font-weight: 700; color: #ff9944; margin-bottom: 28px; }
+
+  .popup-close {
+    padding: 14px 40px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    border: none;
+    border-radius: 14px;
+    color: #000;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .popup-close:hover { transform: scale(1.05); }
+
+  .popup-confetti {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    border-radius: 28px;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="container">
+  <header>
+    <h1>🎊 จับฉลากของรางวัล</h1>
+    <p>หมุนวงล้อ — ผลลัพธ์ไม่ซ้ำกัน — บันทึกอัตโนมัติ</p>
+  </header>
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <!-- Setup -->
+    <div class="setup-card">
+      <h2>⚙️ ตั้งค่ากิจกรรม</h2>
+      <div class="setup-grid">
+        <div class="input-group">
+          <label>ชื่อผู้เข้าร่วม</label>
+          <input type="text" id="participantInput" placeholder="เช่น นาย ก." />
+        </div>
+        <div class="input-group">
+          <label>ของรางวัล</label>
+          <input type="text" id="prizeInput" placeholder="เช่น บัตรของขวัญ" />
+        </div>
+      </div>
+      <button class="btn-add" onclick="addItems()">➕ เพิ่มผู้เข้าร่วม &amp; รางวัล</button>
+
+      <div class="csv-section" style="grid-template-columns: 1fr;">
+        <!-- Single CSV for both -->
+        <div class="csv-drop" id="csvDropMain"
+          ondragover="handleDragOver(event,'csvDropMain')"
+          ondragleave="handleDragLeave('csvDropMain')"
+          ondrop="handleDropMain(event)">
+          <input type="file" accept=".csv,text/csv" onchange="handleFileSelectMain(event)" />
+          <div class="csv-icon">📂</div>
+          <div class="csv-label" id="csvDropLabel">นำเข้าข้อมูลจาก CSV ไฟล์เดียว<br><span style="color:rgba(255,215,0,0.7);font-size:0.75rem;">คลิกหรือลากไฟล์มาวางที่นี่</span></div>
+          <div class="csv-type">คอลัมน์ที่ 1 = ชื่อผู้เข้าร่วม &nbsp;|&nbsp; คอลัมน์ที่ 2 = ของรางวัล</div>
+        </div>
+        <div class="csv-hint">
+          ตัวอย่าง CSV: <code>นาย ก.,บัตรของขวัญ 500</code> &nbsp;|&nbsp; <code>นาง ข.,หูฟัง Bluetooth</code><br>
+          รองรับ header row (จะข้ามบรรทัดแรกอัตโนมัติหากเป็น text) &nbsp;|&nbsp; Encoding: UTF-8
+        </div>
+      </div>
+    </div>
+
+    <!-- Lists -->
+    <div class="lists-grid">
+      <div class="list-card">
+        <h3>👥 ผู้เข้าร่วม <span class="badge" id="pCount">0</span></h3>
+        <div class="item-list" id="participantList">
+          <div class="empty-hint">ยังไม่มีผู้เข้าร่วม</div>
+        </div>
+      </div>
+      <div class="list-card">
+        <h3>🎁 ของรางวัล <span class="badge" id="prizeCount">0</span></h3>
+        <div class="item-list" id="prizeList">
+          <div class="empty-hint">ยังไม่มีรางวัล</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wheel -->
+    <div class="wheel-section">
+      <div class="wheel-wrapper">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheel" width="600" height="600"></canvas>
+        <div class="wheel-center">⭐</div>
+      </div>
+      <button class="spin-btn" id="spinBtn" onclick="spinWheel()">🎰 หมุนจับฉลาก!</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <!-- Result Banner -->
+    <div class="result-banner" id="resultBanner">
+      <div class="confetti-container" id="bannerConfetti"></div>
+      <div class="winner-icon">🎯</div>
+      <div class="waiting-text">กด "หมุนจับฉลาก!" เพื่อเริ่มต้น</div>
+    </div>
+
+    <!-- Report -->
+    <div class="report-card">
+      <div class="report-header">
+        <h3>📋 รายงานผลการจับฉลาก</h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-export" onclick="exportReport()">💾 ส่งออก</button>
+          <button class="btn-reset" onclick="resetAll()">🔄 รีเซ็ต</button>
+        </div>
+      </div>
+      <div class="report-list" id="reportList">
+        <div class="report-empty">ยังไม่มีผลการจับฉลาก</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Popup -->
+<div class="popup-overlay" id="popupOverlay" onclick="closePopup(event)">
+  <div class="popup-box">
+    <div class="popup-confetti" id="popupConfetti"></div>
+    <div class="popup-trophy">🏆</div>
+    <div class="popup-title">ผู้ได้รับรางวัล</div>
+    <div class="popup-winner" id="popupWinner">-</div>
+    <div class="popup-gets">ได้รับรางวัล</div>
+    <div class="popup-prize" id="popupPrize">-</div>
+    <button class="popup-close" onclick="closePopup()">🎉 รับทราบ!</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+let participants = [];
+let prizes = [];
+let results = [];
+let isSpinning = false;
+let currentWheelItems = [];
+
+// ===== STARS =====
+(function() {
+  const s = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const el = document.createElement('div');
+    el.className = 'star';
+    el.style.left = Math.random() * 100 + '%';
+    el.style.top = Math.random() * 100 + '%';
+    el.style.animationDelay = Math.random() * 3 + 's';
+    el.style.animationDuration = (2 + Math.random() * 3) + 's';
+    el.style.width = el.style.height = (1 + Math.random() * 2) + 'px';
+    s.appendChild(el);
+  }
+})();
+
+// ===== TOAST =====
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===== CSV IMPORT (ไฟล์เดียว 2 คอลัมน์) =====
+function parseCSVTwoCol(text) {
+  // Detect delimiter: comma or semicolon or tab
+  const delim = text.includes('\t') ? '\t' : text.includes(';') ? ';' : ',';
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const rows = [];
+
+  for (const line of lines) {
+    // Parse columns respecting quoted fields
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === delim && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += c;
+    }
+    cols.push(cur.trim());
+    rows.push(cols);
+  }
+
+  // Auto-detect header: if first row has no data that looks like a name+prize pair
+  // (i.e. both cols look like labels rather than real data — heuristic: skip if col2 looks like a header word)
+  const headerWords = ['รางวัล','prize','ของรางวัล','reward','gift','รางวัล','ชื่อ','name','participant','ผู้เข้าร่วม'];
+  let startIdx = 0;
+  if (rows.length > 1 && rows[0].length >= 2) {
+    const r0c1 = rows[0][1] ? rows[0][1].toLowerCase() : '';
+    if (headerWords.some(w => r0c1.includes(w))) startIdx = 1;
+  }
+
+  const participants = [], prizes = [];
+  for (let i = startIdx; i < rows.length; i++) {
+    const col0 = rows[i][0] || '';
+    const col1 = rows[i][1] || '';
+    if (col0) participants.push(col0);
+    if (col1) prizes.push(col1);
+  }
+  return { participants, prizes };
+}
+
+function handleFileSelectMain(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  importCSVMain(file);
+  event.target.value = '';
+}
+
+function handleDragOver(event, dropId) {
+  event.preventDefault();
+  document.getElementById(dropId).classList.add('dragover');
+}
+
+function handleDragLeave(dropId) {
+  document.getElementById(dropId).classList.remove('dragover');
+}
+
+function handleDropMain(event) {
+  event.preventDefault();
+  document.getElementById('csvDropMain').classList.remove('dragover');
+  const file = event.dataTransfer.files[0];
+  if (!file || !file.name.toLowerCase().endsWith('.csv')) {
+    showToast('⚠️ กรุณาใช้ไฟล์ .csv เท่านั้น', true);
+    return;
+  }
+  importCSVMain(file);
+}
+
+function importCSVMain(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result;
+      const { participants: newP, prizes: newPr } = parseCSVTwoCol(text);
+
+      if (newP.length === 0 && newPr.length === 0) {
+        showToast('⚠️ ไม่พบข้อมูลในไฟล์ CSV', true);
+        return;
+      }
+
+      let addedP = 0, addedPr = 0;
+      newP.forEach(item => { if (item && !participants.includes(item)) { participants.push(item); addedP++; } });
+      newPr.forEach(item => { if (item && !prizes.includes(item)) { prizes.push(item); addedPr++; } });
+
+      renderLists();
+      drawWheel();
+
+      const drop = document.getElementById('csvDropMain');
+      const label = document.getElementById('csvDropLabel');
+      drop.classList.add('loaded');
+      label.innerHTML = `✅ <strong>${file.name}</strong><br>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.6);">
+          👤 ${addedP} คน &nbsp;|&nbsp; 🎁 ${addedPr} รางวัล
+        </span>`;
+      showToast(`✅ นำเข้าสำเร็จ — ผู้เข้าร่วม ${addedP} คน, รางวัล ${addedPr} รายการ`);
+    } catch (err) {
+      showToast('❌ อ่านไฟล์ไม่สำเร็จ: ' + err.message, true);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ===== UI =====
+function addItems() {
+  const pInput = document.getElementById('participantInput');
+  const prInput = document.getElementById('prizeInput');
+  const pVal = pInput.value.trim();
+  const prVal = prInput.value.trim();
+
+  if (!pVal && !prVal) {
+    alert('กรุณากรอกชื่อผู้เข้าร่วมหรือของรางวัล');
+    return;
+  }
+
+  if (pVal) { participants.push(pVal); pInput.value = ''; }
+  if (prVal) { prizes.push(prVal); prInput.value = ''; }
+
+  renderLists();
+  drawWheel();
+}
+
+// Allow Enter key
+['participantInput', 'prizeInput'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') addItems();
+  });
+});
+
+function renderLists() {
+  renderItemList('participantList', participants, 'p', 'pCount');
+  renderItemList('prizeList', prizes, 'pr', 'prizeCount');
+}
+
+function renderItemList(listId, arr, prefix, countId) {
+  const el = document.getElementById(listId);
+  const usedParticipants = results.map(r => r.winner);
+  const usedPrizes = results.map(r => r.prize);
+  document.getElementById(countId).textContent = arr.length;
+
+  if (arr.length === 0) {
+    el.innerHTML = '<div class="empty-hint">ยังไม่มีข้อมูล</div>';
+    return;
+  }
+
+  el.innerHTML = arr.map((item, i) => {
+    const isUsed = prefix === 'p' ? usedParticipants.includes(item) : usedPrizes.includes(item);
+    return `<div class="list-item ${isUsed ? 'used' : ''}">
+      <span>${item}</span>
+      <button class="del-btn" onclick="removeItem('${prefix}', ${i})" title="ลบ">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function removeItem(type, idx) {
+  if (type === 'p') participants.splice(idx, 1);
+  else prizes.splice(idx, 1);
+  renderLists();
+  drawWheel();
+}
+
+// ===== WHEEL =====
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+
+const COLORS = [
+  '#FF416C','#FF6B35','#F7B731','#20BF6B','#0984E3','#A29BFE','#FD79A8','#00CEC9',
+  '#6C5CE7','#FDCB6E','#E17055','#00B894','#74B9FF','#D63031','#2D3436','#636E72'
+];
+
+function drawWheel() {
+  const usedParticipants = results.map(r => r.winner);
+  const avail = participants.filter(p => !usedParticipants.includes(p));
+  currentWheelItems = avail.length > 0 ? avail : ['เพิ่มผู้เข้าร่วม'];
+
+  const n = currentWheelItems.length;
+  const arc = (2 * Math.PI) / n;
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2, r = W / 2 - 10;
+
+  ctx.clearRect(0, 0, W, H);
+
+  for (let i = 0; i < n; i++) {
+    const start = i * arc - Math.PI / 2;
+    const end = start + arc;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = COLORS[i % COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Text
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.min(22, 300 / n)}px Kanit, sans-serif`;
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    const label = currentWheelItems[i].length > 12 ? currentWheelItems[i].slice(0, 12) + '…' : currentWheelItems[i];
+    ctx.fillText(label, r - 18, 7);
+    ctx.restore();
+  }
+
+  // Border ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+}
+
+drawWheel();
+
+// ===== SPIN =====
+let rotation = 0;
+
+function spinWheel() {
+  const usedParticipants = results.map(r => r.winner);
+  const availP = participants.filter(p => !usedParticipants.includes(p));
+  const usedPrizes = results.map(r => r.prize);
+  const availPr = prizes.filter(p => !usedPrizes.includes(p));
+
+  if (participants.length === 0) return alert('กรุณาเพิ่มผู้เข้าร่วมก่อน!');
+  if (prizes.length === 0) return alert('กรุณาเพิ่มของรางวัลก่อน!');
+  if (availP.length === 0) return alert('ผู้เข้าร่วมทุกคนได้รับรางวัลแล้ว!');
+  if (availPr.length === 0) return alert('ของรางวัลทั้งหมดถูกจับไปแล้ว!');
+  if (isSpinning) return;
+
+  isSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  const totalSpins = 5 + Math.random() * 5;
+  const totalAngle = totalSpins * 2 * Math.PI;
+  const n = currentWheelItems.length;
+  const arc = (2 * Math.PI) / n;
+
+  // Choose winner index
+  const winnerIdx = Math.floor(Math.random() * n);
+
+  // Calculate target rotation so pointer (top = -π/2) points at winner
+  const targetAngle = totalAngle - (winnerIdx * arc + arc / 2) - (rotation % (2 * Math.PI));
+  const finalRot = rotation + targetAngle + 2 * Math.PI; // ensure positive
+
+  const duration = 4000 + Math.random() * 1000;
+  const startTime = performance.now();
+  const startRot = rotation;
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easedProgress = easeOut(progress);
+    rotation = startRot + (finalRot - startRot) * easedProgress;
+
+    redrawRotated(rotation);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      rotation = finalRot;
+      isSpinning = false;
+      document.getElementById('spinBtn').disabled = false;
+      announceWinner(winnerIdx);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function redrawRotated(rot) {
+  const n = currentWheelItems.length;
+  const arc = (2 * Math.PI) / n;
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2, r = W / 2 - 10;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rot);
+  ctx.translate(-cx, -cy);
+
+  for (let i = 0; i < n; i++) {
+    const start = i * arc - Math.PI / 2;
+    const end = start + arc;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = COLORS[i % COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.min(22, 300 / n)}px Kanit, sans-serif`;
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    const label = currentWheelItems[i].length > 12 ? currentWheelItems[i].slice(0, 12) + '…' : currentWheelItems[i];
+    ctx.fillText(label, r - 18, 7);
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  // Border ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+}
+
+function announceWinner(idx) {
+  const winner = currentWheelItems[idx];
+  const usedPrizes = results.map(r => r.prize);
+  const availPr = prizes.filter(p => !usedPrizes.includes(p));
+  const prize = availPr[Math.floor(Math.random() * availPr.length)];
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  const entry = { winner, prize, time: timeStr, num: results.length + 1 };
+  results.push(entry);
+
+  updateResultBanner(winner, prize);
+  addReportItem(entry);
+  showPopup(winner, prize);
+  renderLists();
+  drawWheel();
+}
+
+function updateResultBanner(winner, prize) {
+  const banner = document.getElementById('resultBanner');
+  banner.innerHTML = `
+    <div class="confetti-container" id="bannerConfetti"></div>
+    <div class="winner-icon">🎉</div>
+    <div class="winner-name">${winner}</div>
+    <div class="arrow">▼</div>
+    <div class="prize-name">🎁 ${prize}</div>
+  `;
+  launchConfetti('bannerConfetti');
+}
+
+function addReportItem(entry) {
+  const list = document.getElementById('reportList');
+  const empty = list.querySelector('.report-empty');
+  if (empty) empty.remove();
+
+  const item = document.createElement('div');
+  item.className = 'report-item';
+  item.innerHTML = `
+    <div class="report-num">${entry.num}</div>
+    <div class="report-info">
+      <div class="report-winner">👤 ${entry.winner}</div>
+      <div class="report-prize">🎁 ${entry.prize}</div>
+    </div>
+    <div class="report-time">${entry.time}</div>
+  `;
+  list.insertBefore(item, list.firstChild);
+}
+
+// ===== POPUP =====
+function showPopup(winner, prize) {
+  document.getElementById('popupWinner').textContent = winner;
+  document.getElementById('popupPrize').textContent = '🎁 ' + prize;
+  document.getElementById('popupOverlay').classList.add('show');
+  launchConfetti('popupConfetti');
+}
+
+function closePopup(e) {
+  if (!e || e.target === document.getElementById('popupOverlay') || e.currentTarget.tagName === 'BUTTON') {
+    document.getElementById('popupOverlay').classList.remove('show');
+  }
+}
+
+// ===== CONFETTI =====
+function launchConfetti(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  const colors = ['#FFD700', '#FF416C', '#20BF6B', '#0984E3', '#A29BFE', '#FDCB6E'];
+  for (let i = 0; i < 30; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.top = '-10px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 0.5 + 's';
+    piece.style.animationDuration = (1 + Math.random()) + 's';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    container.appendChild(piece);
+  }
+}
+
+// ===== EXPORT =====
+function exportReport() {
+  if (results.length === 0) return alert('ยังไม่มีผลการจับฉลาก');
+  let txt = '═══════════════════════════════\n';
+  txt += '     รายงานผลการจับฉลากของรางวัล\n';
+  txt += '═══════════════════════════════\n\n';
+  results.forEach(r => {
+    txt += `ลำดับที่ ${r.num}  [${r.time}]\n`;
+    txt += `  ผู้ได้รับรางวัล : ${r.winner}\n`;
+    txt += `  ของรางวัล       : ${r.prize}\n`;
+    txt += '───────────────────────────────\n';
+  });
+  txt += `\nรวมทั้งหมด ${results.length} รางวัล`;
+
+  const blob = new Blob(['\ufeff' + txt], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lucky-draw-report.txt';
+  a.click();
+}
+
+// ===== RESET =====
+function resetAll() {
+  if (!confirm('รีเซ็ตผลการจับฉลากทั้งหมด? (ข้อมูลผู้เข้าร่วมและรางวัลยังคงอยู่)')) return;
+  results = [];
+  document.getElementById('reportList').innerHTML = '<div class="report-empty">ยังไม่มีผลการจับฉลาก</div>';
+  document.getElementById('resultBanner').innerHTML = `
+    <div class="confetti-container" id="bannerConfetti"></div>
+    <div class="winner-icon">🎯</div>
+    <div class="waiting-text">กด "หมุนจับฉลาก!" เพื่อเริ่มต้น</div>
+  `;
+  renderLists();
+  drawWheel();
+}
+</script>
+</body>
+</html>
