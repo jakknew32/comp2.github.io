@@ -49,7 +49,12 @@ header h1{font-size:clamp(1.8rem,4.5vw,3.2rem);font-weight:900;
   background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
   background-clip:text;animation:shimmer 4s linear infinite;letter-spacing:-.02em;}
 @keyframes shimmer{0%{background-position:0% center;}100%{background-position:300% center;}}
-header p{font-family:'Sarabun',sans-serif;color:rgba(21,101,192,.48);font-size:.92rem;margin-top:4px;}
+.header-logo-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:4px;}
+.header-logo{height:clamp(48px,6vw,72px);width:auto;object-fit:contain;
+  filter:drop-shadow(0 2px 8px rgba(21,101,192,.25));
+  animation:logoPop .6s cubic-bezier(.175,.885,.32,1.275) both;}
+@keyframes logoPop{from{transform:scale(0) rotate(-10deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+header p{font-family:'Sarabun',sans-serif;color:rgba(21,101,192,.48);font-size:.92rem;margin-top:0;}
 
 .card{background:#fff;border:1px solid rgba(21,101,192,.12);border-radius:22px;padding:20px;
   box-shadow:var(--shadow);}
@@ -86,6 +91,68 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
 .spin-btn:hover::before{left:120%;}
 .spin-btn:hover{transform:translateY(-3px);box-shadow:0 14px 35px rgba(21,101,192,.5);border-color:var(--gold);}
 .spin-btn:disabled{opacity:.5;transform:none;}
+
+/* ── BATCH CONTROL ──────────────────────── */
+.batch-bar{width:100%;max-width:390px;
+  display:flex;align-items:center;gap:10px;
+  background:#fff;border:1.5px solid rgba(21,101,192,.15);border-radius:14px;padding:10px 16px;
+  box-shadow:0 2px 10px rgba(21,101,192,.08);}
+.batch-label{font-size:.82rem;color:var(--blue);font-weight:600;white-space:nowrap;flex-shrink:0;}
+.batch-presets{display:flex;gap:6px;flex-wrap:wrap;}
+.batch-chip{padding:5px 13px;border-radius:20px;font-family:'Kanit',sans-serif;
+  font-size:.78rem;font-weight:700;border:1.5px solid rgba(21,101,192,.2);
+  background:#fff;color:var(--blue);cursor:none;transition:all .18s;}
+.batch-chip:hover{border-color:var(--blue);background:var(--blue-xl);}
+.batch-chip.active{background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(21,101,192,.3);}
+.batch-custom-wrap{display:flex;align-items:center;gap:5px;margin-left:auto;}
+.batch-custom-lbl{font-size:.76rem;color:rgba(21,101,192,.5);font-family:'Sarabun',sans-serif;white-space:nowrap;}
+.batch-custom{width:56px;padding:5px 8px;border:1.5px solid rgba(21,101,192,.2);
+  border-radius:8px;font-family:'Kanit',sans-serif;font-size:.82rem;font-weight:700;
+  color:var(--blue);text-align:center;outline:none;transition:border-color .2s;}
+.batch-custom:focus{border-color:var(--blue-lt);}
+
+/* Progress indicator during batch */
+.batch-progress{width:100%;max-width:390px;display:none;}
+.batch-progress.show{display:block;}
+.bp-label{display:flex;justify-content:space-between;margin-bottom:5px;
+  font-size:.78rem;color:var(--blue);font-family:'Sarabun',sans-serif;}
+.bp-track{width:100%;height:8px;background:rgba(21,101,192,.1);border-radius:10px;overflow:hidden;}
+.bp-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-lt),var(--gold));
+  border-radius:10px;transition:width .4s ease;width:0%;}
+
+/* Batch summary popup */
+.bpop-overlay{display:none;position:fixed;inset:0;background:rgba(10,20,60,.78);
+  z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(14px);}
+.bpop-overlay.show{display:flex;}
+.bpop-box{background:linear-gradient(145deg,#fff,#EEF4FF);
+  border-radius:28px;padding:32px 36px 28px;max-width:560px;width:94%;position:relative;
+  animation:popBounce .5s cubic-bezier(.175,.885,.32,1.275);
+  box-shadow:0 0 0 3px rgba(255,179,0,.4),0 24px 60px rgba(21,101,192,.3);}
+.bpop-box::before{content:'';position:absolute;inset:-3px;border-radius:31px;z-index:-1;
+  background:linear-gradient(135deg,var(--gold),var(--blue-lt),var(--gold2),var(--blue),var(--gold));
+  background-size:400% 400%;animation:bShimmer 2s linear infinite;}
+@keyframes bShimmer{0%{background-position:0% 50%;}100%{background-position:400% 50%;}}
+.bpop-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:28px;}
+.bpop-title{font-size:1.4rem;font-weight:900;color:var(--blue);margin-bottom:16px;text-align:center;}
+.bpop-title span{color:var(--gold2);}
+.bpop-table{width:100%;border-collapse:collapse;font-family:'Sarabun',sans-serif;font-size:.88rem;}
+.bpop-table th{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;
+  padding:8px 12px;font-family:'Kanit',sans-serif;font-size:.8rem;font-weight:700;}
+.bpop-table th:first-child{border-radius:10px 0 0 0;}
+.bpop-table th:last-child{border-radius:0 10px 0 0;}
+.bpop-table td{padding:9px 12px;border-bottom:1px solid rgba(21,101,192,.08);}
+.bpop-table tr:last-child td{border-bottom:none;}
+.bpop-table tr:nth-child(even) td{background:rgba(21,101,192,.04);}
+.bpop-num-cell{font-weight:800;color:var(--gold2);text-align:center;}
+.bpop-winner-cell{font-weight:700;color:var(--blue);}
+.bpop-prize-cell{color:var(--gold2);font-weight:600;}
+.bpop-footer{display:flex;gap:10px;justify-content:center;margin-top:20px;}
+.bpop-close{padding:12px 40px;background:linear-gradient(135deg,var(--blue),var(--blue2));
+  border:2px solid rgba(255,179,0,.4);border-radius:16px;color:#fff;
+  font-family:'Kanit',sans-serif;font-size:1rem;font-weight:700;cursor:none;transition:all .2s;
+  box-shadow:0 6px 20px rgba(21,101,192,.3);}
+.bpop-close:hover{transform:scale(1.05);border-color:var(--gold);}
 
 .result-strip{width:100%;max-width:390px;
   background:linear-gradient(135deg,rgba(21,101,192,.05),rgba(255,179,0,.05));
@@ -245,6 +312,12 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
 @keyframes winSlide{from{transform:translateY(22px);opacity:0;}to{transform:translateY(0);opacity:1;}}
 
 .pop-gets{font-size:.88rem;color:rgba(21,101,192,.48);font-family:'Sarabun',sans-serif;margin-bottom:5px;}
+.pop-dept-badge{margin:-2px 0 10px;display:flex;justify-content:center;}
+.pop-dept-badge span{background:linear-gradient(135deg,var(--blue),var(--blue-lt));
+  color:#fff;font-family:'Sarabun',sans-serif;font-size:.92rem;font-weight:700;
+  padding:5px 20px;border-radius:20px;
+  box-shadow:0 3px 12px rgba(21,101,192,.3);
+  animation:tagPop .35s ease .6s both;letter-spacing:.04em;}
 
 .pop-prize{font-size:1.55rem;font-weight:800;color:var(--gold2);margin-bottom:10px;
   animation:prSlide .4s ease .5s both;text-shadow:0 2px 10px rgba(255,143,0,.3);}
@@ -323,6 +396,9 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
     <div class="pop-winner-wrap">
       <div class="pop-winner" id="popWinner">-</div>
     </div>
+    <div class="pop-dept-badge" id="popDeptWrap" style="display:none;">
+      <span id="popDept"></span>
+    </div>
     <div class="pop-gets">ได้รับรางวัล</div>
     <div class="pop-prize" id="popPrize">-</div>
     <div class="pop-stars">🌟 🎊 🎉 🎁 🎊 🌟</div>
@@ -330,10 +406,37 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
   </div>
 </div>
 
+<!-- ── BATCH SUMMARY POPUP ──────────────── -->
+<div class="bpop-overlay" id="bpopOverlay" onclick="closeBatchPopup(event)">
+  <div class="bpop-box">
+    <div class="bpop-confetti" id="bpopConfetti"></div>
+    <div class="bpop-title">🎊 ผลการจับฉลาก <span id="bpopRound"></span></div>
+    <div style="overflow-x:auto;">
+      <table class="bpop-table">
+        <thead>
+          <tr>
+            <th style="width:44px;">#</th>
+            <th>ชื่อผู้ได้รับรางวัล</th>
+            <th>แผนก</th>
+            <th>ของรางวัล</th>
+          </tr>
+        </thead>
+        <tbody id="bpopBody"></tbody>
+      </table>
+    </div>
+    <div class="bpop-footer">
+      <button class="bpop-close" onclick="closeBatchPopup()">✅ รับทราบ!</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MAIN ───────────────────────────────── -->
 <div class="container">
   <header>
-    <h1>🎊 จับฉลากของรางวัล CFM</h1>
+    <div class="header-logo-row">
+      <img src="https://s.imgz.io/2026/02/24/Blue-LOGO-CFM_147a6c527d15e3b22.png" alt="CFM Logo" class="header-logo" onerror="this.style.display='none'"/>
+      <h1>🎊 จับฉลากของรางวัล CFM</h1>
+    </div>
     <p>หมุนวงล้อ — ผลลัพธ์ไม่ซ้ำกัน — บันทึกอัตโนมัติ</p>
   </header>
 
@@ -346,7 +449,32 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
         <canvas id="wheel" width="600" height="600"></canvas>
         <div class="wheel-center">⭐</div>
       </div>
-      <button class="spin-btn" id="spinBtn" onclick="spinWheel()">🎰 หมุนจับฉลาก!</button>
+      <button class="spin-btn" id="spinBtn" onclick="startBatch()">🎰 หมุนจับฉลาก!</button>
+
+      <!-- Batch size control -->
+      <div class="batch-bar">
+        <span class="batch-label">จับทีละ</span>
+        <div class="batch-presets">
+          <button class="batch-chip active" onclick="setBatch(1,this)">1</button>
+          <button class="batch-chip" onclick="setBatch(5,this)">5</button>
+          <button class="batch-chip" onclick="setBatch(10,this)">10</button>
+          <button class="batch-chip" onclick="setBatch(20,this)">20</button>
+          <button class="batch-chip" onclick="setBatch(30,this)">30</button>
+        </div>
+        <div class="batch-custom-wrap">
+          <span class="batch-custom-lbl">กำหนดเอง</span>
+          <input class="batch-custom" type="number" id="batchCustom" min="1" max="999" placeholder="?" oninput="setBatchCustom(this.value)"/>
+        </div>
+      </div>
+
+      <!-- Progress bar (shown during batch) -->
+      <div class="batch-progress" id="batchProgress">
+        <div class="bp-label">
+          <span id="bpText">กำลังจับ...</span>
+          <span id="bpCount">0 / 0</span>
+        </div>
+        <div class="bp-track"><div class="bp-fill" id="bpFill"></div></div>
+      </div>
       <div class="result-strip" id="resultBanner">
         <div class="cc" id="bannerCC"></div>
         <div class="w-wait">กด "หมุนจับฉลาก!" เพื่อเริ่มต้น</div>
@@ -384,13 +512,17 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
 
     <div class="setup-card">
       <div class="card-title">⚙️ ตั้งค่ากิจกรรม</div>
-      <div class="setup-grid">
+      <div class="setup-grid" style="grid-template-columns:1fr 1fr 1fr;">
         <div class="inp-g">
-          <label>ชื่อผู้เข้าร่วม</label>
+          <label>ชื่อผู้เข้าร่วม (คอล. 1)</label>
           <input type="text" id="pInput" placeholder="เช่น นาย ก."/>
         </div>
         <div class="inp-g">
-          <label>ของรางวัล</label>
+          <label>แผนก (คอล. 2)</label>
+          <input type="text" id="dInput" placeholder="เช่น HR, IT, Sale"/>
+        </div>
+        <div class="inp-g">
+          <label>ของรางวัล (คอล. 3)</label>
           <input type="text" id="prInput" placeholder="เช่น บัตรของขวัญ"/>
         </div>
       </div>
@@ -402,10 +534,10 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
           <div class="csv-icon">📂</div>
           <div class="csv-lbl" id="csvLbl">นำเข้าข้อมูลจาก CSV ไฟล์เดียว<br>
             <span style="color:var(--blue-lt);font-size:.7rem;">คลิกหรือลากไฟล์มาวางที่นี่</span></div>
-          <div class="csv-type">คอลัมน์ที่ 1 = ชื่อ &nbsp;|&nbsp; คอลัมน์ที่ 2 = รางวัล</div>
+          <div class="csv-type">คอล. 1 = ชื่อ &nbsp;|&nbsp; คอล. 2 = แผนก &nbsp;|&nbsp; คอล. 3 = รางวัล</div>
         </div>
         <div class="csv-hint">
-          ตัวอย่าง: <code>นาย ก.,บัตรของขวัญ 500</code> | <code>นาง ข.,iPad</code>
+          ตัวอย่าง: <code>นาย ก.,HR,บัตรของขวัญ 500</code> | <code>นาง ข.,IT,iPad</code>
         </div>
       </div>
     </div>
@@ -430,6 +562,7 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
 })();
 
 // ── DATA ──
+// participants = [{name, dept}], prizes = [string], results = [{...}]
 let participants=[], prizes=[], results=[], isSpinning=false, currentWheelItems=[];
 
 // ── CURSOR ──
@@ -477,8 +610,8 @@ function toast(msg,err=false){
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200);
 }
 
-// ── CSV IMPORT ──
-function parseCSV2(text){
+// ── CSV IMPORT (3 cols: name | dept | prize) ──
+function parseCSV3(text){
   const d=text.includes('\t')?'\t':text.includes(';')?';':',';
   const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   const rows=[];
@@ -492,56 +625,41 @@ function parseCSV2(text){
     }
     cols.push(cur.trim()); rows.push(cols);
   }
-  const hdr=['รางวัล','prize','ของรางวัล','reward','ชื่อ','name','participant'];
+  // Auto-detect header: skip first row if it looks like a header
+  const hdrWords=['ชื่อ','name','แผนก','dept','รางวัล','prize','reward','participant'];
   let s=0;
-  if(rows.length>1&&rows[0][1]&&hdr.some(w=>rows[0][1].toLowerCase().includes(w))) s=1;
-  const p=[],pr=[];
-  for(let i=s;i<rows.length;i++){
-    if(rows[i][0]) p.push(rows[i][0]);
-    if(rows[i][1]) pr.push(rows[i][1]);
+  if(rows.length>1){
+    const r0=rows[0].join('|').toLowerCase();
+    if(hdrWords.some(w=>r0.includes(w))) s=1;
   }
-  return{participants:p,prizes:pr};
+  const newP=[],newPr=[];
+  for(let i=s;i<rows.length;i++){
+    const name=(rows[i][0]||'').trim();
+    const dept=(rows[i][1]||'').trim();
+    const prize=(rows[i][2]||'').trim();
+    if(name) newP.push({name, dept});
+    if(prize) newPr.push(prize);
+  }
+  return{participants:newP, prizes:newPr};
 }
 function importFile(file){
-  new FileReader().addEventListener('load',e=>{
-    try{
-      const{participants:np,prizes:npr}=parseCSV2(e.target.result);
-      if(!np.length&&!npr.length){toast('⚠️ ไม่พบข้อมูลในไฟล์',true);return;}
-      let ap=0,apr=0;
-      np.forEach(i=>{if(i&&!participants.includes(i)){participants.push(i);ap++;}});
-      npr.forEach(i=>{if(i&&!prizes.includes(i)){prizes.push(i);apr++;}});
-      renderLists(); drawWheel();
-      document.getElementById('csvDrop').classList.add('loaded');
-      document.getElementById('csvLbl').innerHTML=`✅ <strong>${file.name}</strong><br><span style="font-size:.7rem;color:var(--blue)">👤 ${ap} คน | 🎁 ${apr} รางวัล</span>`;
-      toast(`✅ นำเข้าสำเร็จ — ${ap} คน, ${apr} รางวัล`);
-    }catch(err){toast('❌ อ่านไฟล์ไม่สำเร็จ',true);}
-  });
-  (new FileReader()).onload=function(e){
-    try{
-      const{participants:np,prizes:npr}=parseCSV2(e.target.result);
-      if(!np.length&&!npr.length){toast('⚠️ ไม่พบข้อมูลในไฟล์',true);return;}
-      let ap=0,apr=0;
-      np.forEach(i=>{if(i&&!participants.includes(i)){participants.push(i);ap++;}});
-      npr.forEach(i=>{if(i&&!prizes.includes(i)){prizes.push(i);apr++;}});
-      renderLists(); drawWheel();
-      document.getElementById('csvDrop').classList.add('loaded');
-      document.getElementById('csvLbl').innerHTML=`✅ <strong>${file.name}</strong><br><span style="font-size:.7rem;color:var(--blue)">👤 ${ap} คน | 🎁 ${apr} รางวัล</span>`;
-      toast(`✅ นำเข้าสำเร็จ — ${ap} คน, ${apr} รางวัล`);
-    }catch(err){toast('❌ อ่านไฟล์ไม่สำเร็จ',true);}
-  };
   const fr=new FileReader();
   fr.onload=e=>{
     try{
-      const{participants:np,prizes:npr}=parseCSV2(e.target.result);
+      const{participants:np,prizes:npr}=parseCSV3(e.target.result);
       if(!np.length&&!npr.length){toast('⚠️ ไม่พบข้อมูลในไฟล์',true);return;}
       let ap=0,apr=0;
-      np.forEach(i=>{if(i&&!participants.includes(i)){participants.push(i);ap++;}});
+      np.forEach(p=>{
+        if(p.name&&!participants.some(x=>x.name===p.name&&x.dept===p.dept)){
+          participants.push(p);ap++;
+        }
+      });
       npr.forEach(i=>{if(i&&!prizes.includes(i)){prizes.push(i);apr++;}});
       renderLists(); drawWheel();
       document.getElementById('csvDrop').classList.add('loaded');
       document.getElementById('csvLbl').innerHTML=`✅ <strong>${file.name}</strong><br><span style="font-size:.7rem;color:var(--blue)">👤 ${ap} คน | 🎁 ${apr} รางวัล</span>`;
       toast(`✅ นำเข้าสำเร็จ — ${ap} คน, ${apr} รางวัล`);
-    }catch(err){toast('❌ อ่านไฟล์ไม่สำเร็จ',true);}
+    }catch(err){toast('❌ อ่านไฟล์ไม่สำเร็จ: '+err.message,true);}
   };
   fr.readAsText(file,'UTF-8');
 }
@@ -557,23 +675,28 @@ function onDrop(e){
 
 // ── ADD ITEMS ──
 function addItems(){
-  const pI=document.getElementById('pInput'),prI=document.getElementById('prInput');
-  const pV=pI.value.trim(),prV=prI.value.trim();
+  const pI=document.getElementById('pInput'),dI=document.getElementById('dInput'),prI=document.getElementById('prInput');
+  const pV=pI.value.trim(),dV=dI.value.trim(),prV=prI.value.trim();
   if(!pV&&!prV){toast('⚠️ กรุณากรอกข้อมูล',true);return;}
-  if(pV){participants.push(pV);pI.value='';}
+  if(pV){participants.push({name:pV,dept:dV});pI.value='';dI.value='';}
   if(prV){prizes.push(prV);prI.value='';}
   renderLists(); drawWheel();
 }
-['pInput','prInput'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addItems();}));
+['pInput','dInput','prInput'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addItems();}));
 
 function renderLists(){
-  const usedP=results.map(r=>r.winner),usedPr=results.map(r=>r.prize);
+  const usedNames=results.map(r=>r.winner);
+  const usedPr=results.map(r=>r.prize);
   document.getElementById('pCount').textContent=participants.length;
   document.getElementById('prCount').textContent=prizes.length;
   const pEl=document.getElementById('pList'),prEl=document.getElementById('prList');
   if(!participants.length){pEl.innerHTML='<div class="empty-hint">ยังไม่มีผู้เข้าร่วม</div>';}
-  else pEl.innerHTML=participants.map((it,i)=>`<div class="list-item ${usedP.includes(it)?'used':''}">
-    <span>${it}</span><button class="del-btn" onclick="delItem('p',${i})">✕</button></div>`).join('');
+  else pEl.innerHTML=participants.map((p,i)=>{
+    const used=usedNames.includes(p.name);
+    return `<div class="list-item ${used?'used':''}">
+      <span>${p.name}${p.dept?` <span style="font-size:.7rem;opacity:.65;background:rgba(21,101,192,.1);padding:1px 6px;border-radius:10px;">${p.dept}</span>`:''}</span>
+      <button class="del-btn" onclick="delItem('p',${i})">✕</button></div>`;
+  }).join('');
   if(!prizes.length){prEl.innerHTML='<div class="empty-hint">ยังไม่มีรางวัล</div>';}
   else prEl.innerHTML=prizes.map((it,i)=>`<div class="list-item ${usedPr.includes(it)?'used':''}">
     <span>${it}</span><button class="del-btn" onclick="delItem('pr',${i})">✕</button></div>`).join('');
@@ -617,66 +740,198 @@ function drawSegs(items,rotOff=0){
 
 function drawWheel(){
   const used=results.map(r=>r.winner);
-  const avail=participants.filter(p=>!used.includes(p));
-  currentWheelItems=avail.length?avail:['เพิ่มผู้เข้าร่วม'];
+  const avail=participants.filter(p=>!used.includes(p.name));
+  currentWheelItems=avail.length?avail.map(p=>p.name):['เพิ่มผู้เข้าร่วม'];
   ctx.clearRect(0,0,canvas.width,canvas.height);
   drawSegs(currentWheelItems);
 }
 drawWheel();
 
-// ── SPIN ──
-let rot=0;
-function spinWheel(){
-  const usedP=results.map(r=>r.winner),availP=participants.filter(p=>!usedP.includes(p));
-  const usedPr=results.map(r=>r.prize),availPr=prizes.filter(p=>!usedPr.includes(p));
-  if(!participants.length) return toast('⚠️ กรุณาเพิ่มผู้เข้าร่วมก่อน!',true);
-  if(!prizes.length)       return toast('⚠️ กรุณาเพิ่มของรางวัลก่อน!',true);
-  if(!availP.length)       return toast('✅ ทุกคนได้รับรางวัลแล้ว!');
-  if(!availPr.length)      return toast('✅ รางวัลถูกจับไปหมดแล้ว!');
-  if(isSpinning) return;
-  isSpinning=true; document.getElementById('spinBtn').disabled=true;
+// ── SPIN STATE ──
+let rot = 0;
 
-  const n=currentWheelItems.length,arc=(2*Math.PI)/n;
-  const wi=Math.floor(Math.random()*n);
-  const total=(6+Math.random()*5)*2*Math.PI;
-  const target=total-(wi*arc+arc/2)-(rot%(2*Math.PI));
-  const finalR=rot+target+2*Math.PI;
-  const dur=4200+Math.random()*1000, t0=performance.now(), r0=rot;
+// ── BATCH SETTINGS ──
+let batchSize = 1;
+let batchQueue = [];    // winners picked this round
+let batchRunning = false;
 
-  function ease(t){return 1-Math.pow(1-t,4.5);}
-  function frame(now){
-    const prog=Math.min((now-t0)/dur,1), ep=ease(prog);
-    rot=r0+(finalR-r0)*ep;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.save(); ctx.translate(canvas.width/2,canvas.height/2);
-    ctx.rotate(rot); ctx.translate(-canvas.width/2,-canvas.height/2);
-    drawSegs(currentWheelItems); ctx.restore();
-    if(prog<1){requestAnimationFrame(frame);}
-    else{rot=finalR;isSpinning=false;document.getElementById('spinBtn').disabled=false;announce(wi);}
+function setBatch(n, el) {
+  batchSize = n;
+  document.querySelectorAll('.batch-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('batchCustom').value = '';
+}
+
+function setBatchCustom(val) {
+  const n = parseInt(val);
+  if (isNaN(n) || n < 1) return;
+  batchSize = Math.min(n, 999);
+  document.querySelectorAll('.batch-chip').forEach(c => c.classList.remove('active'));
+}
+
+// ── START BATCH ──
+function startBatch() {
+  const usedP = results.map(r => r.winner);
+  const usedPr = results.map(r => r.prize);
+  const availP = participants.filter(p => !usedP.includes(p.name));
+  const availPr = prizes.filter(p => !usedPr.includes(p));
+
+  if (!participants.length) return toast('⚠️ กรุณาเพิ่มผู้เข้าร่วมก่อน!', true);
+  if (!prizes.length)       return toast('⚠️ กรุณาเพิ่มของรางวัลก่อน!', true);
+  if (!availP.length)       return toast('✅ ทุกคนได้รับรางวัลแล้ว!');
+  if (!availPr.length)      return toast('✅ รางวัลถูกจับไปหมดแล้ว!');
+  if (isSpinning || batchRunning) return;
+
+  const actual = Math.min(batchSize, availP.length, availPr.length);
+  if (actual <= 0) return;
+
+  batchQueue = [];
+  batchRunning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('batchProgress').classList.add('show');
+  updateProgress(0, actual);
+
+  runNextSpin(0, actual);
+}
+
+function runNextSpin(done, total) {
+  updateProgress(done, total);
+  if (done >= total) {
+    // All done — show summary
+    batchRunning = false;
+    document.getElementById('spinBtn').disabled = false;
+    document.getElementById('batchProgress').classList.remove('show');
+    if (batchQueue.length === 1) {
+      // Single draw — show individual popup only (already shown)
+    } else {
+      showBatchPopup(batchQueue);
+    }
+    renderLists(); drawWheel();
+    return;
+  }
+
+  spinWheel(done, total);
+}
+
+// ── SPIN (one turn) ──
+function spinWheel(doneIdx, totalBatch) {
+  const usedP = results.map(r => r.winner);
+  const availP = participants.filter(p => !usedP.includes(p.name));
+  if (!availP.length) {
+    // ran out mid-batch
+    batchRunning = false;
+    document.getElementById('spinBtn').disabled = false;
+    document.getElementById('batchProgress').classList.remove('show');
+    if (batchQueue.length > 0) showBatchPopup(batchQueue);
+    renderLists(); drawWheel();
+    return;
+  }
+
+  isSpinning = true;
+
+  // Rebuild wheel with current available
+  const usedPAll = results.map(r => r.winner);
+  const avail = participants.filter(p => !usedPAll.includes(p.name));
+  currentWheelItems = avail.length ? avail.map(p=>p.name) : ['เพิ่มผู้เข้าร่วม'];
+
+  const n = currentWheelItems.length, arc = (2 * Math.PI) / n;
+  const wi = Math.floor(Math.random() * n);
+  const total = (4 + Math.random() * 4) * 2 * Math.PI;
+  const target = total - (wi * arc + arc / 2) - (rot % (2 * Math.PI));
+  const finalR = rot + target + 2 * Math.PI;
+
+  // Faster spin for batch > 1
+  const isBatch = totalBatch > 1;
+  const dur = isBatch ? (1800 + Math.random() * 600) : (4200 + Math.random() * 1000);
+  const t0 = performance.now(), r0 = rot;
+
+  function ease(t) { return 1 - Math.pow(1 - t, 4.5); }
+  function frame(now) {
+    const prog = Math.min((now - t0) / dur, 1), ep = ease(prog);
+    rot = r0 + (finalR - r0) * ep;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(rot);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    drawSegs(currentWheelItems);
+    ctx.restore();
+    if (prog < 1) { requestAnimationFrame(frame); }
+    else {
+      rot = finalR;
+      isSpinning = false;
+      announceOne(wi, doneIdx, totalBatch);
+    }
   }
   requestAnimationFrame(frame);
 }
 
-// ── ANNOUNCE ──
-function announce(idx){
-  const winner=currentWheelItems[idx];
-  const usedPr=results.map(r=>r.prize),availPr=prizes.filter(p=>!usedPr.includes(p));
-  const prize=availPr[Math.floor(Math.random()*availPr.length)];
-  const now=new Date();
-  const timeStr=now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const dateStr=now.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
-  const entry={winner,prize,time:timeStr,date:dateStr,num:results.length+1};
+// ── ANNOUNCE ONE ──
+function announceOne(idx, doneIdx, totalBatch) {
+  const winnerName = currentWheelItems[idx];
+  // Find dept from participants
+  const pObj = participants.find(p=>p.name===winnerName) || {name:winnerName,dept:''};
+  const usedPr = results.map(r => r.prize);
+  const availPr = prizes.filter(p => !usedPr.includes(p));
+  const prize = availPr[Math.floor(Math.random() * availPr.length)];
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dateStr = now.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const entry = { winner: winnerName, dept: pObj.dept, prize, time: timeStr, date: dateStr, num: results.length + 1 };
   results.push(entry);
-  // banner
-  const b=document.getElementById('resultBanner');
-  b.innerHTML=`<div class="cc" id="bannerCC"></div>
-    <div class="w-name">🎉 ${winner}</div>
+  batchQueue.push(entry);
+
+  // Always update result banner and report row
+  const b = document.getElementById('resultBanner');
+  b.innerHTML = `<div class="cc" id="bannerCC"></div>
+    <div class="w-name">🎉 ${winnerName}</div>
+    ${pObj.dept?`<div style="font-size:.82rem;color:var(--blue-lt);font-family:'Sarabun',sans-serif;margin:-4px 0 2px;">🏢 ${pObj.dept}</div>`:''}
     <div class="w-arrow">▼</div>
     <div class="w-prize">🎁 ${prize}</div>`;
-  confetti('bannerCC',28);
-  addRow(entry); showPopup(winner,prize,entry.num);
+  confetti('bannerCC', 22);
+  addRow(entry);
+
+  // For single draw — show individual popup too
+  if (totalBatch === 1) {
+    showPopup(winnerName, pObj.dept, prize, entry.num);
+  }
+
+  updateProgress(doneIdx + 1, totalBatch);
   renderLists(); drawWheel();
+
+  // Short delay before next spin in batch
+  const delay = totalBatch > 1 ? 300 : 0;
+  setTimeout(() => runNextSpin(doneIdx + 1, totalBatch), delay);
 }
+
+function updateProgress(done, total) {
+  const pct = total > 0 ? (done / total) * 100 : 0;
+  document.getElementById('bpFill').style.width = pct + '%';
+  document.getElementById('bpCount').textContent = done + ' / ' + total;
+  document.getElementById('bpText').textContent = done < total ? `กำลังจับลำดับที่ ${done + 1}...` : '✅ เสร็จสิ้น!';
+}
+
+// ── BATCH POPUP ──
+function showBatchPopup(entries) {
+  document.getElementById('bpopRound').textContent = `รอบนี้ ${entries.length} รางวัล`;
+  const tbody = document.getElementById('bpopBody');
+  tbody.innerHTML = entries.map((e, i) => `
+    <tr>
+      <td class="bpop-num-cell">${i + 1}</td>
+      <td class="bpop-winner-cell">👤 ${e.winner}</td>
+      <td style="font-size:.82rem;color:var(--blue);font-family:'Sarabun',sans-serif;">${e.dept||'-'}</td>
+      <td class="bpop-prize-cell">🎁 ${e.prize}</td>
+    </tr>`).join('');
+  document.getElementById('bpopOverlay').classList.add('show');
+  bigConfetti('bpopConfetti');
+}
+function closeBatchPopup(e) {
+  if (!e || e.target === document.getElementById('bpopOverlay') || e.currentTarget.tagName === 'BUTTON')
+    document.getElementById('bpopOverlay').classList.remove('show');
+}
+
+// ── ANNOUNCE (kept for compat) ──
+function announce(idx) { announceOne(idx, 0, 1); }
 
 function addRow(e){
   const list=document.getElementById('rptList');
@@ -684,7 +939,7 @@ function addRow(e){
   const d=document.createElement('div'); d.className='rpt-item';
   d.innerHTML=`<div class="rpt-num">${e.num}</div>
     <div class="rpt-info">
-      <div class="rpt-winner">👤 ${e.winner}</div>
+      <div class="rpt-winner">👤 ${e.winner}${e.dept?` <span style="font-size:.68rem;background:rgba(21,101,192,.1);padding:1px 6px;border-radius:8px;color:var(--blue);">${e.dept}</span>`:''}</div>
       <div class="rpt-prize">🎁 ${e.prize}</div>
     </div>
     <div class="rpt-time">${e.time}</div>`;
@@ -692,10 +947,17 @@ function addRow(e){
 }
 
 // ── POPUP ──
-function showPopup(winner,prize,num){
+function showPopup(winner, dept, prize, num){
   document.getElementById('popWinner').textContent=winner;
   document.getElementById('popPrize').textContent='🎁 '+prize;
   document.getElementById('popNum').textContent='#'+num;
+  const deptWrap=document.getElementById('popDeptWrap');
+  if(dept){
+    document.getElementById('popDept').textContent='🏢 '+dept;
+    deptWrap.style.display='flex';
+  } else {
+    deptWrap.style.display='none';
+  }
   document.getElementById('popOverlay').classList.add('show');
   bigConfetti('popConfetti');
 }
@@ -741,8 +1003,8 @@ function bigConfetti(id){
 function exportCSV(){
   if(!results.length){toast('⚠️ ยังไม่มีผลการจับฉลาก',true);return;}
   let csv='\uFEFF';
-  csv+='ลำดับที่,วันที่,เวลา,ชื่อผู้ได้รับรางวัล,ของรางวัล\n';
-  results.forEach(r=>{csv+=`${r.num},"${r.date}","${r.time}","${r.winner}","${r.prize}"\n`;});
+  csv+='ลำดับที่,วันที่,เวลา,ชื่อผู้ได้รับรางวัล,แผนก,ของรางวัล\n';
+  results.forEach(r=>{csv+=`${r.num},"${r.date}","${r.time}","${r.winner}","${r.dept||''}","${r.prize}"\n`;});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download='lucky-draw-report.csv'; a.click();
@@ -754,7 +1016,10 @@ function exportTxt(){
   if(!results.length){toast('⚠️ ยังไม่มีผลการจับฉลาก',true);return;}
   let txt='═══════════════════════════════\n     รายงานผลการจับฉลากของรางวัล\n═══════════════════════════════\n\n';
   results.forEach(r=>{
-    txt+=`ลำดับที่ ${r.num}  [${r.date} ${r.time}]\n  ผู้ได้รับรางวัล : ${r.winner}\n  ของรางวัล       : ${r.prize}\n───────────────────────────────\n`;
+    txt+=`ลำดับที่ ${r.num}  [${r.date} ${r.time}]\n`;
+    txt+=`  ผู้ได้รับรางวัล : ${r.winner}\n`;
+    if(r.dept) txt+=`  แผนก            : ${r.dept}\n`;
+    txt+=`  ของรางวัล       : ${r.prize}\n───────────────────────────────\n`;
   });
   txt+=`\nรวมทั้งหมด ${results.length} รางวัล`;
   const a=document.createElement('a');
