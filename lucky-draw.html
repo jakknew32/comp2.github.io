@@ -534,7 +534,7 @@ canvas#wheel{width:100%;height:100%;border-radius:50%;
           <div class="csv-icon">📂</div>
           <div class="csv-lbl" id="csvLbl">นำเข้าข้อมูลจาก CSV ไฟล์เดียว<br>
             <span style="color:var(--blue-lt);font-size:.7rem;">คลิกหรือลากไฟล์มาวางที่นี่</span></div>
-          <div class="csv-type">คอลั่ม. 1 = ชื่อ &nbsp;|&nbsp; คอลั่ม. 2 = แผนก &nbsp;|&nbsp; คอลั่ม. 3 = รางวัล</div>
+          <div class="csv-type">คอล. 1 = ชื่อ &nbsp;|&nbsp; คอล. 2 = แผนก &nbsp;|&nbsp; คอล. 3 = รางวัล</div>
         </div>
         <div class="csv-hint">
           ตัวอย่าง: <code>นาย ก.,HR,บัตรของขวัญ 500</code> | <code>นาง ข.,IT,iPad</code>
@@ -1036,6 +1036,32 @@ function resetAll(){
   document.getElementById('resultBanner').innerHTML='<div class="cc" id="bannerCC"></div><div class="w-wait">กด "หมุนจับฉลาก!" เพื่อเริ่มต้น</div>';
   renderLists(); drawWheel();
 }
+
+// ── PREVENT ACCIDENTAL CLOSE ──
+// ครั้งที่ 1: browser native dialog (ปรากฏทันทีเมื่อกด X หรือ refresh)
+window.addEventListener('beforeunload', (e) => {
+  const hasData = participants.length > 0 || prizes.length > 0 || results.length > 0;
+  if (!hasData) return; // ไม่มีข้อมูลใดเลย — ไม่ต้องเตือน
+  e.preventDefault();
+  e.returnValue = ''; // required for Chrome/Edge to show native dialog
+});
+
+// ครั้งที่ 2: intercept ลิงก์และปุ่มที่จะออกจากหน้า (เพิ่มชั้นป้องกันภายใน)
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+  const hasData = participants.length > 0 || prizes.length > 0 || results.length > 0;
+  if (!hasData) return;
+  e.preventDefault();
+  const confirmed = confirm(
+    '⚠️ คุณกำลังจะออกจากหน้านี้\n\n' +
+    'ข้อมูลผู้เข้าร่วม รางวัล และผลจับฉลากทั้งหมดจะหายไป\n\n' +
+    'ยืนยันออกจากหน้านี้หรือไม่?'
+  );
+  if (confirmed) window.location.href = href;
+});
 </script>
 </body>
 </html>
