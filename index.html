@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Print & Shipping Label - Chiangmai Freshmilk</title>
     <style>
-                @page {
-                    size: 4in 6in;
-                    margin: 0;
-                }
                 @media print {
                     body, html {
                         background: white !important;
@@ -214,7 +210,7 @@
             position: relative;
             flex: 1;
             max-width: 210mm;
-            height: calc((297mm - 8mm) / 2.5);
+            height: 88mm;
             border: none;
             display: flex;
             align-items: center;
@@ -225,7 +221,7 @@
 
         .photo-container.full-width {
             max-width: 100%;
-            height: calc(((297mm - 8mm) / 2.5) * 1.4);
+            height: 190mm;
             cursor: pointer;
             border: 2px dashed #ccc;
         }
@@ -268,7 +264,7 @@
         }
 
         @page {
-            margin: 2mm;
+            margin: 0;
             size: A4;
         }
 
@@ -276,6 +272,7 @@
             body {
                 background: white;
                 padding: 0;
+                margin: 0;
             }
 
             .container {
@@ -299,13 +296,23 @@
                 width: 210mm;
                 height: 297mm;
                 margin: 0;
-                padding: 0;
+                padding: 4mm;
                 box-shadow: none;
                 page-break-after: always;
+                overflow: hidden;
+                box-sizing: border-box;
             }
 
             .a4-page:last-child {
                 page-break-after: auto;
+            }
+
+            .photo-container {
+                height: 88mm;
+            }
+
+            .photo-container.full-width {
+                height: 190mm;
             }
         }
 
@@ -876,17 +883,31 @@
                     <title>ฉลากจัดส่ง - Chiangmai Freshmilk</title>
                     <style>
                         @page {
-                            size: 4in 6in;
+                            size: 101.6mm 152.4mm;
                             margin: 0;
                         }
-                        body {
+                        * {
                             margin: 0;
                             padding: 0;
+                            box-sizing: border-box;
+                        }
+                        html, body {
+                            margin: 0;
+                            padding: 0;
+                            width: 101.6mm;
+                            height: 152.4mm;
                             font-family: 'Sarabun', 'Tahoma', sans-serif;
                         }
                         .label {
-                            width: 100mm;
-                            height: 150mm;
+                            width: 101.6mm;
+                            height: 152.4mm;
+                            border: 3mm solid #333;
+                            background: white;
+                            padding: 6mm 6mm 3mm 6mm;
+                            display: flex;
+                            flex-direction: column;
+                            box-sizing: border-box;
+                            overflow: hidden;
                         }
                     </style>
                 </head>
