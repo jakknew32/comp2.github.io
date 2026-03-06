@@ -375,6 +375,14 @@
                 <div class="stat-number" id="todayReceivers">0</div>
                 <div class="stat-label">เพิ่มวันนี้</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalPhotoPrints" style="color:#10b981;">0</div>
+                <div class="stat-label">📸 ปริ้นรูปทั้งหมด</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalLabelPrints" style="color:#764ba2;">0</div>
+                <div class="stat-label">📦 ปริ้นฉลากทั้งหมด</div>
+            </div>
         </div>
 
         <!-- Search and Actions -->
@@ -402,9 +410,9 @@
                         <tr>
                             <th>ลำดับ</th>
                             <th>เลขที่เอกสาร</th>
-                            <th>ชื่อที่อยู่</th>
-                            <th>เบอร์โทร</th>
+                            <th>ชื่อ / เบอร์</th>
                             <th>หมายเหตุ</th>
+                            <th>ปริ้นแล้ว</th>
                             <th>เพิ่มเมื่อ</th>
                             <th>แหล่งที่มา</th>
                             <th class="no-print">จัดการ</th>
@@ -504,6 +512,24 @@
         // Data storage
         let receivers = [];
 
+        // Generate next document number (running number)
+        function generateDocumentNumber() {
+            const prefix = 'CFM';
+            const today = new Date();
+            const yy = String(today.getFullYear()).slice(-2);
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dateKey = yy + mm;
+
+            // Find highest number for this month
+            const monthDocs = receivers
+                .map(r => r.documentNumber || '')
+                .filter(d => d.startsWith(prefix + dateKey))
+                .map(d => parseInt(d.slice(prefix.length + dateKey.length)) || 0);
+
+            const nextNum = monthDocs.length > 0 ? Math.max(...monthDocs) + 1 : 1;
+            return `${prefix}${dateKey}${String(nextNum).padStart(4, '0')}`;
+        }
+
         // Load data on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadReceivers();
@@ -550,21 +576,26 @@
             emptyState.style.display = 'none';
             
             tbody.innerHTML = data.map((r, index) => {
+                const photoPrinted = r.photoPrintCount || 0;
+                const labelPrinted = r.labelPrintCount || 0;
                 const hasImages = r.row1Photo || (r.row2Photos && r.row2Photos.length > 0);
                 
                 return `
                 <tr>
                     <td>${index + 1}</td>
                     <td><strong style="color: #667eea;">${r.documentNumber || '-'}</strong></td>
-                    <td><strong>${r.name}</strong></td>
-                    <td>${r.phone}</td>
+                    <td><strong>${r.name}</strong><br><small style="color:#888;">${r.phone}</small></td>
                     <td>${r.notes || '-'}</td>
+                    <td>
+                        <span title="ปริ้นรูปแล้ว ${photoPrinted} ครั้ง" style="margin-right:6px;">📸 ${photoPrinted > 0 ? '<span style="color:#10b981;font-weight:bold;">' + photoPrinted + 'x</span>' : '<span style="color:#ccc;">0x</span>'}</span>
+                        <span title="ปริ้นฉลากแล้ว ${labelPrinted} ครั้ง">📦 ${labelPrinted > 0 ? '<span style="color:#667eea;font-weight:bold;">' + labelPrinted + 'x</span>' : '<span style="color:#ccc;">0x</span>'}</span>
+                    </td>
                     <td>${formatDate(r.createdAt)}</td>
                     <td>${getSourceLabel(r.source)}</td>
                     <td class="no-print">
                         <div class="actions">
-                            ${hasImages ? `<button class="btn-primary btn-icon" onclick="viewImages('${r.id}')" title="ดูรูปภาพ">🖼️</button>` : ''}
-                            ${hasImages ? `<button class="btn-success btn-icon" onclick="recreatePhotoPage('${r.id}')" title="สร้างหน้ารูปภาพใหม่">📄</button>` : ''}
+                            ${hasImages ? '<button class="btn-primary btn-icon" onclick="viewImages(\'' + r.id + '\')" title="ดูรูปภาพ">🖼️</button>' : ''}
+                            ${hasImages ? '<button class="btn-success btn-icon" onclick="recreatePhotoPage(\'' + r.id + '\')" title="สร้างหน้ารูปภาพใหม่">📄</button>' : ''}
                             <button class="btn-success btn-icon" onclick="showPhotoModal('${r.id}')" title="พิมพ์รูปใหม่">📸</button>
                             <button class="btn-primary btn-icon" onclick="showShippingModal('${r.id}')" title="สร้างฉลาก">📦</button>
                             <button class="btn-danger btn-icon" onclick="deleteReceiver('${r.id}')" title="ลบ">🗑️</button>
@@ -584,6 +615,15 @@
                 new Date(r.createdAt).toDateString() === today
             ).length;
             document.getElementById('todayReceivers').textContent = todayCount;
+
+            const totalPhotoPrints = receivers.reduce((sum, r) => sum + (r.photoPrintCount || 0), 0);
+            const totalLabelPrints = receivers.reduce((sum, r) => sum + (r.labelPrintCount || 0), 0);
+            document.getElementById('totalPhotoPrints').textContent = totalPhotoPrints;
+            document.getElementById('totalLabelPrints').textContent = totalLabelPrints;
+
+            // Store next doc number in sessionStorage for use by index.html
+            const nextDoc = generateDocumentNumber();
+            sessionStorage.setItem('nextDocumentNumber', nextDoc);
         }
 
         // Format date
@@ -613,14 +653,31 @@
             const modal = document.getElementById('viewImagesModal');
             const container = document.getElementById('imagesContainer');
 
+            // Check if we have actual base64 data or just flags
+            const hasRealRow1 = receiver.row1Photo && typeof receiver.row1Photo === 'string' && receiver.row1Photo.startsWith('data:');
+            const hasRealRow2 = receiver.row2Photos && Array.isArray(receiver.row2Photos) && receiver.row2Photos.length > 0;
+
+            if (!hasRealRow1 && !hasRealRow2) {
+                const count1 = receiver.row1Photo === true ? 1 : 0;
+                const count2 = typeof receiver.row2Photos === 'number' ? receiver.row2Photos : 0;
+                container.innerHTML = `<div style="text-align:center;padding:30px;color:#666;">
+                    <div style="font-size:3em;margin-bottom:15px;">📸</div>
+                    <p>ระบบบันทึกสถิติการปริ้นเท่านั้น ไม่เก็บไฟล์รูปภาพ</p>
+                    <p style="margin-top:10px;">รูปแถวบน: ${count1 ? '✅ เคยปริ้น' : '-'} | รูปแถวล่าง: ${count2 > 0 ? `✅ ${count2} รูป` : '-'}</p>
+                    <p style="margin-top:10px;color:#10b981;font-weight:bold;">ปริ้นรูป: ${receiver.photoPrintCount || 0}x | ปริ้นฉลาก: ${receiver.labelPrintCount || 0}x</p>
+                </div>`;
+                modal.classList.add('active');
+                return;
+            }
+
             let html = '<h3 style="margin-bottom: 15px;">รูปภาพที่บันทึก</h3>';
             html += '<div class="image-preview">';
 
-            if (receiver.row1Photo) {
+            if (hasRealRow1) {
                 html += `<img src="${receiver.row1Photo}" alt="Row 1 Photo" onclick="window.open(this.src, '_blank')">`;
             }
 
-            if (receiver.row2Photos && receiver.row2Photos.length > 0) {
+            if (hasRealRow2) {
                 receiver.row2Photos.forEach((photo, i) => {
                     html += `<img src="${photo}" alt="Row 2 Photo ${i+1}" onclick="window.open(this.src, '_blank')">`;
                 });
@@ -644,6 +701,9 @@
             // Show modal
             const modal = document.getElementById('shippingLabelModal');
             modal.classList.add('active');
+
+            // Store current receiver id for print tracking
+            document.getElementById('labelPreview').dataset.receiverId = id;
 
             // Fill textarea with receiver info (ใช้ originalText ถ้ามี ไม่งั้นใช้การรวมข้อมูล)
             const modalReceiverInfo = document.getElementById('modalReceiverInfo');
@@ -711,6 +771,19 @@
         function printLabel() {
             const labelPreview = document.getElementById('labelPreview');
             if (!labelPreview) return;
+
+            // Track label print count
+            const currentId = labelPreview.dataset.receiverId;
+            if (currentId) {
+                const receiver = receivers.find(r => r.id === currentId);
+                if (receiver) {
+                    receiver.labelPrintCount = (receiver.labelPrintCount || 0) + 1;
+                    saveToLocalStorage();
+                    renderReceivers();
+                    updateStats();
+                }
+            }
+
             const printWindow = window.open('', '', 'width=800,height=600');
             printWindow.document.write(`
                 <!DOCTYPE html>
@@ -773,6 +846,7 @@
             }
 
             addressField.value = fullAddress;
+            modal.dataset.receiverId = id;
             modal.classList.add('active');
         }
 
@@ -784,6 +858,18 @@
         // Go to photo print page
         function goToPhotoPrint() {
             const address = document.getElementById('photoAddress').value;
+            const currentId = document.getElementById('photoPrintModal').dataset.receiverId;
+            
+            // Track photo print count
+            if (currentId) {
+                const receiver = receivers.find(r => r.id === currentId);
+                if (receiver) {
+                    receiver.photoPrintCount = (receiver.photoPrintCount || 0) + 1;
+                    saveToLocalStorage();
+                    renderReceivers();
+                    updateStats();
+                }
+            }
             
             // Save address to sessionStorage for index.html to read
             sessionStorage.setItem('receiverAddress', address);
@@ -846,35 +932,33 @@
             const receiver = receivers.find(r => r.id === id);
             if (!receiver) return;
             
-            if (!receiver.row1Photo && (!receiver.row2Photos || receiver.row2Photos.length === 0)) {
-                alert('⚠️ ไม่มีรูปภาพที่บันทึกไว้');
+            if (!receiver.row1Photo && !receiver.row2Photos) {
+                alert('⚠️ ไม่มีรูปภาพที่บันทึกไว้ (ระบบบันทึกเฉพาะจำนวนครั้งที่ปริ้นแล้ว ไม่เก็บไฟล์รูป)');
                 return;
             }
             
-            // Save receiver data to sessionStorage for index.html to recreate the page
-            let pageText;
-            if (receiver.originalText) {
-                // ใช้ข้อความเดิมจาก Text below page
-                pageText = receiver.originalText;
-            } else {
-                // ถ้าไม่มี originalText ให้รวมข้อมูลแบบเดิม
-                pageText = `${receiver.name}\n${receiver.address}${receiver.notes ? '\nหมายเหตุ: ' + receiver.notes : ''}`;
-            }
-            
-            sessionStorage.setItem('recreatePhotos', JSON.stringify({
-                row1Photo: receiver.row1Photo,
-                row2Photos: receiver.row2Photos || [],
-                pageText: pageText,
-                documentNumber: receiver.documentNumber
-            }));
-            
-            // Open index.html
-            window.open('index.html', '_blank');
+            // Since we no longer store raw base64, just redirect to photo page with address
+            showPhotoModal(id);
         }
 
         // LocalStorage functions
         function saveToLocalStorage() {
-            localStorage.setItem('receiversDB', JSON.stringify(receivers));
+            // Strip large base64 image data to save space — keep only print counts and metadata
+            const slim = receivers.map(r => {
+                const copy = Object.assign({}, r);
+                // Replace large base64 images with a flag (true/false)
+                copy.row1Photo = r.row1Photo ? true : false;
+                copy.row2Photos = (r.row2Photos && r.row2Photos.length > 0) ? r.row2Photos.length : 0;
+                return copy;
+            });
+            try {
+                localStorage.setItem('receiversDB', JSON.stringify(slim));
+            } catch(e) {
+                // If still too big, save without any image references
+                const minimal = slim.map(r => { const c = Object.assign({}, r); delete c.row1Photo; delete c.row2Photos; return c; });
+                localStorage.setItem('receiversDB', JSON.stringify(minimal));
+                console.warn('Storage full: saved without image flags');
+            }
         }
 
         function loadReceivers() {
