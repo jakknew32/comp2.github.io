@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ฐานข้อมูลผู้รับสินค้า - Chiangmai Freshmilk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
                 @page {
-                    size: 4in 6in;
+                    size: A6;
                     margin: 0;
                 }
                 @media print {
@@ -19,26 +22,29 @@
                         display: none !important;
                     }
                     #labelPreview, .label {
-                        display: block !important;
-                        margin: 0 auto !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        margin: 0 !important;
                         box-shadow: none !important;
-                        border: 3mm solid #333 !important;
+                        border: 2mm solid #333 !important;
                         background: white !important;
-                        width: 101.6mm !important;
-                        height: 152.4mm !important;
-                        padding: 6mm 6mm 3mm 6mm !important;
+                        width: 105mm !important;
+                        height: 148mm !important;
+                        padding: 5mm !important;
+                        box-sizing: border-box !important;
                         page-break-after: always;
+                        font-family: 'Kanit', 'Tahoma', sans-serif !important;
                     }
                 }
                 .label {
-                    width: 100mm;
-                    height: 150mm;
+                    width: 105mm;
+                    height: 148mm;
                     background: white;
-                    border: 3mm solid #333;
+                    border: 2mm solid #333;
                     margin: 0 auto;
                     display: flex;
                     flex-direction: column;
-                    font-family: 'Sarabun', 'Tahoma', sans-serif;
+                    font-family: 'Kanit', 'Tahoma', sans-serif;
                     box-sizing: border-box;
                 }
         * {
@@ -48,7 +54,7 @@
         }
 
         body {
-            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -452,29 +458,29 @@
     <div id="shippingLabelModal" class="modal">
         <div class="modal-content" style="max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border-radius: 15px; padding: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="margin: 0; color: #333; font-family: 'Sarabun', sans-serif;">📦 Chiangmai Freshmilk</h2>
+                <h2 style="margin: 0; color: #333; font-family: 'Kanit', sans-serif;">📦 Chiangmai Freshmilk</h2>
                 <button class="btn-danger btn-icon" onclick="closeShippingModal()">✕</button>
             </div>
             <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-family: 'Sarabun', sans-serif;">📥 แก้ไขข้อมูลผู้รับ:</label>
-                <textarea id="modalReceiverInfo" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; font-family: 'Sarabun', 'Tahoma', sans-serif; min-height: 100px; box-sizing: border-box;"></textarea>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-family: 'Kanit', sans-serif;">📥 แก้ไขข้อมูลผู้รับ:</label>
+                <textarea id="modalReceiverInfo" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; font-family: 'Kanit', 'Tahoma', sans-serif; min-height: 100px; box-sizing: border-box;"></textarea>
             </div>
             <div style="text-align: center; margin-bottom: 20px;">
-                <div id="labelPreview" style="width: 101.6mm; height: 152.4mm; border: 3mm solid #333; background: white; padding: 6mm 6mm 3mm 6mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box;">
-                    <div style="text-align: center; border-bottom: 2px solid #333; padding: 2mm 0 2mm 0; margin-bottom: 2mm;">
-                        <img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 32px; height: 32px; vertical-align: middle; margin-bottom: 2px;">
-                        <span style="font-size: 22px; font-weight: bold; color: #111; font-family: 'Sarabun', 'Tahoma', sans-serif; margin-left: 6px;">Chiangmai Freshmilk</span>
+                <div id="labelPreview" style="width: 105mm; height: 148mm; border: 2mm solid #333; background: white; padding: 5mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Kanit', 'Tahoma', sans-serif; box-sizing: border-box;">
+                    <div style="text-align: center; border-bottom: 2px solid #333; padding: 2mm 0; margin-bottom: 2mm;">
+                        <img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 30px; height: 30px; vertical-align: middle; margin-bottom: 2px;">
+                        <span style="font-size: 20px; font-weight: 700; color: #111; font-family: 'Kanit', 'Tahoma', sans-serif; margin-left: 6px;">Chiangmai Freshmilk</span>
                     </div>
-                    <div style="font-size: 13px; color: #222; margin-bottom: 2mm; text-align: center; line-height: 1.4;">บริษัท เชียงใหม่เฟรชมิลค์ จำกัด สำนักงาน 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687</div>
+                    <div style="font-size: 12px; color: #222; margin-bottom: 2mm; text-align: center; line-height: 1.4; font-family: 'Kanit', sans-serif;">บริษัท เชียงใหม่เฟรชมิลค์ จำกัด สำนักงาน 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687</div>
                     <div style="border-bottom: 1px dashed #999; margin-bottom: 2mm;"></div>
                     <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 2mm;">
-                        <div style="font-weight: bold; font-size: 15px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px; text-align: center;">ผู้รับ (TO):</div>
-                        <div id="modalReceiverDisplay" style="font-size: 14px; line-height: 1.7; color: #000; white-space: pre-line; flex: 1; text-align: center;">กรุณากรอกข้อมูลผู้รับ</div>
+                        <div style="font-weight: 600; font-size: 14px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px; text-align: center; font-family: 'Kanit', sans-serif;">ผู้รับ (TO):</div>
+                        <div id="modalReceiverDisplay" style="font-size: 13px; line-height: 1.6; color: #000; white-space: pre-line; flex: 1; text-align: center; font-family: 'Kanit', sans-serif;">กรุณากรอกข้อมูลผู้รับ</div>
                     </div>
                     <div style="margin-bottom: 2mm; text-align: center;">
-                        <img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="Warning" style="width: 80mm; height: auto; max-width: 100%; margin-bottom: 2mm;" onerror="this.style.display='none'">
+                        <img src="https://img5.pic.in.th/file/secure-sv1/dont.png" alt="Warning" style="width: 75mm; height: auto; max-width: 100%;" onerror="this.style.display='none'">
                     </div>
-                    <div id="labelTimestamp" style="font-size: 10px; color: #666; text-align: center; margin-top: auto;"></div>
+                    <div id="labelTimestamp" style="font-size: 9px; color: #666; text-align: center; margin-top: auto; font-family: 'Kanit', sans-serif;"></div>
                 </div>
             </div>
             <div class="button-group" style="margin-top: 20px; display: flex; gap: 10px;">
@@ -791,30 +797,35 @@
                 <head>
                     <meta charset="UTF-8">
                     <title>ฉลากจัดส่ง - Chiangmai Freshmilk</title>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                     <style>
                         @page {
-                            size: 4in 6in;
+                            size: A6;
                             margin: 0;
                         }
                         body {
                             margin: 0;
                             padding: 0;
-                            font-family: 'Sarabun', 'Tahoma', sans-serif;
+                            font-family: 'Kanit', 'Tahoma', sans-serif;
                         }
-                        .label {
-                            width: 100mm;
-                            height: 150mm;
+                        #labelPreview {
+                            width: 105mm;
+                            height: 148mm;
+                            box-sizing: border-box;
+                            font-family: 'Kanit', 'Tahoma', sans-serif;
                         }
                     </style>
                 </head>
                 <body>
-                    <div class="label">${labelPreview.innerHTML}</div>
+                    <div id="labelPreview">${labelPreview.innerHTML}</div>
                     <script>
-                        window.onload = function() {
+                        document.fonts.ready.then(function() {
                             setTimeout(function() {
                                 window.print();
-                            }, 500);
-                        }
+                            }, 300);
+                        });
                         window.onafterprint = function() {
                             window.close();
                         }
