@@ -561,6 +561,7 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
           <div class="filter-bar" style="margin:0">
             <input type="date" id="map-date" onchange="renderMapPins()"/>
             <button class="abtn abtn-ok" onclick="renderMapPins()">🔄 รีเฟรช</button>
+            <button class="abtn abtn-del" onclick="openDeliveryRoute()">🗺️ เส้นทาง Google Maps</button>
           </div>
         </div>
         <div id="delivery-map"></div>
@@ -1157,35 +1158,83 @@ ${inner.innerHTML}
 function initDeliveryMap() {
   if (dMap) { dMap.invalidateSize(); return; }
   dMap = L.map('delivery-map').setView([13.7563,100.5018], 11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  L.tileLayer('https://{s}.tile-openstreetmap.org/{z}/{x}/{y}.png',
     {attribution:'© OpenStreetMap', maxZoom:19}).addTo(dMap);
 }
+
+// Warehouse location (คลังของคุณ)
+const WAREHOUSE_LOCATION = {
+  lat: 13.7563,
+  lng: 100.5018,
+  name: "คลังสินค้า",
+  address: "https://maps.app.goo.gl/TZFsHPedBmqFoxaD8"
+};
 
 window.renderMapPins = () => {
   if (!dMap) return;
   mapMarkers.forEach(m => dMap.removeLayer(m));
   mapMarkers = [];
+  
   const date = document.getElementById('map-date').value;
   const orders = allOrders.filter(o =>
     (!date || (o.deliveryDate===date || o.createdAt.startsWith(date))) && o.lat && o.lng);
+  
   if (!orders.length) return;
+  
   const colors = {pending:'#F59E0B', confirmed:'#06C755', delivered:'#38BDF8'};
   const bounds = [];
-  orders.forEach(o => {
+  
+  // Add warehouse marker first
+  const warehouseIcon = L.divIcon({
+    html: `<div style="position:relative">
+      <div style="background:#EF4444;width:40px;height:40px;border-radius:50%;border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center">
+        <span style="color:white;font-size:20px">🏠</span>
+      </div>
+      <div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#EF4444;color:white;padding:2px 6px;border-radius:4px;font-size:10px;white-space:nowrap">คลัง</div>
+    </div>`, 
+    iconSize:[40,40], 
+    iconAnchor:[20,40], 
+    className:''
+  });
+  
+  const warehouseMarker = L.marker([WAREHOUSE_LOCATION.lat, WAREHOUSE_LOCATION.lng], {icon: warehouseIcon})
+    .addTo(dMap)
+    .bindPopup(`<strong>🏠 คลังสินค้า</strong><br>จุดเริ่มต้นการจัดส่ง`);
+  mapMarkers.push(warehouseMarker);
+  bounds.push([WAREHOUSE_LOCATION.lat, WAREHOUSE_LOCATION.lng]);
+  
+  // Add delivery markers
+  orders.forEach((o, index) => {
     const color = colors[o.status]||'#06C755';
     const icon = L.divIcon({html:`
       <div style="position:relative">
         <div style="background:${color};width:36px;height:36px;border-radius:50% 50% 50% 0;
           transform:rotate(-45deg);border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,.3)"></div>
         <div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);
-          font-size:.6rem;font-weight:800;color:white;font-family:monospace">${o.id.slice(-4)}</div>
+          font-size:.6rem;font-weight:800;color:white;font-family:monospace">${index + 1}</div>
       </div>`, iconSize:[36,36], iconAnchor:[18,36], className:''});
+    
     const m = L.marker([o.lat,o.lng], {icon}).addTo(dMap);
     m.on('click', () => window.showMapDetail(o._fid||o.id));
     mapMarkers.push(m);
     bounds.push([o.lat, o.lng]);
   });
+  
   if (bounds.length) dMap.fitBounds(bounds, {padding:[40,40]});
+  
+  // Add route lines from warehouse to each delivery point
+  orders.forEach(o => {
+    const routeLine = L.polyline([
+      [WAREHOUSE_LOCATION.lat, WAREHOUSE_LOCATION.lng],
+      [o.lat, o.lng]
+    ], {
+      color: '#06C755',
+      weight: 2,
+      opacity: 0.6,
+      dashArray: '5, 10'
+    }).addTo(dMap);
+    mapMarkers.push(routeLine);
+  });
 };
 
 window.showMapDetail = (fid) => {
@@ -1194,16 +1243,59 @@ window.showMapDetail = (fid) => {
   document.getElementById('md-body').innerHTML =
     `📞 ${o.phone}<br>📅 จัดส่ง: ${fdate(o.deliveryDate)}<br>📌 ${o.lat.toFixed(5)}, ${o.lng.toFixed(5)}<br>` +
     (o.address ? `🏠 ${o.address}<br>` : '') + `💰 ${fmoney(o.total)}<br>${statusLabel(o.status)}`;
-  document.getElementById('md-gmaps').onclick = () =>
-    window.open(`https://www.google.com/maps?q=${o.lat},${o.lng}`, '_blank');
+  
+  // Update Google Maps button to show route from warehouse
+  document.getElementById('md-gmaps').onclick = () => {
+    const routeUrl = `https://www.google.com/maps/dir/${WAREHOUSE_LOCATION.lat},${WAREHOUSE_LOCATION.lng}/${o.lat},${o.lng}`;
+    window.open(routeUrl, '_blank');
+  };
+  
   document.getElementById('map-detail-overlay').classList.add('open');
   setTimeout(() => {
     if (mdMiniMap) { mdMiniMap.remove(); mdMiniMap=null; }
     mdMiniMap = L.map('md-map').setView([o.lat,o.lng], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    L.tileLayer('https://{s}.tile-openstreetmap.org/{z}/{x}/{y}.png',
       {attribution:'© OSM', maxZoom:19}).addTo(mdMiniMap);
-    L.marker([o.lat,o.lng]).addTo(mdMiniMap).bindPopup(o.name).openPopup();
+    
+    // Add warehouse marker to mini map
+    L.marker([WAREHOUSE_LOCATION.lat, WAREHOUSE_LOCATION.lng])
+      .addTo(mdMiniMap)
+      .bindPopup('🏠 คลังสินค้า');
+    
+    // Add delivery marker
+    L.marker([o.lat,o.lng])
+      .addTo(mdMiniMap)
+      .bindPopup(o.name)
+      .openPopup();
+    
+    // Add route line
+    L.polyline([
+      [WAREHOUSE_LOCATION.lat, WAREHOUSE_LOCATION.lng],
+      [o.lat, o.lng]
+    ], {
+      color: '#06C755',
+      weight: 3,
+      opacity: 0.7,
+      dashArray: '5, 10'
+    }).addTo(mdMiniMap);
   }, 150);
+};
+
+// Add function to open multi-stop route in Google Maps
+window.openDeliveryRoute = () => {
+  const date = document.getElementById('map-date').value;
+  const orders = allOrders.filter(o =>
+    (!date || (o.deliveryDate===date || o.createdAt.startsWith(date))) && o.lat && o.lng);
+  
+  if (!orders.length) {
+    alert('ไม่มีออเดอร์ที่มีพิกัดสำหรับวันนี้');
+    return;
+  }
+  
+  // Create route: warehouse -> order1 -> order2 -> ... -> orderN
+  const waypoints = orders.slice(0, 9).map(o => `${o.lat},${o.lng}`).join('/');
+  const routeUrl = `https://www.google.com/maps/dir/${WAREHOUSE_LOCATION.lat},${WAREHOUSE_LOCATION.lng}/${waypoints}`;
+  window.open(routeUrl, '_blank');
 };
 
 // ── SUMMARY ───────────────────────────────────
