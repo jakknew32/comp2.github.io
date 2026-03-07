@@ -188,6 +188,29 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
   .modal-btns{display:none}
 }
 
+/* PRODUCT ADMIN CARDS */
+.prod-card{
+  background:var(--card2);border-radius:14px;border:1px solid var(--border);
+  padding:16px;transition:.2s;position:relative;overflow:hidden;
+}
+.prod-card:hover{border-color:var(--g);box-shadow:0 4px 20px rgba(6,199,85,.15)}
+.prod-card.inactive{opacity:.55}
+.prod-card .inactive-badge{
+  position:absolute;top:10px;right:10px;background:rgba(239,68,68,.15);
+  color:var(--red);font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:20px;
+}
+.prod-card .active-badge{
+  position:absolute;top:10px;right:10px;background:rgba(6,199,85,.15);
+  color:var(--g);font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:20px;
+}
+.prod-em-big{font-size:2.4rem;margin-bottom:8px;display:block}
+.prod-card-name{font-weight:700;font-size:.95rem;margin-bottom:3px}
+.prod-card-cat{font-size:.72rem;color:var(--muted);margin-bottom:6px}
+.prod-card-price{font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--g);font-size:1.05rem}
+.prod-card-desc{font-size:.78rem;color:var(--muted);margin-top:5px;line-height:1.5}
+.prod-card-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+/* toggle switch active state handled via JS */
+
 @media(max-width:800px){
   .layout{grid-template-columns:1fr}
   .sidebar{display:none}
@@ -237,6 +260,9 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
       </button>
       <button class="nav-item" onclick="goPage('summary',this)">
         <span class="nav-icon">📈</span>สรุปรายวัน
+      </button>
+      <button class="nav-item" onclick="goPage('products',this)">
+        <span class="nav-icon">🛍️</span>จัดการสินค้า
       </button>
       <div class="nav-sep"></div>
       <div class="nav-label">ตั้งค่า</div>
@@ -346,11 +372,118 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
         </div>
       </div>
 
+      <!-- PRODUCTS -->
+      <div class="page" id="page-products">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+          <div style="font-size:1.3rem;font-weight:800">🛍️ จัดการสินค้า</div>
+          <button class="abtn abtn-ok" style="padding:10px 18px;font-size:.9rem" onclick="openProductModal()">+ เพิ่มสินค้าใหม่</button>
+        </div>
+
+        <!-- Search & filter bar -->
+        <div class="filter-bar">
+          <input type="text" id="prod-search" placeholder="🔍 ค้นหาสินค้า..." oninput="renderProducts()"
+            style="flex:1;min-width:180px"/>
+          <select id="prod-filter" onchange="renderProducts()">
+            <option value="all">ทั้งหมด</option>
+            <option value="active">เปิดขาย</option>
+            <option value="inactive">ปิดขาย</option>
+          </select>
+          <span class="badge badge-g" id="prod-count-badge">0 รายการ</span>
+        </div>
+
+        <!-- Product grid -->
+        <div id="prod-admin-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
+      </div>
+
     </div><!-- end content -->
   </div><!-- end layout -->
 </div><!-- end app -->
 
-<!-- RECEIPT MODAL -->
+<!-- PRODUCT MODAL -->
+<div class="overlay" id="prod-modal">
+  <div style="background:var(--card);border-radius:18px;padding:28px;max-width:440px;width:100%;
+    border:1px solid var(--border);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+      <div style="font-size:1.1rem;font-weight:800" id="prod-modal-title">เพิ่มสินค้าใหม่</div>
+      <button onclick="closeProdModal()" style="background:var(--card2);border:none;color:var(--muted);
+        border-radius:8px;padding:6px 12px;cursor:pointer;font-size:1rem">✕</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- Emoji picker -->
+      <div>
+        <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px">ไอคอน / Emoji</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div id="em-preview" style="font-size:2.5rem;width:56px;height:56px;background:var(--card2);
+            border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+            border:2px solid var(--border)" onclick="toggleEmojiPicker()">🍱</div>
+          <input id="pm-emoji-input" type="text" placeholder="พิมพ์ emoji โดยตรง" maxlength="4"
+            style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;
+            background:var(--card2);color:var(--txt);font-size:1.2rem;font-family:inherit;outline:none"
+            oninput="updateEmojiPreview(this.value)"/>
+        </div>
+        <!-- Quick emoji palette -->
+        <div id="emoji-palette" style="display:none;margin-top:10px;background:var(--card2);
+          border-radius:12px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;font-weight:600">เลือกด่วน</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px" id="emoji-quick"></div>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">ชื่อสินค้า *</label>
+        <input id="pm-name" type="text" placeholder="เช่น ข้าวผัดไข่" style="width:100%;padding:10px 14px;
+          border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);
+          font-family:inherit;font-size:.95rem;outline:none"/>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">ราคา (บาท) *</label>
+          <input id="pm-price" type="number" min="0" placeholder="0" style="width:100%;padding:10px 14px;
+            border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);
+            font-family:'JetBrains Mono',monospace;font-size:.95rem;outline:none"/>
+        </div>
+        <div>
+          <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">หมวดหมู่</label>
+          <input id="pm-cat" type="text" placeholder="เช่น อาหาร, เครื่องดื่ม" style="width:100%;padding:10px 14px;
+            border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);
+            font-family:inherit;font-size:.95rem;outline:none"/>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">รายละเอียด</label>
+        <textarea id="pm-desc" placeholder="รายละเอียดสินค้า (ไม่บังคับ)" style="width:100%;padding:10px 14px;
+          border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);
+          font-family:inherit;font-size:.875rem;outline:none;resize:vertical;min-height:60px"></textarea>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card2);
+        padding:12px 16px;border-radius:10px;border:1px solid var(--border)">
+        <div>
+          <div style="font-weight:600;font-size:.9rem">เปิดขาย</div>
+          <div style="font-size:.75rem;color:var(--muted)">ลูกค้าจะเห็นสินค้านี้</div>
+        </div>
+        <label style="position:relative;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="pm-active" checked style="opacity:0;width:0;height:0;position:absolute"/>
+          <span id="pm-toggle-track" style="position:absolute;inset:0;border-radius:12px;background:var(--border);
+            transition:.2s;cursor:pointer" onclick="toggleActiveSwitch()"></span>
+          <span id="pm-toggle-thumb" style="position:absolute;left:2px;top:2px;width:20px;height:20px;
+            border-radius:50%;background:#fff;transition:.2s;pointer-events:none"></span>
+        </label>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="login-btn" style="flex:1;padding:12px" onclick="saveProdModal()">💾 บันทึก</button>
+        <button onclick="closeProdModal()" style="flex:0 0 auto;padding:12px 20px;border-radius:12px;
+          border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;
+          font-family:inherit;font-weight:700">ยกเลิก</button>
+      </div>
+      <div id="pm-err" style="font-size:.8rem;color:var(--red);min-height:18px;text-align:center"></div>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="receipt-overlay">
   <div class="receipt" id="receipt-box"></div>
   <div class="modal-btns" style="max-width:360px;width:100%">
@@ -432,6 +565,7 @@ function goPage(name, el){
   if(name==='orders') renderOrders();
   if(name==='mapview'){ setTimeout(()=>{ initDeliveryMap(); renderMapPins(); },100); }
   if(name==='summary') renderSummary();
+  if(name==='products') renderProducts();
 }
 
 // ===== DASHBOARD =====
@@ -656,6 +790,163 @@ function changePw(){
 function saveShop(){
   localStorage.setItem('shop_name',document.getElementById('shop-name').value);
   alert('บันทึกแล้ว');
+}
+
+// ===== PRODUCT MANAGEMENT =====
+const DEFAULT_PRODUCTS = [
+  {id:1,name:'ข้าวกล่อง',em:'🍱',price:45,cat:'อาหาร',desc:'',active:true},
+  {id:2,name:'ก๋วยเตี๋ยว',em:'🍜',price:50,cat:'อาหาร',desc:'',active:true},
+  {id:3,name:'ข้าวผัด',em:'🍳',price:55,cat:'อาหาร',desc:'',active:true},
+  {id:4,name:'ส้มตำ',em:'🥗',price:40,cat:'อาหาร',desc:'',active:true},
+  {id:5,name:'ไก่ทอด',em:'🍗',price:35,cat:'อาหาร',desc:'',active:true},
+  {id:6,name:'น้ำส้ม',em:'🍊',price:25,cat:'เครื่องดื่ม',desc:'',active:true},
+  {id:7,name:'ชานม',em:'🧋',price:45,cat:'เครื่องดื่ม',desc:'',active:true},
+  {id:8,name:'ข้าวหมูแดง',em:'🍖',price:55,cat:'อาหาร',desc:'',active:true},
+  {id:9,name:'ผัดไทย',em:'🍝',price:50,cat:'อาหาร',desc:'',active:true},
+  {id:10,name:'ต้มยำ',em:'🍲',price:60,cat:'อาหาร',desc:'',active:true},
+  {id:11,name:'ขนมปัง',em:'🥖',price:30,cat:'เบเกอรี่',desc:'',active:true},
+  {id:12,name:'กาแฟ',em:'☕',price:45,cat:'เครื่องดื่ม',desc:'',active:true},
+];
+
+const QUICK_EMOJIS = ['🍱','🍜','🍳','🥗','🍗','🍖','🍝','🍲','🍛','🍣','🍔','🌮','🥙','🍕',
+  '🥘','🍤','🥚','🧆','🥐','🥖','🍰','🎂','🍩','🍫','🍦','🧁',
+  '☕','🧋','🍊','🍋','🍵','🥤','🧃','🍹','🍺','🥛','🫖','🧊'];
+
+function getProducts(){
+  const stored = localStorage.getItem('lo_products');
+  if(!stored) {
+    localStorage.setItem('lo_products', JSON.stringify(DEFAULT_PRODUCTS));
+    return DEFAULT_PRODUCTS;
+  }
+  return JSON.parse(stored);
+}
+function saveProducts(p){ localStorage.setItem('lo_products', JSON.stringify(p)); }
+
+function renderProducts(){
+  const search = (document.getElementById('prod-search').value||'').toLowerCase();
+  const filter = document.getElementById('prod-filter').value;
+  let prods = getProducts();
+  if(search) prods = prods.filter(p=>p.name.includes(search)||p.cat.includes(search));
+  if(filter==='active') prods = prods.filter(p=>p.active);
+  if(filter==='inactive') prods = prods.filter(p=>!p.active);
+  document.getElementById('prod-count-badge').textContent = prods.length + ' รายการ';
+
+  document.getElementById('prod-admin-grid').innerHTML = prods.length ? prods.map(p=>`
+    <div class="prod-card ${p.active?'':'inactive'}">
+      <span class="${p.active?'active-badge':'inactive-badge'}">${p.active?'✅ เปิดขาย':'🔴 ปิดขาย'}</span>
+      <span class="prod-em-big">${p.em}</span>
+      <div class="prod-card-name">${p.name}</div>
+      ${p.cat?`<div class="prod-card-cat">🏷️ ${p.cat}</div>`:''}
+      <div class="prod-card-price">฿${(+p.price).toLocaleString()}</div>
+      ${p.desc?`<div class="prod-card-desc">${p.desc}</div>`:''}
+      <div class="prod-card-actions">
+        <button class="abtn abtn-ok" style="flex:1" onclick="openProductModal(${p.id})">✏️ แก้ไข</button>
+        <button class="abtn ${p.active?'abtn-map':'abtn-ok'}" style="flex:1" onclick="toggleProduct(${p.id})">
+          ${p.active?'🔴 ปิด':'✅ เปิด'}
+        </button>
+        <button class="abtn" style="background:rgba(239,68,68,.15);color:var(--red)" onclick="deleteProduct(${p.id})">🗑</button>
+      </div>
+    </div>`).join('')
+  : `<div class="empty" style="grid-column:1/-1"><span class="empty-em">📦</span>ไม่มีสินค้า</div>`;
+}
+
+let editingProductId = null;
+
+function openProductModal(id){
+  editingProductId = id || null;
+  const prods = getProducts();
+  const p = id ? prods.find(x=>x.id===id) : null;
+  document.getElementById('prod-modal-title').textContent = id ? '✏️ แก้ไขสินค้า' : '➕ เพิ่มสินค้าใหม่';
+  document.getElementById('pm-emoji-input').value = p ? p.em : '🍱';
+  document.getElementById('em-preview').textContent = p ? p.em : '🍱';
+  document.getElementById('pm-name').value = p ? p.name : '';
+  document.getElementById('pm-price').value = p ? p.price : '';
+  document.getElementById('pm-cat').value = p ? (p.cat||'') : '';
+  document.getElementById('pm-desc').value = p ? (p.desc||'') : '';
+  const active = p ? p.active : true;
+  document.getElementById('pm-active').checked = active;
+  document.getElementById('pm-toggle-track').style.background = active ? 'var(--g)' : 'var(--border)';
+  document.getElementById('pm-toggle-thumb').style.left = active ? '22px' : '2px';
+  document.getElementById('pm-err').textContent = '';
+  // Build emoji quick palette
+  document.getElementById('emoji-quick').innerHTML = QUICK_EMOJIS.map(e=>
+    `<span style="font-size:1.5rem;cursor:pointer;padding:4px;border-radius:6px;
+      transition:.15s" onmouseover="this.style.background='var(--border)'"
+      onmouseout="this.style.background='transparent'"
+      onclick="selectEmoji('${e}')">${e}</span>`).join('');
+  document.getElementById('emoji-palette').style.display='none';
+  document.getElementById('prod-modal').classList.add('open');
+}
+
+function closeProdModal(){
+  document.getElementById('prod-modal').classList.remove('open');
+  document.getElementById('emoji-palette').style.display='none';
+}
+
+function toggleEmojiPicker(){
+  const p = document.getElementById('emoji-palette');
+  p.style.display = p.style.display==='none' ? 'block' : 'none';
+}
+
+function selectEmoji(e){
+  document.getElementById('pm-emoji-input').value = e;
+  document.getElementById('em-preview').textContent = e;
+  document.getElementById('emoji-palette').style.display='none';
+}
+
+function updateEmojiPreview(v){
+  const trimmed = [...v.trim()].slice(0,2).join('');
+  if(trimmed) document.getElementById('em-preview').textContent = trimmed;
+}
+
+function toggleActiveSwitch(){
+  const cb = document.getElementById('pm-active');
+  cb.checked = !cb.checked;
+  const active = cb.checked;
+  document.getElementById('pm-toggle-track').style.background = active ? 'var(--g)' : 'var(--border)';
+  document.getElementById('pm-toggle-thumb').style.left = active ? '22px' : '2px';
+}
+
+function saveProdModal(){
+  const name = document.getElementById('pm-name').value.trim();
+  const price = parseFloat(document.getElementById('pm-price').value);
+  const em = document.getElementById('pm-emoji-input').value.trim() || '📦';
+  const err = document.getElementById('pm-err');
+  if(!name){ err.textContent='กรุณากรอกชื่อสินค้า'; return; }
+  if(isNaN(price)||price<0){ err.textContent='กรุณากรอกราคาที่ถูกต้อง'; return; }
+
+  const prods = getProducts();
+  if(editingProductId){
+    const idx = prods.findIndex(x=>x.id===editingProductId);
+    if(idx>=0){
+      prods[idx] = {...prods[idx], em, name, price,
+        cat: document.getElementById('pm-cat').value.trim(),
+        desc: document.getElementById('pm-desc').value.trim(),
+        active: document.getElementById('pm-active').checked };
+    }
+  } else {
+    const newId = Math.max(0,...prods.map(p=>p.id))+1;
+    prods.unshift({id:newId, em, name, price,
+      cat: document.getElementById('pm-cat').value.trim(),
+      desc: document.getElementById('pm-desc').value.trim(),
+      active: document.getElementById('pm-active').checked });
+  }
+  saveProducts(prods);
+  renderProducts();
+  closeProdModal();
+}
+
+function toggleProduct(id){
+  const prods = getProducts();
+  const p = prods.find(x=>x.id===id);
+  if(p){ p.active = !p.active; saveProducts(prods); renderProducts(); }
+}
+
+function deleteProduct(id){
+  if(!confirm('ลบสินค้านี้?')) return;
+  const prods = getProducts().filter(x=>x.id!==id);
+  saveProducts(prods);
+  renderProducts();
 }
 
 // ===== INIT =====

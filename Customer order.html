@@ -259,20 +259,26 @@ textarea{resize:vertical;min-height:70px}
 
 <script>
 // ===== PRODUCTS =====
-const PRODUCTS = [
-  {id:1,name:'ข้าวกล่อง',em:'🍱',price:45},
-  {id:2,name:'ก๋วยเตี๋ยว',em:'🍜',price:50},
-  {id:3,name:'ข้าวผัด',em:'🍳',price:55},
-  {id:4,name:'ส้มตำ',em:'🥗',price:40},
-  {id:5,name:'ไก่ทอด',em:'🍗',price:35},
-  {id:6,name:'น้ำส้ม',em:'🍊',price:25},
-  {id:7,name:'ชานม',em:'🧋',price:45},
-  {id:8,name:'ข้าวหมูแดง',em:'🍖',price:55},
-  {id:9,name:'ผัดไทย',em:'🍝',price:50},
-  {id:10,name:'ต้มยำ',em:'🍲',price:60},
-  {id:11,name:'ขนมปัง',em:'🥖',price:30},
-  {id:12,name:'กาแฟ',em:'☕',price:45},
+const DEFAULT_PRODUCTS = [
+  {id:1,name:'ข้าวกล่อง',em:'🍱',price:45,cat:'อาหาร',active:true},
+  {id:2,name:'ก๋วยเตี๋ยว',em:'🍜',price:50,cat:'อาหาร',active:true},
+  {id:3,name:'ข้าวผัด',em:'🍳',price:55,cat:'อาหาร',active:true},
+  {id:4,name:'ส้มตำ',em:'🥗',price:40,cat:'อาหาร',active:true},
+  {id:5,name:'ไก่ทอด',em:'🍗',price:35,cat:'อาหาร',active:true},
+  {id:6,name:'น้ำส้ม',em:'🍊',price:25,cat:'เครื่องดื่ม',active:true},
+  {id:7,name:'ชานม',em:'🧋',price:45,cat:'เครื่องดื่ม',active:true},
+  {id:8,name:'ข้าวหมูแดง',em:'🍖',price:55,cat:'อาหาร',active:true},
+  {id:9,name:'ผัดไทย',em:'🍝',price:50,cat:'อาหาร',active:true},
+  {id:10,name:'ต้มยำ',em:'🍲',price:60,cat:'อาหาร',active:true},
+  {id:11,name:'ขนมปัง',em:'🥖',price:30,cat:'เบเกอรี่',active:true},
+  {id:12,name:'กาแฟ',em:'☕',price:45,cat:'เครื่องดื่ม',active:true},
 ];
+
+function getActiveProducts(){
+  const stored = localStorage.getItem('lo_products');
+  const prods = stored ? JSON.parse(stored) : DEFAULT_PRODUCTS;
+  return prods.filter(p=>p.active!==false);
+}
 
 let cart = {};
 let pinLat = null, pinLng = null;
@@ -317,13 +323,33 @@ function showCoords(){
 
 // ===== PRODUCTS =====
 function renderProducts() {
-  document.getElementById('prod-grid').innerHTML = PRODUCTS.map(p=>`
-    <div class="prod-item ${cart[p.id]?'sel':''}" onclick="toggleProd(${p.id})">
-      <span class="prod-em">${p.em}</span>
-      <div class="prod-name">${p.name}</div>
-      <div class="prod-price">฿${p.price}</div>
-      ${cart[p.id]?`<div class="prod-badge">×${cart[p.id]}</div>`:''}
-    </div>`).join('');
+  const PRODUCTS = getActiveProducts();
+  // Group by category
+  const cats = [...new Set(PRODUCTS.map(p=>p.cat||'อื่นๆ'))];
+  let html = '';
+  if(cats.length > 1){
+    cats.forEach(cat=>{
+      const items = PRODUCTS.filter(p=>(p.cat||'อื่นๆ')===cat);
+      html += `<div style="grid-column:1/-1;font-size:.78rem;font-weight:700;color:var(--muted);
+        text-transform:uppercase;letter-spacing:.08em;margin-top:4px;margin-bottom:-2px">🏷️ ${cat}</div>`;
+      html += items.map(p=>`
+        <div class="prod-item ${cart[p.id]?'sel':''}" onclick="toggleProd(${p.id})">
+          <span class="prod-em">${p.em}</span>
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-price">฿${p.price}</div>
+          ${cart[p.id]?`<div class="prod-badge">×${cart[p.id]}</div>`:''}
+        </div>`).join('');
+    });
+  } else {
+    html = PRODUCTS.map(p=>`
+      <div class="prod-item ${cart[p.id]?'sel':''}" onclick="toggleProd(${p.id})">
+        <span class="prod-em">${p.em}</span>
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-price">฿${p.price}</div>
+        ${cart[p.id]?`<div class="prod-badge">×${cart[p.id]}</div>`:''}
+      </div>`).join('');
+  }
+  document.getElementById('prod-grid').innerHTML = html;
 }
 
 function toggleProd(id){
@@ -340,13 +366,17 @@ function changeQty(id,d){
 function removeItem(id){ delete cart[id]; renderProducts(); renderCart(); }
 
 function renderCart(){
+  const PRODUCTS = getActiveProducts();
+  const allProducts = JSON.parse(localStorage.getItem('lo_products')||'[]');
+  const findProd = id => allProducts.find(x=>x.id===+id) || PRODUCTS.find(x=>x.id===+id);
   const entries=Object.entries(cart).filter(([,q])=>q>0);
   const cc=document.getElementById('cart-card');
   if(!entries.length){cc.style.display='none';return;}
   cc.style.display='block';
   let total=0;
   document.getElementById('cart-list').innerHTML=entries.map(([id,qty])=>{
-    const p=PRODUCTS.find(x=>x.id===+id);
+    const p=findProd(id);
+    if(!p) return '';
     total+=p.price*qty;
     return `<div class="cart-row">
       <span class="cart-em">${p.em}</span>
@@ -453,6 +483,7 @@ function showAIResult(parsed){
 function toggleChip(i,el){el.style.opacity=el.style.opacity==='0.4'?'1':'0.4';}
 
 function applyAICart(){
+  const PRODUCTS = getActiveProducts();
   // Match AI items to products
   aiParsedItems.forEach(item=>{
     const name=item.name.toLowerCase();
@@ -499,8 +530,9 @@ function placeOrder(){
   if(!phone){alert('กรุณากรอกเบอร์โทร');return;}
   if(!Object.keys(cart).length){alert('กรุณาเลือกสินค้า');return;}
 
+  const allProds = JSON.parse(localStorage.getItem('lo_products')||JSON.stringify(DEFAULT_PRODUCTS));
   const items=Object.entries(cart).map(([id,qty])=>{
-    const p=PRODUCTS.find(x=>x.id===+id);
+    const p=allProds.find(x=>x.id===+id) || getActiveProducts().find(x=>x.id===+id);
     return{id:+id,name:p.name,em:p.em,price:p.price,qty};
   });
   const total=items.reduce((s,i)=>s+i.price*i.qty,0);
