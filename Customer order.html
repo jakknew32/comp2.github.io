@@ -168,7 +168,7 @@ textarea{resize:vertical;min-height:70px}
       <div class="sec-label">สั่งสินค้า</div></div>
     <div class="tabs">
       <button class="tab on" onclick="switchTab('menu',this)">📋 เลือกจากเมนู</button>
-      <button class="tab" onclick="switchTab('img',this)">📷 ส่งรูปออเดอร์</button>
+      <button class="tab" onclick="switchTab('text',this)">✏️ พิมพ์ออเดอร์</button>
     </div>
     <div class="pane on" id="pane-menu">
       <div class="prod-grid" id="prod-grid">
@@ -177,20 +177,24 @@ textarea{resize:vertical;min-height:70px}
         </div>
       </div>
     </div>
-    <div class="pane" id="pane-img">
-      <div class="img-drop" id="img-drop">
-        <input type="file" accept="image/*" id="img-input" onchange="handleImg(this)"/>
-        <span style="font-size:2.2rem;display:block;margin-bottom:8px">📸</span>
-        <div style="font-weight:700">อัปโหลดรูปออเดอร์</div>
-        <div style="font-size:.8rem;color:var(--muted);margin-top:4px">LINE screenshot, รูปถ่าย ทุกรูปแบบ<br>คลิกหรือลากไฟล์มาวางที่นี่</div>
-      </div>
-      <div class="img-preview" id="img-preview"><img id="img-thumb" src="" alt=""/></div>
-      <div class="ai-loading" id="ai-loading"><div class="spin"></div><br>AI กำลังอ่านรูปภาพ...</div>
-      <div class="ai-result" id="ai-result">
-        <div class="ai-label">🤖 AI อ่านออเดอร์ได้</div>
-        <div id="ai-text"></div>
-        <div id="parsed-chips" style="margin-top:10px"></div>
-        <button class="btn-outline" onclick="applyAICart()">✅ เพิ่มสินค้าเหล่านี้เข้าตะกร้า</button>
+    <div class="pane" id="pane-text">
+      <div style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:12px">
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px;line-height:1.7">
+          ✏️ พิมพ์รายการที่ต้องการ เช่น<br>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--txt);font-size:.78rem">
+            ข้าวผัด 2<br>ก๋วยเตี๋ยว 1<br>ชานม 3
+          </span>
+        </div>
+        <textarea id="text-order" placeholder="พิมพ์รายการสั่งซื้อที่นี่..." 
+          style="width:100%;min-height:120px;padding:12px;border:2px solid var(--border);
+          border-radius:10px;font-family:inherit;font-size:.9rem;outline:none;resize:vertical;
+          background:#fff;color:var(--txt);transition:.2s;line-height:1.7"
+          onfocus="this.style.borderColor='var(--g)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <button class="btn-g" style="margin-top:10px;font-size:.85rem;padding:10px 18px;
+          width:auto;display:inline-flex" onclick="applyTextOrder()">
+          ✅ เพิ่มเข้าตะกร้า
+        </button>
+        <div id="text-match-result" style="margin-top:10px;font-size:.8rem;color:var(--muted);display:none"></div>
       </div>
     </div>
   </div>
@@ -278,21 +282,28 @@ const DEFAULT_PRODUCTS = [
 let PRODUCTS = [];
 let cart = {};
 let pinLat = null, pinLng = null;
-let aiParsedItems = [];
+
 let mapObj, marker;
 
 async function loadProducts() {
-  let prods = null;
   if (db) {
-    try {
-      const snap = await getDocs(collection(db, 'products'));
-      if (!snap.empty) prods = snap.docs.map(d => ({...d.data(), _fid: d.id}));
-    } catch(e) { console.error('load products error:', e); }
+    // Realtime subscription — products update instantly when admin changes them
+    onSnapshot(collection(db, 'products'), snap => {
+      if (!snap.empty) {
+        const prods = snap.docs.map(d => ({...d.data(), _fid: d.id}));
+        localStorage.setItem('lo_products', JSON.stringify(prods));
+        PRODUCTS = prods.filter(p => p.active !== false);
+        renderProducts();
+      }
+    }, err => { console.error('products snapshot error:', err); loadProductsLocal(); });
+  } else {
+    loadProductsLocal();
   }
-  if (!prods) {
-    const s = localStorage.getItem('lo_products');
-    prods = s ? JSON.parse(s) : DEFAULT_PRODUCTS;
-  }
+}
+
+function loadProductsLocal() {
+  const s = localStorage.getItem('lo_products');
+  const prods = s ? JSON.parse(s) : DEFAULT_PRODUCTS;
   PRODUCTS = prods.filter(p => p.active !== false);
   renderProducts();
 }
@@ -399,68 +410,50 @@ window.switchTab = (name, el) => {
   document.getElementById('pane-'+name).classList.add('on');
 };
 
-// ─── AI IMAGE ────────────────────────────────
-window.handleImg = async (input) => {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('img-thumb').src = e.target.result;
-    document.getElementById('img-preview').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-  document.getElementById('ai-loading').style.display = 'block';
-  document.getElementById('ai-result').style.display = 'none';
-  try {
-    const b64 = await new Promise((res,rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(',')[1]);
-      r.onerror = rej;
-      r.readAsDataURL(file);
-    });
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:1000,
-        system:`คุณคือระบบอ่านออเดอร์ ตอบ JSON เท่านั้น ห้ามมี markdown
-{"summary":"สรุป","items":[{"name":"ชื่อ","qty":จำนวน,"note":"หมายเหตุ"}],"customer":"ชื่อ","total":"ยอด"}`,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
-          {type:'text',text:'อ่านออเดอร์จากรูปนี้'}
-        ]}]
-      })
-    });
-    const data = await resp.json();
-    const text = data.content.map(c=>c.text||'').join('');
-    let parsed; try{parsed=JSON.parse(text);}catch(e){parsed={summary:text,items:[]};}
-    aiParsedItems = parsed.items||[];
-    let html = `<strong>${parsed.summary||'อ่านได้'}</strong>`;
-    if(parsed.customer) html += `<br>👤 ${parsed.customer}`;
-    if(parsed.total) html += `<br>💰 ${parsed.total}`;
-    document.getElementById('ai-text').innerHTML = html;
-    document.getElementById('parsed-chips').innerHTML = aiParsedItems.length
-      ? aiParsedItems.map((item,i)=>
-          `<span class="chip" onclick="this.style.opacity=this.style.opacity==='0.4'?'1':'0.4'">
-            ${item.name} ×${item.qty||1}${item.note?` (${item.note})`:''}</span>`).join('')
-      : '<span style="font-size:.8rem;color:var(--muted)">ไม่พบรายการอัตโนมัติ</span>';
-    document.getElementById('ai-result').style.display = 'block';
-  } catch(err) {
-    document.getElementById('ai-text').innerHTML = '⚠️ ' + err.message;
-    document.getElementById('ai-result').style.display = 'block';
-  }
-  document.getElementById('ai-loading').style.display = 'none';
-};
+// ─── TEXT ORDER ────────────────────────────────
+window.applyTextOrder = () => {
+  const raw = document.getElementById('text-order').value.trim();
+  if (!raw) return;
 
-window.applyAICart = () => {
-  aiParsedItems.forEach(item => {
-    const n = item.name.toLowerCase();
-    const match = PRODUCTS.find(p =>
-      n.includes(p.name) || p.name.includes(item.name) ||
-      lev(n, p.name.toLowerCase()) < 3
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
+  const matched = [];
+  const missed = [];
+
+  lines.forEach(line => {
+    // Parse "ชื่อสินค้า จำนวน" — จำนวนอยู่ท้าย หรือ "x2", "×2"
+    const qtyMatch = line.match(/(\d+)\s*$/);
+    const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+    const namePart = line.replace(/(x|×|\*)?(\d+)\s*$/i, '').trim();
+
+    const n = namePart.toLowerCase();
+    const p = PRODUCTS.find(p =>
+      n === p.name.toLowerCase() ||
+      n.includes(p.name.toLowerCase()) ||
+      p.name.toLowerCase().includes(n) ||
+      lev(n, p.name.toLowerCase()) <= 2
     );
-    if (match) cart[match.id] = (cart[match.id]||0) + (item.qty||1);
+
+    if (p) {
+      cart[p.id] = (cart[p.id]||0) + qty;
+      matched.push(`✅ ${p.em} ${p.name} ×${qty}`);
+    } else {
+      missed.push(`❓ "${namePart}" — ไม่พบในเมนู`);
+    }
   });
+
   renderProducts(); renderCart();
-  window.switchTab('menu', document.querySelector('.tab'));
+
+  const resultEl = document.getElementById('text-match-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = [
+    ...matched.map(m => `<div style="color:var(--g)">${m}</div>`),
+    ...missed.map(m => `<div style="color:var(--amber)">${m}</div>`)
+  ].join('');
+
+  if (matched.length) {
+    document.getElementById('text-order').value = '';
+    setTimeout(() => window.switchTab('menu', document.querySelector('.tab')), 800);
+  }
 };
 
 function lev(a,b) {
@@ -473,18 +466,7 @@ function lev(a,b) {
   return d[a.length][b.length];
 }
 
-// Drag & drop
-const dropEl = document.getElementById('img-drop');
-dropEl.addEventListener('dragover', e => { e.preventDefault(); dropEl.classList.add('drag'); });
-dropEl.addEventListener('dragleave', () => dropEl.classList.remove('drag'));
-dropEl.addEventListener('drop', e => {
-  e.preventDefault(); dropEl.classList.remove('drag');
-  const f = e.dataTransfer.files[0];
-  if (f?.type.startsWith('image/')) {
-    document.getElementById('img-input').files = e.dataTransfer.files;
-    window.handleImg(document.getElementById('img-input'));
-  }
-});
+// (drag & drop removed)
 
 // ─── PLACE ORDER (Firestore) ──────────────────
 window.placeOrder = async () => {

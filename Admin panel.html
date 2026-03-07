@@ -156,16 +156,37 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 .modal-close{background:var(--card2);border:none;color:var(--muted);border-radius:8px;
   padding:6px 12px;cursor:pointer;font-size:1rem}
 
-/* RECEIPT */
-.receipt{background:#fff;color:#111;border-radius:16px;padding:28px;max-width:360px;width:100%;
-  font-family:'JetBrains Mono',monospace;max-height:90vh;overflow-y:auto}
-.r-head{text-align:center;margin-bottom:16px}
-.r-shop{font-size:1.2rem;font-weight:700}
-.r-dash{border-top:2px dashed #ddd;margin:12px 0}
-.r-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:.82rem}
-.r-total{font-size:1rem;font-weight:700;color:#06C755}
-.r-foot{text-align:center;font-size:.72rem;color:#888;margin-top:14px}
-.modal-btns{display:flex;gap:10px;margin-top:16px;max-width:360px;width:100%}
+/* RECEIPT — screen preview */
+.receipt{background:#fff;color:#111;border-radius:12px;padding:0;width:105mm;
+  font-family:'Noto Sans Thai','JetBrains Mono',monospace;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.receipt-inner{padding:20px 20px 16px;max-height:82vh;overflow-y:auto}
+.r-head{text-align:center;margin-bottom:14px;padding-bottom:14px;border-bottom:2px dashed #e5e7eb}
+.r-shop{font-size:1.15rem;font-weight:800;color:#111;letter-spacing:.01em}
+.r-sub{font-size:.7rem;color:#888;margin-top:3px}
+.r-meta{background:#f9fafb;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:.78rem;line-height:1.9}
+.r-meta-row{display:flex;gap:6px}
+.r-meta-label{color:#6b7280;min-width:60px;flex-shrink:0}
+.r-meta-val{color:#111;font-weight:600;word-break:break-word}
+.r-dash{border-top:2px dashed #e5e7eb;margin:12px 0}
+.r-items{margin-bottom:4px}
+.r-item{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;
+  border-bottom:1px solid #f3f4f6;gap:8px}
+.r-item:last-child{border-bottom:none}
+.r-item-name{font-size:.82rem;color:#111;flex:1}
+.r-item-qty{font-size:.78rem;color:#6b7280;min-width:28px;text-align:center}
+.r-item-price{font-size:.82rem;color:#111;font-weight:600;text-align:right;min-width:56px}
+.r-total-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
+  background:#f0fdf4;border-radius:8px;margin-top:10px}
+.r-total-lab{font-size:.88rem;font-weight:700;color:#15803d}
+.r-total-amt{font-size:1.2rem;font-weight:800;color:#16a34a;font-family:'JetBrains Mono',monospace}
+.r-note{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 10px;
+  font-size:.75rem;color:#78350f;margin-top:8px;line-height:1.6}
+.r-foot{text-align:center;margin-top:12px;padding-top:12px;border-top:2px dashed #e5e7eb;
+  font-size:.72rem;color:#9ca3af;line-height:1.8}
+.r-barcode{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#d1d5db;
+  letter-spacing:.15em;margin-top:6px}
+.receipt-actions{background:#f8fafc;padding:12px 16px;display:flex;gap:8px;border-top:1px solid #e5e7eb}
+.modal-btns{display:flex;gap:10px;margin-top:14px;max-width:105mm;width:100%}
 .mbtn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;
   font-weight:700;font-size:.875rem;flex:1}
 .mbtn-g{background:var(--g);color:#fff}
@@ -203,8 +224,7 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
   border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-@media print{body *{visibility:hidden}.overlay,.overlay *{visibility:visible}
-  .overlay{position:fixed;left:0;top:0;width:100%;background:white}.modal-btns{display:none}}
+@media print{@page{size:A6 portrait;margin:0}}
 @media(max-width:800px){.layout{grid-template-columns:1fr}.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -411,10 +431,12 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 </div><!-- app -->
 
 <!-- RECEIPT MODAL -->
-<div class="overlay" id="receipt-overlay">
-  <div class="receipt" id="receipt-box"></div>
+<div class="overlay" id="receipt-overlay" style="background:rgba(0,0,0,.75);flex-direction:column;align-items:center;justify-content:center">
+  <div class="receipt" id="receipt-box">
+    <div class="receipt-inner" id="receipt-inner"></div>
+  </div>
   <div class="modal-btns">
-    <button class="mbtn mbtn-g" onclick="window.print()">🖨️ พิมพ์</button>
+    <button class="mbtn mbtn-g" onclick="printReceiptA6()">🖨️ พิมพ์ A6</button>
     <button class="mbtn mbtn-s" onclick="closeOverlay('receipt-overlay')">✕ ปิด</button>
   </div>
 </div>
@@ -739,24 +761,91 @@ window.setStatus = async (fid, status) => {
 };
 
 // ── RECEIPT ───────────────────────────────────
+function buildReceiptHTML(o) {
+  const shop = getShop();
+  const printTime = new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  return `
+    <div class="r-head">
+      <div class="r-shop">🛍 ${shop}</div>
+      <div class="r-sub">ใบสั่งซื้อ / ORDER RECEIPT</div>
+    </div>
+    <div class="r-meta">
+      <div class="r-meta-row"><span class="r-meta-label">เลขที่</span><span class="r-meta-val">${o.id}</span></div>
+      <div class="r-meta-row"><span class="r-meta-label">ลูกค้า</span><span class="r-meta-val">${o.name}</span></div>
+      <div class="r-meta-row"><span class="r-meta-label">โทร</span><span class="r-meta-val">${o.phone}</span></div>
+      ${o.address ? `<div class="r-meta-row"><span class="r-meta-label">ที่อยู่</span><span class="r-meta-val">${o.address}</span></div>` : ''}
+      <div class="r-meta-row"><span class="r-meta-label">วันจัดส่ง</span><span class="r-meta-val">${fdate(o.deliveryDate)}</span></div>
+    </div>
+    <div class="r-dash"></div>
+    <div class="r-items">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:7pt;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em">
+        <span>รายการ</span><span>จำนวน</span><span>ราคา</span>
+      </div>
+      ${o.items.map(i=>`
+        <div class="r-item">
+          <span class="r-item-name">${i.em} ${i.name}</span>
+          <span class="r-item-qty">×${i.qty}</span>
+          <span class="r-item-price">${fmoney(i.price*i.qty)}</span>
+        </div>`).join('')}
+    </div>
+    <div class="r-total-row">
+      <span class="r-total-lab">💰 รวมทั้งสิ้น</span>
+      <span class="r-total-amt">${fmoney(o.total)}</span>
+    </div>
+    ${o.note ? `<div class="r-note">📝 หมายเหตุ: ${o.note}</div>` : ''}
+    <div class="r-foot">
+      ขอบคุณที่ใช้บริการ 💚 · ${shop}<br>
+      <span style="font-size:7pt;color:#d1d5db;font-family:monospace">${o.id} · ${printTime}</span>
+    </div>`;
+}
+
 window.printReceipt = (fid) => {
   const o = allOrders.find(x => x._fid===fid || x.id===fid); if (!o) return;
-  document.getElementById('receipt-box').innerHTML = `
-    <div class="r-head"><div class="r-shop">🛍 ${getShop()}</div>
-      <div style="font-size:.72rem;color:#888;margin-top:3px">ใบสั่งซื้อ</div></div>
-    <div class="r-dash"></div>
-    <div class="r-row"><span>เลขที่:</span><span>${o.id}</span></div>
-    <div class="r-row"><span>ลูกค้า:</span><span>${o.name}</span></div>
-    <div class="r-row"><span>โทร:</span><span>${o.phone}</span></div>
-    ${o.address ? `<div class="r-row"><span>ที่อยู่:</span><span style="max-width:180px;text-align:right">${o.address}</span></div>` : ''}
-    <div class="r-row"><span>วันจัดส่ง:</span><span>${fdate(o.deliveryDate)}</span></div>
-    <div class="r-dash"></div>
-    ${o.items.map(i=>`<div class="r-row"><span>${i.em} ${i.name} ×${i.qty}</span><span>${fmoney(i.price*i.qty)}</span></div>`).join('')}
-    <div class="r-dash"></div>
-    <div class="r-row r-total"><span>รวมทั้งสิ้น</span><span>${fmoney(o.total)}</span></div>
-    ${o.note ? `<div class="r-row" style="font-size:.72rem"><span>หมายเหตุ:</span><span>${o.note}</span></div>` : ''}
-    <div class="r-foot">ขอบคุณที่ใช้บริการ 💚<br>${getShop()}</div>`;
+  document.getElementById('receipt-inner').innerHTML = buildReceiptHTML(o);
   document.getElementById('receipt-overlay').classList.add('open');
+};
+
+window.printReceiptA6 = () => {
+  const inner = document.getElementById('receipt-inner');
+  if (!inner || !inner.innerHTML.trim()) return;
+  const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A6 portrait; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'Noto Sans Thai', sans-serif; background: #fff; width: 105mm; min-height: 148mm; padding: 7mm 8mm 6mm; font-size: 9pt; color: #111; }
+  .r-head { text-align: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px dashed #e5e7eb; }
+  .r-shop { font-size: 13pt; font-weight: 800; color: #111; }
+  .r-sub { font-size: 7pt; color: #888; margin-top: 2px; }
+  .r-meta { background: #f9fafb; border-radius: 5px; padding: 7px 9px; margin-bottom: 10px; font-size: 8pt; line-height: 1.85; }
+  .r-meta-row { display: flex; gap: 5px; }
+  .r-meta-label { color: #6b7280; min-width: 52px; flex-shrink: 0; }
+  .r-meta-val { color: #111; font-weight: 600; word-break: break-word; }
+  .r-dash { border-top: 2px dashed #e5e7eb; margin: 9px 0; }
+  .r-items { margin-bottom: 4px; }
+  .r-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 4px 0; border-bottom: 1px solid #f3f4f6; gap: 6px; }
+  .r-item:last-child { border-bottom: none; }
+  .r-item-name { font-size: 8.5pt; flex: 1; }
+  .r-item-qty { font-size: 8pt; color: #6b7280; min-width: 24px; text-align: center; }
+  .r-item-price { font-size: 8.5pt; font-weight: 700; text-align: right; min-width: 50px; font-family: 'JetBrains Mono', monospace; }
+  .r-total-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #f0fdf4; border-radius: 6px; margin-top: 8px; }
+  .r-total-lab { font-size: 9pt; font-weight: 700; color: #15803d; }
+  .r-total-amt { font-size: 13pt; font-weight: 800; color: #16a34a; font-family: 'JetBrains Mono', monospace; }
+  .r-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; padding: 5px 8px; font-size: 7.5pt; color: #78350f; margin-top: 7px; line-height: 1.6; }
+  .r-foot { text-align: center; margin-top: 10px; padding-top: 10px; border-top: 2px dashed #e5e7eb; font-size: 7.5pt; color: #9ca3af; line-height: 1.8; }
+</style>
+</head>
+<body>
+${inner.innerHTML}
+</body>
+</html>`;
+  const w = window.open('', '_blank', 'width=420,height=620');
+  w.document.write(html);
+  w.document.close();
+  w.onload = () => { w.focus(); w.print(); };
 };
 
 // ── DELIVERY MAP ──────────────────────────────
@@ -817,11 +906,14 @@ window.renderSummary = () => {
   const date = document.getElementById('sum-date').value; if (!date) return;
   const dayOrders = allOrders.filter(o => o.deliveryDate===date);
   const rev = dayOrders.reduce((s,o) => s+o.total, 0);
+  // Use name as key (robust against id type mismatch from Firestore)
   const itemMap = {};
-  dayOrders.forEach(o => o.items.forEach(i => {
-    if (!itemMap[i.id]) itemMap[i.id] = {...i, totalQty:0, totalVal:0};
-    itemMap[i.id].totalQty += i.qty;
-    itemMap[i.id].totalVal += i.price*i.qty;
+  dayOrders.forEach(o => (o.items||[]).forEach(i => {
+    const key = (i.name||'').trim();
+    if (!key) return;
+    if (!itemMap[key]) itemMap[key] = {name:i.name, em:i.em||'📦', price:i.price||0, totalQty:0, totalVal:0};
+    itemMap[key].totalQty += (i.qty||1);
+    itemMap[key].totalVal += (i.price||0)*(i.qty||1);
   }));
   const items = Object.values(itemMap).sort((a,b) => b.totalQty-a.totalQty);
   const totalItems = items.reduce((s,i) => s+i.totalQty, 0);
