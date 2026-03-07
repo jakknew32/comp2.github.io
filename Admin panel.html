@@ -3,138 +3,114 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แอดมิน — ระบบออเดอร์ LINE</title>
+<title>Admin — LINE Order</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-:root{
-  --g:#06C755;--gd:#049A40;--gl:#DCFCE7;
-  --bg:#0F172A;--card:#1E293B;--card2:#273549;
-  --txt:#F1F5F9;--muted:#94A3B8;--border:#334155;
-  --red:#EF4444;--amber:#F59E0B;--blue:#38BDF8;--purple:#A78BFA;
-  --shadow:0 4px 20px rgba(0,0,0,.3);--r:14px;
-}
+:root{--g:#06C755;--gd:#049A40;--gl:#DCFCE7;--bg:#0F172A;--card:#1E293B;--card2:#273549;
+  --txt:#F1F5F9;--muted:#94A3B8;--border:#334155;--red:#EF4444;--amber:#F59E0B;
+  --blue:#38BDF8;--purple:#A78BFA;--shadow:0 4px 20px rgba(0,0,0,.3);--r:14px;}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 
-/* ===== LOGIN ===== */
-#login-screen{
-  display:flex;align-items:center;justify-content:center;
-  min-height:100vh;padding:20px;
-  background:linear-gradient(135deg,#0F172A 0%,#1E1B4B 100%);
-}
-.login-box{
-  background:var(--card);border-radius:20px;padding:40px;
-  max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);
-  border:1px solid var(--border);text-align:center;
-}
+/* ─── LOGIN ─── */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;
+  background:linear-gradient(135deg,#0F172A,#1E1B4B)}
+.login-box{background:var(--card);border-radius:20px;padding:40px;max-width:380px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid var(--border);text-align:center}
 .login-logo{font-size:3rem;display:block;margin-bottom:16px}
 .login-title{font-size:1.5rem;font-weight:800;margin-bottom:4px}
 .login-sub{color:var(--muted);font-size:.875rem;margin-bottom:28px}
-.login-input{
-  width:100%;padding:14px 18px;border:2px solid var(--border);border-radius:12px;
-  background:var(--card2);color:var(--txt);font-size:1rem;font-family:inherit;
-  outline:none;transition:.2s;text-align:center;letter-spacing:.15em;margin-bottom:14px;
-}
+.login-input{width:100%;padding:14px 18px;border:2px solid var(--border);border-radius:12px;
+  background:var(--card2);color:var(--txt);font-size:1rem;font-family:inherit;outline:none;
+  transition:.2s;text-align:center;letter-spacing:.15em;margin-bottom:14px}
 .login-input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(6,199,85,.2)}
-.login-btn{
-  width:100%;padding:14px;border-radius:12px;border:none;
-  background:var(--g);color:#fff;font-size:1rem;font-weight:700;
-  cursor:pointer;font-family:inherit;transition:.2s;
-}
+.login-btn{width:100%;padding:14px;border-radius:12px;border:none;background:var(--g);
+  color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
 .login-btn:hover{background:var(--gd);transform:translateY(-1px)}
 .login-err{color:var(--red);font-size:.85rem;margin-top:10px;min-height:20px}
 .login-hint{color:var(--muted);font-size:.75rem;margin-top:12px}
 
-/* ===== APP ===== */
+/* ─── APP SHELL ─── */
 #app{display:none}
-.topbar{
-  background:var(--card);border-bottom:1px solid var(--border);
-  height:58px;display:flex;align-items:center;padding:0 20px;gap:12px;
-  position:sticky;top:0;z-index:300;box-shadow:var(--shadow);
-}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);height:58px;
+  display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:300;
+  box-shadow:var(--shadow)}
 .topbar-logo{background:var(--g);width:34px;height:34px;border-radius:10px;
   display:flex;align-items:center;justify-content:center;font-size:1rem}
-.topbar-title{font-weight:800;font-size:1rem}
 .topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
-.logout-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);
-  background:transparent;color:var(--muted);cursor:pointer;font-size:.8rem;font-family:inherit;transition:.2s}
+.logout-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;font-size:.8rem;font-family:inherit;transition:.2s}
 .logout-btn:hover{border-color:var(--red);color:var(--red)}
+.db-status{font-size:.75rem;padding:3px 10px;border-radius:20px;font-weight:700}
+.db-online{background:rgba(6,199,85,.15);color:var(--g)}
+.db-offline{background:rgba(239,68,68,.15);color:var(--red)}
 
 .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 58px)}
-
-/* SIDEBAR */
-.sidebar{background:var(--card);border-right:1px solid var(--border);padding:16px 12px}
-.nav-item{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;
-  border-radius:10px;cursor:pointer;transition:.2s;color:var(--muted);
-  font-size:.9rem;font-weight:600;border:none;background:transparent;
-  font-family:inherit;width:100%;text-align:left;margin-bottom:4px;
-}
+.sidebar{background:var(--card);border-right:1px solid var(--border);padding:16px 12px;
+  overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;
+  cursor:pointer;transition:.2s;color:var(--muted);font-size:.9rem;font-weight:600;border:none;
+  background:transparent;font-family:inherit;width:100%;text-align:left;margin-bottom:4px}
 .nav-item:hover{background:var(--card2);color:var(--txt)}
 .nav-item.on{background:rgba(6,199,85,.15);color:var(--g)}
-.nav-icon{font-size:1.1rem;width:24px;text-align:center}
 .nav-sep{height:1px;background:var(--border);margin:12px 0}
-.nav-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.1em;padding:0 14px;margin-bottom:6px}
-
-/* CONTENT */
+.nav-lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;
+  padding:0 14px;margin-bottom:6px}
 .content{padding:24px;overflow-y:auto}
 .page{display:none}.page.on{display:block}
+.page-h{font-size:1.3rem;font-weight:800;margin-bottom:18px}
 
-/* STATS ROW */
+/* ─── CARDS & STATS ─── */
+.card{background:var(--card);border-radius:var(--r);padding:20px;border:1px solid var(--border);
+  margin-bottom:16px;box-shadow:var(--shadow)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:8px}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .stat{background:var(--card);border-radius:var(--r);padding:18px;border:1px solid var(--border)}
 .stat-num{font-size:1.8rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--g)}
 .stat-lbl{font-size:.75rem;color:var(--muted);margin-top:4px}
-.stat-sub{font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
 
-/* CARDS */
-.card{background:var(--card);border-radius:var(--r);padding:20px;
-  border:1px solid var(--border);margin-bottom:16px;box-shadow:var(--shadow)}
-.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.card-title{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:8px}
+/* ─── FORM ─── */
+.fi{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.fi label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.fi input,.fi select,.fi textarea{padding:10px 14px;border:1px solid var(--border);border-radius:10px;
+  background:var(--card2);color:var(--txt);font-family:inherit;font-size:.9rem;outline:none;transition:.2s}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--g)}
+.fi textarea{resize:vertical;min-height:60px}
 
-/* DATE FILTER */
+/* ─── FILTER BAR ─── */
 .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.filter-bar input,select{
-  padding:8px 14px;border:1px solid var(--border);border-radius:10px;
+.filter-bar input,.filter-bar select{padding:8px 14px;border:1px solid var(--border);border-radius:10px;
   background:var(--card2);color:var(--txt);font-size:.875rem;font-family:inherit;outline:none}
 .filter-bar input:focus{border-color:var(--g)}
 .badge{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700}
 .badge-g{background:rgba(6,199,85,.15);color:var(--g)}
-.badge-a{background:rgba(245,158,11,.15);color:var(--amber)}
-.badge-b{background:rgba(56,189,248,.15);color:var(--blue)}
 
-/* ORDER CARDS */
-.order-item{
-  background:var(--card2);border-radius:12px;padding:16px;
-  border:1px solid var(--border);margin-bottom:10px;transition:.2s;
-  border-left:4px solid transparent;
-}
-.order-item:hover{border-color:var(--g);transform:translateX(2px)}
-.order-item.s-pending{border-left-color:var(--amber)}
-.order-item.s-confirmed{border-left-color:var(--g)}
-.order-item.s-delivered{border-left-color:var(--blue)}
+/* ─── ORDER CARDS ─── */
+.order-item{background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border);
+  margin-bottom:10px;transition:.2s;border-left:4px solid transparent}
+.order-item:hover{border-color:var(--g)}
+.s-pending{border-left-color:var(--amber)}
+.s-confirmed{border-left-color:var(--g)}
+.s-delivered{border-left-color:var(--blue)}
 .o-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 .o-id{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)}
 .o-name{font-weight:700;font-size:.95rem}
 .o-meta{font-size:.78rem;color:var(--muted);margin-top:2px}
-.status-pill{padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.o-items{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.itag{background:var(--card);border-radius:8px;padding:3px 10px;font-size:.78rem;
+  color:var(--txt);border:1px solid var(--border)}
+.o-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.o-total{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--g)}
+.o-actions{display:flex;gap:6px;flex-wrap:wrap}
+.sp{padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;white-space:nowrap}
 .sp-pending{background:rgba(245,158,11,.15);color:var(--amber)}
 .sp-confirmed{background:rgba(6,199,85,.15);color:var(--g)}
 .sp-delivered{background:rgba(56,189,248,.15);color:var(--blue)}
-.o-items{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.itag{background:var(--card);border-radius:8px;padding:3px 10px;
-  font-size:.78rem;color:var(--txt);border:1px solid var(--border)}
-.o-foot{display:flex;justify-content:space-between;align-items:center}
-.o-total{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--g)}
-.o-actions{display:flex;gap:6px;flex-wrap:wrap}
-.abtn{
-  padding:5px 12px;border-radius:8px;border:none;cursor:pointer;
-  font-size:.75rem;font-weight:700;font-family:inherit;transition:.2s;
-}
+.abtn{padding:5px 12px;border-radius:8px;border:none;cursor:pointer;font-size:.75rem;
+  font-weight:700;font-family:inherit;transition:.2s}
 .abtn-map{background:rgba(245,158,11,.2);color:var(--amber)}
 .abtn-map:hover{background:rgba(245,158,11,.35)}
 .abtn-ok{background:rgba(6,199,85,.2);color:var(--g)}
@@ -143,89 +119,103 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 .abtn-del:hover{background:rgba(56,189,248,.35)}
 .abtn-print{background:rgba(167,139,250,.2);color:var(--purple)}
 .abtn-print:hover{background:rgba(167,139,250,.35)}
+.abtn-red{background:rgba(239,68,68,.15);color:var(--red)}
+.abtn-red:hover{background:rgba(239,68,68,.3)}
 
-/* MAP PAGE */
+/* ─── MAP ─── */
 #delivery-map{height:calc(100vh - 160px);min-height:400px;border-radius:12px;
   border:1px solid var(--border);overflow:hidden}
 
-/* SUMMARY TABLE */
+/* ─── SUMMARY TABLE ─── */
 .tbl{width:100%;border-collapse:collapse}
-.tbl th{background:var(--card2);padding:10px 14px;text-align:left;
-  font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.06em;border-bottom:1px solid var(--border)}
+.tbl th{background:var(--card2);padding:10px 14px;text-align:left;font-size:.75rem;
+  font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;
+  border-bottom:1px solid var(--border)}
 .tbl td{padding:12px 14px;border-bottom:1px solid rgba(51,65,85,.5);font-size:.88rem}
-.tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:var(--card2)}
 .tbl .foot td{background:rgba(6,199,85,.1);font-weight:700;color:var(--g);border-top:2px solid var(--g)}
 
-/* RECEIPT MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
-  z-index:1000;align-items:center;justify-content:center;padding:20px}
+/* ─── PRODUCT CARDS ─── */
+.prod-card{background:var(--card2);border-radius:14px;border:1px solid var(--border);
+  padding:16px;transition:.2s;position:relative}
+.prod-card:hover{border-color:var(--g)}
+.prod-card.inactive{opacity:.5}
+.status-dot{position:absolute;top:10px;right:10px;font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:20px}
+.dot-on{background:rgba(6,199,85,.15);color:var(--g)}
+.dot-off{background:rgba(239,68,68,.15);color:var(--red)}
+.prod-card-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* ─── MODALS ─── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;
+  align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .overlay.open{display:flex}
-.receipt{background:#fff;color:#111;border-radius:16px;padding:28px;
-  max-width:360px;width:100%;font-family:'JetBrains Mono',monospace;max-height:90vh;overflow-y:auto}
+.modal-box{background:var(--card);border-radius:18px;padding:28px;max-width:460px;width:100%;
+  border:1px solid var(--border);max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal-title{font-size:1.1rem;font-weight:800}
+.modal-close{background:var(--card2);border:none;color:var(--muted);border-radius:8px;
+  padding:6px 12px;cursor:pointer;font-size:1rem}
+
+/* RECEIPT */
+.receipt{background:#fff;color:#111;border-radius:16px;padding:28px;max-width:360px;width:100%;
+  font-family:'JetBrains Mono',monospace;max-height:90vh;overflow-y:auto}
 .r-head{text-align:center;margin-bottom:16px}
 .r-shop{font-size:1.2rem;font-weight:700}
 .r-dash{border-top:2px dashed #ddd;margin:12px 0}
 .r-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:.82rem}
 .r-total{font-size:1rem;font-weight:700;color:#06C755}
 .r-foot{text-align:center;font-size:.72rem;color:#888;margin-top:14px}
-.modal-btns{display:flex;gap:10px;margin-top:16px}
-.mbtn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;
-  font-family:inherit;font-weight:700;font-size:.875rem;flex:1}
+.modal-btns{display:flex;gap:10px;margin-top:16px;max-width:360px;width:100%}
+.mbtn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;
+  font-weight:700;font-size:.875rem;flex:1}
 .mbtn-g{background:var(--g);color:#fff}
 .mbtn-s{background:#F1F5F9;color:#374151}
 
-/* EMPTY */
+/* TOGGLE SWITCH */
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;background:var(--card2);
+  padding:12px 16px;border-radius:10px;border:1px solid var(--border)}
+.toggle-track{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0}
+.toggle-track input{opacity:0;width:0;height:0;position:absolute}
+.toggle-bg{position:absolute;inset:0;border-radius:12px;background:var(--border);transition:.2s}
+.toggle-thumb{position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;
+  background:#fff;transition:.2s;pointer-events:none}
+
+/* FIREBASE SETUP */
+.setup-step{background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border);margin-bottom:12px}
+.step-num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--g);
+  color:#fff;font-size:.8rem;font-weight:800;align-items:center;justify-content:center;
+  margin-right:8px;flex-shrink:0}
+.step-title{font-weight:700;font-size:.9rem;display:flex;align-items:center}
+.step-body{font-size:.82rem;color:var(--muted);margin-top:8px;line-height:1.8}
+.step-body a{color:var(--blue);font-weight:600}
+.step-body code{background:var(--card);padding:2px 6px;border-radius:4px;
+  font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--purple)}
+.config-paste{width:100%;min-height:160px;padding:12px;border:1px solid var(--border);
+  border-radius:10px;background:var(--card);color:var(--txt);font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;outline:none;resize:vertical}
+.config-paste:focus{border-color:var(--g)}
+
 .empty{text-align:center;padding:48px 20px;color:var(--muted)}
 .empty-em{font-size:3rem;display:block;margin-bottom:12px}
 
-/* PRINT */
-@media print{
-  body *{visibility:hidden}
-  .overlay,.overlay *{visibility:visible}
-  .overlay{position:fixed;left:0;top:0;width:100%;background:white}
-  .modal-btns{display:none}
-}
+.loading-row{display:flex;align-items:center;gap:10px;padding:16px;color:var(--muted);font-size:.85rem}
+.spin-sm{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--g);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* PRODUCT ADMIN CARDS */
-.prod-card{
-  background:var(--card2);border-radius:14px;border:1px solid var(--border);
-  padding:16px;transition:.2s;position:relative;overflow:hidden;
-}
-.prod-card:hover{border-color:var(--g);box-shadow:0 4px 20px rgba(6,199,85,.15)}
-.prod-card.inactive{opacity:.55}
-.prod-card .inactive-badge{
-  position:absolute;top:10px;right:10px;background:rgba(239,68,68,.15);
-  color:var(--red);font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:20px;
-}
-.prod-card .active-badge{
-  position:absolute;top:10px;right:10px;background:rgba(6,199,85,.15);
-  color:var(--g);font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:20px;
-}
-.prod-em-big{font-size:2.4rem;margin-bottom:8px;display:block}
-.prod-card-name{font-weight:700;font-size:.95rem;margin-bottom:3px}
-.prod-card-cat{font-size:.72rem;color:var(--muted);margin-bottom:6px}
-.prod-card-price{font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--g);font-size:1.05rem}
-.prod-card-desc{font-size:.78rem;color:var(--muted);margin-top:5px;line-height:1.5}
-.prod-card-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-/* toggle switch active state handled via JS */
-
-@media(max-width:800px){
-  .layout{grid-template-columns:1fr}
-  .sidebar{display:none}
-  .stats-row{grid-template-columns:1fr 1fr}
-}
+@media print{body *{visibility:hidden}.overlay,.overlay *{visibility:visible}
+  .overlay{position:fixed;left:0;top:0;width:100%;background:white}.modal-btns{display:none}}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
     <span class="login-logo">🔐</span>
     <div class="login-title">แอดมิน</div>
-    <div class="login-sub">กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบจัดการออเดอร์</div>
+    <div class="login-sub">กรุณาใส่รหัสผ่านเพื่อเข้าระบบจัดการออเดอร์</div>
     <input class="login-input" type="password" id="pw-input" placeholder="••••••••"
       onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="login-btn" onclick="doLogin()">🔓 เข้าสู่ระบบ</button>
@@ -238,53 +228,37 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 <div id="app">
   <div class="topbar">
     <div class="topbar-logo">🛍</div>
-    <div class="topbar-title">LINE Order Admin</div>
+    <div style="font-weight:800;font-size:1rem">LINE Order Admin</div>
     <div class="topbar-right">
-      <span style="font-size:.8rem;color:var(--muted)" id="admin-user"></span>
+      <span class="db-status db-offline" id="db-status-badge">⏳ กำลังเชื่อมต่อ</span>
       <button class="logout-btn" onclick="logout()">ออกจากระบบ</button>
     </div>
   </div>
 
   <div class="layout">
-    <!-- SIDEBAR -->
     <div class="sidebar">
-      <div class="nav-label">เมนูหลัก</div>
-      <button class="nav-item on" onclick="goPage('dashboard',this)">
-        <span class="nav-icon">📊</span>Dashboard
-      </button>
-      <button class="nav-item" onclick="goPage('orders',this)">
-        <span class="nav-icon">📋</span>ออเดอร์ทั้งหมด
-      </button>
-      <button class="nav-item" onclick="goPage('mapview',this)">
-        <span class="nav-icon">🗺️</span>แผนที่จัดส่ง
-      </button>
-      <button class="nav-item" onclick="goPage('summary',this)">
-        <span class="nav-icon">📈</span>สรุปรายวัน
-      </button>
-      <button class="nav-item" onclick="goPage('products',this)">
-        <span class="nav-icon">🛍️</span>จัดการสินค้า
-      </button>
+      <div class="nav-lbl">เมนูหลัก</div>
+      <button class="nav-item on" data-page="dashboard">📊 Dashboard</button>
+      <button class="nav-item" data-page="orders">📋 ออเดอร์</button>
+      <button class="nav-item" data-page="mapview">🗺️ แผนที่จัดส่ง</button>
+      <button class="nav-item" data-page="summary">📈 สรุปรายวัน</button>
+      <button class="nav-item" data-page="products">🛍️ จัดการสินค้า</button>
       <div class="nav-sep"></div>
-      <div class="nav-label">ตั้งค่า</div>
-      <button class="nav-item" onclick="goPage('settings',this)">
-        <span class="nav-icon">⚙️</span>ตั้งค่า
-      </button>
+      <div class="nav-lbl">ตั้งค่า</div>
+      <button class="nav-item" data-page="firebase">🔥 Firebase</button>
+      <button class="nav-item" data-page="settings">⚙️ ตั้งค่า</button>
     </div>
 
-    <!-- CONTENT -->
     <div class="content">
 
       <!-- DASHBOARD -->
       <div class="page on" id="page-dashboard">
-        <div style="margin-bottom:20px">
-          <div style="font-size:1.3rem;font-weight:800">📊 Dashboard</div>
-          <div style="color:var(--muted);font-size:.85rem" id="dash-date"></div>
-        </div>
+        <div class="page-h" id="dash-date">📊 Dashboard</div>
         <div class="stats-row" id="dash-stats"></div>
         <div class="card">
           <div class="card-head">
             <div class="card-title">⚡ ออเดอร์ล่าสุด</div>
-            <button class="abtn abtn-map" onclick="goPage('orders',document.querySelector('[onclick*=orders]'))">ดูทั้งหมด →</button>
+            <button class="abtn abtn-map" onclick="goPage('orders')">ดูทั้งหมด →</button>
           </div>
           <div id="dash-recent"></div>
         </div>
@@ -292,25 +266,25 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 
       <!-- ORDERS -->
       <div class="page" id="page-orders">
-        <div style="margin-bottom:18px;font-size:1.3rem;font-weight:800">📋 ออเดอร์ทั้งหมด</div>
+        <div class="page-h">📋 ออเดอร์ทั้งหมด</div>
         <div class="filter-bar">
-          <input type="date" id="ord-date" onchange="renderOrders()"/>
-          <select id="ord-status" onchange="renderOrders()">
+          <input type="date" id="ord-date" onchange="filterOrders()"/>
+          <select id="ord-status" onchange="filterOrders()">
             <option value="">ทุกสถานะ</option>
             <option value="pending">⏳ รอยืนยัน</option>
             <option value="confirmed">✅ ยืนยันแล้ว</option>
             <option value="delivered">🚚 จัดส่งแล้ว</option>
           </select>
-          <button class="abtn abtn-map" onclick="clearOrdFilter()">ล้างตัวกรอง</button>
+          <button class="abtn abtn-map" onclick="clearOrdFilter()">ล้าง</button>
           <span class="badge badge-g" id="ord-count">0 รายการ</span>
         </div>
         <div id="orders-list"></div>
       </div>
 
-      <!-- MAP VIEW -->
+      <!-- MAP -->
       <div class="page" id="page-mapview">
-        <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
-          <div style="font-size:1.3rem;font-weight:800">🗺️ แผนที่จัดส่ง</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div class="page-h" style="margin:0">🗺️ แผนที่จัดส่ง</div>
           <div class="filter-bar" style="margin:0">
             <input type="date" id="map-date" onchange="renderMapPins()"/>
             <button class="abtn abtn-ok" onclick="renderMapPins()">🔄 รีเฟรช</button>
@@ -321,7 +295,7 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 
       <!-- SUMMARY -->
       <div class="page" id="page-summary">
-        <div style="margin-bottom:18px;font-size:1.3rem;font-weight:800">📈 สรุปรายวัน</div>
+        <div class="page-h">📈 สรุปรายวัน</div>
         <div class="filter-bar">
           <input type="date" id="sum-date" onchange="renderSummary()"/>
           <button class="abtn abtn-ok" onclick="document.getElementById('sum-date').value=today();renderSummary()">วันนี้</button>
@@ -329,9 +303,7 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
         </div>
         <div class="stats-row" id="sum-stats" style="grid-template-columns:repeat(3,1fr)"></div>
         <div class="card">
-          <div class="card-head">
-            <div class="card-title">📦 สินค้าที่ต้องเตรียมจัดส่ง</div>
-          </div>
+          <div class="card-head"><div class="card-title">📦 สินค้าที่ต้องเตรียมจัดส่ง</div></div>
           <table class="tbl"><thead><tr>
             <th>สินค้า</th><th>จำนวน</th><th>ราคา/ชิ้น</th><th>มูลค่ารวม</th>
           </tr></thead><tbody id="sum-body"></tbody></table>
@@ -342,615 +314,773 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
         </div>
       </div>
 
+      <!-- PRODUCTS -->
+      <div class="page" id="page-products">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+          <div class="page-h" style="margin:0">🛍️ จัดการสินค้า</div>
+          <button class="abtn abtn-ok" style="padding:10px 18px;font-size:.9rem" onclick="openProdModal()">+ เพิ่มสินค้า</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="prod-search" placeholder="🔍 ค้นหา..." oninput="renderProdAdmin()"
+            style="flex:1;min-width:160px"/>
+          <select id="prod-filter" onchange="renderProdAdmin()">
+            <option value="all">ทั้งหมด</option>
+            <option value="active">เปิดขาย</option>
+            <option value="inactive">ปิดขาย</option>
+          </select>
+          <span class="badge badge-g" id="prod-count">0 รายการ</span>
+        </div>
+        <div id="prod-admin-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px"></div>
+      </div>
+
+      <!-- FIREBASE SETUP -->
+      <div class="page" id="page-firebase">
+        <div class="page-h">🔥 ตั้งค่า Firebase</div>
+        <div id="firebase-status-card" class="card" style="margin-bottom:16px"></div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">📋 วิธีสร้าง Firebase Project</div>
+          <div class="setup-step">
+            <div class="step-title"><span class="step-num">1</span> สร้าง Firebase Project</div>
+            <div class="step-body">ไปที่ <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>
+              → คลิก <strong>Add project</strong> → ตั้งชื่อ → กด Continue จนเสร็จ</div>
+          </div>
+          <div class="setup-step">
+            <div class="step-title"><span class="step-num">2</span> เปิดใช้ Firestore Database</div>
+            <div class="step-body">ในเมนูซ้าย → <strong>Firestore Database</strong> → <strong>Create database</strong>
+              → เลือก <strong>Start in test mode</strong> → เลือก region ใกล้สุด (เช่น asia-southeast1) → Enable</div>
+          </div>
+          <div class="setup-step">
+            <div class="step-title"><span class="step-num">3</span> คัดลอก Config</div>
+            <div class="step-body">ไปที่ Project Settings (⚙️) → <strong>Your apps</strong>
+              → คลิก <strong>&lt;/&gt; Web</strong> → ตั้งชื่อ app → Register app
+              → จะเห็น <code>firebaseConfig</code> → คัดลอกทั้งหมด</div>
+          </div>
+          <div class="setup-step">
+            <div class="step-title"><span class="step-num">4</span> วาง Config ด้านล่าง</div>
+            <div class="step-body">วาง firebaseConfig object (ทั้ง <code>{ }</code>) ลงในช่องด้านล่าง</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">🔑 วาง Firebase Config</div>
+          <div class="fi">
+            <label>Firebase Config (JSON)</label>
+            <textarea class="config-paste" id="fb-config-input"
+              placeholder='วาง firebaseConfig ที่นี่ เช่น:
+{
+  "apiKey": "AIza...",
+  "authDomain": "project.firebaseapp.com",
+  "projectId": "project-id",
+  "storageBucket": "project.appspot.com",
+  "messagingSenderId": "123456",
+  "appId": "1:123:web:abc"
+}'></textarea>
+          </div>
+          <button class="login-btn" style="max-width:200px;padding:10px" onclick="saveFirebaseConfig()">
+            💾 บันทึกและเชื่อมต่อ
+          </button>
+          <div id="fb-config-msg" style="font-size:.82rem;margin-top:10px;min-height:20px"></div>
+        </div>
+      </div>
+
       <!-- SETTINGS -->
       <div class="page" id="page-settings">
-        <div style="margin-bottom:18px;font-size:1.3rem;font-weight:800">⚙️ ตั้งค่า</div>
+        <div class="page-h">⚙️ ตั้งค่า</div>
         <div class="card">
           <div class="card-title" style="margin-bottom:16px">🔐 เปลี่ยนรหัสผ่าน</div>
           <div style="max-width:360px;display:flex;flex-direction:column;gap:12px">
-            <div>
-              <label style="font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">รหัสผ่านเก่า</label>
-              <input type="password" id="pw-old" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);font-family:inherit;outline:none"/>
-            </div>
-            <div>
-              <label style="font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">รหัสผ่านใหม่</label>
-              <input type="password" id="pw-new" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);font-family:inherit;outline:none"/>
-            </div>
-            <button class="login-btn" style="padding:10px" onclick="changePw()">บันทึกรหัสผ่านใหม่</button>
-            <div id="pw-msg" style="font-size:.85rem;min-height:20px"></div>
+            <div class="fi"><label>รหัสผ่านเก่า</label><input type="password" id="pw-old"/></div>
+            <div class="fi"><label>รหัสผ่านใหม่</label><input type="password" id="pw-new"/></div>
+            <button class="login-btn" style="padding:10px" onclick="changePw()">บันทึก</button>
+            <div id="pw-msg" style="font-size:.82rem;min-height:18px"></div>
           </div>
         </div>
         <div class="card">
-          <div class="card-title" style="margin-bottom:16px">🏪 ข้อมูลร้าน</div>
+          <div class="card-title" style="margin-bottom:16px">🏪 ชื่อร้าน</div>
           <div style="max-width:360px;display:flex;flex-direction:column;gap:12px">
-            <div>
-              <label style="font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">ชื่อร้าน</label>
-              <input type="text" id="shop-name" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);font-family:inherit;outline:none" placeholder="ร้านของฉัน"/>
-            </div>
+            <div class="fi"><label>ชื่อร้าน</label>
+              <input type="text" id="shop-name" placeholder="ร้านของฉัน"/></div>
             <button class="login-btn" style="padding:10px" onclick="saveShop()">บันทึก</button>
           </div>
         </div>
       </div>
 
-      <!-- PRODUCTS -->
-      <div class="page" id="page-products">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-          <div style="font-size:1.3rem;font-weight:800">🛍️ จัดการสินค้า</div>
-          <button class="abtn abtn-ok" style="padding:10px 18px;font-size:.9rem" onclick="openProductModal()">+ เพิ่มสินค้าใหม่</button>
-        </div>
+    </div><!-- content -->
+  </div><!-- layout -->
+</div><!-- app -->
 
-        <!-- Search & filter bar -->
-        <div class="filter-bar">
-          <input type="text" id="prod-search" placeholder="🔍 ค้นหาสินค้า..." oninput="renderProducts()"
-            style="flex:1;min-width:180px"/>
-          <select id="prod-filter" onchange="renderProducts()">
-            <option value="all">ทั้งหมด</option>
-            <option value="active">เปิดขาย</option>
-            <option value="inactive">ปิดขาย</option>
-          </select>
-          <span class="badge badge-g" id="prod-count-badge">0 รายการ</span>
-        </div>
-
-        <!-- Product grid -->
-        <div id="prod-admin-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
-      </div>
-
-    </div><!-- end content -->
-  </div><!-- end layout -->
-</div><!-- end app -->
-
-<!-- PRODUCT MODAL -->
-<div class="overlay" id="prod-modal">
-  <div style="background:var(--card);border-radius:18px;padding:28px;max-width:440px;width:100%;
-    border:1px solid var(--border);max-height:90vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
-      <div style="font-size:1.1rem;font-weight:800" id="prod-modal-title">เพิ่มสินค้าใหม่</div>
-      <button onclick="closeProdModal()" style="background:var(--card2);border:none;color:var(--muted);
-        border-radius:8px;padding:6px 12px;cursor:pointer;font-size:1rem">✕</button>
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <!-- Emoji picker -->
-      <div>
-        <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px">ไอคอน / Emoji</label>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div id="em-preview" style="font-size:2.5rem;width:56px;height:56px;background:var(--card2);
-            border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;
-            border:2px solid var(--border)" onclick="toggleEmojiPicker()">🍱</div>
-          <input id="pm-emoji-input" type="text" placeholder="พิมพ์ emoji โดยตรง" maxlength="4"
-            style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;
-            background:var(--card2);color:var(--txt);font-size:1.2rem;font-family:inherit;outline:none"
-            oninput="updateEmojiPreview(this.value)"/>
-        </div>
-        <!-- Quick emoji palette -->
-        <div id="emoji-palette" style="display:none;margin-top:10px;background:var(--card2);
-          border-radius:12px;padding:12px;border:1px solid var(--border)">
-          <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;font-weight:600">เลือกด่วน</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px" id="emoji-quick"></div>
-        </div>
-      </div>
-
-      <div>
-        <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">ชื่อสินค้า *</label>
-        <input id="pm-name" type="text" placeholder="เช่น ข้าวผัดไข่" style="width:100%;padding:10px 14px;
-          border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);
-          font-family:inherit;font-size:.95rem;outline:none"/>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">ราคา (บาท) *</label>
-          <input id="pm-price" type="number" min="0" placeholder="0" style="width:100%;padding:10px 14px;
-            border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);
-            font-family:'JetBrains Mono',monospace;font-size:.95rem;outline:none"/>
-        </div>
-        <div>
-          <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">หมวดหมู่</label>
-          <input id="pm-cat" type="text" placeholder="เช่น อาหาร, เครื่องดื่ม" style="width:100%;padding:10px 14px;
-            border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);
-            font-family:inherit;font-size:.95rem;outline:none"/>
-        </div>
-      </div>
-
-      <div>
-        <label style="font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">รายละเอียด</label>
-        <textarea id="pm-desc" placeholder="รายละเอียดสินค้า (ไม่บังคับ)" style="width:100%;padding:10px 14px;
-          border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);
-          font-family:inherit;font-size:.875rem;outline:none;resize:vertical;min-height:60px"></textarea>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card2);
-        padding:12px 16px;border-radius:10px;border:1px solid var(--border)">
-        <div>
-          <div style="font-weight:600;font-size:.9rem">เปิดขาย</div>
-          <div style="font-size:.75rem;color:var(--muted)">ลูกค้าจะเห็นสินค้านี้</div>
-        </div>
-        <label style="position:relative;width:44px;height:24px;cursor:pointer">
-          <input type="checkbox" id="pm-active" checked style="opacity:0;width:0;height:0;position:absolute"/>
-          <span id="pm-toggle-track" style="position:absolute;inset:0;border-radius:12px;background:var(--border);
-            transition:.2s;cursor:pointer" onclick="toggleActiveSwitch()"></span>
-          <span id="pm-toggle-thumb" style="position:absolute;left:2px;top:2px;width:20px;height:20px;
-            border-radius:50%;background:#fff;transition:.2s;pointer-events:none"></span>
-        </label>
-      </div>
-
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <button class="login-btn" style="flex:1;padding:12px" onclick="saveProdModal()">💾 บันทึก</button>
-        <button onclick="closeProdModal()" style="flex:0 0 auto;padding:12px 20px;border-radius:12px;
-          border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;
-          font-family:inherit;font-weight:700">ยกเลิก</button>
-      </div>
-      <div id="pm-err" style="font-size:.8rem;color:var(--red);min-height:18px;text-align:center"></div>
-    </div>
-  </div>
-</div>
+<!-- RECEIPT MODAL -->
 <div class="overlay" id="receipt-overlay">
   <div class="receipt" id="receipt-box"></div>
-  <div class="modal-btns" style="max-width:360px;width:100%">
+  <div class="modal-btns">
     <button class="mbtn mbtn-g" onclick="window.print()">🖨️ พิมพ์</button>
-    <button class="mbtn mbtn-s" onclick="closeReceipt()">✕ ปิด</button>
+    <button class="mbtn mbtn-s" onclick="closeOverlay('receipt-overlay')">✕ ปิด</button>
   </div>
 </div>
 
 <!-- MAP DETAIL MODAL -->
 <div class="overlay" id="map-detail-overlay">
-  <div style="background:var(--card);border-radius:16px;padding:24px;max-width:380px;width:100%;border:1px solid var(--border)">
-    <div style="font-weight:800;font-size:1rem;margin-bottom:16px" id="md-title"></div>
-    <div id="md-body" style="font-size:.875rem;line-height:2;color:var(--muted)"></div>
-    <div id="md-map" style="height:200px;border-radius:10px;overflow:hidden;margin:14px 0;border:1px solid var(--border)"></div>
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <button class="abtn abtn-ok" style="flex:1;padding:10px" onclick="closeMapDetail()">ปิด</button>
-      <button class="abtn abtn-print" style="flex:1;padding:10px" id="md-gmaps">📍 Google Maps</button>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="md-title"></div>
+      <button class="modal-close" onclick="closeOverlay('map-detail-overlay')">✕</button>
+    </div>
+    <div id="md-body" style="font-size:.875rem;line-height:2;color:var(--muted);margin-bottom:12px"></div>
+    <div id="md-map" style="height:200px;border-radius:10px;overflow:hidden;border:1px solid var(--border)"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="abtn abtn-ok" style="flex:1;padding:10px" onclick="closeOverlay('map-detail-overlay')">ปิด</button>
+      <button class="abtn abtn-del" style="flex:1;padding:10px" id="md-gmaps">📍 Google Maps</button>
     </div>
   </div>
 </div>
 
-<script>
+<!-- PRODUCT MODAL -->
+<div class="overlay" id="prod-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="pm-title">เพิ่มสินค้า</div>
+      <button class="modal-close" onclick="closeOverlay('prod-modal')">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="fi">
+        <label>ไอคอน / Emoji</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div id="em-prev" style="font-size:2.5rem;width:52px;height:52px;background:var(--card2);
+            border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+            border:2px solid var(--border)" onclick="toggleEmojiPalette()">🍱</div>
+          <input id="pm-em" type="text" style="flex:1;padding:10px 14px;border:1px solid var(--border);
+            border-radius:10px;background:var(--card2);color:var(--txt);font-size:1.2rem;font-family:inherit;outline:none"
+            placeholder="พิมพ์ emoji" maxlength="4" oninput="document.getElementById('em-prev').textContent=this.value||'📦'"/>
+        </div>
+        <div id="emoji-palette" style="display:none;background:var(--card2);border-radius:12px;
+          padding:12px;border:1px solid var(--border);margin-top:6px">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px">เลือกด่วน</div>
+          <div id="emoji-quick" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
+      </div>
+      <div class="fi"><label>ชื่อสินค้า *</label>
+        <input id="pm-name" type="text" placeholder="เช่น ข้าวผัดไข่"
+          style="padding:10px 14px;border:1px solid var(--border);border-radius:10px;
+          background:var(--card2);color:var(--txt);font-family:inherit;font-size:.95rem;outline:none"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="fi"><label>ราคา (บาท) *</label>
+          <input id="pm-price" type="number" min="0" placeholder="0"
+            style="padding:10px 14px;border:1px solid var(--border);border-radius:10px;
+            background:var(--card2);color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:.95rem;outline:none"/></div>
+        <div class="fi"><label>หมวดหมู่</label>
+          <input id="pm-cat" type="text" placeholder="เช่น อาหาร"
+            style="padding:10px 14px;border:1px solid var(--border);border-radius:10px;
+            background:var(--card2);color:var(--txt);font-family:inherit;font-size:.95rem;outline:none"/></div>
+      </div>
+      <div class="fi"><label>รายละเอียด</label>
+        <textarea id="pm-desc" placeholder="(ไม่บังคับ)"
+          style="padding:10px 14px;border:1px solid var(--border);border-radius:10px;
+          background:var(--card2);color:var(--txt);font-family:inherit;font-size:.875rem;
+          outline:none;resize:vertical;min-height:60px"></textarea></div>
+      <div class="toggle-wrap">
+        <div><div style="font-weight:600;font-size:.9rem">เปิดขาย</div>
+          <div style="font-size:.75rem;color:var(--muted)">ลูกค้าจะเห็นสินค้านี้</div></div>
+        <label class="toggle-track" onclick="flipToggle()">
+          <input type="checkbox" id="pm-active" checked style="opacity:0;position:absolute"/>
+          <span class="toggle-bg" id="pm-toggle-bg" style="background:var(--g)"></span>
+          <span class="toggle-thumb" id="pm-toggle-thumb" style="left:22px"></span>
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="login-btn" style="flex:1;padding:12px" onclick="saveProd()">💾 บันทึก</button>
+        <button onclick="closeOverlay('prod-modal')"
+          style="padding:12px 20px;border-radius:12px;border:1px solid var(--border);
+          background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:700">ยกเลิก</button>
+      </div>
+      <div id="pm-err" style="font-size:.8rem;color:var(--red);min-height:18px;text-align:center"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs, getDoc, doc,
+  updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ── GLOBALS ──────────────────────────────────
+let db = null;
+let unsubOrders = null;
+let allOrders = [];
+let allProducts = [];
+let dMap = null, mdMiniMap = null, mapMarkers = [];
+let editingProdId = null;
+
 const DEFAULT_PW = 'admin1234';
-let dMap = null, miniMap = null, markers = [];
+const QUICK_EMOJIS = ['🍱','🍜','🍳','🥗','🍗','🍖','🍝','🍲','🍛','🍣','🍔','🌮',
+  '🥙','🍕','🥘','🍤','🥚','🧆','🥐','🥖','🍰','🎂','🍩','🍫','🍦','🧁',
+  '☕','🧋','🍊','🍋','🍵','🥤','🧃','🍹','🥛'];
 
-function today(){ return new Date().toISOString().split('T')[0]; }
-function fmoney(n){ return '฿' + (+n).toLocaleString(); }
-function fdate(d){ return new Date(d).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}); }
-function getOrders(){ return JSON.parse(localStorage.getItem('lo_orders')||'[]'); }
-function getPw(){ return localStorage.getItem('admin_pw') || DEFAULT_PW; }
-function getShop(){ return localStorage.getItem('shop_name') || 'ร้านของฉัน'; }
+function today() { return new Date().toISOString().split('T')[0]; }
+function fmoney(n) { return '฿' + (+n||0).toLocaleString(); }
+function fdate(d) { return new Date(d).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}); }
+function getPw() { return localStorage.getItem('admin_pw') || DEFAULT_PW; }
+function getShop() { return localStorage.getItem('shop_name') || 'ร้านของฉัน'; }
 
-// ===== LOGIN =====
-function doLogin(){
+// ── LOGIN ─────────────────────────────────────
+window.doLogin = () => {
   const v = document.getElementById('pw-input').value;
-  if(v === getPw()){
+  if (v === getPw()) {
     localStorage.setItem('admin_session','1');
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='block';
-    document.getElementById('admin-user').textContent='👤 Admin';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
     initApp();
   } else {
-    const e=document.getElementById('login-err');
-    e.textContent='รหัสผ่านไม่ถูกต้อง';
-    document.getElementById('pw-input').value='';
-    setTimeout(()=>e.textContent='',3000);
+    const e = document.getElementById('login-err');
+    e.textContent = 'รหัสผ่านไม่ถูกต้อง';
+    document.getElementById('pw-input').value = '';
+    setTimeout(() => e.textContent='', 3000);
   }
-}
+};
 
-document.getElementById('pw-input').addEventListener('keydown',e=>{
-  if(e.key==='Enter') doLogin();
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.doLogin();
 });
 
-function logout(){
+window.logout = () => {
+  if (unsubOrders) unsubOrders();
   localStorage.removeItem('admin_session');
   location.reload();
-}
+};
 
-function initApp(){
-  if(localStorage.getItem('admin_session')==='1'){
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='block';
-    document.getElementById('admin-user').textContent='👤 Admin';
+// ── FIREBASE ──────────────────────────────────
+async function initFirebase() {
+  const saved = localStorage.getItem('fb_config');
+  if (!saved) { setDbStatus(false); return; }
+  try {
+    const config = JSON.parse(saved);
+    if (!config.apiKey || config.apiKey === 'YOUR_API_KEY') { setDbStatus(false); return; }
+    const app = initializeApp(config);
+    db = getFirestore(app);
+    setDbStatus(true);
+    return true;
+  } catch(e) {
+    console.error('Firebase init:', e);
+    setDbStatus(false);
+    return false;
   }
-  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('ord-date').value=today();
-  document.getElementById('map-date').value=today();
-  document.getElementById('sum-date').value=today();
-  document.getElementById('shop-name').value=getShop();
-  renderDashboard();
 }
 
-// ===== NAV =====
-function goPage(name, el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+function setDbStatus(online) {
+  const el = document.getElementById('db-status-badge');
+  if (online) {
+    el.textContent = '🟢 Firebase online';
+    el.className = 'db-status db-online';
+  } else {
+    el.textContent = '🔴 Local mode';
+    el.className = 'db-status db-offline';
+  }
+}
+
+// ── APP INIT ──────────────────────────────────
+async function initApp() {
+  document.getElementById('ord-date').value = today();
+  document.getElementById('map-date').value = today();
+  document.getElementById('sum-date').value = today();
+  document.getElementById('shop-name').value = getShop();
+  document.getElementById('dash-date').textContent =
+    '📊 ' + new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  await initFirebase();
+  await loadProducts();
+  subscribeOrders();
+  renderFirebaseStatus();
+}
+
+if (localStorage.getItem('admin_session') === '1') initApp();
+
+// ── NAV ───────────────────────────────────────
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const page = btn.dataset.page;
+    goPage(page);
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  });
+});
+
+window.goPage = (name) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
-  if(el) el.classList.add('on');
-  if(name==='orders') renderOrders();
-  if(name==='mapview'){ setTimeout(()=>{ initDeliveryMap(); renderMapPins(); },100); }
-  if(name==='summary') renderSummary();
-  if(name==='products') renderProducts();
+  const btn = document.querySelector(`[data-page="${name}"]`);
+  if (btn) {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+  if (name === 'mapview') setTimeout(() => { initDeliveryMap(); renderMapPins(); }, 100);
+  if (name === 'summary') renderSummary();
+  if (name === 'products') renderProdAdmin();
+  if (name === 'firebase') renderFirebaseStatus();
+  if (name === 'dashboard') renderDashboard();
+};
+
+// ── ORDERS (Firestore realtime) ───────────────
+function subscribeOrders() {
+  if (db) {
+    // Realtime listener
+    const q = query(collection(db, 'orders'), orderBy('createdAt','desc'));
+    unsubOrders = onSnapshot(q, snap => {
+      allOrders = snap.docs.map(d => ({_fid: d.id, ...d.data()}));
+      onOrdersUpdated();
+    }, err => {
+      console.error('onSnapshot error:', err);
+      loadOrdersLocal();
+    });
+  } else {
+    loadOrdersLocal();
+  }
 }
 
-// ===== DASHBOARD =====
-function renderDashboard(){
-  const orders = getOrders();
-  const todayOrders = orders.filter(o=>o.deliveryDate===today()||o.createdAt.startsWith(today()));
-  const total = orders.reduce((s,o)=>s+o.total,0);
-  const todayRev = todayOrders.reduce((s,o)=>s+o.total,0);
-  const pending = orders.filter(o=>o.status==='pending').length;
+function loadOrdersLocal() {
+  allOrders = JSON.parse(localStorage.getItem('lo_orders')||'[]');
+  onOrdersUpdated();
+}
 
-  document.getElementById('dash-stats').innerHTML=`
-    <div class="stat"><div class="stat-num">${orders.length}</div><div class="stat-lbl">ออเดอร์ทั้งหมด</div></div>
+function onOrdersUpdated() {
+  renderDashboard();
+  if (document.getElementById('page-orders').classList.contains('on')) filterOrders();
+  if (document.getElementById('page-summary').classList.contains('on')) renderSummary();
+}
+
+// ── DASHBOARD ─────────────────────────────────
+function renderDashboard() {
+  const todayOrders = allOrders.filter(o => o.deliveryDate===today() || o.createdAt.startsWith(today()));
+  const total = allOrders.reduce((s,o) => s+o.total, 0);
+  const todayRev = todayOrders.reduce((s,o) => s+o.total, 0);
+  const pending = allOrders.filter(o => o.status==='pending').length;
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat"><div class="stat-num">${allOrders.length}</div><div class="stat-lbl">ออเดอร์ทั้งหมด</div></div>
     <div class="stat"><div class="stat-num" style="color:var(--amber)">${pending}</div><div class="stat-lbl">⏳ รอยืนยัน</div></div>
-    <div class="stat"><div class="stat-num">${todayOrders.length}</div><div class="stat-lbl">📅 ออเดอร์วันนี้</div></div>
-    <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(todayRev)}</div><div class="stat-lbl">💰 ยอดวันนี้</div><div class="stat-sub">รวม ${fmoney(total)}</div></div>
-  `;
-  document.getElementById('dash-recent').innerHTML = orders.slice(0,5).map(o=>orderCard(o)).join('')||'<div class="empty"><span class="empty-em">📭</span>ยังไม่มีออเดอร์</div>';
+    <div class="stat"><div class="stat-num">${todayOrders.length}</div><div class="stat-lbl">📅 วันนี้</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(todayRev)}</div>
+      <div class="stat-lbl">💰 ยอดวันนี้</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace">รวม ${fmoney(total)}</div>
+    </div>`;
+  document.getElementById('dash-recent').innerHTML =
+    allOrders.slice(0,5).map(o => orderCard(o)).join('') ||
+    '<div class="empty"><span class="empty-em">📭</span>ยังไม่มีออเดอร์</div>';
 }
 
-// ===== ORDERS =====
-function renderOrders(){
-  const date=document.getElementById('ord-date').value;
-  const status=document.getElementById('ord-status').value;
-  let list=getOrders();
-  if(date) list=list.filter(o=>o.deliveryDate===date||o.createdAt.startsWith(date));
-  if(status) list=list.filter(o=>o.status===status);
-  document.getElementById('ord-count').textContent=list.length+' รายการ';
-  document.getElementById('orders-list').innerHTML=list.length
-    ?list.map(o=>orderCard(o)).join('')
-    :'<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์ตามตัวกรอง</div>';
+// ── ORDER LIST ────────────────────────────────
+function statusLabel(s) {
+  return {pending:'⏳ รอยืนยัน', confirmed:'✅ ยืนยันแล้ว', delivered:'🚚 จัดส่งแล้ว'}[s]||s;
 }
 
-function clearOrdFilter(){
-  document.getElementById('ord-date').value='';
-  document.getElementById('ord-status').value='';
-  renderOrders();
-}
-
-function statusLabel(s){ return {pending:'⏳ รอยืนยัน',confirmed:'✅ ยืนยันแล้ว',delivered:'🚚 จัดส่งแล้ว'}[s]||s; }
-
-function orderCard(o){
+function orderCard(o) {
   return `<div class="order-item s-${o.status}">
     <div class="o-top">
       <div>
         <div class="o-id">#${o.id}</div>
         <div class="o-name">${o.name} 📞 ${o.phone}</div>
         <div class="o-meta">📅 จัดส่ง: ${fdate(o.deliveryDate)} | ⏰ ${new Date(o.createdAt).toLocaleString('th-TH')}</div>
-        ${o.address?`<div class="o-meta">📍 ${o.address}</div>`:''}
-        ${o.note?`<div class="o-meta">📝 ${o.note}</div>`:''}
+        ${o.address ? `<div class="o-meta">📍 ${o.address}</div>` : ''}
+        ${o.note ? `<div class="o-meta">📝 ${o.note}</div>` : ''}
       </div>
-      <span class="status-pill sp-${o.status}">${statusLabel(o.status)}</span>
+      <span class="sp sp-${o.status}">${statusLabel(o.status)}</span>
     </div>
     <div class="o-items">${o.items.map(i=>`<span class="itag">${i.em} ${i.name} ×${i.qty}</span>`).join('')}</div>
     <div class="o-foot">
       <span class="o-total">${fmoney(o.total)}</span>
       <div class="o-actions">
-        ${o.lat?`<button class="abtn abtn-map" onclick="showMapDetail('${o.id}')">📍 แผนที่</button>`:''}
-        <button class="abtn abtn-print" onclick="printReceipt('${o.id}')">🧾 ใบสั่ง</button>
-        ${o.status==='pending'?`<button class="abtn abtn-ok" onclick="setStatus('${o.id}','confirmed')">✅ ยืนยัน</button>`:''}
-        ${o.status==='confirmed'?`<button class="abtn abtn-del" onclick="setStatus('${o.id}','delivered')">🚚 ส่งแล้ว</button>`:''}
+        ${o.lat ? `<button class="abtn abtn-map" onclick="window.showMapDetail('${o._fid||o.id}')">📍 แผนที่</button>` : ''}
+        <button class="abtn abtn-print" onclick="window.printReceipt('${o._fid||o.id}')">🧾 ใบสั่ง</button>
+        ${o.status==='pending' ? `<button class="abtn abtn-ok" onclick="window.setStatus('${o._fid||o.id}','confirmed')">✅ ยืนยัน</button>` : ''}
+        ${o.status==='confirmed' ? `<button class="abtn abtn-del" onclick="window.setStatus('${o._fid||o.id}','delivered')">🚚 ส่งแล้ว</button>` : ''}
       </div>
     </div>
   </div>`;
 }
 
-function setStatus(id,status){
-  const orders=getOrders();
-  const o=orders.find(x=>x.id===id);
-  if(o){o.status=status;localStorage.setItem('lo_orders',JSON.stringify(orders));}
-  renderOrders(); renderDashboard();
-}
+window.filterOrders = () => {
+  const date = document.getElementById('ord-date').value;
+  const status = document.getElementById('ord-status').value;
+  let list = allOrders;
+  if (date) list = list.filter(o => o.deliveryDate===date || o.createdAt.startsWith(date));
+  if (status) list = list.filter(o => o.status===status);
+  document.getElementById('ord-count').textContent = list.length + ' รายการ';
+  document.getElementById('orders-list').innerHTML = list.length
+    ? list.map(o => orderCard(o)).join('')
+    : '<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์</div>';
+};
 
-// ===== RECEIPT =====
-function printReceipt(id){
-  const o=getOrders().find(x=>x.id===id); if(!o) return;
-  document.getElementById('receipt-box').innerHTML=`
-    <div class="r-head">
-      <div class="r-shop">🛍 ${getShop()}</div>
-      <div style="font-size:.72rem;color:#888;margin-top:3px">ใบสั่งซื้อ</div>
-    </div>
+window.clearOrdFilter = () => {
+  document.getElementById('ord-date').value = '';
+  document.getElementById('ord-status').value = '';
+  window.filterOrders();
+};
+
+window.setStatus = async (fid, status) => {
+  if (db) {
+    try { await updateDoc(doc(db,'orders',fid), {status}); } catch(e) { alert('Error: '+e.message); }
+  } else {
+    const o = allOrders.find(x => x._fid===fid || x.id===fid);
+    if (o) {
+      o.status = status;
+      localStorage.setItem('lo_orders', JSON.stringify(allOrders));
+      onOrdersUpdated();
+    }
+  }
+};
+
+// ── RECEIPT ───────────────────────────────────
+window.printReceipt = (fid) => {
+  const o = allOrders.find(x => x._fid===fid || x.id===fid); if (!o) return;
+  document.getElementById('receipt-box').innerHTML = `
+    <div class="r-head"><div class="r-shop">🛍 ${getShop()}</div>
+      <div style="font-size:.72rem;color:#888;margin-top:3px">ใบสั่งซื้อ</div></div>
     <div class="r-dash"></div>
     <div class="r-row"><span>เลขที่:</span><span>${o.id}</span></div>
     <div class="r-row"><span>ลูกค้า:</span><span>${o.name}</span></div>
     <div class="r-row"><span>โทร:</span><span>${o.phone}</span></div>
-    ${o.address?`<div class="r-row"><span>ที่อยู่:</span><span style="max-width:200px;text-align:right">${o.address}</span></div>`:''}
+    ${o.address ? `<div class="r-row"><span>ที่อยู่:</span><span style="max-width:180px;text-align:right">${o.address}</span></div>` : ''}
     <div class="r-row"><span>วันจัดส่ง:</span><span>${fdate(o.deliveryDate)}</span></div>
     <div class="r-dash"></div>
     ${o.items.map(i=>`<div class="r-row"><span>${i.em} ${i.name} ×${i.qty}</span><span>${fmoney(i.price*i.qty)}</span></div>`).join('')}
     <div class="r-dash"></div>
     <div class="r-row r-total"><span>รวมทั้งสิ้น</span><span>${fmoney(o.total)}</span></div>
-    ${o.note?`<div class="r-row" style="font-size:.72rem"><span>หมายเหตุ:</span><span>${o.note}</span></div>`:''}
-    <div class="r-foot">ขอบคุณที่ใช้บริการ 💚<br>${getShop()}</div>
-  `;
+    ${o.note ? `<div class="r-row" style="font-size:.72rem"><span>หมายเหตุ:</span><span>${o.note}</span></div>` : ''}
+    <div class="r-foot">ขอบคุณที่ใช้บริการ 💚<br>${getShop()}</div>`;
   document.getElementById('receipt-overlay').classList.add('open');
+};
+
+// ── DELIVERY MAP ──────────────────────────────
+function initDeliveryMap() {
+  if (dMap) { dMap.invalidateSize(); return; }
+  dMap = L.map('delivery-map').setView([13.7563,100.5018], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {attribution:'© OpenStreetMap', maxZoom:19}).addTo(dMap);
 }
-function closeReceipt(){ document.getElementById('receipt-overlay').classList.remove('open'); }
 
-// ===== DELIVERY MAP =====
-function initDeliveryMap(){
-  if(dMap){ dMap.invalidateSize(); return; }
-  dMap = L.map('delivery-map').setView([13.7563,100.5018],11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(dMap);
-}
-
-function renderMapPins(){
-  if(!dMap) return;
-  markers.forEach(m=>dMap.removeLayer(m));
-  markers=[];
-  const date=document.getElementById('map-date').value;
-  const orders=getOrders().filter(o=>(!date||(o.deliveryDate===date||o.createdAt.startsWith(date)))&&o.lat&&o.lng);
-  if(!orders.length) return;
-
-  const statusColors={pending:'#F59E0B',confirmed:'#06C755',delivered:'#38BDF8'};
-  const bounds=[];
-
-  orders.forEach(o=>{
-    const color=statusColors[o.status]||'#06C755';
-    const icon=L.divIcon({html:`
+window.renderMapPins = () => {
+  if (!dMap) return;
+  mapMarkers.forEach(m => dMap.removeLayer(m));
+  mapMarkers = [];
+  const date = document.getElementById('map-date').value;
+  const orders = allOrders.filter(o =>
+    (!date || (o.deliveryDate===date || o.createdAt.startsWith(date))) && o.lat && o.lng);
+  if (!orders.length) return;
+  const colors = {pending:'#F59E0B', confirmed:'#06C755', delivered:'#38BDF8'};
+  const bounds = [];
+  orders.forEach(o => {
+    const color = colors[o.status]||'#06C755';
+    const icon = L.divIcon({html:`
       <div style="position:relative">
         <div style="background:${color};width:36px;height:36px;border-radius:50% 50% 50% 0;
           transform:rotate(-45deg);border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,.3)"></div>
-        <div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);font-size:.65rem;
-          font-weight:800;color:white;font-family:JetBrains Mono,monospace">
-          ${o.id.slice(-3)}
-        </div>
-      </div>`,iconSize:[36,36],iconAnchor:[18,36],className:''});
-
-    const m=L.marker([o.lat,o.lng],{icon}).addTo(dMap);
-    m.bindPopup(`<strong>${o.name}</strong><br>📞 ${o.phone}<br>🆔 ${o.id}<br>💰 ${fmoney(o.total)}<br>${statusLabel(o.status)}`);
-    m.on('click',()=>showMapDetail(o.id));
-    markers.push(m);
-    bounds.push([o.lat,o.lng]);
+        <div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);
+          font-size:.6rem;font-weight:800;color:white;font-family:monospace">${o.id.slice(-4)}</div>
+      </div>`, iconSize:[36,36], iconAnchor:[18,36], className:''});
+    const m = L.marker([o.lat,o.lng], {icon}).addTo(dMap);
+    m.on('click', () => window.showMapDetail(o._fid||o.id));
+    mapMarkers.push(m);
+    bounds.push([o.lat, o.lng]);
   });
+  if (bounds.length) dMap.fitBounds(bounds, {padding:[40,40]});
+};
 
-  if(bounds.length) dMap.fitBounds(bounds,{padding:[40,40]});
-}
-
-// MAP DETAIL
-let mdMiniMap=null;
-function showMapDetail(id){
-  const o=getOrders().find(x=>x.id===id); if(!o||!o.lat) return;
-  document.getElementById('md-title').textContent=`#${o.id} — ${o.name}`;
-  document.getElementById('md-body').innerHTML=`
-    📞 ${o.phone}<br>
-    📅 จัดส่ง: ${fdate(o.deliveryDate)}<br>
-    📍 ${o.lat.toFixed(5)}, ${o.lng.toFixed(5)}<br>
-    ${o.address?`🏠 ${o.address}<br>`:''}
-    💰 ${fmoney(o.total)}<br>
-    ${statusLabel(o.status)}
-  `;
-  document.getElementById('md-gmaps').onclick=()=>window.open(`https://www.google.com/maps?q=${o.lat},${o.lng}`,'_blank');
+window.showMapDetail = (fid) => {
+  const o = allOrders.find(x => x._fid===fid || x.id===fid); if (!o||!o.lat) return;
+  document.getElementById('md-title').textContent = `#${o.id} — ${o.name}`;
+  document.getElementById('md-body').innerHTML =
+    `📞 ${o.phone}<br>📅 จัดส่ง: ${fdate(o.deliveryDate)}<br>📌 ${o.lat.toFixed(5)}, ${o.lng.toFixed(5)}<br>` +
+    (o.address ? `🏠 ${o.address}<br>` : '') + `💰 ${fmoney(o.total)}<br>${statusLabel(o.status)}`;
+  document.getElementById('md-gmaps').onclick = () =>
+    window.open(`https://www.google.com/maps?q=${o.lat},${o.lng}`, '_blank');
   document.getElementById('map-detail-overlay').classList.add('open');
-
-  setTimeout(()=>{
-    if(mdMiniMap){ mdMiniMap.remove(); mdMiniMap=null; }
-    mdMiniMap=L.map('md-map').setView([o.lat,o.lng],16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19}).addTo(mdMiniMap);
+  setTimeout(() => {
+    if (mdMiniMap) { mdMiniMap.remove(); mdMiniMap=null; }
+    mdMiniMap = L.map('md-map').setView([o.lat,o.lng], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {attribution:'© OSM', maxZoom:19}).addTo(mdMiniMap);
     L.marker([o.lat,o.lng]).addTo(mdMiniMap).bindPopup(o.name).openPopup();
-  },150);
-}
+  }, 150);
+};
 
-function closeMapDetail(){
-  document.getElementById('map-detail-overlay').classList.remove('open');
-  if(mdMiniMap){ mdMiniMap.remove(); mdMiniMap=null; }
-}
-
-// ===== SUMMARY =====
-function renderSummary(){
-  const date=document.getElementById('sum-date').value; if(!date) return;
-  const dayOrders=getOrders().filter(o=>o.deliveryDate===date);
-  const rev=dayOrders.reduce((s,o)=>s+o.total,0);
-  const itemMap={};
-  dayOrders.forEach(o=>o.items.forEach(i=>{
-    if(!itemMap[i.id]) itemMap[i.id]={...i,totalQty:0,totalVal:0};
-    itemMap[i.id].totalQty+=i.qty; itemMap[i.id].totalVal+=i.price*i.qty;
+// ── SUMMARY ───────────────────────────────────
+window.renderSummary = () => {
+  const date = document.getElementById('sum-date').value; if (!date) return;
+  const dayOrders = allOrders.filter(o => o.deliveryDate===date);
+  const rev = dayOrders.reduce((s,o) => s+o.total, 0);
+  const itemMap = {};
+  dayOrders.forEach(o => o.items.forEach(i => {
+    if (!itemMap[i.id]) itemMap[i.id] = {...i, totalQty:0, totalVal:0};
+    itemMap[i.id].totalQty += i.qty;
+    itemMap[i.id].totalVal += i.price*i.qty;
   }));
-  const items=Object.values(itemMap).sort((a,b)=>b.totalQty-a.totalQty);
-  const totalItems=items.reduce((s,i)=>s+i.totalQty,0);
+  const items = Object.values(itemMap).sort((a,b) => b.totalQty-a.totalQty);
+  const totalItems = items.reduce((s,i) => s+i.totalQty, 0);
 
-  document.getElementById('sum-stats').innerHTML=`
+  document.getElementById('sum-stats').innerHTML = `
     <div class="stat"><div class="stat-num">${dayOrders.length}</div><div class="stat-lbl">📦 ออเดอร์</div></div>
     <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(rev)}</div><div class="stat-lbl">💰 ยอดขาย</div></div>
-    <div class="stat"><div class="stat-num">${totalItems}</div><div class="stat-lbl">🛍 รายการรวม</div></div>
-  `;
+    <div class="stat"><div class="stat-num">${totalItems}</div><div class="stat-lbl">🛍 รายการรวม</div></div>`;
 
-  document.getElementById('sum-body').innerHTML=items.length
-    ? items.map(i=>`<tr>
+  document.getElementById('sum-body').innerHTML = items.length
+    ? items.map(i => `<tr>
         <td>${i.em} ${i.name}</td>
         <td><strong style="color:var(--g);font-family:'JetBrains Mono',monospace">${i.totalQty} ชิ้น</strong></td>
         <td style="font-family:'JetBrains Mono',monospace">${fmoney(i.price)}</td>
         <td style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmoney(i.totalVal)}</td>
-      </tr>`).join('')+`
-      <tr class="foot"><td colspan="3">รวมทั้งหมด</td><td>${fmoney(rev)}</td></tr>`
-    :'<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีออเดอร์</td></tr>';
+      </tr>`).join('') + `<tr class="foot"><td colspan="3">รวม</td><td>${fmoney(rev)}</td></tr>`
+    : '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีออเดอร์</td></tr>';
 
-  document.getElementById('sum-customers').innerHTML=dayOrders.length
-    ? dayOrders.map(o=>`
+  document.getElementById('sum-customers').innerHTML = dayOrders.length
+    ? dayOrders.map(o => `
       <div style="padding:14px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <strong>${o.name} ${o.phone}</strong>
           <span style="font-family:'JetBrains Mono',monospace;color:var(--g);font-weight:700">${fmoney(o.total)}</span>
         </div>
-        ${o.address?`<div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">📍 ${o.address}</div>`:''}
-        ${o.lat?`<div style="font-size:.78rem;color:var(--amber);margin-bottom:6px">🗺️ ปักหมุดแล้ว <a href="https://www.google.com/maps?q=${o.lat},${o.lng}" target="_blank" style="color:var(--blue)">ดูแผนที่</a></div>`:''}
+        ${o.address ? `<div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">📍 ${o.address}</div>` : ''}
+        ${o.lat ? `<a href="https://www.google.com/maps?q=${o.lat},${o.lng}" target="_blank"
+          style="font-size:.78rem;color:var(--blue);display:block;margin-bottom:6px">🗺️ ดูแผนที่</a>` : ''}
         <div style="display:flex;flex-wrap:wrap;gap:6px">${o.items.map(i=>`<span class="itag">${i.em} ${i.name} ×${i.qty}</span>`).join('')}</div>
       </div>`).join('')
-    :'<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์</div>';
-}
+    : '<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์</div>';
+};
 
-// ===== SETTINGS =====
-function changePw(){
-  const old=document.getElementById('pw-old').value;
-  const nw=document.getElementById('pw-new').value;
-  const msg=document.getElementById('pw-msg');
-  if(old!==getPw()){msg.style.color='var(--red)';msg.textContent='รหัสผ่านเก่าไม่ถูกต้อง';return;}
-  if(nw.length<4){msg.style.color='var(--red)';msg.textContent='รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร';return;}
-  localStorage.setItem('admin_pw',nw);
-  msg.style.color='var(--g)';msg.textContent='✅ เปลี่ยนรหัสผ่านสำเร็จ';
-  document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';
-}
-
-function saveShop(){
-  localStorage.setItem('shop_name',document.getElementById('shop-name').value);
-  alert('บันทึกแล้ว');
-}
-
-// ===== PRODUCT MANAGEMENT =====
+// ── PRODUCTS ──────────────────────────────────
 const DEFAULT_PRODUCTS = [
-  {id:1,name:'ข้าวกล่อง',em:'🍱',price:45,cat:'อาหาร',desc:'',active:true},
-  {id:2,name:'ก๋วยเตี๋ยว',em:'🍜',price:50,cat:'อาหาร',desc:'',active:true},
-  {id:3,name:'ข้าวผัด',em:'🍳',price:55,cat:'อาหาร',desc:'',active:true},
-  {id:4,name:'ส้มตำ',em:'🥗',price:40,cat:'อาหาร',desc:'',active:true},
-  {id:5,name:'ไก่ทอด',em:'🍗',price:35,cat:'อาหาร',desc:'',active:true},
-  {id:6,name:'น้ำส้ม',em:'🍊',price:25,cat:'เครื่องดื่ม',desc:'',active:true},
-  {id:7,name:'ชานม',em:'🧋',price:45,cat:'เครื่องดื่ม',desc:'',active:true},
-  {id:8,name:'ข้าวหมูแดง',em:'🍖',price:55,cat:'อาหาร',desc:'',active:true},
-  {id:9,name:'ผัดไทย',em:'🍝',price:50,cat:'อาหาร',desc:'',active:true},
-  {id:10,name:'ต้มยำ',em:'🍲',price:60,cat:'อาหาร',desc:'',active:true},
-  {id:11,name:'ขนมปัง',em:'🥖',price:30,cat:'เบเกอรี่',desc:'',active:true},
-  {id:12,name:'กาแฟ',em:'☕',price:45,cat:'เครื่องดื่ม',desc:'',active:true},
+  {id:1,name:'ข้าวกล่อง',em:'🍱',price:45,cat:'อาหาร',active:true},
+  {id:2,name:'ก๋วยเตี๋ยว',em:'🍜',price:50,cat:'อาหาร',active:true},
+  {id:3,name:'ข้าวผัด',em:'🍳',price:55,cat:'อาหาร',active:true},
+  {id:4,name:'ส้มตำ',em:'🥗',price:40,cat:'อาหาร',active:true},
+  {id:5,name:'ไก่ทอด',em:'🍗',price:35,cat:'อาหาร',active:true},
+  {id:6,name:'น้ำส้ม',em:'🍊',price:25,cat:'เครื่องดื่ม',active:true},
+  {id:7,name:'ชานม',em:'🧋',price:45,cat:'เครื่องดื่ม',active:true},
+  {id:8,name:'ข้าวหมูแดง',em:'🍖',price:55,cat:'อาหาร',active:true},
+  {id:9,name:'ผัดไทย',em:'🍝',price:50,cat:'อาหาร',active:true},
+  {id:10,name:'ต้มยำ',em:'🍲',price:60,cat:'อาหาร',active:true},
+  {id:11,name:'ขนมปัง',em:'🥖',price:30,cat:'เบเกอรี่',active:true},
+  {id:12,name:'กาแฟ',em:'☕',price:45,cat:'เครื่องดื่ม',active:true},
 ];
 
-const QUICK_EMOJIS = ['🍱','🍜','🍳','🥗','🍗','🍖','🍝','🍲','🍛','🍣','🍔','🌮','🥙','🍕',
-  '🥘','🍤','🥚','🧆','🥐','🥖','🍰','🎂','🍩','🍫','🍦','🧁',
-  '☕','🧋','🍊','🍋','🍵','🥤','🧃','🍹','🍺','🥛','🫖','🧊'];
-
-function getProducts(){
-  const stored = localStorage.getItem('lo_products');
-  if(!stored) {
-    localStorage.setItem('lo_products', JSON.stringify(DEFAULT_PRODUCTS));
-    return DEFAULT_PRODUCTS;
+async function loadProducts() {
+  if (db) {
+    try {
+      const snap = await getDocs(collection(db, 'products'));
+      if (!snap.empty) {
+        allProducts = snap.docs.map(d => ({_fid:d.id, ...d.data()}));
+        localStorage.setItem('lo_products', JSON.stringify(allProducts));
+        return;
+      }
+    } catch(e) { console.error('load products:', e); }
   }
-  return JSON.parse(stored);
+  const local = localStorage.getItem('lo_products');
+  allProducts = local ? JSON.parse(local) : DEFAULT_PRODUCTS;
 }
-function saveProducts(p){ localStorage.setItem('lo_products', JSON.stringify(p)); }
 
-function renderProducts(){
+async function saveProductsLocal() {
+  localStorage.setItem('lo_products', JSON.stringify(allProducts));
+}
+
+window.renderProdAdmin = () => {
   const search = (document.getElementById('prod-search').value||'').toLowerCase();
   const filter = document.getElementById('prod-filter').value;
-  let prods = getProducts();
-  if(search) prods = prods.filter(p=>p.name.includes(search)||p.cat.includes(search));
-  if(filter==='active') prods = prods.filter(p=>p.active);
-  if(filter==='inactive') prods = prods.filter(p=>!p.active);
-  document.getElementById('prod-count-badge').textContent = prods.length + ' รายการ';
+  let prods = allProducts;
+  if (search) prods = prods.filter(p => p.name.toLowerCase().includes(search) || (p.cat||'').toLowerCase().includes(search));
+  if (filter==='active') prods = prods.filter(p => p.active!==false);
+  if (filter==='inactive') prods = prods.filter(p => p.active===false);
+  document.getElementById('prod-count').textContent = prods.length + ' รายการ';
+  document.getElementById('prod-admin-grid').innerHTML = prods.length
+    ? prods.map(p => `
+      <div class="prod-card ${p.active===false?'inactive':''}">
+        <span class="status-dot ${p.active===false?'dot-off':'dot-on'}">${p.active===false?'🔴 ปิด':'✅ เปิด'}</span>
+        <div style="font-size:2.4rem;margin-bottom:8px">${p.em}</div>
+        <div style="font-weight:700;font-size:.95rem;margin-bottom:2px">${p.name}</div>
+        ${p.cat ? `<div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">🏷️ ${p.cat}</div>` : ''}
+        <div style="font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--g);font-size:1.05rem">${fmoney(p.price)}</div>
+        ${p.desc ? `<div style="font-size:.78rem;color:var(--muted);margin-top:5px;line-height:1.5">${p.desc}</div>` : ''}
+        <div class="prod-card-actions">
+          <button class="abtn abtn-ok" style="flex:1" onclick="window.openProdModal('${p._fid||p.id}')">✏️ แก้ไข</button>
+          <button class="abtn ${p.active===false?'abtn-ok':'abtn-map'}" style="flex:1" onclick="window.toggleProd('${p._fid||p.id}')">
+            ${p.active===false?'✅ เปิด':'🔴 ปิด'}
+          </button>
+          <button class="abtn abtn-red" onclick="window.deleteProd('${p._fid||p.id}')">🗑</button>
+        </div>
+      </div>`).join('')
+    : '<div class="empty" style="grid-column:1/-1"><span class="empty-em">📦</span>ไม่มีสินค้า</div>';
+};
 
-  document.getElementById('prod-admin-grid').innerHTML = prods.length ? prods.map(p=>`
-    <div class="prod-card ${p.active?'':'inactive'}">
-      <span class="${p.active?'active-badge':'inactive-badge'}">${p.active?'✅ เปิดขาย':'🔴 ปิดขาย'}</span>
-      <span class="prod-em-big">${p.em}</span>
-      <div class="prod-card-name">${p.name}</div>
-      ${p.cat?`<div class="prod-card-cat">🏷️ ${p.cat}</div>`:''}
-      <div class="prod-card-price">฿${(+p.price).toLocaleString()}</div>
-      ${p.desc?`<div class="prod-card-desc">${p.desc}</div>`:''}
-      <div class="prod-card-actions">
-        <button class="abtn abtn-ok" style="flex:1" onclick="openProductModal(${p.id})">✏️ แก้ไข</button>
-        <button class="abtn ${p.active?'abtn-map':'abtn-ok'}" style="flex:1" onclick="toggleProduct(${p.id})">
-          ${p.active?'🔴 ปิด':'✅ เปิด'}
-        </button>
-        <button class="abtn" style="background:rgba(239,68,68,.15);color:var(--red)" onclick="deleteProduct(${p.id})">🗑</button>
-      </div>
-    </div>`).join('')
-  : `<div class="empty" style="grid-column:1/-1"><span class="empty-em">📦</span>ไม่มีสินค้า</div>`;
-}
-
-let editingProductId = null;
-
-function openProductModal(id){
-  editingProductId = id || null;
-  const prods = getProducts();
-  const p = id ? prods.find(x=>x.id===id) : null;
-  document.getElementById('prod-modal-title').textContent = id ? '✏️ แก้ไขสินค้า' : '➕ เพิ่มสินค้าใหม่';
-  document.getElementById('pm-emoji-input').value = p ? p.em : '🍱';
-  document.getElementById('em-preview').textContent = p ? p.em : '🍱';
-  document.getElementById('pm-name').value = p ? p.name : '';
-  document.getElementById('pm-price').value = p ? p.price : '';
-  document.getElementById('pm-cat').value = p ? (p.cat||'') : '';
-  document.getElementById('pm-desc').value = p ? (p.desc||'') : '';
-  const active = p ? p.active : true;
+window.openProdModal = (fid) => {
+  editingProdId = fid || null;
+  const p = fid ? allProducts.find(x => String(x._fid||x.id)===String(fid)) : null;
+  document.getElementById('pm-title').textContent = fid ? '✏️ แก้ไขสินค้า' : '➕ เพิ่มสินค้าใหม่';
+  const em = p?.em || '🍱';
+  document.getElementById('pm-em').value = em;
+  document.getElementById('em-prev').textContent = em;
+  document.getElementById('pm-name').value = p?.name || '';
+  document.getElementById('pm-price').value = p?.price || '';
+  document.getElementById('pm-cat').value = p?.cat || '';
+  document.getElementById('pm-desc').value = p?.desc || '';
+  const active = p ? p.active !== false : true;
   document.getElementById('pm-active').checked = active;
-  document.getElementById('pm-toggle-track').style.background = active ? 'var(--g)' : 'var(--border)';
+  document.getElementById('pm-toggle-bg').style.background = active ? 'var(--g)' : 'var(--border)';
   document.getElementById('pm-toggle-thumb').style.left = active ? '22px' : '2px';
   document.getElementById('pm-err').textContent = '';
-  // Build emoji quick palette
-  document.getElementById('emoji-quick').innerHTML = QUICK_EMOJIS.map(e=>
-    `<span style="font-size:1.5rem;cursor:pointer;padding:4px;border-radius:6px;
-      transition:.15s" onmouseover="this.style.background='var(--border)'"
-      onmouseout="this.style.background='transparent'"
-      onclick="selectEmoji('${e}')">${e}</span>`).join('');
-  document.getElementById('emoji-palette').style.display='none';
+
+  // Build emoji palette
+  document.getElementById('emoji-quick').innerHTML = QUICK_EMOJIS.map(e =>
+    `<span style="font-size:1.5rem;cursor:pointer;padding:4px;border-radius:6px"
+      onclick="document.getElementById('pm-em').value='${e}';document.getElementById('em-prev').textContent='${e}';document.getElementById('emoji-palette').style.display='none'">${e}</span>`
+  ).join('');
+  document.getElementById('emoji-palette').style.display = 'none';
   document.getElementById('prod-modal').classList.add('open');
-}
+};
 
-function closeProdModal(){
-  document.getElementById('prod-modal').classList.remove('open');
-  document.getElementById('emoji-palette').style.display='none';
-}
-
-function toggleEmojiPicker(){
+window.toggleEmojiPalette = () => {
   const p = document.getElementById('emoji-palette');
-  p.style.display = p.style.display==='none' ? 'block' : 'none';
-}
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+};
 
-function selectEmoji(e){
-  document.getElementById('pm-emoji-input').value = e;
-  document.getElementById('em-preview').textContent = e;
-  document.getElementById('emoji-palette').style.display='none';
-}
-
-function updateEmojiPreview(v){
-  const trimmed = [...v.trim()].slice(0,2).join('');
-  if(trimmed) document.getElementById('em-preview').textContent = trimmed;
-}
-
-function toggleActiveSwitch(){
+window.flipToggle = () => {
   const cb = document.getElementById('pm-active');
   cb.checked = !cb.checked;
-  const active = cb.checked;
-  document.getElementById('pm-toggle-track').style.background = active ? 'var(--g)' : 'var(--border)';
-  document.getElementById('pm-toggle-thumb').style.left = active ? '22px' : '2px';
-}
+  document.getElementById('pm-toggle-bg').style.background = cb.checked ? 'var(--g)' : 'var(--border)';
+  document.getElementById('pm-toggle-thumb').style.left = cb.checked ? '22px' : '2px';
+};
 
-function saveProdModal(){
+window.saveProd = async () => {
   const name = document.getElementById('pm-name').value.trim();
   const price = parseFloat(document.getElementById('pm-price').value);
-  const em = document.getElementById('pm-emoji-input').value.trim() || '📦';
+  const em = document.getElementById('pm-em').value.trim() || '📦';
   const err = document.getElementById('pm-err');
-  if(!name){ err.textContent='กรุณากรอกชื่อสินค้า'; return; }
-  if(isNaN(price)||price<0){ err.textContent='กรุณากรอกราคาที่ถูกต้อง'; return; }
+  if (!name) { err.textContent='กรุณากรอกชื่อสินค้า'; return; }
+  if (isNaN(price)||price<0) { err.textContent='กรุณากรอกราคาที่ถูกต้อง'; return; }
 
-  const prods = getProducts();
-  if(editingProductId){
-    const idx = prods.findIndex(x=>x.id===editingProductId);
-    if(idx>=0){
-      prods[idx] = {...prods[idx], em, name, price,
-        cat: document.getElementById('pm-cat').value.trim(),
-        desc: document.getElementById('pm-desc').value.trim(),
-        active: document.getElementById('pm-active').checked };
+  const prodData = {
+    em, name, price,
+    cat: document.getElementById('pm-cat').value.trim(),
+    desc: document.getElementById('pm-desc').value.trim(),
+    active: document.getElementById('pm-active').checked
+  };
+
+  if (editingProdId) {
+    const idx = allProducts.findIndex(x => String(x._fid||x.id)===String(editingProdId));
+    if (idx >= 0) {
+      allProducts[idx] = {...allProducts[idx], ...prodData};
+      if (db && allProducts[idx]._fid) {
+        try { await updateDoc(doc(db,'products',allProducts[idx]._fid), prodData); } catch(e){}
+      }
     }
   } else {
-    const newId = Math.max(0,...prods.map(p=>p.id))+1;
-    prods.unshift({id:newId, em, name, price,
-      cat: document.getElementById('pm-cat').value.trim(),
-      desc: document.getElementById('pm-desc').value.trim(),
-      active: document.getElementById('pm-active').checked });
+    const newId = Math.max(0,...allProducts.map(p=>+p.id||0))+1;
+    const newProd = {id:newId, ...prodData};
+    if (db) {
+      try {
+        const ref = await addDoc(collection(db,'products'), newProd);
+        newProd._fid = ref.id;
+      } catch(e){}
+    }
+    allProducts.unshift(newProd);
   }
-  saveProducts(prods);
-  renderProducts();
-  closeProdModal();
+  saveProductsLocal();
+  window.renderProdAdmin();
+  closeOverlay('prod-modal');
+};
+
+window.toggleProd = async (fid) => {
+  const p = allProducts.find(x => String(x._fid||x.id)===String(fid)); if (!p) return;
+  p.active = p.active === false ? true : false;
+  if (db && p._fid) {
+    try { await updateDoc(doc(db,'products',p._fid), {active:p.active}); } catch(e){}
+  }
+  saveProductsLocal();
+  window.renderProdAdmin();
+};
+
+window.deleteProd = async (fid) => {
+  if (!confirm('ลบสินค้านี้?')) return;
+  const idx = allProducts.findIndex(x => String(x._fid||x.id)===String(fid));
+  if (idx < 0) return;
+  const p = allProducts[idx];
+  if (db && p._fid) {
+    try { await deleteDoc(doc(db,'products',p._fid)); } catch(e){}
+  }
+  allProducts.splice(idx, 1);
+  saveProductsLocal();
+  window.renderProdAdmin();
+};
+
+// ── FIREBASE SETUP ────────────────────────────
+window.saveFirebaseConfig = async () => {
+  const raw = document.getElementById('fb-config-input').value.trim();
+  const msg = document.getElementById('fb-config-msg');
+  try {
+    // Try to parse — accept both { apiKey:... } and const x = {...}
+    let json = raw;
+    const match = raw.match(/\{[\s\S]+\}/);
+    if (match) json = match[0];
+    // Convert JS object literal to valid JSON
+    json = json.replace(/(['"])?([a-zA-Z_][a-zA-Z0-9_]*)(['"])?\s*:/g, '"$2":');
+    json = json.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+    const config = JSON.parse(json);
+    if (!config.apiKey || !config.projectId) throw new Error('config ไม่ครบ');
+    localStorage.setItem('fb_config', JSON.stringify(config));
+    msg.style.color = 'var(--g)';
+    msg.textContent = '✅ บันทึกแล้ว กำลังเชื่อมต่อ...';
+    setTimeout(() => location.reload(), 1200);
+  } catch(e) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ รูปแบบ config ไม่ถูกต้อง: ' + e.message;
+  }
+};
+
+function renderFirebaseStatus() {
+  const saved = localStorage.getItem('fb_config');
+  const card = document.getElementById('firebase-status-card');
+  if (saved) {
+    try {
+      const c = JSON.parse(saved);
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:2rem">🔥</span>
+          <div>
+            <div style="font-weight:700">เชื่อมต่อกับ Firebase</div>
+            <div style="font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace">${c.projectId}</div>
+          </div>
+          <button class="abtn abtn-red" style="margin-left:auto" onclick="if(confirm('ยกเลิก Firebase?')){localStorage.removeItem('fb_config');location.reload()}">
+            🔌 ยกเลิก
+          </button>
+        </div>`;
+      document.getElementById('fb-config-input').value = JSON.stringify(c, null, 2);
+    } catch(e) {}
+  } else {
+    card.innerHTML = `<div style="display:flex;align-items:center;gap:10px;color:var(--red)">
+      ⚠️ <span>ยังไม่ได้ตั้งค่า Firebase — ข้อมูลจะเก็บเฉพาะในเครื่องนี้</span></div>`;
+  }
 }
 
-function toggleProduct(id){
-  const prods = getProducts();
-  const p = prods.find(x=>x.id===id);
-  if(p){ p.active = !p.active; saveProducts(prods); renderProducts(); }
-}
+// ── SETTINGS ──────────────────────────────────
+window.changePw = () => {
+  const old = document.getElementById('pw-old').value;
+  const nw = document.getElementById('pw-new').value;
+  const msg = document.getElementById('pw-msg');
+  if (old !== getPw()) { msg.style.color='var(--red)'; msg.textContent='รหัสผ่านเก่าไม่ถูกต้อง'; return; }
+  if (nw.length < 4) { msg.style.color='var(--red)'; msg.textContent='ต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
+  localStorage.setItem('admin_pw', nw);
+  msg.style.color='var(--g)'; msg.textContent='✅ เปลี่ยนรหัสผ่านสำเร็จ';
+  document.getElementById('pw-old').value=''; document.getElementById('pw-new').value='';
+};
 
-function deleteProduct(id){
-  if(!confirm('ลบสินค้านี้?')) return;
-  const prods = getProducts().filter(x=>x.id!==id);
-  saveProducts(prods);
-  renderProducts();
-}
+window.saveShop = () => {
+  localStorage.setItem('shop_name', document.getElementById('shop-name').value);
+  alert('บันทึกแล้ว');
+};
 
-// ===== INIT =====
-if(localStorage.getItem('admin_session')==='1') initApp();
+// ── UTILS ─────────────────────────────────────
+window.closeOverlay = (id) => {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'map-detail-overlay' && mdMiniMap) { mdMiniMap.remove(); mdMiniMap=null; }
+};
 </script>
 </body>
 </html>
