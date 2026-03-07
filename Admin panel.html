@@ -577,7 +577,7 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
         </div>
         
         <!-- Summary Stats -->
-        <div class="stats-row" id="sum-stats" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div class="stats-row" id="sum-stats" style="grid-template-columns:repeat(3,1fr)"></div>
         
         <!-- Shop Info -->
         <div class="card" id="shop-info-card" style="display:none;">
@@ -589,7 +589,7 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
         <div class="card no-break">
           <div class="card-head"><div class="card-title">📦 สรุปสินค้าที่ต้องเตรียม</div></div>
           <table class="tbl"><thead><tr>
-            <th style="width:40%">สินค้า</th><th style="width:15%">จำนวน</th><th style="width:15%">ราคา/ชิ้น</th><th style="width:30%">มูลค่ารวม</th>
+            <th style="width:50%">สินค้า</th><th style="width:20%">จำนวน</th><th style="width:30%">มูลค่ารวม</th>
           </tr></thead><tbody id="sum-body"></tbody></table>
         </div>
         
@@ -1230,100 +1230,44 @@ window.renderSummary = () => {
   const items = Object.values(itemMap).sort((a,b) => b.totalQty-a.totalQty);
   const totalItems = items.reduce((s,i) => s+i.totalQty, 0);
   
-  // Calculate additional stats
-  const pendingOrders = dayOrders.filter(o => o.status === 'pending').length;
-  const confirmedOrders = dayOrders.filter(o => o.status === 'confirmed').length;
-  const deliveredOrders = dayOrders.filter(o => o.status === 'delivered').length;
-  const avgOrderValue = dayOrders.length > 0 ? rev / dayOrders.length : 0;
-  const deliveryAddresses = dayOrders.filter(o => o.address).length;
-  
-  // Enhanced stats with 4 columns
+  // Simplified stats - focus on 3 key metrics only
   document.getElementById('sum-stats').innerHTML = `
-    <div class="stat"><div class="stat-num">${dayOrders.length}</div><div class="stat-lbl">📦 ออเดอร์ทั้งหมด</div></div>
-    <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(rev)}</div><div class="stat-lbl">💰 ยอดขายรวม</div></div>
-    <div class="stat"><div class="stat-num">${totalItems}</div><div class="stat-lbl">🛍 รายการสินค้า</div></div>
-    <div class="stat"><div class="stat-num" style="color:var(--amber)">${fmoney(avgOrderValue)}</div><div class="stat-lbl">📊 มูลค่าเฉลี่ย/ออเดอร์</div></div>`;
+    <div class="stat"><div class="stat-num">${dayOrders.length}</div><div class="stat-lbl">📦 ออเดอร์</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(rev)}</div><div class="stat-lbl">💰 ยอดขาย</div></div>
+    <div class="stat"><div class="stat-num">${totalItems}</div><div class="stat-lbl">🛍 รายการ</div></div>`;
 
-  // Enhanced product table with better formatting
+  // Simplified product table - essential info only
   document.getElementById('sum-body').innerHTML = items.length
     ? items.map(i => `<tr>
-        <td>${i.em} <strong>${i.name}</strong></td>
+        <td>${i.em} ${i.name}</td>
         <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--g)">${i.totalQty}</td>
-        <td style="text-align:right;font-family:'JetBrains Mono',monospace">${fmoney(i.price)}</td>
         <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700">${fmoney(i.totalVal)}</td>
-      </tr>`).join('') + `<tr class="foot"><td colspan="3" style="text-align:right"><strong>รวมทั้งหมด</strong></td><td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700">${fmoney(rev)}</td></tr>`
-    : '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีออเดอร์ในวันนี้</td></tr>';
+      </tr>`).join('') + `<tr class="foot"><td colspan="2" style="text-align:right"><strong>รวม</strong></td><td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700">${fmoney(rev)}</td></tr>`
+    : '<tr><td colspan="3" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีออเดอร์ในวันนี้</td></tr>';
 
-  // Enhanced customer details with more info
+  // Simplified customer list - just names and totals
   document.getElementById('sum-customers').innerHTML = dayOrders.length
     ? dayOrders.map((o, idx) => `
-      <div style="padding:16px 0;border-bottom:1px solid var(--border);${idx === 0 ? 'border-top:2px solid var(--g);' : ''}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+      <div style="padding:12px 0;border-bottom:1px solid var(--border);${idx === 0 ? 'border-top:2px solid var(--g);' : ''}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <strong style="font-size:1.1em">${o.name}</strong>
+            <strong>${o.name}</strong>
             <span style="color:var(--muted);margin-left:8px;font-size:0.9em">📞 ${o.phone}</span>
-            <span class="sp sp-${o.status}" style="margin-left:8px;font-size:0.75em">${statusLabel(o.status)}</span>
           </div>
           <div style="text-align:right">
             <div style="font-family:'JetBrains Mono',monospace;color:var(--g);font-weight:700;font-size:1.1em">${fmoney(o.total)}</div>
             <div style="font-size:0.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace">#${o.id}</div>
           </div>
         </div>
-        ${o.address ? `
-          <div style="background:var(--card2);padding:8px 12px;border-radius:8px;margin-bottom:8px;font-size:0.9em">
-            <strong style="color:var(--muted)">📍 ที่อยู่จัดส่ง:</strong> ${o.address}
-          </div>
-        ` : ''}
-        ${o.note ? `
-          <div style="background:rgba(245,158,11,.1);border-left:3px solid var(--amber);padding:8px 12px;margin-bottom:8px;font-size:0.85em">
-            <strong style="color:var(--amber)">📝 หมายเหตุ:</strong> ${o.note}
-          </div>
-        ` : ''}
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
           ${o.items.map(i=>`<span class="itag">${i.em} ${i.name} ×${i.qty}</span>`).join('')}
-        </div>
-        <div style="display:flex;gap:10px;font-size:0.8rem;color:var(--muted)">
-          <span>⏰ สั่งเมื่อ: ${new Date(o.createdAt).toLocaleString('th-TH')}</span>
-          <span>📅 จัดส่ง: ${fdate(o.deliveryDate)}</span>
         </div>
       </div>`).join('')
     : '<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์ในวันนี้</div>';
     
-  // Show shop info for print
-  const shopName = getShop();
-  const printDate = new Date().toLocaleString('th-TH');
-  document.getElementById('shop-info-card').style.display = 'block';
-  document.getElementById('shop-info-content').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-      <div>
-        <strong>🏪 ชื่อร้าน:</strong> ${shopName}<br>
-        <strong>📅 วันที่พิมพ์:</strong> ${printDate}<br>
-        <strong>📊 รายวัน:</strong> ${dateStr}
-      </div>
-      <div>
-        <strong>📦 ออเดอร์ทั้งหมด:</strong> ${dayOrders.length} รายการ<br>
-        <strong>✅ ยืนยันแล้ว:</strong> ${confirmedOrders} รายการ<br>
-        <strong>🚚 จัดส่งแล้ว:</strong> ${deliveredOrders} รายการ
-      </div>
-    </div>
-  `;
-  
-  // Delivery summary
-  if (deliveryAddresses > 0) {
-    document.getElementById('delivery-summary-card').style.display = 'block';
-    document.getElementById('delivery-summary-content').innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
-        <div>
-          <strong>📍 ที่อยู่ที่ต้องจัดส่ง:</strong> ${deliveryAddresses} แห่ง<br>
-          <strong>📦 ออเดอร์ที่รอจัดส่ง:</strong> ${pendingOrders + confirmedOrders} รายการ
-        </div>
-        <div>
-          <strong>💰 มูลค่ารวม:</strong> ${fmoney(rev)}<br>
-          <strong>📊 มูลค่าเฉลี่ย/ออเดอร์:</strong> ${fmoney(avgOrderValue)}
-        </div>
-      </div>
-    `;
-  }
+  // Hide shop info and delivery summary for simplified view
+  document.getElementById('shop-info-card').style.display = 'none';
+  document.getElementById('delivery-summary-card').style.display = 'none';
 };
 
 // Export to Excel function
