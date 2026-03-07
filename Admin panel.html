@@ -192,6 +192,150 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 .mbtn-g{background:var(--g);color:#fff}
 .mbtn-s{background:#F1F5F9;color:#374151}
 
+/* ─── THERMAL PRINTER A6 STYLES ─── */
+@media print {
+  @page { size: A6 portrait; margin: 5mm; }
+  
+  .receipt {
+    width: 100% !important;
+    max-width: 105mm !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+    font-size: 10pt !important;
+    line-height: 1.3 !important;
+  }
+  
+  .receipt-inner {
+    padding: 10mm 8mm !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  .r-shop {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    margin-bottom: 8pt !important;
+  }
+  
+  .r-sub {
+    font-size: 8pt !important;
+    text-align: center !important;
+    margin-bottom: 10pt !important;
+  }
+  
+  .r-meta {
+    background: transparent !important;
+    border: 1px solid #000 !important;
+    padding: 6pt 8pt !important;
+    margin-bottom: 8pt !important;
+    font-size: 8pt !important;
+    line-height: 1.4 !important;
+  }
+  
+  .r-meta-label {
+    color: #000 !important;
+    font-weight: bold !important;
+  }
+  
+  .r-meta-val {
+    color: #000 !important;
+    font-weight: normal !important;
+  }
+  
+  .r-dash {
+    border-top: 2px dashed #000 !important;
+    margin: 6pt 0 !important;
+  }
+  
+  .r-item {
+    padding: 3pt 0 !important;
+    border-bottom: 1px solid #ccc !important;
+  }
+  
+  .r-item-name {
+    font-size: 9pt !important;
+    color: #000 !important;
+  }
+  
+  .r-item-qty {
+    font-size: 8pt !important;
+    color: #000 !important;
+    text-align: center !important;
+  }
+  
+  .r-item-price {
+    font-size: 9pt !important;
+    color: #000 !important;
+    font-weight: bold !important;
+    text-align: right !important;
+  }
+  
+  .r-total-row {
+    background: transparent !important;
+    border: 2px solid #000 !important;
+    padding: 6pt 8pt !important;
+    margin-top: 8pt !important;
+  }
+  
+  .r-total-lab {
+    font-size: 10pt !important;
+    color: #000 !important;
+    font-weight: bold !important;
+  }
+  
+  .r-total-amt {
+    font-size: 12pt !important;
+    color: #000 !important;
+    font-weight: bold !important;
+  }
+  
+  .r-note {
+    background: transparent !important;
+    border: 1px solid #000 !important;
+    padding: 4pt 6pt !important;
+    font-size: 8pt !important;
+    color: #000 !important;
+    margin-top: 6pt !important;
+  }
+  
+  .r-foot {
+    text-align: center !important;
+    margin-top: 8pt !important;
+    padding-top: 8pt !important;
+    border-top: 2px dashed #000 !important;
+    font-size: 7pt !important;
+    color: #000 !important;
+    line-height: 1.4 !important;
+  }
+  
+  .r-barcode {
+    font-family: 'Courier New', monospace !important;
+    font-size: 7pt !important;
+    color: #000 !important;
+    letter-spacing: 0.1em !important;
+    margin-top: 4pt !important;
+  }
+  
+  /* Hide modal buttons when printing */
+  .modal-btns, .receipt-actions {
+    display: none !important;
+  }
+  
+  /* Ensure no page breaks inside receipt */
+  .receipt {
+    page-break-inside: avoid;
+  }
+  
+  /* Thermal printer specific - force monospace for alignment */
+  .receipt, .receipt-inner, .r-item, .r-meta-row {
+    font-family: 'Courier New', 'JetBrains Mono', monospace !important;
+  }
+}
+
 /* TOGGLE SWITCH */
 .toggle-wrap{display:flex;align-items:center;justify-content:space-between;background:var(--card2);
   padding:12px 16px;border-radius:10px;border:1px solid var(--border)}
@@ -226,6 +370,115 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 
 @media print{@page{size:A6 portrait;margin:0}}
 @media(max-width:800px){.layout{grid-template-columns:1fr}.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}}
+
+/* ─── A4 PRINT STYLES ─── */
+@media print {
+  @page { size: A4 portrait; margin: 15mm; }
+  
+  body { 
+    background: white !important; 
+    color: black !important; 
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  .topbar, .sidebar, .filter-bar, .card-head, .nav-item, .logout-btn, .db-status {
+    display: none !important;
+  }
+  
+  .layout { grid-template-columns: 1fr !important; }
+  .content { padding: 0 !important; }
+  .page { display: block !important; }
+  
+  .card {
+    border: 2px solid #000 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid;
+  }
+  
+  .stats-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+    border: 2px solid #000;
+    padding: 15px;
+  }
+  
+  .stat {
+    border: 1px solid #000;
+    padding: 10px !important;
+    text-align: center;
+    background: white !important;
+  }
+  
+  .stat-num {
+    color: black !important;
+    font-size: 18pt !important;
+    font-weight: bold;
+  }
+  
+  .stat-lbl {
+    color: black !important;
+    font-size: 10pt !important;
+    margin-top: 5px;
+  }
+  
+  .page-h {
+    font-size: 20pt !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    margin-bottom: 20px !important;
+    border-bottom: 3px solid #000;
+    padding-bottom: 10px;
+  }
+  
+  .tbl {
+    border: 2px solid #000 !important;
+    width: 100% !important;
+  }
+  
+  .tbl th {
+    background: #f0f0f0 !important;
+    color: black !important;
+    border: 1px solid #000 !important;
+    padding: 8px !important;
+    font-size: 10pt !important;
+  }
+  
+  .tbl td {
+    border: 1px solid #000 !important;
+    padding: 8px !important;
+    font-size: 10pt !important;
+  }
+  
+  .tbl .foot td {
+    background: #e8e8e8 !important;
+    color: black !important;
+    font-weight: bold !important;
+    border-top: 2px solid #000 !important;
+  }
+  
+  .itag {
+    border: 1px solid #000 !important;
+    background: white !important;
+    color: black !important;
+    padding: 3px 8px !important;
+    margin: 2px !important;
+    font-size: 9pt !important;
+  }
+  
+  .empty { display: none; }
+  
+  .page-break-before {
+    page-break-before: always;
+  }
+  
+  .no-break {
+    page-break-inside: avoid;
+  }
+}
 </style>
 </head>
 <body>
@@ -315,22 +568,41 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--tx
 
       <!-- SUMMARY -->
       <div class="page" id="page-summary">
-        <div class="page-h">📈 สรุปรายวัน</div>
+        <div class="page-h" id="summary-title">📈 สรุปรายวัน</div>
         <div class="filter-bar">
           <input type="date" id="sum-date" onchange="renderSummary()"/>
           <button class="abtn abtn-ok" onclick="document.getElementById('sum-date').value=today();renderSummary()">วันนี้</button>
-          <button class="abtn abtn-print" onclick="window.print()">🖨️ พิมพ์</button>
+          <button class="abtn abtn-print" onclick="window.print()">🖨️ พิมพ์ A4</button>
+          <button class="abtn abtn-map" onclick="exportToExcel()">📊 Excel</button>
         </div>
-        <div class="stats-row" id="sum-stats" style="grid-template-columns:repeat(3,1fr)"></div>
-        <div class="card">
-          <div class="card-head"><div class="card-title">📦 สินค้าที่ต้องเตรียมจัดส่ง</div></div>
+        
+        <!-- Summary Stats -->
+        <div class="stats-row" id="sum-stats" style="grid-template-columns:repeat(4,1fr)"></div>
+        
+        <!-- Shop Info -->
+        <div class="card" id="shop-info-card" style="display:none;">
+          <div class="card-head"><div class="card-title">🏪 ข้อมูลร้าน</div></div>
+          <div id="shop-info-content"></div>
+        </div>
+        
+        <!-- Product Summary -->
+        <div class="card no-break">
+          <div class="card-head"><div class="card-title">📦 สรุปสินค้าที่ต้องเตรียม</div></div>
           <table class="tbl"><thead><tr>
-            <th>สินค้า</th><th>จำนวน</th><th>ราคา/ชิ้น</th><th>มูลค่ารวม</th>
+            <th style="width:40%">สินค้า</th><th style="width:15%">จำนวน</th><th style="width:15%">ราคา/ชิ้น</th><th style="width:30%">มูลค่ารวม</th>
           </tr></thead><tbody id="sum-body"></tbody></table>
         </div>
-        <div class="card">
-          <div class="card-head"><div class="card-title">👥 รายละเอียดลูกค้า</div></div>
+        
+        <!-- Customer Details -->
+        <div class="card page-break-before">
+          <div class="card-head"><div class="card-title">👥 รายละเอียดลูกค้าและออเดอร์</div></div>
           <div id="sum-customers"></div>
+        </div>
+        
+        <!-- Delivery Summary -->
+        <div class="card no-break" id="delivery-summary-card" style="display:none;">
+          <div class="card-head"><div class="card-title">🚚 สรุปการจัดส่ง</div></div>
+          <div id="delivery-summary-content"></div>
         </div>
       </div>
 
@@ -764,38 +1036,50 @@ window.setStatus = async (fid, status) => {
 function buildReceiptHTML(o) {
   const shop = getShop();
   const printTime = new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  const orderTime = new Date(o.createdAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  
   return `
     <div class="r-head">
-      <div class="r-shop">🛍 ${shop}</div>
+      <div class="r-shop">${shop}</div>
       <div class="r-sub">ใบสั่งซื้อ / ORDER RECEIPT</div>
     </div>
     <div class="r-meta">
-      <div class="r-meta-row"><span class="r-meta-label">เลขที่</span><span class="r-meta-val">${o.id}</span></div>
-      <div class="r-meta-row"><span class="r-meta-label">ลูกค้า</span><span class="r-meta-val">${o.name}</span></div>
-      <div class="r-meta-row"><span class="r-meta-label">โทร</span><span class="r-meta-val">${o.phone}</span></div>
-      ${o.address ? `<div class="r-meta-row"><span class="r-meta-label">ที่อยู่</span><span class="r-meta-val">${o.address}</span></div>` : ''}
-      <div class="r-meta-row"><span class="r-meta-label">วันจัดส่ง</span><span class="r-meta-val">${fdate(o.deliveryDate)}</span></div>
+      <div class="r-meta-row"><span class="r-meta-label">เลขที่:</span><span class="r-meta-val">#${o.id}</span></div>
+      <div class="r-meta-row"><span class="r-meta-label">ลูกค้า:</span><span class="r-meta-val">${o.name}</span></div>
+      <div class="r-meta-row"><span class="r-meta-label">โทร:</span><span class="r-meta-val">${o.phone}</span></div>
+      ${o.address ? `<div class="r-meta-row"><span class="r-meta-label">ที่อยู่:</span><span class="r-meta-val">${o.address}</span></div>` : ''}
+      <div class="r-meta-row"><span class="r-meta-label">สั่งเมื่อ:</span><span class="r-meta-val">${orderTime}</span></div>
+      <div class="r-meta-row"><span class="r-meta-label">จัดส่ง:</span><span class="r-meta-val">${fdate(o.deliveryDate)}</span></div>
+      <div class="r-meta-row"><span class="r-meta-label">สถานะ:</span><span class="r-meta-val">${statusLabel(o.status)}</span></div>
     </div>
     <div class="r-dash"></div>
     <div class="r-items">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:7pt;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em">
-        <span>รายการ</span><span>จำนวน</span><span>ราคา</span>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:8pt;color:#000;font-weight:bold;text-transform:uppercase">
+        <span style="flex:1">รายการ</span>
+        <span style="width:25px;text-align:center">จน.</span>
+        <span style="width:50px;text-align:right">ราคา</span>
       </div>
       ${o.items.map(i=>`
         <div class="r-item">
           <span class="r-item-name">${i.em} ${i.name}</span>
-          <span class="r-item-qty">×${i.qty}</span>
+          <span class="r-item-qty">${i.qty}</span>
           <span class="r-item-price">${fmoney(i.price*i.qty)}</span>
         </div>`).join('')}
     </div>
+    <div class="r-dash"></div>
     <div class="r-total-row">
-      <span class="r-total-lab">💰 รวมทั้งสิ้น</span>
+      <span class="r-total-lab">รวมทั้งสิ้น:</span>
       <span class="r-total-amt">${fmoney(o.total)}</span>
     </div>
-    ${o.note ? `<div class="r-note">📝 หมายเหตุ: ${o.note}</div>` : ''}
+    ${o.note ? `<div class="r-note"><strong>หมายเหตุ:</strong> ${o.note}</div>` : ''}
+    <div class="r-dash"></div>
     <div class="r-foot">
-      ขอบคุณที่ใช้บริการ 💚 · ${shop}<br>
-      <span style="font-size:7pt;color:#d1d5db;font-family:monospace">${o.id} · ${printTime}</span>
+      ขอบคุณที่ใช้บริการ<br>
+      ${shop}<br>
+      <span style="font-size:7pt">#${o.id} · ${printTime}</span>
+    </div>
+    <div class="r-barcode">
+      *${o.id}*
     </div>`;
 }
 
@@ -812,30 +1096,47 @@ window.printReceiptA6 = () => {
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  @page { size: A6 portrait; margin: 0; }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { font-family: 'Noto Sans Thai', sans-serif; background: #fff; width: 105mm; min-height: 148mm; padding: 7mm 8mm 6mm; font-size: 9pt; color: #111; }
-  .r-head { text-align: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px dashed #e5e7eb; }
-  .r-shop { font-size: 13pt; font-weight: 800; color: #111; }
-  .r-sub { font-size: 7pt; color: #888; margin-top: 2px; }
-  .r-meta { background: #f9fafb; border-radius: 5px; padding: 7px 9px; margin-bottom: 10px; font-size: 8pt; line-height: 1.85; }
-  .r-meta-row { display: flex; gap: 5px; }
-  .r-meta-label { color: #6b7280; min-width: 52px; flex-shrink: 0; }
-  .r-meta-val { color: #111; font-weight: 600; word-break: break-word; }
-  .r-dash { border-top: 2px dashed #e5e7eb; margin: 9px 0; }
+  @page { size: A6 portrait; margin: 5mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: 'Courier New', 'JetBrains Mono', monospace !important; 
+    background: #fff; 
+    width: 100%; 
+    max-width: 105mm; 
+    min-height: 148mm; 
+    padding: 8mm 6mm; 
+    font-size: 9pt; 
+    color: #000; 
+    line-height: 1.3;
+  }
+  .r-head { text-align: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px dashed #000; }
+  .r-shop { font-size: 14pt; font-weight: bold; color: #000; margin-bottom: 2px; }
+  .r-sub { font-size: 8pt; color: #000; margin-top: 2px; }
+  .r-meta { background: transparent; border: 1px solid #000; padding: 5px 7px; margin-bottom: 8px; font-size: 8pt; line-height: 1.4; }
+  .r-meta-row { display: flex; gap: 5px; margin-bottom: 2px; }
+  .r-meta-row:last-child { margin-bottom: 0; }
+  .r-meta-label { color: #000; min-width: 50px; flex-shrink: 0; font-weight: bold; }
+  .r-meta-val { color: #000; font-weight: normal; }
+  .r-dash { border-top: 2px dashed #000; margin: 6px 0; }
   .r-items { margin-bottom: 4px; }
-  .r-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 4px 0; border-bottom: 1px solid #f3f4f6; gap: 6px; }
+  .r-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 3px 0; border-bottom: 1px solid #ccc; gap: 5px; }
   .r-item:last-child { border-bottom: none; }
-  .r-item-name { font-size: 8.5pt; flex: 1; }
-  .r-item-qty { font-size: 8pt; color: #6b7280; min-width: 24px; text-align: center; }
-  .r-item-price { font-size: 8.5pt; font-weight: 700; text-align: right; min-width: 50px; font-family: 'JetBrains Mono', monospace; }
-  .r-total-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #f0fdf4; border-radius: 6px; margin-top: 8px; }
-  .r-total-lab { font-size: 9pt; font-weight: 700; color: #15803d; }
-  .r-total-amt { font-size: 13pt; font-weight: 800; color: #16a34a; font-family: 'JetBrains Mono', monospace; }
-  .r-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; padding: 5px 8px; font-size: 7.5pt; color: #78350f; margin-top: 7px; line-height: 1.6; }
-  .r-foot { text-align: center; margin-top: 10px; padding-top: 10px; border-top: 2px dashed #e5e7eb; font-size: 7.5pt; color: #9ca3af; line-height: 1.8; }
+  .r-item-name { font-size: 9pt; flex: 1; color: #000; }
+  .r-item-qty { font-size: 8pt; color: #000; min-width: 20px; text-align: center; font-weight: bold; }
+  .r-item-price { font-size: 9pt; font-weight: bold; text-align: right; min-width: 45px; color: #000; }
+  .r-total-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border: 2px solid #000; margin-top: 8px; }
+  .r-total-lab { font-size: 10pt; font-weight: bold; color: #000; }
+  .r-total-amt { font-size: 12pt; font-weight: bold; color: #000; }
+  .r-note { background: transparent; border: 1px solid #000; padding: 4px 6px; font-size: 8pt; color: #000; margin-top: 6px; line-height: 1.4; }
+  .r-foot { text-align: center; margin-top: 8px; padding-top: 8px; border-top: 2px dashed #000; font-size: 7pt; color: #000; line-height: 1.4; }
+  .r-barcode { font-family: 'Courier New', monospace; font-size: 7pt; color: #000; letter-spacing: 0.1em; margin-top: 4px; text-align: center; }
+  
+  /* Thermal printer optimizations */
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    * { -webkit-font-smoothing: antialiased; }
+  }
 </style>
 </head>
 <body>
@@ -845,7 +1146,11 @@ ${inner.innerHTML}
   const w = window.open('', '_blank', 'width=420,height=620');
   w.document.write(html);
   w.document.close();
-  w.onload = () => { w.focus(); w.print(); };
+  w.onload = () => { 
+    w.focus(); 
+    // Add small delay for thermal printers to process
+    setTimeout(() => { w.print(); }, 200);
+  };
 };
 
 // ── DELIVERY MAP ──────────────────────────────
@@ -906,6 +1211,13 @@ window.renderSummary = () => {
   const date = document.getElementById('sum-date').value; if (!date) return;
   const dayOrders = allOrders.filter(o => o.deliveryDate===date);
   const rev = dayOrders.reduce((s,o) => s+o.total, 0);
+  
+  // Update title with date
+  const dateStr = new Date(date).toLocaleDateString('th-TH', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+  document.getElementById('summary-title').innerHTML = `📈 สรุปรายวัน<br><small style="font-weight:normal;font-size:0.6em">${dateStr}</small>`;
+  
   // Use name as key (robust against id type mismatch from Firestore)
   const itemMap = {};
   dayOrders.forEach(o => (o.items||[]).forEach(i => {
@@ -917,34 +1229,138 @@ window.renderSummary = () => {
   }));
   const items = Object.values(itemMap).sort((a,b) => b.totalQty-a.totalQty);
   const totalItems = items.reduce((s,i) => s+i.totalQty, 0);
-
+  
+  // Calculate additional stats
+  const pendingOrders = dayOrders.filter(o => o.status === 'pending').length;
+  const confirmedOrders = dayOrders.filter(o => o.status === 'confirmed').length;
+  const deliveredOrders = dayOrders.filter(o => o.status === 'delivered').length;
+  const avgOrderValue = dayOrders.length > 0 ? rev / dayOrders.length : 0;
+  const deliveryAddresses = dayOrders.filter(o => o.address).length;
+  
+  // Enhanced stats with 4 columns
   document.getElementById('sum-stats').innerHTML = `
-    <div class="stat"><div class="stat-num">${dayOrders.length}</div><div class="stat-lbl">📦 ออเดอร์</div></div>
-    <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(rev)}</div><div class="stat-lbl">💰 ยอดขาย</div></div>
-    <div class="stat"><div class="stat-num">${totalItems}</div><div class="stat-lbl">🛍 รายการรวม</div></div>`;
+    <div class="stat"><div class="stat-num">${dayOrders.length}</div><div class="stat-lbl">📦 ออเดอร์ทั้งหมด</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(rev)}</div><div class="stat-lbl">💰 ยอดขายรวม</div></div>
+    <div class="stat"><div class="stat-num">${totalItems}</div><div class="stat-lbl">🛍 รายการสินค้า</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--amber)">${fmoney(avgOrderValue)}</div><div class="stat-lbl">📊 มูลค่าเฉลี่ย/ออเดอร์</div></div>`;
 
+  // Enhanced product table with better formatting
   document.getElementById('sum-body').innerHTML = items.length
     ? items.map(i => `<tr>
-        <td>${i.em} ${i.name}</td>
-        <td><strong style="color:var(--g);font-family:'JetBrains Mono',monospace">${i.totalQty} ชิ้น</strong></td>
-        <td style="font-family:'JetBrains Mono',monospace">${fmoney(i.price)}</td>
-        <td style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmoney(i.totalVal)}</td>
-      </tr>`).join('') + `<tr class="foot"><td colspan="3">รวม</td><td>${fmoney(rev)}</td></tr>`
-    : '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีออเดอร์</td></tr>';
+        <td>${i.em} <strong>${i.name}</strong></td>
+        <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--g)">${i.totalQty}</td>
+        <td style="text-align:right;font-family:'JetBrains Mono',monospace">${fmoney(i.price)}</td>
+        <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700">${fmoney(i.totalVal)}</td>
+      </tr>`).join('') + `<tr class="foot"><td colspan="3" style="text-align:right"><strong>รวมทั้งหมด</strong></td><td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700">${fmoney(rev)}</td></tr>`
+    : '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีออเดอร์ในวันนี้</td></tr>';
 
+  // Enhanced customer details with more info
   document.getElementById('sum-customers').innerHTML = dayOrders.length
-    ? dayOrders.map(o => `
-      <div style="padding:14px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <strong>${o.name} ${o.phone}</strong>
-          <span style="font-family:'JetBrains Mono',monospace;color:var(--g);font-weight:700">${fmoney(o.total)}</span>
+    ? dayOrders.map((o, idx) => `
+      <div style="padding:16px 0;border-bottom:1px solid var(--border);${idx === 0 ? 'border-top:2px solid var(--g);' : ''}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <strong style="font-size:1.1em">${o.name}</strong>
+            <span style="color:var(--muted);margin-left:8px;font-size:0.9em">📞 ${o.phone}</span>
+            <span class="sp sp-${o.status}" style="margin-left:8px;font-size:0.75em">${statusLabel(o.status)}</span>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;color:var(--g);font-weight:700;font-size:1.1em">${fmoney(o.total)}</div>
+            <div style="font-size:0.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace">#${o.id}</div>
+          </div>
         </div>
-        ${o.address ? `<div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">📍 ${o.address}</div>` : ''}
-        ${o.lat ? `<a href="https://www.google.com/maps?q=${o.lat},${o.lng}" target="_blank"
-          style="font-size:.78rem;color:var(--blue);display:block;margin-bottom:6px">🗺️ ดูแผนที่</a>` : ''}
-        <div style="display:flex;flex-wrap:wrap;gap:6px">${o.items.map(i=>`<span class="itag">${i.em} ${i.name} ×${i.qty}</span>`).join('')}</div>
+        ${o.address ? `
+          <div style="background:var(--card2);padding:8px 12px;border-radius:8px;margin-bottom:8px;font-size:0.9em">
+            <strong style="color:var(--muted)">📍 ที่อยู่จัดส่ง:</strong> ${o.address}
+          </div>
+        ` : ''}
+        ${o.note ? `
+          <div style="background:rgba(245,158,11,.1);border-left:3px solid var(--amber);padding:8px 12px;margin-bottom:8px;font-size:0.85em">
+            <strong style="color:var(--amber)">📝 หมายเหตุ:</strong> ${o.note}
+          </div>
+        ` : ''}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          ${o.items.map(i=>`<span class="itag">${i.em} ${i.name} ×${i.qty}</span>`).join('')}
+        </div>
+        <div style="display:flex;gap:10px;font-size:0.8rem;color:var(--muted)">
+          <span>⏰ สั่งเมื่อ: ${new Date(o.createdAt).toLocaleString('th-TH')}</span>
+          <span>📅 จัดส่ง: ${fdate(o.deliveryDate)}</span>
+        </div>
       </div>`).join('')
-    : '<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์</div>';
+    : '<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์ในวันนี้</div>';
+    
+  // Show shop info for print
+  const shopName = getShop();
+  const printDate = new Date().toLocaleString('th-TH');
+  document.getElementById('shop-info-card').style.display = 'block';
+  document.getElementById('shop-info-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <strong>🏪 ชื่อร้าน:</strong> ${shopName}<br>
+        <strong>📅 วันที่พิมพ์:</strong> ${printDate}<br>
+        <strong>📊 รายวัน:</strong> ${dateStr}
+      </div>
+      <div>
+        <strong>📦 ออเดอร์ทั้งหมด:</strong> ${dayOrders.length} รายการ<br>
+        <strong>✅ ยืนยันแล้ว:</strong> ${confirmedOrders} รายการ<br>
+        <strong>🚚 จัดส่งแล้ว:</strong> ${deliveredOrders} รายการ
+      </div>
+    </div>
+  `;
+  
+  // Delivery summary
+  if (deliveryAddresses > 0) {
+    document.getElementById('delivery-summary-card').style.display = 'block';
+    document.getElementById('delivery-summary-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+        <div>
+          <strong>📍 ที่อยู่ที่ต้องจัดส่ง:</strong> ${deliveryAddresses} แห่ง<br>
+          <strong>📦 ออเดอร์ที่รอจัดส่ง:</strong> ${pendingOrders + confirmedOrders} รายการ
+        </div>
+        <div>
+          <strong>💰 มูลค่ารวม:</strong> ${fmoney(rev)}<br>
+          <strong>📊 มูลค่าเฉลี่ย/ออเดอร์:</strong> ${fmoney(avgOrderValue)}
+        </div>
+      </div>
+    `;
+  }
+};
+
+// Export to Excel function
+window.exportToExcel = () => {
+  const date = document.getElementById('sum-date').value;
+  if (!date) return;
+  
+  const dayOrders = allOrders.filter(o => o.deliveryDate===date);
+  if (dayOrders.length === 0) {
+    alert('ไม่มีข้อมูลออเดอร์ในวันที่เลือก');
+    return;
+  }
+  
+  let csv = 'ID,ชื่อลูกค้า,เบอร์โทร,ที่อยู่,สถานะ,วันที่สั่ง,วันที่จัดส่ง,ยอดรวม,รายการสินค้า,หมายเหตุ\n';
+  
+  dayOrders.forEach(o => {
+    const items = (o.items || []).map(i => `${i.em} ${i.name}×${i.qty}`).join(' | ');
+    const row = [
+      o.id || '',
+      `"${o.name || ''}"`,
+      `"${o.phone || ''}"`,
+      `"${o.address || ''}"`,
+      o.status || '',
+      new Date(o.createdAt).toLocaleString('th-TH'),
+      fdate(o.deliveryDate),
+      o.total || 0,
+      `"${items}"`,
+      `"${o.note || ''}"`
+    ].join(',');
+    csv += row + '\n';
+  });
+  
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `daily-summary-${date}.csv`;
+  link.click();
 };
 
 // ── PRODUCTS ──────────────────────────────────
