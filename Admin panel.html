@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แอดมิน — ระบบออเดอร์ LINE</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --g:#06C755;--gd:#049A40;--gl:#DCFCE7;
+  --bg:#0F172A;--card:#1E293B;--card2:#273549;
+  --txt:#F1F5F9;--muted:#94A3B8;--border:#334155;
+  --red:#EF4444;--amber:#F59E0B;--blue:#38BDF8;--purple:#A78BFA;
+  --shadow:0 4px 20px rgba(0,0,0,.3);--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* ===== LOGIN ===== */
+#login-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:20px;
+  background:linear-gradient(135deg,#0F172A 0%,#1E1B4B 100%);
+}
+.login-box{
+  background:var(--card);border-radius:20px;padding:40px;
+  max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);
+  border:1px solid var(--border);text-align:center;
+}
+.login-logo{font-size:3rem;display:block;margin-bottom:16px}
+.login-title{font-size:1.5rem;font-weight:800;margin-bottom:4px}
+.login-sub{color:var(--muted);font-size:.875rem;margin-bottom:28px}
+.login-input{
+  width:100%;padding:14px 18px;border:2px solid var(--border);border-radius:12px;
+  background:var(--card2);color:var(--txt);font-size:1rem;font-family:inherit;
+  outline:none;transition:.2s;text-align:center;letter-spacing:.15em;margin-bottom:14px;
+}
+.login-input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(6,199,85,.2)}
+.login-btn{
+  width:100%;padding:14px;border-radius:12px;border:none;
+  background:var(--g);color:#fff;font-size:1rem;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.2s;
+}
+.login-btn:hover{background:var(--gd);transform:translateY(-1px)}
+.login-err{color:var(--red);font-size:.85rem;margin-top:10px;min-height:20px}
+.login-hint{color:var(--muted);font-size:.75rem;margin-top:12px}
+
+/* ===== APP ===== */
+#app{display:none}
+.topbar{
+  background:var(--card);border-bottom:1px solid var(--border);
+  height:58px;display:flex;align-items:center;padding:0 20px;gap:12px;
+  position:sticky;top:0;z-index:300;box-shadow:var(--shadow);
+}
+.topbar-logo{background:var(--g);width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:1rem}
+.topbar-title{font-weight:800;font-size:1rem}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.logout-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);cursor:pointer;font-size:.8rem;font-family:inherit;transition:.2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 58px)}
+
+/* SIDEBAR */
+.sidebar{background:var(--card);border-right:1px solid var(--border);padding:16px 12px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-radius:10px;cursor:pointer;transition:.2s;color:var(--muted);
+  font-size:.9rem;font-weight:600;border:none;background:transparent;
+  font-family:inherit;width:100%;text-align:left;margin-bottom:4px;
+}
+.nav-item:hover{background:var(--card2);color:var(--txt)}
+.nav-item.on{background:rgba(6,199,85,.15);color:var(--g)}
+.nav-icon{font-size:1.1rem;width:24px;text-align:center}
+.nav-sep{height:1px;background:var(--border);margin:12px 0}
+.nav-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.1em;padding:0 14px;margin-bottom:6px}
+
+/* CONTENT */
+.content{padding:24px;overflow-y:auto}
+.page{display:none}.page.on{display:block}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border-radius:var(--r);padding:18px;border:1px solid var(--border)}
+.stat-num{font-size:1.8rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--g)}
+.stat-lbl{font-size:.75rem;color:var(--muted);margin-top:4px}
+.stat-sub{font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+
+/* CARDS */
+.card{background:var(--card);border-radius:var(--r);padding:20px;
+  border:1px solid var(--border);margin-bottom:16px;box-shadow:var(--shadow)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:8px}
+
+/* DATE FILTER */
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.filter-bar input,select{
+  padding:8px 14px;border:1px solid var(--border);border-radius:10px;
+  background:var(--card2);color:var(--txt);font-size:.875rem;font-family:inherit;outline:none}
+.filter-bar input:focus{border-color:var(--g)}
+.badge{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700}
+.badge-g{background:rgba(6,199,85,.15);color:var(--g)}
+.badge-a{background:rgba(245,158,11,.15);color:var(--amber)}
+.badge-b{background:rgba(56,189,248,.15);color:var(--blue)}
+
+/* ORDER CARDS */
+.order-item{
+  background:var(--card2);border-radius:12px;padding:16px;
+  border:1px solid var(--border);margin-bottom:10px;transition:.2s;
+  border-left:4px solid transparent;
+}
+.order-item:hover{border-color:var(--g);transform:translateX(2px)}
+.order-item.s-pending{border-left-color:var(--amber)}
+.order-item.s-confirmed{border-left-color:var(--g)}
+.order-item.s-delivered{border-left-color:var(--blue)}
+.o-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.o-id{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)}
+.o-name{font-weight:700;font-size:.95rem}
+.o-meta{font-size:.78rem;color:var(--muted);margin-top:2px}
+.status-pill{padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.sp-pending{background:rgba(245,158,11,.15);color:var(--amber)}
+.sp-confirmed{background:rgba(6,199,85,.15);color:var(--g)}
+.sp-delivered{background:rgba(56,189,248,.15);color:var(--blue)}
+.o-items{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.itag{background:var(--card);border-radius:8px;padding:3px 10px;
+  font-size:.78rem;color:var(--txt);border:1px solid var(--border)}
+.o-foot{display:flex;justify-content:space-between;align-items:center}
+.o-total{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--g)}
+.o-actions{display:flex;gap:6px;flex-wrap:wrap}
+.abtn{
+  padding:5px 12px;border-radius:8px;border:none;cursor:pointer;
+  font-size:.75rem;font-weight:700;font-family:inherit;transition:.2s;
+}
+.abtn-map{background:rgba(245,158,11,.2);color:var(--amber)}
+.abtn-map:hover{background:rgba(245,158,11,.35)}
+.abtn-ok{background:rgba(6,199,85,.2);color:var(--g)}
+.abtn-ok:hover{background:rgba(6,199,85,.35)}
+.abtn-del{background:rgba(56,189,248,.2);color:var(--blue)}
+.abtn-del:hover{background:rgba(56,189,248,.35)}
+.abtn-print{background:rgba(167,139,250,.2);color:var(--purple)}
+.abtn-print:hover{background:rgba(167,139,250,.35)}
+
+/* MAP PAGE */
+#delivery-map{height:calc(100vh - 160px);min-height:400px;border-radius:12px;
+  border:1px solid var(--border);overflow:hidden}
+
+/* SUMMARY TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{background:var(--card2);padding:10px 14px;text-align:left;
+  font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.06em;border-bottom:1px solid var(--border)}
+.tbl td{padding:12px 14px;border-bottom:1px solid rgba(51,65,85,.5);font-size:.88rem}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--card2)}
+.tbl .foot td{background:rgba(6,199,85,.1);font-weight:700;color:var(--g);border-top:2px solid var(--g)}
+
+/* RECEIPT MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:1000;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.receipt{background:#fff;color:#111;border-radius:16px;padding:28px;
+  max-width:360px;width:100%;font-family:'JetBrains Mono',monospace;max-height:90vh;overflow-y:auto}
+.r-head{text-align:center;margin-bottom:16px}
+.r-shop{font-size:1.2rem;font-weight:700}
+.r-dash{border-top:2px dashed #ddd;margin:12px 0}
+.r-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:.82rem}
+.r-total{font-size:1rem;font-weight:700;color:#06C755}
+.r-foot{text-align:center;font-size:.72rem;color:#888;margin-top:14px}
+.modal-btns{display:flex;gap:10px;margin-top:16px}
+.mbtn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;
+  font-family:inherit;font-weight:700;font-size:.875rem;flex:1}
+.mbtn-g{background:var(--g);color:#fff}
+.mbtn-s{background:#F1F5F9;color:#374151}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-em{font-size:3rem;display:block;margin-bottom:12px}
+
+/* PRINT */
+@media print{
+  body *{visibility:hidden}
+  .overlay,.overlay *{visibility:visible}
+  .overlay{position:fixed;left:0;top:0;width:100%;background:white}
+  .modal-btns{display:none}
+}
+
+@media(max-width:800px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <span class="login-logo">🔐</span>
+    <div class="login-title">แอดมิน</div>
+    <div class="login-sub">กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบจัดการออเดอร์</div>
+    <input class="login-input" type="password" id="pw-input" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">🔓 เข้าสู่ระบบ</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-hint">รหัสผ่านเริ่มต้น: <strong>admin1234</strong></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">🛍</div>
+    <div class="topbar-title">LINE Order Admin</div>
+    <div class="topbar-right">
+      <span style="font-size:.8rem;color:var(--muted)" id="admin-user"></span>
+      <button class="logout-btn" onclick="logout()">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="nav-label">เมนูหลัก</div>
+      <button class="nav-item on" onclick="goPage('dashboard',this)">
+        <span class="nav-icon">📊</span>Dashboard
+      </button>
+      <button class="nav-item" onclick="goPage('orders',this)">
+        <span class="nav-icon">📋</span>ออเดอร์ทั้งหมด
+      </button>
+      <button class="nav-item" onclick="goPage('mapview',this)">
+        <span class="nav-icon">🗺️</span>แผนที่จัดส่ง
+      </button>
+      <button class="nav-item" onclick="goPage('summary',this)">
+        <span class="nav-icon">📈</span>สรุปรายวัน
+      </button>
+      <div class="nav-sep"></div>
+      <div class="nav-label">ตั้งค่า</div>
+      <button class="nav-item" onclick="goPage('settings',this)">
+        <span class="nav-icon">⚙️</span>ตั้งค่า
+      </button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page on" id="page-dashboard">
+        <div style="margin-bottom:20px">
+          <div style="font-size:1.3rem;font-weight:800">📊 Dashboard</div>
+          <div style="color:var(--muted);font-size:.85rem" id="dash-date"></div>
+        </div>
+        <div class="stats-row" id="dash-stats"></div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">⚡ ออเดอร์ล่าสุด</div>
+            <button class="abtn abtn-map" onclick="goPage('orders',document.querySelector('[onclick*=orders]'))">ดูทั้งหมด →</button>
+          </div>
+          <div id="dash-recent"></div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="page" id="page-orders">
+        <div style="margin-bottom:18px;font-size:1.3rem;font-weight:800">📋 ออเดอร์ทั้งหมด</div>
+        <div class="filter-bar">
+          <input type="date" id="ord-date" onchange="renderOrders()"/>
+          <select id="ord-status" onchange="renderOrders()">
+            <option value="">ทุกสถานะ</option>
+            <option value="pending">⏳ รอยืนยัน</option>
+            <option value="confirmed">✅ ยืนยันแล้ว</option>
+            <option value="delivered">🚚 จัดส่งแล้ว</option>
+          </select>
+          <button class="abtn abtn-map" onclick="clearOrdFilter()">ล้างตัวกรอง</button>
+          <span class="badge badge-g" id="ord-count">0 รายการ</span>
+        </div>
+        <div id="orders-list"></div>
+      </div>
+
+      <!-- MAP VIEW -->
+      <div class="page" id="page-mapview">
+        <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:1.3rem;font-weight:800">🗺️ แผนที่จัดส่ง</div>
+          <div class="filter-bar" style="margin:0">
+            <input type="date" id="map-date" onchange="renderMapPins()"/>
+            <button class="abtn abtn-ok" onclick="renderMapPins()">🔄 รีเฟรช</button>
+          </div>
+        </div>
+        <div id="delivery-map"></div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="page" id="page-summary">
+        <div style="margin-bottom:18px;font-size:1.3rem;font-weight:800">📈 สรุปรายวัน</div>
+        <div class="filter-bar">
+          <input type="date" id="sum-date" onchange="renderSummary()"/>
+          <button class="abtn abtn-ok" onclick="document.getElementById('sum-date').value=today();renderSummary()">วันนี้</button>
+          <button class="abtn abtn-print" onclick="window.print()">🖨️ พิมพ์</button>
+        </div>
+        <div class="stats-row" id="sum-stats" style="grid-template-columns:repeat(3,1fr)"></div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">📦 สินค้าที่ต้องเตรียมจัดส่ง</div>
+          </div>
+          <table class="tbl"><thead><tr>
+            <th>สินค้า</th><th>จำนวน</th><th>ราคา/ชิ้น</th><th>มูลค่ารวม</th>
+          </tr></thead><tbody id="sum-body"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">👥 รายละเอียดลูกค้า</div></div>
+          <div id="sum-customers"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="page-settings">
+        <div style="margin-bottom:18px;font-size:1.3rem;font-weight:800">⚙️ ตั้งค่า</div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🔐 เปลี่ยนรหัสผ่าน</div>
+          <div style="max-width:360px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label style="font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">รหัสผ่านเก่า</label>
+              <input type="password" id="pw-old" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);font-family:inherit;outline:none"/>
+            </div>
+            <div>
+              <label style="font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">รหัสผ่านใหม่</label>
+              <input type="password" id="pw-new" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);font-family:inherit;outline:none"/>
+            </div>
+            <button class="login-btn" style="padding:10px" onclick="changePw()">บันทึกรหัสผ่านใหม่</button>
+            <div id="pw-msg" style="font-size:.85rem;min-height:20px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🏪 ข้อมูลร้าน</div>
+          <div style="max-width:360px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label style="font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">ชื่อร้าน</label>
+              <input type="text" id="shop-name" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--txt);font-family:inherit;outline:none" placeholder="ร้านของฉัน"/>
+            </div>
+            <button class="login-btn" style="padding:10px" onclick="saveShop()">บันทึก</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end layout -->
+</div><!-- end app -->
+
+<!-- RECEIPT MODAL -->
+<div class="overlay" id="receipt-overlay">
+  <div class="receipt" id="receipt-box"></div>
+  <div class="modal-btns" style="max-width:360px;width:100%">
+    <button class="mbtn mbtn-g" onclick="window.print()">🖨️ พิมพ์</button>
+    <button class="mbtn mbtn-s" onclick="closeReceipt()">✕ ปิด</button>
+  </div>
+</div>
+
+<!-- MAP DETAIL MODAL -->
+<div class="overlay" id="map-detail-overlay">
+  <div style="background:var(--card);border-radius:16px;padding:24px;max-width:380px;width:100%;border:1px solid var(--border)">
+    <div style="font-weight:800;font-size:1rem;margin-bottom:16px" id="md-title"></div>
+    <div id="md-body" style="font-size:.875rem;line-height:2;color:var(--muted)"></div>
+    <div id="md-map" style="height:200px;border-radius:10px;overflow:hidden;margin:14px 0;border:1px solid var(--border)"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="abtn abtn-ok" style="flex:1;padding:10px" onclick="closeMapDetail()">ปิด</button>
+      <button class="abtn abtn-print" style="flex:1;padding:10px" id="md-gmaps">📍 Google Maps</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_PW = 'admin1234';
+let dMap = null, miniMap = null, markers = [];
+
+function today(){ return new Date().toISOString().split('T')[0]; }
+function fmoney(n){ return '฿' + (+n).toLocaleString(); }
+function fdate(d){ return new Date(d).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}); }
+function getOrders(){ return JSON.parse(localStorage.getItem('lo_orders')||'[]'); }
+function getPw(){ return localStorage.getItem('admin_pw') || DEFAULT_PW; }
+function getShop(){ return localStorage.getItem('shop_name') || 'ร้านของฉัน'; }
+
+// ===== LOGIN =====
+function doLogin(){
+  const v = document.getElementById('pw-input').value;
+  if(v === getPw()){
+    localStorage.setItem('admin_session','1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('admin-user').textContent='👤 Admin';
+    initApp();
+  } else {
+    const e=document.getElementById('login-err');
+    e.textContent='รหัสผ่านไม่ถูกต้อง';
+    document.getElementById('pw-input').value='';
+    setTimeout(()=>e.textContent='',3000);
+  }
+}
+
+document.getElementById('pw-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') doLogin();
+});
+
+function logout(){
+  localStorage.removeItem('admin_session');
+  location.reload();
+}
+
+function initApp(){
+  if(localStorage.getItem('admin_session')==='1'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('admin-user').textContent='👤 Admin';
+  }
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('ord-date').value=today();
+  document.getElementById('map-date').value=today();
+  document.getElementById('sum-date').value=today();
+  document.getElementById('shop-name').value=getShop();
+  renderDashboard();
+}
+
+// ===== NAV =====
+function goPage(name, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+  document.getElementById('page-'+name).classList.add('on');
+  if(el) el.classList.add('on');
+  if(name==='orders') renderOrders();
+  if(name==='mapview'){ setTimeout(()=>{ initDeliveryMap(); renderMapPins(); },100); }
+  if(name==='summary') renderSummary();
+}
+
+// ===== DASHBOARD =====
+function renderDashboard(){
+  const orders = getOrders();
+  const todayOrders = orders.filter(o=>o.deliveryDate===today()||o.createdAt.startsWith(today()));
+  const total = orders.reduce((s,o)=>s+o.total,0);
+  const todayRev = todayOrders.reduce((s,o)=>s+o.total,0);
+  const pending = orders.filter(o=>o.status==='pending').length;
+
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat"><div class="stat-num">${orders.length}</div><div class="stat-lbl">ออเดอร์ทั้งหมด</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--amber)">${pending}</div><div class="stat-lbl">⏳ รอยืนยัน</div></div>
+    <div class="stat"><div class="stat-num">${todayOrders.length}</div><div class="stat-lbl">📅 ออเดอร์วันนี้</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(todayRev)}</div><div class="stat-lbl">💰 ยอดวันนี้</div><div class="stat-sub">รวม ${fmoney(total)}</div></div>
+  `;
+  document.getElementById('dash-recent').innerHTML = orders.slice(0,5).map(o=>orderCard(o)).join('')||'<div class="empty"><span class="empty-em">📭</span>ยังไม่มีออเดอร์</div>';
+}
+
+// ===== ORDERS =====
+function renderOrders(){
+  const date=document.getElementById('ord-date').value;
+  const status=document.getElementById('ord-status').value;
+  let list=getOrders();
+  if(date) list=list.filter(o=>o.deliveryDate===date||o.createdAt.startsWith(date));
+  if(status) list=list.filter(o=>o.status===status);
+  document.getElementById('ord-count').textContent=list.length+' รายการ';
+  document.getElementById('orders-list').innerHTML=list.length
+    ?list.map(o=>orderCard(o)).join('')
+    :'<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์ตามตัวกรอง</div>';
+}
+
+function clearOrdFilter(){
+  document.getElementById('ord-date').value='';
+  document.getElementById('ord-status').value='';
+  renderOrders();
+}
+
+function statusLabel(s){ return {pending:'⏳ รอยืนยัน',confirmed:'✅ ยืนยันแล้ว',delivered:'🚚 จัดส่งแล้ว'}[s]||s; }
+
+function orderCard(o){
+  return `<div class="order-item s-${o.status}">
+    <div class="o-top">
+      <div>
+        <div class="o-id">#${o.id}</div>
+        <div class="o-name">${o.name} 📞 ${o.phone}</div>
+        <div class="o-meta">📅 จัดส่ง: ${fdate(o.deliveryDate)} | ⏰ ${new Date(o.createdAt).toLocaleString('th-TH')}</div>
+        ${o.address?`<div class="o-meta">📍 ${o.address}</div>`:''}
+        ${o.note?`<div class="o-meta">📝 ${o.note}</div>`:''}
+      </div>
+      <span class="status-pill sp-${o.status}">${statusLabel(o.status)}</span>
+    </div>
+    <div class="o-items">${o.items.map(i=>`<span class="itag">${i.em} ${i.name} ×${i.qty}</span>`).join('')}</div>
+    <div class="o-foot">
+      <span class="o-total">${fmoney(o.total)}</span>
+      <div class="o-actions">
+        ${o.lat?`<button class="abtn abtn-map" onclick="showMapDetail('${o.id}')">📍 แผนที่</button>`:''}
+        <button class="abtn abtn-print" onclick="printReceipt('${o.id}')">🧾 ใบสั่ง</button>
+        ${o.status==='pending'?`<button class="abtn abtn-ok" onclick="setStatus('${o.id}','confirmed')">✅ ยืนยัน</button>`:''}
+        ${o.status==='confirmed'?`<button class="abtn abtn-del" onclick="setStatus('${o.id}','delivered')">🚚 ส่งแล้ว</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function setStatus(id,status){
+  const orders=getOrders();
+  const o=orders.find(x=>x.id===id);
+  if(o){o.status=status;localStorage.setItem('lo_orders',JSON.stringify(orders));}
+  renderOrders(); renderDashboard();
+}
+
+// ===== RECEIPT =====
+function printReceipt(id){
+  const o=getOrders().find(x=>x.id===id); if(!o) return;
+  document.getElementById('receipt-box').innerHTML=`
+    <div class="r-head">
+      <div class="r-shop">🛍 ${getShop()}</div>
+      <div style="font-size:.72rem;color:#888;margin-top:3px">ใบสั่งซื้อ</div>
+    </div>
+    <div class="r-dash"></div>
+    <div class="r-row"><span>เลขที่:</span><span>${o.id}</span></div>
+    <div class="r-row"><span>ลูกค้า:</span><span>${o.name}</span></div>
+    <div class="r-row"><span>โทร:</span><span>${o.phone}</span></div>
+    ${o.address?`<div class="r-row"><span>ที่อยู่:</span><span style="max-width:200px;text-align:right">${o.address}</span></div>`:''}
+    <div class="r-row"><span>วันจัดส่ง:</span><span>${fdate(o.deliveryDate)}</span></div>
+    <div class="r-dash"></div>
+    ${o.items.map(i=>`<div class="r-row"><span>${i.em} ${i.name} ×${i.qty}</span><span>${fmoney(i.price*i.qty)}</span></div>`).join('')}
+    <div class="r-dash"></div>
+    <div class="r-row r-total"><span>รวมทั้งสิ้น</span><span>${fmoney(o.total)}</span></div>
+    ${o.note?`<div class="r-row" style="font-size:.72rem"><span>หมายเหตุ:</span><span>${o.note}</span></div>`:''}
+    <div class="r-foot">ขอบคุณที่ใช้บริการ 💚<br>${getShop()}</div>
+  `;
+  document.getElementById('receipt-overlay').classList.add('open');
+}
+function closeReceipt(){ document.getElementById('receipt-overlay').classList.remove('open'); }
+
+// ===== DELIVERY MAP =====
+function initDeliveryMap(){
+  if(dMap){ dMap.invalidateSize(); return; }
+  dMap = L.map('delivery-map').setView([13.7563,100.5018],11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(dMap);
+}
+
+function renderMapPins(){
+  if(!dMap) return;
+  markers.forEach(m=>dMap.removeLayer(m));
+  markers=[];
+  const date=document.getElementById('map-date').value;
+  const orders=getOrders().filter(o=>(!date||(o.deliveryDate===date||o.createdAt.startsWith(date)))&&o.lat&&o.lng);
+  if(!orders.length) return;
+
+  const statusColors={pending:'#F59E0B',confirmed:'#06C755',delivered:'#38BDF8'};
+  const bounds=[];
+
+  orders.forEach(o=>{
+    const color=statusColors[o.status]||'#06C755';
+    const icon=L.divIcon({html:`
+      <div style="position:relative">
+        <div style="background:${color};width:36px;height:36px;border-radius:50% 50% 50% 0;
+          transform:rotate(-45deg);border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,.3)"></div>
+        <div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);font-size:.65rem;
+          font-weight:800;color:white;font-family:JetBrains Mono,monospace">
+          ${o.id.slice(-3)}
+        </div>
+      </div>`,iconSize:[36,36],iconAnchor:[18,36],className:''});
+
+    const m=L.marker([o.lat,o.lng],{icon}).addTo(dMap);
+    m.bindPopup(`<strong>${o.name}</strong><br>📞 ${o.phone}<br>🆔 ${o.id}<br>💰 ${fmoney(o.total)}<br>${statusLabel(o.status)}`);
+    m.on('click',()=>showMapDetail(o.id));
+    markers.push(m);
+    bounds.push([o.lat,o.lng]);
+  });
+
+  if(bounds.length) dMap.fitBounds(bounds,{padding:[40,40]});
+}
+
+// MAP DETAIL
+let mdMiniMap=null;
+function showMapDetail(id){
+  const o=getOrders().find(x=>x.id===id); if(!o||!o.lat) return;
+  document.getElementById('md-title').textContent=`#${o.id} — ${o.name}`;
+  document.getElementById('md-body').innerHTML=`
+    📞 ${o.phone}<br>
+    📅 จัดส่ง: ${fdate(o.deliveryDate)}<br>
+    📍 ${o.lat.toFixed(5)}, ${o.lng.toFixed(5)}<br>
+    ${o.address?`🏠 ${o.address}<br>`:''}
+    💰 ${fmoney(o.total)}<br>
+    ${statusLabel(o.status)}
+  `;
+  document.getElementById('md-gmaps').onclick=()=>window.open(`https://www.google.com/maps?q=${o.lat},${o.lng}`,'_blank');
+  document.getElementById('map-detail-overlay').classList.add('open');
+
+  setTimeout(()=>{
+    if(mdMiniMap){ mdMiniMap.remove(); mdMiniMap=null; }
+    mdMiniMap=L.map('md-map').setView([o.lat,o.lng],16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19}).addTo(mdMiniMap);
+    L.marker([o.lat,o.lng]).addTo(mdMiniMap).bindPopup(o.name).openPopup();
+  },150);
+}
+
+function closeMapDetail(){
+  document.getElementById('map-detail-overlay').classList.remove('open');
+  if(mdMiniMap){ mdMiniMap.remove(); mdMiniMap=null; }
+}
+
+// ===== SUMMARY =====
+function renderSummary(){
+  const date=document.getElementById('sum-date').value; if(!date) return;
+  const dayOrders=getOrders().filter(o=>o.deliveryDate===date);
+  const rev=dayOrders.reduce((s,o)=>s+o.total,0);
+  const itemMap={};
+  dayOrders.forEach(o=>o.items.forEach(i=>{
+    if(!itemMap[i.id]) itemMap[i.id]={...i,totalQty:0,totalVal:0};
+    itemMap[i.id].totalQty+=i.qty; itemMap[i.id].totalVal+=i.price*i.qty;
+  }));
+  const items=Object.values(itemMap).sort((a,b)=>b.totalQty-a.totalQty);
+  const totalItems=items.reduce((s,i)=>s+i.totalQty,0);
+
+  document.getElementById('sum-stats').innerHTML=`
+    <div class="stat"><div class="stat-num">${dayOrders.length}</div><div class="stat-lbl">📦 ออเดอร์</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--purple)">${fmoney(rev)}</div><div class="stat-lbl">💰 ยอดขาย</div></div>
+    <div class="stat"><div class="stat-num">${totalItems}</div><div class="stat-lbl">🛍 รายการรวม</div></div>
+  `;
+
+  document.getElementById('sum-body').innerHTML=items.length
+    ? items.map(i=>`<tr>
+        <td>${i.em} ${i.name}</td>
+        <td><strong style="color:var(--g);font-family:'JetBrains Mono',monospace">${i.totalQty} ชิ้น</strong></td>
+        <td style="font-family:'JetBrains Mono',monospace">${fmoney(i.price)}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmoney(i.totalVal)}</td>
+      </tr>`).join('')+`
+      <tr class="foot"><td colspan="3">รวมทั้งหมด</td><td>${fmoney(rev)}</td></tr>`
+    :'<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีออเดอร์</td></tr>';
+
+  document.getElementById('sum-customers').innerHTML=dayOrders.length
+    ? dayOrders.map(o=>`
+      <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong>${o.name} ${o.phone}</strong>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--g);font-weight:700">${fmoney(o.total)}</span>
+        </div>
+        ${o.address?`<div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">📍 ${o.address}</div>`:''}
+        ${o.lat?`<div style="font-size:.78rem;color:var(--amber);margin-bottom:6px">🗺️ ปักหมุดแล้ว <a href="https://www.google.com/maps?q=${o.lat},${o.lng}" target="_blank" style="color:var(--blue)">ดูแผนที่</a></div>`:''}
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${o.items.map(i=>`<span class="itag">${i.em} ${i.name} ×${i.qty}</span>`).join('')}</div>
+      </div>`).join('')
+    :'<div class="empty"><span class="empty-em">📭</span>ไม่มีออเดอร์</div>';
+}
+
+// ===== SETTINGS =====
+function changePw(){
+  const old=document.getElementById('pw-old').value;
+  const nw=document.getElementById('pw-new').value;
+  const msg=document.getElementById('pw-msg');
+  if(old!==getPw()){msg.style.color='var(--red)';msg.textContent='รหัสผ่านเก่าไม่ถูกต้อง';return;}
+  if(nw.length<4){msg.style.color='var(--red)';msg.textContent='รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร';return;}
+  localStorage.setItem('admin_pw',nw);
+  msg.style.color='var(--g)';msg.textContent='✅ เปลี่ยนรหัสผ่านสำเร็จ';
+  document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';
+}
+
+function saveShop(){
+  localStorage.setItem('shop_name',document.getElementById('shop-name').value);
+  alert('บันทึกแล้ว');
+}
+
+// ===== INIT =====
+if(localStorage.getItem('admin_session')==='1') initApp();
+</script>
+</body>
+</html>
