@@ -1157,15 +1157,15 @@ ${inner.innerHTML}
 // ── DELIVERY MAP ──────────────────────────────
 function initDeliveryMap() {
   if (dMap) { dMap.invalidateSize(); return; }
-  dMap = L.map('delivery-map').setView([13.7563,100.5018], 11);
+  dMap = L.map('delivery-map').setView([18.72833700950625, 99.00016991187053], 11);
   L.tileLayer('https://{s}.tile-openstreetmap.org/{z}/{x}/{y}.png',
     {attribution:'© OpenStreetMap', maxZoom:19}).addTo(dMap);
 }
 
 // Warehouse location (คลังของคุณ)
 const WAREHOUSE_LOCATION = {
-  lat: 13.7563,
-  lng: 100.5018,
+  lat: 18.72833700950625,
+  lng: 99.00016991187053,
   name: "คลังสินค้า",
   address: "https://maps.app.goo.gl/Z2mrwKRa8osCaaqx9"
 };
