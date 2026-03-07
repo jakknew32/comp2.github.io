@@ -220,19 +220,18 @@ textarea{resize:vertical;min-height:70px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, getDocs, query, where, orderBy, onSnapshot
+  getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ════════════════════════════════════════════
-// 🔧 ใส่ค่า Firebase Config ที่นี่
-//    (ได้จาก admin panel → ตั้งค่า Firebase)
-// ════════════════════════════════════════════
-let FB_CONFIG = null;
-try {
-  const saved = localStorage.getItem('fb_config');
-  if (saved) FB_CONFIG = JSON.parse(saved);
-} catch(e){}
-// ════════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey: "AIzaSyCgwWtRfU-VP4JK8EegFEMgubAID2vmYUg",
+  authDomain: "lineorder-69d5d.firebaseapp.com",
+  projectId: "lineorder-69d5d",
+  storageBucket: "lineorder-69d5d.firebasestorage.app",
+  messagingSenderId: "325494140904",
+  appId: "1:325494140904:web:a0a6094cbf65cc3c817e5d",
+  measurementId: "G-GL2QYWQBL2"
+};
 
 let db = null;
 
@@ -241,17 +240,13 @@ async function init() {
   document.getElementById('shop-title').textContent =
     localStorage.getItem('shop_name') || 'สั่งสินค้าออนไลน์';
 
-  if (FB_CONFIG && FB_CONFIG.apiKey && FB_CONFIG.apiKey !== 'YOUR_API_KEY') {
-    try {
-      const app = initializeApp(FB_CONFIG);
-      db = getFirestore(app);
-      document.getElementById('mode-pill').textContent = '🟢 online';
-      document.getElementById('fb-banner').style.display = 'none';
-    } catch(e) {
-      console.error('Firebase error:', e);
-      showLocalMode();
-    }
-  } else {
+  try {
+    const app = initializeApp(FB_CONFIG);
+    db = getFirestore(app);
+    document.getElementById('mode-pill').textContent = '🟢 online';
+    document.getElementById('fb-banner').style.display = 'none';
+  } catch(e) {
+    console.error('Firebase error:', e);
     showLocalMode();
   }
 

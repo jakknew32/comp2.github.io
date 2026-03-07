@@ -551,15 +551,23 @@ window.logout = () => {
 };
 
 // ── FIREBASE ──────────────────────────────────
+const FB_CONFIG = {
+  apiKey: "AIzaSyCgwWtRfU-VP4JK8EegFEMgubAID2vmYUg",
+  authDomain: "lineorder-69d5d.firebaseapp.com",
+  projectId: "lineorder-69d5d",
+  storageBucket: "lineorder-69d5d.firebasestorage.app",
+  messagingSenderId: "325494140904",
+  appId: "1:325494140904:web:a0a6094cbf65cc3c817e5d",
+  measurementId: "G-GL2QYWQBL2"
+};
+
 async function initFirebase() {
-  const saved = localStorage.getItem('fb_config');
-  if (!saved) { setDbStatus(false); return; }
   try {
-    const config = JSON.parse(saved);
-    if (!config.apiKey || config.apiKey === 'YOUR_API_KEY') { setDbStatus(false); return; }
-    const app = initializeApp(config);
+    const app = initializeApp(FB_CONFIG);
     db = getFirestore(app);
     setDbStatus(true);
+    // Also save to localStorage so customer page can use it
+    localStorage.setItem('fb_config', JSON.stringify(FB_CONFIG));
     return true;
   } catch(e) {
     console.error('Firebase init:', e);
@@ -1035,28 +1043,16 @@ window.saveFirebaseConfig = async () => {
 };
 
 function renderFirebaseStatus() {
-  const saved = localStorage.getItem('fb_config');
   const card = document.getElementById('firebase-status-card');
-  if (saved) {
-    try {
-      const c = JSON.parse(saved);
-      card.innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:2rem">🔥</span>
-          <div>
-            <div style="font-weight:700">เชื่อมต่อกับ Firebase</div>
-            <div style="font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace">${c.projectId}</div>
-          </div>
-          <button class="abtn abtn-red" style="margin-left:auto" onclick="if(confirm('ยกเลิก Firebase?')){localStorage.removeItem('fb_config');location.reload()}">
-            🔌 ยกเลิก
-          </button>
-        </div>`;
-      document.getElementById('fb-config-input').value = JSON.stringify(c, null, 2);
-    } catch(e) {}
-  } else {
-    card.innerHTML = `<div style="display:flex;align-items:center;gap:10px;color:var(--red)">
-      ⚠️ <span>ยังไม่ได้ตั้งค่า Firebase — ข้อมูลจะเก็บเฉพาะในเครื่องนี้</span></div>`;
-  }
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:2rem">🔥</span>
+      <div>
+        <div style="font-weight:700;color:var(--g)">✅ Firebase ตั้งค่าไว้แล้ว</div>
+        <div style="font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace">lineorder-69d5d</div>
+      </div>
+    </div>`;
+  document.getElementById('fb-config-input').value = JSON.stringify(FB_CONFIG, null, 2);
 }
 
 // ── SETTINGS ──────────────────────────────────
