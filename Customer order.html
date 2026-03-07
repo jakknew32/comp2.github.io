@@ -14,6 +14,8 @@
 body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 .fb-banner{display:none;align-items:center;gap:8px;background:#FEF3C7;border-bottom:2px solid #F59E0B;
   padding:10px 16px;font-size:.82rem;color:#92400E}
+.fb-banner.online{background:#D1FAE5;border-bottom:2px solid #10B981;color:#065F46}
+.fb-banner.offline{background:#FEE2E2;border-bottom:2px solid #EF4444;color:#991B1B}
 .topbar{background:var(--g);height:56px;display:flex;align-items:center;padding:0 20px;gap:12px;
   box-shadow:0 2px 12px rgba(6,199,85,.35);position:sticky;top:0;z-index:200}
 .topbar-logo{background:#fff;width:34px;height:34px;border-radius:10px;display:flex;
@@ -164,8 +166,13 @@ textarea{resize:vertical;min-height:70px}
   </div>
 
   <div class="card">
-    <div class="sec-head"><div class="sec-icon" style="background:#DCFCE7">🛒</div>
-      <div class="sec-label">สั่งสินค้า</div></div>
+    <div class="sec-head">
+      <div class="sec-icon" style="background:#DCFCE7">🛒</div>
+      <div class="sec-label">สั่งสินค้า</div>
+      <button id="refresh-btn" class="btn-outline" style="margin-left:auto;font-size:.75rem;padding:6px 12px" onclick="refreshProducts()">
+        🔄 รีเฟรชเมนู
+      </button>
+    </div>
     <div class="tabs">
       <button class="tab on" onclick="switchTab('menu',this)">📋 เลือกจากเมนู</button>
       <button class="tab" onclick="switchTab('text',this)">✏️ พิมพ์ออเดอร์</button>
@@ -244,11 +251,23 @@ async function init() {
   document.getElementById('shop-title').textContent =
     localStorage.getItem('shop_name') || 'สั่งสินค้าออนไลน์';
 
+  // Try to get Firebase config from localStorage first (saved by admin)
+  const savedConfig = localStorage.getItem('fb_config');
+  let configToUse = FB_CONFIG;
+  
+  if (savedConfig) {
+    try {
+      configToUse = JSON.parse(savedConfig);
+      console.log('Using Firebase config from admin panel');
+    } catch(e) {
+      console.log('Using hardcoded Firebase config');
+    }
+  }
+
   try {
-    const app = initializeApp(FB_CONFIG);
+    const app = initializeApp(configToUse);
     db = getFirestore(app);
-    document.getElementById('mode-pill').textContent = '🟢 online';
-    document.getElementById('fb-banner').style.display = 'none';
+    showOnlineMode();
   } catch(e) {
     console.error('Firebase error:', e);
     showLocalMode();
@@ -260,7 +279,25 @@ async function init() {
 
 function showLocalMode() {
   document.getElementById('mode-pill').textContent = '🔴 local only';
-  document.getElementById('fb-banner').style.display = 'flex';
+  const banner = document.getElementById('fb-banner');
+  banner.style.display = 'flex';
+  banner.className = 'fb-banner offline';
+  banner.innerHTML = '⚠️ ไม่สามารถเชื่อมต่อ Firebase กำลังใช้ข้อมูลแคชจากเครื่อง - การเปลี่ยนแปลงสินค้าอาจไม่อัปเดตทันที';
+}
+
+function showOnlineMode() {
+  document.getElementById('mode-pill').textContent = '🟢 online';
+  const banner = document.getElementById('fb-banner');
+  banner.style.display = 'flex';
+  banner.className = 'fb-banner online';
+  banner.innerHTML = '✅ เชื่อมต่อ Firebase สำเร็จ - สินค้าจะอัปเดตอัตโนมัติเมื่อแอดมินเปลี่ยนแปลง';
+  
+  // Hide after 3 seconds
+  setTimeout(() => {
+    if (banner.className === 'fb-banner online') {
+      banner.style.display = 'none';
+    }
+  }, 3000);
 }
 
 // ─── PRODUCTS ───────────────────────────────
@@ -288,14 +325,24 @@ let mapObj, marker;
 async function loadProducts() {
   if (db) {
     // Realtime subscription — products update instantly when admin changes them
-    onSnapshot(collection(db, 'products'), snap => {
+    const unsubscribe = onSnapshot(collection(db, 'products'), snap => {
       if (!snap.empty) {
         const prods = snap.docs.map(d => ({...d.data(), _fid: d.id}));
         localStorage.setItem('lo_products', JSON.stringify(prods));
         PRODUCTS = prods.filter(p => p.active !== false);
         renderProducts();
+        console.log('Products updated from Firebase:', PRODUCTS.length);
+      } else {
+        console.log('No products in Firebase, using local');
+        loadProductsLocal();
       }
-    }, err => { console.error('products snapshot error:', err); loadProductsLocal(); });
+    }, err => { 
+      console.error('products snapshot error:', err); 
+      loadProductsLocal(); 
+    });
+    
+    // Store unsubscribe function for cleanup
+    window._productsUnsubscribe = unsubscribe;
   } else {
     loadProductsLocal();
   }
@@ -306,7 +353,33 @@ function loadProductsLocal() {
   const prods = s ? JSON.parse(s) : DEFAULT_PRODUCTS;
   PRODUCTS = prods.filter(p => p.active !== false);
   renderProducts();
+  console.log('Products loaded from local storage:', PRODUCTS.length);
 }
+
+// Add refresh function
+window.refreshProducts = async () => {
+  console.log('Manually refreshing products...');
+  
+  // Clear existing subscription
+  if (window._productsUnsubscribe) {
+    window._productsUnsubscribe();
+  }
+  
+  // Reload products
+  await loadProducts();
+  
+  // Show feedback
+  const btn = document.getElementById('refresh-btn');
+  if (btn) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✅ อัปเดตแล้ว';
+    btn.style.background = '#10b981';
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.style.background = '';
+    }, 2000);
+  }
+};
 
 function renderProducts() {
   if (!PRODUCTS.length) {
