@@ -671,39 +671,34 @@
             toast.id = 'cfm-toast';
             toast.style.cssText = `
                 position: fixed;
-                bottom: 30px;
-                left: 50%;
-                transform: translateX(-50%) translateY(80px);
+                top: 20px;
+                right: 20px;
+                transform: translateX(120%);
                 background: ${c.bg};
                 color: white;
-                padding: 16px 28px;
-                border-radius: 12px;
+                padding: 14px 20px;
+                border-radius: 10px;
                 font-family: 'Kanit', sans-serif;
-                font-size: 16px;
+                font-size: 15px;
                 font-weight: 600;
-                box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+                box-shadow: 0 6px 24px rgba(0,0,0,0.25);
                 z-index: 99999;
-                max-width: 90vw;
-                text-align: center;
-                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+                max-width: 320px;
+                transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.35s ease;
                 opacity: 0;
             `;
             toast.innerHTML = `${c.icon} ${message}`;
             document.body.appendChild(toast);
 
-            // Animate in
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    toast.style.transform = 'translateX(-50%) translateY(0)';
-                    toast.style.opacity = '1';
-                });
-            });
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                toast.style.transform = 'translateX(0)';
+                toast.style.opacity = '1';
+            }));
 
-            // Animate out
             setTimeout(() => {
-                toast.style.transform = 'translateX(-50%) translateY(80px)';
+                toast.style.transform = 'translateX(120%)';
                 toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 400);
+                setTimeout(() => toast.remove(), 350);
             }, duration);
         }
 
