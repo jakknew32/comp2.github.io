@@ -368,8 +368,35 @@
     </style>
 </head>
 <body>
-    <!-- Firebase Status Banner -->
-    <div id="firebaseBanner" style="display:none; padding: 12px 20px; text-align: center; font-family: 'Kanit', sans-serif; font-size: 15px; position: sticky; top: 0; z-index: 9999;"></div>
+    <!-- Firebase Status Bar -->
+    <div id="fb-statusbar" style="
+        position: sticky; top: 0; z-index: 9000;
+        background: rgba(255,255,255,0.97);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid #e5e7eb;
+        padding: 8px 20px;
+        display: flex; align-items: center; gap: 10px;
+        font-family: 'Kanit', sans-serif; font-size: 14px;
+    ">
+        <style>
+            @keyframes fb-pulse {
+                0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); }
+                70%  { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+                100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+            }
+        </style>
+        <span id="fb-dot" style="
+            display: inline-block; width: 12px; height: 12px;
+            border-radius: 50%; background: #f59e0b;
+            flex-shrink: 0;
+            animation: fb-pulse 1.2s infinite;
+        "></span>
+        <span id="fb-text" style="color: #f59e0b; font-weight: 600;">กำลังเชื่อมต่อ Firebase...</span>
+        <span style="margin-left: auto; color: #9ca3af; font-size: 12px;">🔥 photo-df51e</span>
+    </div>
+
+    <!-- (legacy banner kept hidden) -->
+    <div id="firebaseBanner" style="display:none;"></div>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(102,126,234,0.85); z-index:99999; justify-content:center; align-items:center; flex-direction:column; gap:16px;">
@@ -554,7 +581,9 @@
         // =============================================
         async function saveReceiverToFirebase(receiver) {
             try {
+                setStatus('saving');
                 await set(ref(db, `${RECEIVERS_REF}/${receiver.id}`), receiver);
+                setStatus('saved', receivers.length);
             } catch (e) {
                 console.error('Firebase save error:', e);
                 showFirebaseError('บันทึกข้อมูลไม่สำเร็จ: ' + e.message);
@@ -586,27 +615,46 @@
         }
 
         // =============================================
-        // Show Firebase status banner
+        // Firebase Status Bar
         // =============================================
-        function showFirebaseError(msg) {
-            const banner = document.getElementById('firebaseBanner');
-            if (banner) {
-                banner.textContent = '⚠️ ' + msg;
-                banner.style.background = '#fee2e2';
-                banner.style.color = '#dc2626';
-                banner.style.display = 'block';
+        function setStatus(state, count) {
+            const dot  = document.getElementById('fb-dot');
+            const text = document.getElementById('fb-text');
+            if (!dot || !text) return;
+            const styles = {
+                connecting: { color: '#f59e0b', label: 'กำลังเชื่อมต่อ Firebase...', anim: true  },
+                online:     { color: '#10b981', label: `Firebase เชื่อมต่อแล้ว · ${count ?? '?'} รายการ`, anim: false },
+                offline:    { color: '#ef4444', label: 'Firebase ไม่ได้เชื่อมต่อ', anim: false },
+                saving:     { color: '#667eea', label: 'กำลังบันทึก...', anim: true  },
+                saved:      { color: '#10b981', label: `บันทึกสำเร็จ · ${count ?? '?'} รายการ`, anim: false },
+                error:      { color: '#ef4444', label: 'เกิดข้อผิดพลาด', anim: false },
+            };
+            const s = styles[state] || styles.offline;
+            dot.style.background = s.color;
+            dot.style.boxShadow  = 'none';
+            dot.style.animation  = s.anim ? 'fb-pulse 1.2s infinite' : 'none';
+            text.textContent     = s.label;
+            text.style.color     = s.color;
+        }
+
+        // Monitor connection state
+        setStatus('connecting');
+        onValue(ref(db, '.info/connected'), snap => {
+            if (snap.val() === true) {
+                setStatus('online', receivers.length);
+            } else {
+                setStatus('offline');
             }
+        });
+
+        function showFirebaseError(msg) {
+            setStatus('error');
+            const text = document.getElementById('fb-text');
+            if (text) { text.textContent = '⚠️ ' + msg; text.style.color = '#ef4444'; }
         }
 
         function showFirebaseOk(msg) {
-            const banner = document.getElementById('firebaseBanner');
-            if (banner) {
-                banner.textContent = '✅ ' + msg;
-                banner.style.background = '#d1fae5';
-                banner.style.color = '#059669';
-                banner.style.display = 'block';
-                setTimeout(() => { banner.style.display = 'none'; }, 3000);
-            }
+            setStatus('online', receivers.length);
         }
 
         // =============================================

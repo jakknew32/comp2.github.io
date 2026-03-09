@@ -333,7 +333,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDZolsNGRpa_ZTPco_lbaBfliXNBrjTmTo",
@@ -349,12 +349,51 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // ── Status indicator helpers ──────────────────────
+        function setStatus(state, count) {
+            const dot  = document.getElementById('fb-dot');
+            const text = document.getElementById('fb-text');
+            if (!dot || !text) return;
+            const styles = {
+                connecting: { color: '#f59e0b', label: 'กำลังเชื่อมต่อ Firebase...', anim: true  },
+                online:     { color: '#10b981', label: `Firebase เชื่อมต่อแล้ว · ${count ?? '?'} รายการ`, anim: false },
+                offline:    { color: '#ef4444', label: 'Firebase ไม่ได้เชื่อมต่อ', anim: false },
+            };
+            const s = styles[state] || styles.offline;
+            dot.style.background  = s.color;
+            dot.style.boxShadow   = s.anim ? `0 0 0 0 ${s.color}` : 'none';
+            dot.style.animation   = s.anim ? 'fb-pulse 1.2s infinite' : 'none';
+            text.textContent      = s.label;
+            text.style.color      = s.color;
+        }
+
+        // Monitor connection + record count in real-time
+        setStatus('connecting');
+        const connRef = ref(db, '.info/connected');
+        onValue(connRef, snap => {
+            if (snap.val() === true) {
+                // Get count
+                get(ref(db, 'receivers')).then(s => {
+                    const count = s.exists() ? Object.keys(s.val()).length : 0;
+                    setStatus('online', count);
+                }).catch(() => setStatus('online', '?'));
+            } else {
+                setStatus('offline');
+            }
+        });
+
         window._saveReceiverToFirebase = async function(receiver) {
             try {
                 await set(ref(db, `receivers/${receiver.id}`), receiver);
+                // Refresh count
+                get(ref(db, 'receivers')).then(s => {
+                    const count = s.exists() ? Object.keys(s.val()).length : 0;
+                    setStatus('online', count);
+                });
                 return true;
             } catch(e) {
                 console.error('Firebase save error:', e);
+                setStatus('offline');
                 return false;
             }
         };
@@ -376,6 +415,32 @@
     </script>
 </head>
 <body>
+    <!-- Firebase Status Bar -->
+    <div id="fb-statusbar" style="
+        position: sticky; top: 0; z-index: 9000;
+        background: rgba(255,255,255,0.97);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid #e5e7eb;
+        padding: 8px 20px;
+        display: flex; align-items: center; gap: 10px;
+        font-family: 'Kanit', sans-serif; font-size: 14px;
+    ">
+        <style>
+            @keyframes fb-pulse {
+                0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); }
+                70%  { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+                100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+            }
+        </style>
+        <span id="fb-dot" style="
+            display: inline-block; width: 12px; height: 12px;
+            border-radius: 50%; background: #f59e0b;
+            flex-shrink: 0;
+            animation: fb-pulse 1.2s infinite;
+        "></span>
+        <span id="fb-text" style="color: #f59e0b; font-weight: 600;">กำลังเชื่อมต่อ Firebase...</span>
+        <span style="margin-left: auto; color: #9ca3af; font-size: 12px;">🔥 photo-df51e</span>
+    </div>
     <div class="container">
         <h1>📸 Photo Print & Shipping Label</h1>
         
