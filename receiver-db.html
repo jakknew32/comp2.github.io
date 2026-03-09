@@ -1098,8 +1098,8 @@
                     html, body { width:210mm; height:297mm; overflow:hidden; background:white; font-family:'Kanit','Tahoma',sans-serif; }
                     .a4-page { width:210mm; height:297mm; display:flex; flex-direction:column; overflow:hidden; page-break-after:always; }
                     .a4-page:last-child { page-break-after:auto; }
-                    .row1 { width:210mm; height:${row1H}mm; overflow:hidden; flex-shrink:0; }
-                    .row1 img { width:100%; height:100%; object-fit:cover; display:block; }
+                    .row1 { width:210mm; height:${row1H}mm; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#000; }
+                    .row1 img { width:100%; height:100%; object-fit:contain; display:block; }
                     .row1-empty { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#ccc; }
                     .row2 { width:210mm; height:${row2H}mm; display:flex; flex-shrink:0; overflow:hidden; }
                     .photo-cell { flex:1; height:100%; overflow:hidden; }
