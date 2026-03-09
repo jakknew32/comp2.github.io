@@ -842,24 +842,21 @@
                     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                     <style>
-                        @page {
-                            size: A6 portrait;
-                            margin: 0;
-                        }
-                        * { margin:0; padding:0; box-sizing:border-box; }
-                        html, body {
-                            width: 105mm;
-                            height: 148mm;
-                            overflow: hidden;
-                            font-family: 'Kanit', 'Tahoma', sans-serif;
-                        }
+                        @page { size: 105mm 148mm; margin: 0; }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        html, body { width: 105mm; height: 148mm; overflow: hidden; background: white; }
                         #labelPreview {
-                            width: 105mm;
-                            height: 148mm;
-                            display: flex;
-                            flex-direction: column;
+                            position: absolute;
+                            top: 0; left: 0;
+                            width: 105mm !important;
+                            height: 148mm !important;
+                            border: none !important;
+                            padding: 5mm !important;
+                            margin: 0 !important;
                             font-family: 'Kanit', 'Tahoma', sans-serif;
                             box-sizing: border-box;
+                            display: flex;
+                            flex-direction: column;
                             overflow: hidden;
                         }
                     </style>
@@ -868,13 +865,9 @@
                     <div id="labelPreview">${labelPreview.innerHTML}</div>
                     <script>
                         document.fonts.ready.then(function() {
-                            setTimeout(function() {
-                                window.print();
-                            }, 300);
+                            setTimeout(function() { window.print(); }, 300);
                         });
-                        window.onafterprint = function() {
-                            window.close();
-                        }
+                        window.onafterprint = function() { window.close(); }
                     <\/script>
                 </body>
                 </html>
@@ -1081,41 +1074,37 @@
             for (let p = 0; p < totalPages; p++) {
                 const slice = row2.slice(p * perRow, p * perRow + perRow);
                 while (slice.length < perRow) slice.push(null);
-                pagesHtml += `
-                <div class="a4-page">
-                    ${row2.length > 0 || row1 ? `<div class="row1">${row1
-                        ? `<img src="${row1}">`
-                        : `<div class="row1-empty">ไม่มีรูปแถวบน</div>`
-                    }</div>` : ''}
-                    ${row2.length > 0 ? `<div class="row2">${slice.map(src =>
-                        `<div class="photo-cell">${src ? `<img src="${src}">` : ''}</div>`
-                    ).join('')}</div>` : ''}
+                pagesHtml += `<div class="a4-page">
+                    <div class="row1">${row1 ? `<img src="${row1}">` : `<div class="row1-empty">ไม่มีรูปแถวบน</div>`}</div>
+                    ${row2.length > 0 ? `<div class="row2">${slice.map(src => `<div class="photo-cell">${src ? `<img src="${src}">` : ''}</div>`).join('')}</div>` : ''}
                     ${text ? `<div class="page-text">${text.replace(/\n/g,'<br>')}</div>` : ''}
                 </div>`;
             }
 
             const pw = window.open('', '', 'width=900,height=700');
+            // Calculate row heights: A4 = 297mm. text ~10mm. row1=50%, row2=50% of remaining
+            const hasText = !!text;
+            const textH = hasText ? 10 : 0;
+            const photoH = 297 - textH; // mm available for photos
+            const row1H = row2.length > 0 ? Math.round(photoH * 0.55) : photoH;
+            const row2H = row2.length > 0 ? photoH - row1H : 0;
             pw.document.write(`<!DOCTYPE html><html><head>
                 <meta charset="UTF-8">
                 <title>สลิปรูป - Chiangmai Freshmilk</title>
                 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
                 <style>
-                    @page { size:A4 portrait; margin:0; }
+                    @page { size: 210mm 297mm; margin: 0; }
                     * { margin:0; padding:0; box-sizing:border-box; }
-                    html, body { width:210mm; height:297mm; font-family:'Kanit','Tahoma',sans-serif; background:white; }
-                    .a4-page {
-                        width:210mm; height:297mm;
-                        display:flex; flex-direction:column;
-                        page-break-after:always; overflow:hidden;
-                    }
+                    html, body { width:210mm; height:297mm; overflow:hidden; background:white; font-family:'Kanit','Tahoma',sans-serif; }
+                    .a4-page { width:210mm; height:297mm; display:flex; flex-direction:column; overflow:hidden; page-break-after:always; }
                     .a4-page:last-child { page-break-after:auto; }
-                    .row1 { flex:${row2.length > 0 ? '1 0 50%' : '1 0 100%'}; display:flex; overflow:hidden; }
+                    .row1 { width:210mm; height:${row1H}mm; overflow:hidden; flex-shrink:0; }
                     .row1 img { width:100%; height:100%; object-fit:cover; display:block; }
-                    .row1-empty { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#ddd; font-size:20px; }
-                    .row2 { flex:1; display:flex; gap:0; overflow:hidden; }
-                    .photo-cell { flex:1; overflow:hidden; }
+                    .row1-empty { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#ccc; }
+                    .row2 { width:210mm; height:${row2H}mm; display:flex; flex-shrink:0; overflow:hidden; }
+                    .photo-cell { flex:1; height:100%; overflow:hidden; }
                     .photo-cell img { width:100%; height:100%; object-fit:cover; display:block; }
-                    .page-text { flex-shrink:0; padding:3mm 4mm; text-align:center; font-size:11px; color:#333; border-top:0.5mm solid #e0e0e0; white-space:pre-wrap; line-height:1.5; }
+                    .page-text { width:210mm; height:${textH}mm; display:flex; align-items:center; justify-content:center; font-size:11px; color:#333; border-top:0.3mm solid #ddd; white-space:pre-wrap; text-align:center; flex-shrink:0; padding:0 4mm; }
                 </style>
             </head><body>${pagesHtml}
                 <script>
