@@ -329,6 +329,51 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZolsNGRpa_ZTPco_lbaBfliXNBrjTmTo",
+            authDomain: "photo-df51e.firebaseapp.com",
+            databaseURL: "https://photo-df51e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "photo-df51e",
+            storageBucket: "photo-df51e.firebasestorage.app",
+            messagingSenderId: "388250901051",
+            appId: "1:388250901051:web:8a159cf4a9890eeafe1a1e",
+            measurementId: "G-Q97BD5N227"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window._saveReceiverToFirebase = async function(receiver) {
+            try {
+                await set(ref(db, `receivers/${receiver.id}`), receiver);
+                return true;
+            } catch(e) {
+                console.error('Firebase save error:', e);
+                return false;
+            }
+        };
+
+        window._checkDuplicateInFirebase = async function(phone, address) {
+            try {
+                const snapshot = await get(ref(db, 'receivers'));
+                if (!snapshot.exists()) return false;
+                const receivers = Object.values(snapshot.val());
+                return receivers.some(r =>
+                    (r.phone === phone && phone !== '-') ||
+                    (r.address && r.address.toLowerCase().includes(address.toLowerCase().substring(0, 20)) && address.length > 20)
+                );
+            } catch(e) {
+                console.error('Firebase check error:', e);
+                return false;
+            }
+        };
+    </script>
 </head>
 <body>
     <div class="container">
@@ -363,7 +408,7 @@
             </div>
 
             <div class="button-group">
-                <button class="btn-print" onclick="window.print()">🖨️ Print</button>
+                <button class="btn-print" onclick="handlePrint()">🖨️ Print</button>
                 <button class="btn-clear" onclick="clearPhotos()">🗑️ Clear All</button>
                 <button onclick="createShippingLabel()" style="background: #f59e0b; color: white;">📦 สร้างฉลาก</button>
                 <button class="btn-database" onclick="window.location.href='receiver-db.html'">📋 ฐานข้อมูลผู้รับ</button>
@@ -614,6 +659,16 @@
             renderPhotos();
         }
 
+        function handlePrint() {
+            const address = document.getElementById('pageText').value.trim();
+            if (!row1Photo && row2Photos.length === 0) {
+                showToast('ยังไม่มีรูปภาพ กรุณาอัปโหลดรูปก่อนปริ้น', 'warning');
+                return;
+            }
+            window.print();
+            showToast('ส่งงานพิมพ์แล้ว! หากยังไม่ได้บันทึก กรุณากด 📦 สร้างฉลาก เพื่อบันทึกข้อมูล', 'info', 5000);
+        }
+
         async function runOCR(imageSrc) {
             try {
                 const { data: { text } } = await Tesseract.recognize(imageSrc, 'tha+eng', {
@@ -647,57 +702,96 @@
             }
         }
 
-        function createShippingLabel() {
+        async function createShippingLabel() {
             const address = document.getElementById('pageText').value.trim();
             
-            // Save to database with images
+            // Save to Firebase database
             if (address) {
-                saveToReceiverDatabase(address);
+                await saveToReceiverDatabase(address);
             }
             
             showShippingLabelModal(address);
         }
 
-        function saveToReceiverDatabase(fullText) {
-            // Parse the text to extract name, phone, address
+        // =============================================
+        // Toast Notification
+        // =============================================
+        function showToast(message, type = 'success', duration = 4000) {
+            const existing = document.getElementById('cfm-toast');
+            if (existing) existing.remove();
+
+            const colors = {
+                success: { bg: '#10b981', icon: '✅' },
+                info:    { bg: '#667eea', icon: 'ℹ️' },
+                warning: { bg: '#f59e0b', icon: '⚠️' },
+                error:   { bg: '#ef4444', icon: '❌' }
+            };
+            const c = colors[type] || colors.success;
+
+            const toast = document.createElement('div');
+            toast.id = 'cfm-toast';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%) translateY(80px);
+                background: ${c.bg};
+                color: white;
+                padding: 16px 28px;
+                border-radius: 12px;
+                font-family: 'Kanit', sans-serif;
+                font-size: 16px;
+                font-weight: 600;
+                box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+                z-index: 99999;
+                max-width: 90vw;
+                text-align: center;
+                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+                opacity: 0;
+            `;
+            toast.innerHTML = `${c.icon} ${message}`;
+            document.body.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toast.style.transform = 'translateX(-50%) translateY(0)';
+                    toast.style.opacity = '1';
+                });
+            });
+
+            // Animate out
+            setTimeout(() => {
+                toast.style.transform = 'translateX(-50%) translateY(80px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, duration);
+        }
+
+        // =============================================
+        // Save to Firebase Receiver Database
+        // =============================================
+        async function saveToReceiverDatabase(fullText) {
             const lines = fullText.split('\n').map(line => line.trim()).filter(line => line);
-            
             if (lines.length === 0) return;
-            
-            // Try to extract phone number
-            let phone = '';
-            let name = '';
-            let address = '';
-            let notes = '';
-            
-            // Look for phone pattern
+
+            let phone = '', name = '', address = '', notes = '';
             const phonePattern = /(\d{3}[-\s]?\d{3}[-\s]?\d{4}|\d{10}|0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{4})/;
-            
+
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 const phoneMatch = line.match(phonePattern);
-                
                 if (phoneMatch && !phone) {
                     phone = phoneMatch[0];
-                    // Name is usually before or after phone
-                    if (i > 0 && !name) {
-                        name = lines[i - 1].replace(/^(คุณ|นาย|นาง|นางสาว)\s*/i, '');
-                    }
-                    // Address is usually after phone
-                    if (i < lines.length - 1) {
-                        address = lines.slice(i + 1).join(' ');
-                    }
+                    if (i > 0 && !name) name = lines[i - 1].replace(/^(คุณ|นาย|นาง|นางสาว)\s*/i, '');
+                    if (i < lines.length - 1) address = lines.slice(i + 1).join(' ');
                     break;
                 }
             }
-            
-            // If no phone found, try other pattern
+
             if (!phone) {
-                // First line might be name
                 name = lines[0].replace(/^(คุณ|นาย|นาง|นางสาว)\s*/i, '');
-                // Rest is address
                 if (lines.length > 1) {
-                    // Check if second line looks like phone
                     const secondLinePhone = lines[1].match(phonePattern);
                     if (secondLinePhone) {
                         phone = secondLinePhone[0];
@@ -707,57 +801,49 @@
                     }
                 }
             }
-            
-            // Look for notes (lines starting with หมายเหตุ or Note)
+
             const notesPattern = /(หมายเหตุ|note|notes|โน้ต)[:：]?\s*(.+)/i;
             const notesMatch = fullText.match(notesPattern);
             if (notesMatch) {
                 notes = notesMatch[2];
-                // Remove notes from address
                 address = address.replace(notesPattern, '').trim();
             }
-            
-            // Default values if parsing failed
+
             if (!name) name = lines[0] || 'ไม่ระบุชื่อ';
             if (!phone) phone = '-';
             if (!address) address = fullText;
-            
-            // Load existing receivers from localStorage
-            let receivers = [];
-            const saved = localStorage.getItem('receiversDB');
-            if (saved) {
-                receivers = JSON.parse(saved);
-            }
-            
-            // Check if this receiver already exists (by phone or similar address)
-            const exists = receivers.some(r => 
-                (r.phone === phone && phone !== '-') || 
-                (r.address.toLowerCase().includes(address.toLowerCase().substring(0, 20)) && address.length > 20)
-            );
-            
-            if (!exists) {
-                // Create new receiver entry with images
+
+            // Check duplicate in Firebase
+            const isDuplicate = window._checkDuplicateInFirebase
+                ? await window._checkDuplicateInFirebase(phone, address)
+                : false;
+
+            if (!isDuplicate) {
                 const newReceiver = {
                     id: Date.now().toString(),
                     name: name,
                     phone: phone,
                     address: address,
                     notes: notes,
-                    originalText: fullText, // บันทึกข้อความเดิมจาก Text below page
+                    originalText: fullText,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                     source: 'auto-from-print-page',
                     documentNumber: currentDocumentNumber,
-                    row1Photo: row1Photo,
-                    row2Photos: row2Photos.slice() // copy array
+                    row1Photo: false,
+                    row2Photos: row2Photos.length
                 };
-                
-                receivers.push(newReceiver);
-                localStorage.setItem('receiversDB', JSON.stringify(receivers));
-                
-                console.log('✅ Auto-saved to receiver database with images:', newReceiver);
+
+                if (window._saveReceiverToFirebase) {
+                    const ok = await window._saveReceiverToFirebase(newReceiver);
+                    if (ok) {
+                        showToast(`บันทึกข้อมูล "${name}" ลง Firebase สำเร็จ! 🔥`, 'success');
+                    } else {
+                        showToast('เกิดข้อผิดพลาด ไม่สามารถบันทึกลง Firebase ได้', 'error');
+                    }
+                }
             } else {
-                console.log('ℹ️ Receiver already exists in database');
+                showToast(`ข้อมูลผู้รับนี้มีอยู่แล้วในระบบ`, 'info', 3000);
             }
         }
 
@@ -934,6 +1020,7 @@
                 </html>
             `);
             printWindow.document.close();
+            showToast('🖨️ พิมพ์ฉลากจัดส่งเรียบร้อยแล้ว!', 'success');
         }
 
         // Initialize with empty page
