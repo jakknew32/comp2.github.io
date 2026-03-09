@@ -471,22 +471,6 @@
         </div>
     </div>
 
-    <!-- View Images Modal -->
-    <div id="viewImagesModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🖼️ รูปภาพ</h2>
-                <button class="btn-danger btn-icon" onclick="closeImagesModal()">✕</button>
-            </div>
-            
-            <div id="imagesContainer"></div>
-            
-            <div class="button-group" style="margin-top: 20px;">
-                <button class="btn-secondary" onclick="closeImagesModal()">ปิด</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Shipping Label Modal -->
     <div id="shippingLabelModal" class="modal">
         <div class="modal-content" style="max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border-radius: 15px; padding: 30px;">
@@ -713,9 +697,7 @@
                     <td>${getSourceLabel(r.source)}</td>
                     <td class="no-print">
                         <div class="actions">
-                            ${hasImages ? '<button class="btn-primary btn-icon" onclick="viewImages(\'' + r.id + '\')" title="ดูรูปภาพ">🖼️</button>' : ''}
-                            ${hasImages ? '<button class="btn-success btn-icon" onclick="recreatePhotoPage(\'' + r.id + '\')" title="สร้างหน้ารูปภาพใหม่">📄</button>' : ''}
-                            <button class="btn-success btn-icon" onclick="showPhotoModal('${r.id}')" title="พิมพ์รูปใหม่">📸</button>
+                            <button class="btn-success btn-icon" onclick="showPhotoModal('${r.id}')" title="พิมพ์สลิปรูป">📸</button>
                             <button class="btn-primary btn-icon" onclick="showShippingModal('${r.id}')" title="สร้างฉลาก">📦</button>
                             <button class="btn-danger btn-icon" onclick="deleteReceiver('${r.id}')" title="ลบ">🗑️</button>
                         </div>
@@ -758,54 +740,6 @@
                 return '🤖 อัตโนมัติ';
             }
             return '✋ กรอกเอง';
-        }
-
-        // View images
-        function viewImages(id) {
-            const receiver = receivers.find(r => r.id === id);
-            if (!receiver) return;
-
-            const modal = document.getElementById('viewImagesModal');
-            const container = document.getElementById('imagesContainer');
-
-            // Check if we have actual base64 data or just flags
-            const hasRealRow1 = receiver.row1Photo && typeof receiver.row1Photo === 'string' && receiver.row1Photo.startsWith('data:');
-            const hasRealRow2 = receiver.row2Photos && Array.isArray(receiver.row2Photos) && receiver.row2Photos.length > 0;
-
-            if (!hasRealRow1 && !hasRealRow2) {
-                const count1 = receiver.row1Photo === true ? 1 : 0;
-                const count2 = typeof receiver.row2Photos === 'number' ? receiver.row2Photos : 0;
-                container.innerHTML = `<div style="text-align:center;padding:30px;color:#666;">
-                    <div style="font-size:3em;margin-bottom:15px;">📸</div>
-                    <p>ระบบบันทึกสถิติการปริ้นเท่านั้น ไม่เก็บไฟล์รูปภาพ</p>
-                    <p style="margin-top:10px;">รูปแถวบน: ${count1 ? '✅ เคยปริ้น' : '-'} | รูปแถวล่าง: ${count2 > 0 ? `✅ ${count2} รูป` : '-'}</p>
-                    <p style="margin-top:10px;color:#10b981;font-weight:bold;">ปริ้นรูป: ${receiver.photoPrintCount || 0}x | ปริ้นฉลาก: ${receiver.labelPrintCount || 0}x</p>
-                </div>`;
-                modal.classList.add('active');
-                return;
-            }
-
-            let html = '<h3 style="margin-bottom: 15px;">รูปภาพที่บันทึก</h3>';
-            html += '<div class="image-preview">';
-
-            if (hasRealRow1) {
-                html += `<img src="${receiver.row1Photo}" alt="Row 1 Photo" onclick="window.open(this.src, '_blank')">`;
-            }
-
-            if (hasRealRow2) {
-                receiver.row2Photos.forEach((photo, i) => {
-                    html += `<img src="${photo}" alt="Row 2 Photo ${i+1}" onclick="window.open(this.src, '_blank')">`;
-                });
-            }
-
-            html += '</div>';
-            container.innerHTML = html;
-            modal.classList.add('active');
-        }
-
-        // Close images modal
-        function closeImagesModal() {
-            document.getElementById('viewImagesModal').classList.remove('active');
         }
 
         // Show shipping label modal
@@ -943,76 +877,83 @@
             printWindow.document.close();
         }
 
-        // Show photo print modal — พิมพ์รูปได้ทันที ไม่ต้องย้อนกลับ
+        // Show photo print modal — แสดงรูปที่บันทึกไว้ พิมพ์ได้ทันที
         function showPhotoModal(id) {
             const receiver = receivers.find(r => r.id === id);
             if (!receiver) return;
 
-            let fullAddress;
-            if (receiver.originalText) {
-                fullAddress = receiver.originalText;
-            } else {
-                fullAddress = `${receiver.name}\n${receiver.address}`;
-                if (receiver.notes) fullAddress += `\nหมายเหตุ: ${receiver.notes}`;
-            }
+            const hasRow1 = receiver.row1Photo && typeof receiver.row1Photo === 'string' && receiver.row1Photo.startsWith('data:');
+            const hasRow2 = Array.isArray(receiver.row2Photos) && receiver.row2Photos.length > 0;
 
-            // Remove existing modal if any
+            let fullAddress = receiver.originalText || `${receiver.name}\n${receiver.address}${receiver.notes ? '\nหมายเหตุ: ' + receiver.notes : ''}`;
+
             const existing = document.getElementById('photoPrintDirectModal');
             if (existing) existing.remove();
 
             const modal = document.createElement('div');
             modal.id = 'photoPrintDirectModal';
-            modal.style.cssText = `
-                position:fixed; top:0; left:0; width:100%; height:100%;
-                background:rgba(0,0,0,0.85); z-index:10000;
-                display:flex; justify-content:center; align-items:center; padding:20px;
-            `;
+            modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;
+                background:rgba(0,0,0,0.85);z-index:10000;
+                display:flex;justify-content:center;align-items:center;padding:20px;`;
+
+            // Build row2 thumbnails HTML
+            const row2ThumbsHtml = hasRow2
+                ? receiver.row2Photos.map((src, i) => `
+                    <div style="position:relative;display:inline-block;">
+                        <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:2px solid #e0e0e0;">
+                        <button onclick="window._dbRow2Photos.splice(${i},1); document.getElementById('dbRow2ThumbBox').innerHTML=rebuildThumbs();"
+                            style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:white;border:none;
+                            border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;padding:0;">✕</button>
+                    </div>`).join('')
+                : '<span style="color:#9ca3af;font-size:13px;">ไม่มีรูปแถวล่าง</span>';
 
             modal.innerHTML = `
-                <div style="background:white; border-radius:15px; padding:28px; max-width:640px; width:100%;
-                            max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);
+                <div style="background:white;border-radius:15px;padding:28px;max-width:640px;width:100%;
+                            max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);
                             font-family:'Kanit',sans-serif;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-                        <h2 style="margin:0; color:#333;">📸 พิมพ์สลิปรูปภาพ</h2>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+                        <div>
+                            <h2 style="margin:0;color:#333;">📸 สลิปรูปภาพ</h2>
+                            <div style="font-size:13px;color:#888;margin-top:4px;">${receiver.name} · ${receiver.documentNumber || '-'}</div>
+                        </div>
                         <button onclick="document.getElementById('photoPrintDirectModal').remove()"
                             style="background:#ef4444;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:16px;">✕</button>
                     </div>
 
-                    <!-- Upload row1 -->
+                    <!-- Row 1 -->
                     <div style="margin-bottom:14px;">
-                        <label style="font-weight:600;color:#333;display:block;margin-bottom:6px;">📷 รูปแถวบน (1 รูปเต็มความกว้าง)</label>
-                        <div id="dbRow1Drop" style="border:2px dashed #667eea;border-radius:8px;min-height:80px;
+                        <label style="font-weight:600;color:#333;display:block;margin-bottom:6px;">📷 รูปแถวบน</label>
+                        <div id="dbRow1Drop" style="border:2px dashed #667eea;border-radius:8px;min-height:100px;
                             display:flex;align-items:center;justify-content:center;cursor:pointer;
-                            background:#f5f3ff;color:#667eea;font-size:14px;font-weight:600;position:relative;overflow:hidden;">
-                            <span id="dbRow1Label">คลิก / วาง / ลากรูปที่นี่</span>
-                            <img id="dbRow1Img" style="display:none;max-height:120px;max-width:100%;border-radius:6px;">
+                            background:#f5f3ff;position:relative;overflow:hidden;">
+                            ${hasRow1
+                                ? `<img id="dbRow1Img" src="${receiver.row1Photo}" style="max-height:140px;max-width:100%;border-radius:6px;display:block;">`
+                                : `<span id="dbRow1Label" style="color:#667eea;font-size:14px;font-weight:600;">คลิก / วาง / ลากรูปที่นี่</span>
+                                   <img id="dbRow1Img" style="display:none;max-height:140px;max-width:100%;border-radius:6px;">`
+                            }
                         </div>
                         <input type="file" id="dbRow1Input" accept="image/*" style="display:none;">
                     </div>
 
-                    <!-- Upload row2 -->
+                    <!-- Row 2 -->
                     <div style="margin-bottom:14px;">
-                        <label style="font-weight:600;color:#333;display:block;margin-bottom:6px;">🖼️ รูปแถวล่าง (หลายรูป)</label>
-                        <div style="display:flex;gap:8px;margin-bottom:8px;">
+                        <label style="font-weight:600;color:#333;display:block;margin-bottom:6px;">🖼️ รูปแถวล่าง</label>
+                        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
                             <input type="file" id="dbRow2Input" accept="image/*" multiple style="display:none;">
                             <button onclick="document.getElementById('dbRow2Input').click()"
-                                style="background:#667eea;color:white;border:none;padding:9px 18px;border-radius:7px;cursor:pointer;font-family:'Kanit',sans-serif;font-size:14px;font-weight:600;">
-                                + เพิ่มรูปแถวล่าง
-                            </button>
-                            <button onclick="dbRow2Photos=[]; renderDbRow2Preview();"
-                                style="background:#e5e7eb;color:#374151;border:none;padding:9px 14px;border-radius:7px;cursor:pointer;font-family:'Kanit',sans-serif;font-size:14px;">
-                                ล้าง
-                            </button>
-                            <select id="dbPhotosPerRow" style="border:2px solid #e0e0e0;border-radius:7px;padding:8px;font-family:'Kanit',sans-serif;font-size:14px;">
-                                <option value="2">2 รูป/แถว</option>
-                                <option value="3" selected>3 รูป/แถว</option>
-                                <option value="4">4 รูป/แถว</option>
+                                style="background:#667eea;color:white;border:none;padding:8px 16px;border-radius:7px;cursor:pointer;font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;">+ เพิ่มรูป</button>
+                            <button onclick="window._dbRow2Photos=[];document.getElementById('dbRow2ThumbBox').innerHTML='<span style=color:#9ca3af;font-size:13px>ไม่มีรูปแถวล่าง</span>';"
+                                style="background:#e5e7eb;color:#374151;border:none;padding:8px 12px;border-radius:7px;cursor:pointer;font-family:'Kanit',sans-serif;font-size:13px;">ล้าง</button>
+                            <select id="dbPhotosPerRow" style="border:2px solid #e0e0e0;border-radius:7px;padding:7px;font-family:'Kanit',sans-serif;font-size:13px;">
+                                <option value="2">2/แถว</option>
+                                <option value="3" selected>3/แถว</option>
+                                <option value="4">4/แถว</option>
                             </select>
                         </div>
-                        <div id="dbRow2Preview" style="display:flex;flex-wrap:wrap;gap:6px;min-height:40px;"></div>
+                        <div id="dbRow2ThumbBox" style="display:flex;flex-wrap:wrap;gap:6px;min-height:40px;">${row2ThumbsHtml}</div>
                     </div>
 
-                    <!-- Address text -->
+                    <!-- Text -->
                     <div style="margin-bottom:18px;">
                         <label style="font-weight:600;color:#333;display:block;margin-bottom:6px;">📝 ข้อความใต้รูป</label>
                         <textarea id="dbPageText" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;
@@ -1022,155 +963,128 @@
                     <div style="display:flex;gap:10px;">
                         <button onclick="printPhotoSlip('${id}')"
                             style="flex:1;background:#10b981;color:white;border:none;padding:13px;border-radius:8px;
-                            font-size:16px;font-weight:700;cursor:pointer;font-family:'Kanit',sans-serif;">
-                            🖨️ พิมพ์สลิปรูป
-                        </button>
+                            font-size:16px;font-weight:700;cursor:pointer;font-family:'Kanit',sans-serif;">🖨️ พิมพ์สลิปรูป</button>
                         <button onclick="document.getElementById('photoPrintDirectModal').remove()"
                             style="flex:1;background:#6b7280;color:white;border:none;padding:13px;border-radius:8px;
-                            font-size:16px;font-weight:600;cursor:pointer;font-family:'Kanit',sans-serif;">
-                            ยกเลิก
-                        </button>
+                            font-size:16px;font-weight:600;cursor:pointer;font-family:'Kanit',sans-serif;">ยกเลิก</button>
                     </div>
-                </div>
-            `;
+                </div>`;
 
             document.body.appendChild(modal);
 
-            // Init state
-            window.dbRow1Photo = null;
-            window.dbRow2Photos = [];
+            // Init photo state from saved data
+            window._dbRow1Photo = hasRow1 ? receiver.row1Photo : null;
+            window._dbRow2Photos = hasRow2 ? [...receiver.row2Photos] : [];
 
-            // Row1 click
+            // Rebuild thumbs helper
+            window.rebuildThumbs = function() {
+                if (!window._dbRow2Photos.length) return '<span style="color:#9ca3af;font-size:13px;">ไม่มีรูปแถวล่าง</span>';
+                return window._dbRow2Photos.map((src, i) => `
+                    <div style="position:relative;display:inline-block;">
+                        <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:2px solid #e0e0e0;">
+                        <button onclick="window._dbRow2Photos.splice(${i},1);document.getElementById('dbRow2ThumbBox').innerHTML=rebuildThumbs();"
+                            style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:white;border:none;
+                            border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;padding:0;">✕</button>
+                    </div>`).join('');
+            };
+
+            // Row1 click/drag/paste
             const row1Drop = document.getElementById('dbRow1Drop');
             row1Drop.addEventListener('click', () => document.getElementById('dbRow1Input').click());
             document.getElementById('dbRow1Input').addEventListener('change', e => {
-                const file = e.target.files[0];
-                if (!file) return;
+                const file = e.target.files[0]; if (!file) return;
                 const reader = new FileReader();
                 reader.onload = ev => {
-                    window.dbRow1Photo = ev.target.result;
-                    document.getElementById('dbRow1Label').style.display = 'none';
+                    window._dbRow1Photo = ev.target.result;
+                    const lbl = document.getElementById('dbRow1Label');
+                    if (lbl) lbl.style.display = 'none';
                     const img = document.getElementById('dbRow1Img');
-                    img.src = ev.target.result;
-                    img.style.display = 'block';
+                    img.src = ev.target.result; img.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             });
-
-            // Row1 drag-drop
             row1Drop.addEventListener('dragover', e => { e.preventDefault(); row1Drop.style.background='#ede9fe'; });
             row1Drop.addEventListener('dragleave', () => row1Drop.style.background='#f5f3ff');
             row1Drop.addEventListener('drop', e => {
-                e.preventDefault();
-                row1Drop.style.background='#f5f3ff';
+                e.preventDefault(); row1Drop.style.background='#f5f3ff';
                 const file = e.dataTransfer.files[0];
                 if (file && file.type.startsWith('image/')) {
                     const reader = new FileReader();
                     reader.onload = ev => {
-                        window.dbRow1Photo = ev.target.result;
-                        document.getElementById('dbRow1Label').style.display = 'none';
+                        window._dbRow1Photo = ev.target.result;
+                        const lbl = document.getElementById('dbRow1Label');
+                        if (lbl) lbl.style.display = 'none';
                         const img = document.getElementById('dbRow1Img');
                         img.src = ev.target.result; img.style.display = 'block';
                     };
                     reader.readAsDataURL(file);
                 }
             });
-
-            // Paste image
             modal.addEventListener('paste', e => {
                 for (const item of e.clipboardData.items) {
                     if (item.type.startsWith('image/')) {
                         const reader = new FileReader();
                         reader.onload = ev => {
-                            window.dbRow1Photo = ev.target.result;
-                            document.getElementById('dbRow1Label').style.display = 'none';
+                            window._dbRow1Photo = ev.target.result;
+                            const lbl = document.getElementById('dbRow1Label');
+                            if (lbl) lbl.style.display = 'none';
                             const img = document.getElementById('dbRow1Img');
                             img.src = ev.target.result; img.style.display = 'block';
                         };
-                        reader.readAsDataURL(item.getAsFile());
-                        break;
+                        reader.readAsDataURL(item.getAsFile()); break;
                     }
                 }
             });
 
-            // Row2 multi upload
+            // Row2 upload
             document.getElementById('dbRow2Input').addEventListener('change', e => {
                 Array.from(e.target.files).forEach(file => {
                     const reader = new FileReader();
                     reader.onload = ev => {
-                        window.dbRow2Photos.push(ev.target.result);
-                        renderDbRow2Preview();
+                        window._dbRow2Photos.push(ev.target.result);
+                        document.getElementById('dbRow2ThumbBox').innerHTML = rebuildThumbs();
                     };
                     reader.readAsDataURL(file);
                 });
             });
-
-            window.renderDbRow2Preview = function() {
-                const box = document.getElementById('dbRow2Preview');
-                if (!box) return;
-                if (window.dbRow2Photos.length === 0) {
-                    box.innerHTML = '<span style="color:#9ca3af;font-size:13px;">ยังไม่มีรูปแถวล่าง</span>';
-                    return;
-                }
-                box.innerHTML = window.dbRow2Photos.map((src, i) => `
-                    <div style="position:relative;display:inline-block;">
-                        <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:2px solid #e0e0e0;">
-                        <button onclick="window.dbRow2Photos.splice(${i},1);renderDbRow2Preview();"
-                            style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:white;border:none;
-                            border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;padding:0;">✕</button>
-                    </div>
-                `).join('');
-            };
-            renderDbRow2Preview();
         }
 
-        // Close photo modal (legacy — kept for compatibility)
         function closePhotoModal() {
             const m = document.getElementById('photoPrintDirectModal');
             if (m) m.remove();
         }
 
-        // Print the A4 photo slip directly
+        // Print A4 photo slip
         async function printPhotoSlip(receiverId) {
-            const row1 = window.dbRow1Photo;
-            const row2 = window.dbRow2Photos || [];
-            const text = (document.getElementById('dbPageText')?.value || '').trim();
+            const row1  = window._dbRow1Photo;
+            const row2  = window._dbRow2Photos || [];
+            const text  = (document.getElementById('dbPageText')?.value || '').trim();
             const perRow = parseInt(document.getElementById('dbPhotosPerRow')?.value || '3');
 
-            // Track print count
+            // Track + save updated photos back to Firebase
             const receiver = receivers.find(r => r.id === receiverId);
             if (receiver) {
                 receiver.photoPrintCount = (receiver.photoPrintCount || 0) + 1;
+                // Persist photos back if they were updated
+                if (row1) receiver.row1Photo = row1;
+                if (row2.length) receiver.row2Photos = row2;
                 await saveReceiverToFirebase(receiver);
             }
 
-            // Build pages HTML
             const totalPages = Math.max(1, row2.length > 0 ? Math.ceil(row2.length / perRow) : 1);
             let pagesHtml = '';
             for (let p = 0; p < totalPages; p++) {
-                const startIdx = p * perRow;
-                const endIdx = Math.min(startIdx + perRow, row2.length);
-                const row2Slice = row2.slice(startIdx, endIdx);
-
-                // Pad to fill row
-                const row2Cells = [...row2Slice];
-                while (row2Cells.length < perRow) row2Cells.push(null);
-
+                const slice = row2.slice(p * perRow, p * perRow + perRow);
+                while (slice.length < perRow) slice.push(null);
                 pagesHtml += `
                 <div class="a4-page">
-                    <div class="photo-row row1">
-                        ${row1
-                            ? `<img src="${row1}" style="width:100%;height:148.5mm;object-fit:contain;">`
-                            : `<div style="width:100%;height:148.5mm;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:18px;">ไม่มีรูปแถวบน</div>`
-                        }
-                    </div>
-                    <div class="photo-row row2">
-                        ${row2Cells.map(src => `
-                            <div class="photo-cell">
-                                ${src ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;">` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
+                    <div class="row1">${row1
+                        ? `<img src="${row1}" style="width:100%;height:148.5mm;object-fit:contain;">`
+                        : `<div style="width:100%;height:148.5mm;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:18px;">ไม่มีรูปแถวบน</div>`
+                    }</div>
+                    <div class="row2">${slice.map(src => `
+                        <div class="photo-cell">${src ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;">` : ''}</div>
+                    `).join('')}</div>
                     ${text ? `<div class="page-text">${text.replace(/\n/g,'<br>')}</div>` : ''}
                 </div>`;
             }
@@ -1178,35 +1092,27 @@
             const pw = window.open('', '', 'width=900,height=700');
             pw.document.write(`<!DOCTYPE html><html><head>
                 <meta charset="UTF-8">
-                <title>สลิปรูปภาพ - Chiangmai Freshmilk</title>
+                <title>สลิปรูป - Chiangmai Freshmilk</title>
                 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
                 <style>
                     @page { size:A4; margin:0; }
                     * { margin:0; padding:0; box-sizing:border-box; }
                     body { font-family:'Kanit','Tahoma',sans-serif; background:white; }
-                    .a4-page { width:210mm; height:297mm; overflow:hidden; page-break-after:always; padding:4mm; display:flex; flex-direction:column; }
+                    .a4-page { width:210mm;height:297mm;overflow:hidden;page-break-after:always;padding:4mm;display:flex;flex-direction:column; }
                     .a4-page:last-child { page-break-after:auto; }
-                    .photo-row { display:flex; gap:1mm; }
                     .row1 { margin-bottom:1mm; }
-                    .row2 { flex:1; }
-                    .photo-cell { flex:1; height:130mm; overflow:hidden; }
-                    .page-text { padding:2mm; text-align:center; font-size:12px; color:#333; border-top:1px solid #e0e0e0; margin-top:2mm; white-space:pre-wrap; }
+                    .row2 { flex:1;display:flex;gap:1mm; }
+                    .photo-cell { flex:1;height:130mm;overflow:hidden; }
+                    .page-text { padding:2mm;text-align:center;font-size:12px;color:#333;border-top:1px solid #e0e0e0;margin-top:2mm;white-space:pre-wrap; }
                 </style>
-            </head><body>
-                ${pagesHtml}
+            </head><body>${pagesHtml}
                 <script>
                     document.fonts.ready.then(() => setTimeout(() => window.print(), 400));
                     window.onafterprint = () => window.close();
                 <\/script>
             </body></html>`);
             pw.document.close();
-
             document.getElementById('photoPrintDirectModal')?.remove();
-        }
-
-        // Go to photo print page (legacy fallback — unused but kept)
-        async function goToPhotoPrint() {
-            closePhotoModal();
         }
 
         // Export to CSV
@@ -1252,19 +1158,6 @@
             alert('✅ ลบข้อมูลทั้งหมดสำเร็จ!');
         }
 
-        // Recreate photo page from saved images
-        function recreatePhotoPage(id) {
-            const receiver = receivers.find(r => r.id === id);
-            if (!receiver) return;
-            
-            if (!receiver.row1Photo && !receiver.row2Photos) {
-                alert('⚠️ ไม่มีรูปภาพที่บันทึกไว้ (ระบบบันทึกเฉพาะจำนวนครั้งที่ปริ้นแล้ว ไม่เก็บไฟล์รูป)');
-                return;
-            }
-            
-            showPhotoModal(id);
-        }
-
         // Fallback: load from localStorage if Firebase fails
         function loadFromLocalStorage() {
             const saved = localStorage.getItem('receiversDB');
@@ -1276,19 +1169,14 @@
         // Make functions available globally (needed since we're in a module)
         window.deleteReceiver = deleteReceiver;
         window.filterReceivers = filterReceivers;
-        window.renderReceivers = renderReceivers;
-        window.updateStats = updateStats;
         window.exportToCSV = exportToCSV;
         window.clearAllData = clearAllData;
-        window.viewImages = viewImages;
-        window.closeImagesModal = closeImagesModal;
         window.showShippingModal = showShippingModal;
         window.closeShippingModal = closeShippingModal;
         window.printLabel = printLabel;
         window.showPhotoModal = showPhotoModal;
         window.closePhotoModal = closePhotoModal;
         window.printPhotoSlip = printPhotoSlip;
-        window.recreatePhotoPage = recreatePhotoPage;
 
     </script>
 </body>
