@@ -368,6 +368,15 @@
     </style>
 </head>
 <body>
+    <!-- Firebase Status Banner -->
+    <div id="firebaseBanner" style="display:none; padding: 12px 20px; text-align: center; font-family: 'Kanit', sans-serif; font-size: 15px; position: sticky; top: 0; z-index: 9999;"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(102,126,234,0.85); z-index:99999; justify-content:center; align-items:center; flex-direction:column; gap:16px;">
+        <div style="font-size:3em;">🔥</div>
+        <div style="color:white; font-family:'Kanit',sans-serif; font-size:1.3em; font-weight:600;">กำลังโหลดข้อมูลจาก Firebase...</div>
+    </div>
+
     <div class="container">
         <h1>📦 ฐานข้อมูลผู้รับสินค้า</h1>
 
@@ -514,11 +523,95 @@
         </div>
     </div>
 
-    <script>
-        // Data storage
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, get, remove, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        // =============================================
+        // 🔥 Firebase Configuration — แก้ค่าเหล่านี้ด้วยข้อมูลของคุณ
+        // =============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZolsNGRpa_ZTPco_lbaBfliXNBrjTmTo",
+            authDomain: "photo-df51e.firebaseapp.com",
+            databaseURL: "https://photo-df51e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "photo-df51e",
+            storageBucket: "photo-df51e.firebasestorage.app",
+            messagingSenderId: "388250901051",
+            appId: "1:388250901051:web:8a159cf4a9890eeafe1a1e",
+            measurementId: "G-Q97BD5N227"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const RECEIVERS_REF = "receivers";
+
+        // Data storage (in-memory cache)
         let receivers = [];
 
-        // Generate next document number (running number)
+        // =============================================
+        // Firebase: Save a single receiver (upsert by id)
+        // =============================================
+        async function saveReceiverToFirebase(receiver) {
+            try {
+                await set(ref(db, `${RECEIVERS_REF}/${receiver.id}`), receiver);
+            } catch (e) {
+                console.error('Firebase save error:', e);
+                showFirebaseError('บันทึกข้อมูลไม่สำเร็จ: ' + e.message);
+            }
+        }
+
+        // =============================================
+        // Firebase: Delete a single receiver by id
+        // =============================================
+        async function deleteReceiverFromFirebase(id) {
+            try {
+                await remove(ref(db, `${RECEIVERS_REF}/${id}`));
+            } catch (e) {
+                console.error('Firebase delete error:', e);
+                showFirebaseError('ลบข้อมูลไม่สำเร็จ: ' + e.message);
+            }
+        }
+
+        // =============================================
+        // Firebase: Delete ALL receivers
+        // =============================================
+        async function deleteAllFromFirebase() {
+            try {
+                await remove(ref(db, RECEIVERS_REF));
+            } catch (e) {
+                console.error('Firebase clear error:', e);
+                showFirebaseError('ลบข้อมูลทั้งหมดไม่สำเร็จ: ' + e.message);
+            }
+        }
+
+        // =============================================
+        // Show Firebase status banner
+        // =============================================
+        function showFirebaseError(msg) {
+            const banner = document.getElementById('firebaseBanner');
+            if (banner) {
+                banner.textContent = '⚠️ ' + msg;
+                banner.style.background = '#fee2e2';
+                banner.style.color = '#dc2626';
+                banner.style.display = 'block';
+            }
+        }
+
+        function showFirebaseOk(msg) {
+            const banner = document.getElementById('firebaseBanner');
+            if (banner) {
+                banner.textContent = '✅ ' + msg;
+                banner.style.background = '#d1fae5';
+                banner.style.color = '#059669';
+                banner.style.display = 'block';
+                setTimeout(() => { banner.style.display = 'none'; }, 3000);
+            }
+        }
+
+        // =============================================
+        // Generate next document number
+        // =============================================
         function generateDocumentNumber() {
             const prefix = 'CFM';
             const today = new Date();
@@ -526,7 +619,6 @@
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dateKey = yy + mm;
 
-            // Find highest number for this month
             const monthDocs = receivers
                 .map(r => r.documentNumber || '')
                 .filter(d => d.startsWith(prefix + dateKey))
@@ -536,22 +628,41 @@
             return `${prefix}${dateKey}${String(nextNum).padStart(4, '0')}`;
         }
 
-        // Load data on page load
+        // =============================================
+        // Load data on page load — realtime listener
+        // =============================================
         window.addEventListener('DOMContentLoaded', () => {
-            loadReceivers();
-            renderReceivers();
-            updateStats();
-        });
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            const dbRef = ref(db, RECEIVERS_REF);
+            onValue(dbRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    receivers = Object.values(data);
+                    // Sort by createdAt descending
+                    receivers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                } else {
+                    receivers = [];
+                }
+                renderReceivers();
+                updateStats();
+                document.getElementById('loadingOverlay').style.display = 'none';
+                showFirebaseOk('เชื่อมต่อ Firebase สำเร็จ');
+            }, (error) => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                showFirebaseError('เชื่อมต่อ Firebase ไม่สำเร็จ: ' + error.message);
+                // Fallback to localStorage
+                loadFromLocalStorage();
+                renderReceivers();
+                updateStats();
+            });
+        }); // end DOMContentLoaded
 
         // Delete receiver
-        function deleteReceiver(id) {
+        async function deleteReceiver(id) {
             if (!confirm('⚠️ คุณแน่ใจหรือไม่ที่จะลบข้อมูลนี้?')) return;
 
-            receivers = receivers.filter(r => r.id !== id);
-            saveToLocalStorage();
-            renderReceivers();
-            updateStats();
-            
+            await deleteReceiverFromFirebase(id);
+            // receivers array will be updated by onValue listener
             alert('✅ ลบข้อมูลสำเร็จ!');
         }
 
@@ -774,7 +885,7 @@
         }
 
         // Print label
-        function printLabel() {
+        async function printLabel() {
             const labelPreview = document.getElementById('labelPreview');
             if (!labelPreview) return;
 
@@ -784,9 +895,7 @@
                 const receiver = receivers.find(r => r.id === currentId);
                 if (receiver) {
                     receiver.labelPrintCount = (receiver.labelPrintCount || 0) + 1;
-                    saveToLocalStorage();
-                    renderReceivers();
-                    updateStats();
+                    await saveReceiverToFirebase(receiver);
                 }
             }
 
@@ -867,7 +976,7 @@
         }
 
         // Go to photo print page
-        function goToPhotoPrint() {
+        async function goToPhotoPrint() {
             const address = document.getElementById('photoAddress').value;
             const currentId = document.getElementById('photoPrintModal').dataset.receiverId;
             
@@ -876,9 +985,7 @@
                 const receiver = receivers.find(r => r.id === currentId);
                 if (receiver) {
                     receiver.photoPrintCount = (receiver.photoPrintCount || 0) + 1;
-                    saveToLocalStorage();
-                    renderReceivers();
-                    updateStats();
+                    await saveReceiverToFirebase(receiver);
                 }
             }
             
@@ -925,16 +1032,12 @@
         }
 
         // Clear all data
-        function clearAllData() {
+        async function clearAllData() {
             if (!confirm('⚠️ คุณแน่ใจหรือไม่ที่จะลบข้อมูลทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้!')) return;
             
-            if (!confirm('⚠️⚠️⚠️ ยืนยันอีกครั้ง: ข้อมูลทั้งหมดจะถูกลบถาวร!')) return;
+            if (!confirm('⚠️⚠️⚠️ ยืนยันอีกครั้ง: ข้อมูลทั้งหมดจะถูกลบถาวรจาก Firebase!')) return;
 
-            receivers = [];
-            saveToLocalStorage();
-            renderReceivers();
-            updateStats();
-            
+            await deleteAllFromFirebase();
             alert('✅ ลบข้อมูลทั้งหมดสำเร็จ!');
         }
 
@@ -948,36 +1051,34 @@
                 return;
             }
             
-            // Since we no longer store raw base64, just redirect to photo page with address
             showPhotoModal(id);
         }
 
-        // LocalStorage functions
-        function saveToLocalStorage() {
-            // Strip large base64 image data to save space — keep only print counts and metadata
-            const slim = receivers.map(r => {
-                const copy = Object.assign({}, r);
-                // Replace large base64 images with a flag (true/false)
-                copy.row1Photo = r.row1Photo ? true : false;
-                copy.row2Photos = (r.row2Photos && r.row2Photos.length > 0) ? r.row2Photos.length : 0;
-                return copy;
-            });
-            try {
-                localStorage.setItem('receiversDB', JSON.stringify(slim));
-            } catch(e) {
-                // If still too big, save without any image references
-                const minimal = slim.map(r => { const c = Object.assign({}, r); delete c.row1Photo; delete c.row2Photos; return c; });
-                localStorage.setItem('receiversDB', JSON.stringify(minimal));
-                console.warn('Storage full: saved without image flags');
+        // Fallback: load from localStorage if Firebase fails
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('receiversDB');
+            if (saved) {
+                try { receivers = JSON.parse(saved); } catch(e) { receivers = []; }
             }
         }
 
-        function loadReceivers() {
-            const saved = localStorage.getItem('receiversDB');
-            if (saved) {
-                receivers = JSON.parse(saved);
-            }
-        }
+        // Make functions available globally (needed since we're in a module)
+        window.deleteReceiver = deleteReceiver;
+        window.filterReceivers = filterReceivers;
+        window.renderReceivers = renderReceivers;
+        window.updateStats = updateStats;
+        window.exportToCSV = exportToCSV;
+        window.clearAllData = clearAllData;
+        window.viewImages = viewImages;
+        window.closeImagesModal = closeImagesModal;
+        window.showShippingModal = showShippingModal;
+        window.closeShippingModal = closeShippingModal;
+        window.printLabel = printLabel;
+        window.showPhotoModal = showPhotoModal;
+        window.closePhotoModal = closePhotoModal;
+        window.goToPhotoPrint = goToPhotoPrint;
+        window.recreatePhotoPage = recreatePhotoPage;
+
     </script>
 </body>
 </html>
