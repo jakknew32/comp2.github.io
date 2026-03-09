@@ -831,7 +831,7 @@
                 }
             }
 
-            const printWindow = window.open('', '', 'width=800,height=600');
+            const printWindow = window.open('', '', 'width=600,height=850');
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
@@ -843,19 +843,24 @@
                     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                     <style>
                         @page {
-                            size: A6;
+                            size: A6 portrait;
                             margin: 0;
                         }
-                        body {
-                            margin: 0;
-                            padding: 0;
+                        * { margin:0; padding:0; box-sizing:border-box; }
+                        html, body {
+                            width: 105mm;
+                            height: 148mm;
+                            overflow: hidden;
                             font-family: 'Kanit', 'Tahoma', sans-serif;
                         }
                         #labelPreview {
                             width: 105mm;
                             height: 148mm;
-                            box-sizing: border-box;
+                            display: flex;
+                            flex-direction: column;
                             font-family: 'Kanit', 'Tahoma', sans-serif;
+                            box-sizing: border-box;
+                            overflow: hidden;
                         }
                     </style>
                 </head>
@@ -1078,13 +1083,13 @@
                 while (slice.length < perRow) slice.push(null);
                 pagesHtml += `
                 <div class="a4-page">
-                    <div class="row1">${row1
-                        ? `<img src="${row1}" style="width:100%;height:148.5mm;object-fit:contain;">`
-                        : `<div style="width:100%;height:148.5mm;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:18px;">ไม่มีรูปแถวบน</div>`
-                    }</div>
-                    <div class="row2">${slice.map(src => `
-                        <div class="photo-cell">${src ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;">` : ''}</div>
-                    `).join('')}</div>
+                    ${row2.length > 0 || row1 ? `<div class="row1">${row1
+                        ? `<img src="${row1}">`
+                        : `<div class="row1-empty">ไม่มีรูปแถวบน</div>`
+                    }</div>` : ''}
+                    ${row2.length > 0 ? `<div class="row2">${slice.map(src =>
+                        `<div class="photo-cell">${src ? `<img src="${src}">` : ''}</div>`
+                    ).join('')}</div>` : ''}
                     ${text ? `<div class="page-text">${text.replace(/\n/g,'<br>')}</div>` : ''}
                 </div>`;
             }
@@ -1095,15 +1100,22 @@
                 <title>สลิปรูป - Chiangmai Freshmilk</title>
                 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
                 <style>
-                    @page { size:A4; margin:0; }
+                    @page { size:A4 portrait; margin:0; }
                     * { margin:0; padding:0; box-sizing:border-box; }
-                    body { font-family:'Kanit','Tahoma',sans-serif; background:white; }
-                    .a4-page { width:210mm;height:297mm;overflow:hidden;page-break-after:always;padding:4mm;display:flex;flex-direction:column; }
+                    html, body { width:210mm; height:297mm; font-family:'Kanit','Tahoma',sans-serif; background:white; }
+                    .a4-page {
+                        width:210mm; height:297mm;
+                        display:flex; flex-direction:column;
+                        page-break-after:always; overflow:hidden;
+                    }
                     .a4-page:last-child { page-break-after:auto; }
-                    .row1 { margin-bottom:1mm; }
-                    .row2 { flex:1;display:flex;gap:1mm; }
-                    .photo-cell { flex:1;height:130mm;overflow:hidden; }
-                    .page-text { padding:2mm;text-align:center;font-size:12px;color:#333;border-top:1px solid #e0e0e0;margin-top:2mm;white-space:pre-wrap; }
+                    .row1 { flex:${row2.length > 0 ? '1 0 50%' : '1 0 100%'}; display:flex; overflow:hidden; }
+                    .row1 img { width:100%; height:100%; object-fit:cover; display:block; }
+                    .row1-empty { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#ddd; font-size:20px; }
+                    .row2 { flex:1; display:flex; gap:0; overflow:hidden; }
+                    .photo-cell { flex:1; overflow:hidden; }
+                    .photo-cell img { width:100%; height:100%; object-fit:cover; display:block; }
+                    .page-text { flex-shrink:0; padding:3mm 4mm; text-align:center; font-size:11px; color:#333; border-top:0.5mm solid #e0e0e0; white-space:pre-wrap; line-height:1.5; }
                 </style>
             </head><body>${pagesHtml}
                 <script>
