@@ -1714,71 +1714,88 @@
               <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>🔗 Public Link — เปิดบนเครื่องเล่น</div>
             </div>
             <div class="card-body">
-              <p class="text-muted" style="margin-bottom:14px">อัพโหลด M3U ขึ้น Firebase แล้วรับ URL สำหรับเปิดบน IPTV Player ได้เลย</p>
 
-              <label>ชื่อ Playlist (Public ID)</label>
-              <div style="display:flex;gap:8px;margin-bottom:12px">
-                <input type="text" id="pubSlotName" value="default" placeholder="ชื่อ playlist..." style="margin:0;flex:1">
-                <button class="btn btn-primary" id="pubBtn" onclick="publishM3U()">☁️ เผยแพร่</button>
+              <!-- GitHub Token Setup -->
+              <div id="gistSetupBox" style="background:rgba(38,208,206,0.07);border:1px solid rgba(38,208,206,0.25);border-radius:8px;padding:14px;margin-bottom:14px">
+                <div style="font-size:13px;font-weight:800;margin-bottom:6px;color:var(--accent3)">🐙 GitHub Gist — ได้ Raw URL .m3u จริง (ฟรี ไม่ต้อง setup server)</div>
+                <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.8">
+                  ใส่ GitHub Token แล้วกด เผยแพร่ → ได้ URL <code style="color:var(--accent3);background:rgba(38,208,206,0.1);padding:1px 5px;border-radius:3px">raw.githubusercontent.com/.../playlist.m3u</code><br>
+                  VLC เปิดได้เลย · สร้าง Token ที่ <a href="https://github.com/settings/tokens/new?scopes=gist" target="_blank" style="color:var(--accent)">github.com/settings/tokens</a> → เลือก scope <b>gist</b>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="margin:0;flex:1;font-size:11px;font-family:'Space Mono',monospace">
+                  <button class="btn btn-primary btn-sm" onclick="saveGhToken()">💾 บันทึก</button>
+                  <button class="btn btn-secondary btn-sm" onclick="toggleShowToken()">👁</button>
+                </div>
+                <div id="ghTokenStatus" style="font-size:11px;margin-top:8px;color:var(--text2)"></div>
+              </div>
+
+              <!-- Publish controls -->
+              <label>ชื่อไฟล์ Playlist</label>
+              <div style="display:flex;gap:8px;margin-bottom:8px">
+                <input type="text" id="pubSlotName" value="playlist" placeholder="playlist" style="margin:0;flex:1">
+                <span style="line-height:36px;font-size:12px;color:var(--text2);white-space:nowrap">.m3u</span>
+                <button class="btn btn-primary" id="pubBtn" onclick="publishM3U()" style="white-space:nowrap">🚀 เผยแพร่</button>
+              </div>
+
+              <div>
+                <label>คำอธิบาย Gist (optional)</label>
+                <input type="text" id="gistDesc" placeholder="My IPTV Playlist" style="margin-bottom:8px">
               </div>
 
               <div class="check-row">
+                <input type="checkbox" id="gistPublic">
+                <label class="check-label" for="gistPublic">Gist สาธารณะ (Public) — ปิดเพื่อ Secret Gist</label>
+              </div>
+              <div class="check-row">
                 <input type="checkbox" id="pubAutoUpdate" checked>
-                <label class="check-label" for="pubAutoUpdate">อัพเดท Public Link อัตโนมัติเมื่อบันทึก</label>
+                <label class="check-label" for="pubAutoUpdate">อัพเดท Gist อัตโนมัติเมื่อบันทึก Firebase</label>
               </div>
 
-              <!-- Result area (hidden until published) -->
+              <!-- Result -->
               <div id="pubResultArea" style="display:none">
-                <hr>
-                <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--green)">✅ เผยแพร่แล้ว — Copy link ด้านล่าง</div>
-
-                <label>🎬 M3U Direct URL (วางใน Player)</label>
-                <div class="publink-box">
-                  <div class="publink-url" id="pubDirectUrl"></div>
-                  <button class="publink-copy" onclick="copyPubLink('pubDirectUrl')">📋 Copy</button>
+                <hr style="margin:14px 0">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                  <span style="font-size:18px">✅</span>
+                  <span style="font-size:13px;font-weight:700;color:var(--green)">เผยแพร่สำเร็จ — Raw URL พร้อมใช้งาน</span>
                 </div>
 
-                <label>🌐 Proxy URL (ถ้า Player ต้องการ)</label>
-                <div class="publink-box">
-                  <div class="publink-url" id="pubProxyUrl"></div>
-                  <button class="publink-copy" onclick="copyPubLink('pubProxyUrl')">📋 Copy</button>
+                <label>🎬 Raw URL สำหรับ VLC / Player (plain text .m3u จริง)</label>
+                <div class="publink-box" style="border-color:rgba(74,222,128,0.4)">
+                  <div class="publink-url" id="pubDirectUrl" style="color:var(--green)"></div>
+                  <button class="publink-copy" onclick="copyPubLink('pubDirectUrl')" style="background:var(--green);color:#000">📋 Copy</button>
                 </div>
 
-                <label style="margin-top:10px">📱 QR Code (สแกนบนโทรทัศน์/มือถือ)</label>
-                <div class="qr-wrap" id="pubQrWrap">
-                  <canvas id="pubQrCanvas"></canvas>
+                <label>🌐 Gist Page URL</label>
+                <div class="publink-box" style="opacity:0.7">
+                  <div class="publink-url" id="pubGistPageUrl" style="font-size:10px"></div>
+                  <button class="publink-copy" onclick="copyPubLink('pubGistPageUrl')">📋</button>
                 </div>
 
-                <label>รองรับแอปเหล่านี้</label>
-                <div style="margin-top:6px;flex-wrap:wrap;display:flex">
-                  <span class="app-chip">📺 VLC</span>
-                  <span class="app-chip">📡 TiviMate</span>
-                  <span class="app-chip">🎬 Kodi</span>
-                  <span class="app-chip">📻 IPTV Smarters</span>
-                  <span class="app-chip">▶ Perfect Player</span>
-                  <span class="app-chip">🖥 Plex</span>
-                  <span class="app-chip">📲 GSE IPTV</span>
-                  <span class="app-chip">🌀 OTT Navigator</span>
+                <div style="margin:12px 0;padding:10px 14px;background:rgba(124,106,247,0.08);border-radius:8px;font-size:11px;font-family:'Space Mono',monospace;line-height:1.9">
+                  <b style="color:var(--accent)">VLC Desktop:</b> Media → Open Network Stream (Ctrl+N) → วาง URL → Play<br>
+                  <b style="color:var(--accent)">VLC Mobile:</b> Network → วาง URL<br>
+                  <b style="color:var(--accent)">TiviMate:</b> Add Playlist → M3U URL → วาง URL<br>
+                  <b style="color:var(--accent)">IPTV Smarters:</b> Add User → Load M3U URL<br>
+                  <b style="color:var(--accent)">Kodi:</b> PVR IPTV Simple → M3U URL
                 </div>
 
-                <details style="margin-top:14px">
-                  <summary style="font-size:12px;font-weight:700;cursor:pointer;color:var(--text2)">📖 วิธีเพิ่มใน Player</summary>
-                  <div style="font-size:11px;color:var(--text2);line-height:1.9;margin-top:8px;font-family:'Space Mono',monospace">
-                    <b style="color:var(--accent)">VLC:</b> Media → Open Network Stream → วาง URL<br>
-                    <b style="color:var(--accent)">TiviMate:</b> Add Playlist → M3U URL → วาง URL<br>
-                    <b style="color:var(--accent)">Kodi:</b> Add-ons → PVR IPTV Simple → M3U URL<br>
-                    <b style="color:var(--accent)">IPTV Smarters:</b> Add User → Load Your Playlist → M3U URL<br>
-                    <b style="color:var(--accent)">GSE IPTV:</b> Remote Playlists → + → วาง URL
-                  </div>
-                </details>
+                <label>📱 QR Code — สแกนบนโทรทัศน์/มือถือ</label>
+                <div class="qr-wrap" id="pubQrWrap"></div>
+
+                <div id="pubGistInfo" style="font-size:10px;color:var(--text2);font-family:'Space Mono',monospace;margin-top:8px"></div>
               </div>
 
               <!-- Publish history -->
               <div id="pubHistoryWrap" style="display:none;margin-top:14px">
                 <hr>
-                <div style="font-size:12px;font-weight:700;margin-bottom:8px">📋 ประวัติที่เผยแพร่</div>
+                <div style="font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+                  <span>📋 Gist ที่เผยแพร่แล้ว</span>
+                  <button class="btn btn-danger btn-sm" style="font-size:10px" onclick="clearPubHistory()">ล้างประวัติ</button>
+                </div>
                 <div id="pubHistoryList"></div>
               </div>
+
             </div>
           </div>
         </div>
@@ -3257,112 +3274,209 @@ function copyW3UasM3U() {
   navigator.clipboard.writeText(generateW3UtoM3U()).then(() => toast('คัดลอก M3U แล้ว', 'success'));
 }
 
+
 // ══════════════════════════════════════════════════════════════
-//  PUBLIC LINK — Publish M3U to Firebase REST URL
+//  PUBLIC LINK — GitHub Gist (Raw .m3u URL, works in VLC directly)
 // ══════════════════════════════════════════════════════════════
 const FB_DB_URL = 'https://lineorder-69d5d-default-rtdb.asia-southeast1.firebasedatabase.app';
-let pubHistory  = JSON.parse((() => { try { return localStorage.getItem('m3u_pub_history') || '[]'; } catch{return '[]';} })());
+
+function lsGet(k,d=''){try{return localStorage.getItem(k)??d;}catch{return d;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch{}}
+function lsGetJSON(k,d){try{return JSON.parse(localStorage.getItem(k))??d;}catch{return d;}}
+function lsSetJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+
+let ghToken    = lsGet('gh_token','');
+let pubHistory = lsGetJSON('m3u_pub_history_v2',[]);
+let gistMap    = lsGetJSON('m3u_gist_map',{});
+
+function initPubUI() {
+  const inp = document.getElementById('ghTokenInput');
+  if (inp && ghToken) { inp.value = ghToken; updateTokenStatus(true); }
+  renderPubHistory();
+  if (pubHistory.length) showPubResult(pubHistory[0]);
+}
+
+function saveGhToken() {
+  const val = document.getElementById('ghTokenInput').value.trim();
+  ghToken = val; lsSet('gh_token', val);
+  if (val) verifyGhToken();
+  else { updateTokenStatus(false); toast('ลบ GitHub Token แล้ว','info'); }
+}
+
+async function verifyGhToken() {
+  updateTokenStatus('checking');
+  try {
+    const r = await fetch('https://api.github.com/user', {
+      headers: { Authorization: `Bearer ${ghToken}`, 'X-GitHub-Api-Version': '2022-11-28' }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const u = await r.json();
+    updateTokenStatus(true, u.login);
+    toast(`✅ Token ถูกต้อง — ${u.login}`, 'success');
+  } catch(e) { updateTokenStatus(false); toast('Token ไม่ถูกต้อง: '+e.message,'error'); }
+}
+
+function updateTokenStatus(state, user='') {
+  const el = document.getElementById('ghTokenStatus');
+  if (!el) return;
+  if (state==='checking') el.innerHTML=`<span style="color:var(--yellow)">⏳ กำลังตรวจสอบ...</span>`;
+  else if (state===true)  el.innerHTML=`<span style="color:var(--green)">✅ Token ถูกต้อง${user?' — @'+user:''}</span>`;
+  else el.innerHTML=`<span style="color:var(--text2)">ยังไม่ได้ใส่ Token — <a href="https://github.com/settings/tokens/new?scopes=gist" target="_blank" style="color:var(--accent)">สร้างที่นี่</a> (scope: gist)</span>`;
+}
+
+function toggleShowToken() {
+  const inp = document.getElementById('ghTokenInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
 
 async function publishM3U() {
-  if (!playlist.length) { toast('ไม่มีรายการ — เพิ่มรายการก่อนเผยแพร่', 'error'); return; }
-  const slot = sanitizePubSlot(document.getElementById('pubSlotName').value.trim() || 'default');
-  document.getElementById('pubSlotName').value = slot;
+  if (!playlist.length) { toast('ไม่มีรายการ — เพิ่มรายการก่อน','error'); return; }
+  if (!ghToken) { toast('กรุณาใส่ GitHub Token ก่อน','error'); document.getElementById('ghTokenInput').focus(); return; }
+
+  const rawName  = document.getElementById('pubSlotName').value.trim() || 'playlist';
+  const filename = sanitizePubSlot(rawName) + '.m3u';
+  const desc     = document.getElementById('gistDesc').value.trim() || `M3U Playlist — ${rawName}`;
+  const isPublic = document.getElementById('gistPublic').checked;
+  const m3u      = generateM3U();
+
   const btn = document.getElementById('pubBtn');
   btn.disabled = true; btn.textContent = '⏳ กำลังเผยแพร่...';
 
   try {
-    const m3uContent = generateM3U();
-    // Store to Firebase Realtime DB via REST API
-    const putUrl = `${FB_DB_URL}/m3u_studio/published/${slot}.json`;
-    const resp = await fetch(putUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: m3uContent, updatedAt: Date.now(), entries: playlist.length, slot })
-    });
-    if (!resp.ok) throw new Error(`Firebase PUT ล้มเหลว: HTTP ${resp.status} — ตรวจสอบ Database Rules ให้เปิด write`);
+    const existingId = gistMap[filename]?.gistId;
+    let gistData;
 
-    // Direct Firebase REST URL (returns JSON-encoded string)
-    const rawFirebaseUrl = `${FB_DB_URL}/m3u_studio/published/${slot}/content.json`;
-    // Proxy URL to strip JSON wrapper → ได้ plain text M3U
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawFirebaseUrl)}`;
+    if (existingId) {
+      const r = await fetch(`https://api.github.com/gists/${existingId}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${ghToken}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
+        body: JSON.stringify({ description: desc, files: { [filename]: { content: m3u } } })
+      });
+      if (!r.ok) {
+        if (r.status === 404) { delete gistMap[filename]; lsSetJSON('m3u_gist_map', gistMap); btn.disabled=false; btn.textContent='🚀 เผยแพร่'; return publishM3U(); }
+        const err = await r.json().catch(()=>({message:'HTTP '+r.status}));
+        throw new Error(err.message);
+      }
+      gistData = await r.json();
+      toast(`🔄 อัพเดท "${filename}" สำเร็จ`, 'success');
+    } else {
+      const r = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${ghToken}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
+        body: JSON.stringify({ description: desc, public: isPublic, files: { [filename]: { content: m3u } } })
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(()=>({message:'HTTP '+r.status}));
+        throw new Error(err.message);
+      }
+      gistData = await r.json();
+      toast(`✅ สร้าง Gist "${filename}" สำเร็จ`, 'success');
+    }
 
-    // Save to local history
-    const histEntry = { slot, url: proxyUrl, rawUrl: rawFirebaseUrl, updatedAt: Date.now(), entries: playlist.length };
-    pubHistory = [histEntry, ...pubHistory.filter(h => h.slot !== slot)].slice(0, 20);
-    try { localStorage.setItem('m3u_pub_history', JSON.stringify(pubHistory)); } catch(e) {}
+    // Raw URL without revision hash = always latest
+    const rawUrl  = (gistData.files[filename]?.raw_url || '').replace(/\/raw\/[a-f0-9]+\//, '/raw/');
+    const pageUrl = gistData.html_url;
+    const gistId  = gistData.id;
 
-    showPubResult(rawFirebaseUrl, proxyUrl);
+    gistMap[filename] = { gistId, rawUrl, pageUrl, updatedAt: Date.now(), entries: playlist.length };
+    lsSetJSON('m3u_gist_map', gistMap);
+
+    const entry = { filename, gistId, rawUrl, pageUrl, updatedAt: Date.now(), entries: playlist.length };
+    pubHistory = [entry, ...pubHistory.filter(h => h.filename !== filename)].slice(0, 20);
+    lsSetJSON('m3u_pub_history_v2', pubHistory);
+
+    // Backup to Firebase (non-critical)
+    if (typeof fbReady !== 'undefined' && fbReady) {
+      fetch(`${FB_DB_URL}/m3u_studio/published/${sanitizePubSlot(rawName)}.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ gistId, rawUrl, updatedAt: Date.now(), entries: playlist.length })
+      }).catch(()=>{});
+    }
+
+    showPubResult(entry);
     renderPubHistory();
-    toast(`🔗 เผยแพร่ "${slot}" สำเร็จ — ${playlist.length} รายการ`, 'success');
+
   } catch(e) {
-    toast('เผยแพร่ไม่สำเร็จ: ' + e.message, 'error');
+    toast('เผยแพร่ไม่สำเร็จ: '+e.message, 'error');
     console.error(e);
   } finally {
-    btn.disabled = false; btn.textContent = '☁️ เผยแพร่';
+    btn.disabled = false; btn.textContent = '🚀 เผยแพร่';
   }
 }
 
-function showPubResult(rawUrl, proxyUrl) {
+function showPubResult(entry) {
   document.getElementById('pubResultArea').style.display = 'block';
-  document.getElementById('pubDirectUrl').textContent = proxyUrl;
-  document.getElementById('pubProxyUrl').textContent  = rawUrl;
-  // QR code
+  document.getElementById('pubDirectUrl').textContent   = entry.rawUrl  || '';
+  document.getElementById('pubGistPageUrl').textContent = entry.pageUrl || '';
+  document.getElementById('pubGistInfo').textContent    =
+    `Gist: ${entry.gistId||''} · ${entry.filename||''} · ${entry.entries||0} รายการ · ${new Date(entry.updatedAt).toLocaleString('th-TH')}`;
+
   const qrWrap = document.getElementById('pubQrWrap');
   qrWrap.innerHTML = '';
+  const url = entry.rawUrl;
+  if (!url) return;
   try {
-    new QRCode(qrWrap, { text: proxyUrl, width: 160, height: 160,
-      colorDark: '#7c6af7', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-  } catch(e) {
+    new QRCode(qrWrap, { text: url, width: 160, height: 160,
+      colorDark: '#4ade80', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  } catch {
     const img = document.createElement('img');
-    img.src = `https://chart.googleapis.com/chart?chs=160x160&cht=qr&chl=${encodeURIComponent(proxyUrl)}`;
-    img.alt = 'QR Code'; img.style.borderRadius = '8px';
+    img.src = `https://chart.googleapis.com/chart?chs=160x160&cht=qr&chl=${encodeURIComponent(url)}`;
+    img.style.borderRadius = '8px';
     qrWrap.appendChild(img);
   }
 }
 
 function copyPubLink(elId) {
   const text = document.getElementById(elId).textContent.trim();
-  navigator.clipboard.writeText(text).then(() => toast('คัดลอก URL แล้ว ✅', 'success'));
+  if (!text) { toast('ยังไม่มี URL','error'); return; }
+  navigator.clipboard.writeText(text).then(()=>toast('คัดลอก URL แล้ว ✅','success'));
 }
 
 function renderPubHistory() {
   const wrap = document.getElementById('pubHistoryWrap');
   const list = document.getElementById('pubHistoryList');
-  if (!pubHistory.length) { if(wrap) wrap.style.display='none'; return; }
-  if(wrap) wrap.style.display='block';
-  if(!list) return;
-  list.innerHTML = pubHistory.map(h => `
+  if (!wrap || !list) return;
+  if (!pubHistory.length) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = pubHistory.map(h=>`
     <div class="pub-history-item">
-      <span style="font-size:16px">📋</span>
+      <span style="font-size:18px">🐙</span>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:12px">${esc(h.slot)}</div>
-        <div style="font-size:10px;color:var(--accent3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Space Mono',monospace">${esc(h.url)}</div>
-        <div style="font-size:10px;color:var(--text2)">${h.entries} รายการ · ${new Date(h.updatedAt).toLocaleString('th-TH')}</div>
+        <div style="font-weight:700;font-size:12px">${esc(h.filename||'')}</div>
+        <div style="font-size:10px;color:var(--green);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Space Mono',monospace">${esc(h.rawUrl||'')}</div>
+        <div style="font-size:10px;color:var(--text2)">${h.entries||0} รายการ · ${new Date(h.updatedAt).toLocaleString('th-TH')}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-        <button class="btn btn-primary btn-sm" style="font-size:10px" onclick="rePubFromHistory('${esc(h.slot)}')">🔄 อัพเดท</button>
-        <button class="publink-copy" style="font-size:10px;padding:4px 8px" onclick="navigator.clipboard.writeText('${esc(h.url)}').then(()=>toast('คัดลอกแล้ว','success'))">📋 Copy</button>
+        <button class="btn btn-primary btn-sm" style="font-size:10px;padding:4px 8px" onclick="rePubFromHistory('${esc(h.filename||'')}')">🔄</button>
+        <button class="publink-copy" style="font-size:10px;padding:4px 8px;background:var(--green);color:#000" onclick="navigator.clipboard.writeText('${esc(h.rawUrl||'')}').then(()=>toast('คัดลอกแล้ว','success'))">📋</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function rePubFromHistory(slot) {
-  document.getElementById('pubSlotName').value = slot;
+function rePubFromHistory(filename) {
+  document.getElementById('pubSlotName').value = filename.replace(/\.m3u$/,'');
   publishM3U();
 }
 
-function sanitizePubSlot(name) {
-  return name.replace(/[.#$/[\]\s]+/g,'_').replace(/^_+|_+$/g,'').toLowerCase() || 'default';
+function clearPubHistory() {
+  if (!confirm('ล้างประวัติทั้งหมด?')) return;
+  pubHistory=[]; gistMap={};
+  lsSetJSON('m3u_pub_history_v2',[]); lsSetJSON('m3u_gist_map',{});
+  renderPubHistory();
+  document.getElementById('pubResultArea').style.display='none';
 }
 
-// Init pub history on load
-renderPubHistory();
-if (pubHistory.length) {
-  const latest = pubHistory[0];
-  document.getElementById('pubSlotName').value = latest.slot;
-  showPubResult(latest.rawUrl || latest.url, latest.url);
+function sanitizePubSlot(name) {
+  return name.replace(/\.m3u8?$/i,'').replace(/[^a-z0-9_\-]/gi,'_').replace(/^_+|_+$/g,'').toLowerCase()||'playlist';
 }
+
+// stubs for removed cfWorker refs
+function saveCfWorkerUrl(){}
+
+initPubUI();
+
+
+
 
 let fbReady       = false;
 let activeSlot    = 'default';
