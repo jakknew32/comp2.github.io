@@ -33,8 +33,9 @@
   window.__firebaseReady = true;
   document.dispatchEvent(new CustomEvent("firebase-ready"));
 </script>
+<!-- QR Code generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-  :root {
     --bg: #0a0a0f;
     --surface: #111118;
     --surface2: #1a1a24;
@@ -863,6 +864,76 @@
   .playlist-card-name { font-size: 13px; font-weight: 700; }
   .playlist-card-meta { font-size: 11px; color: var(--text2); font-family:'Space Mono',monospace; margin-top:3px; }
   .playlist-card-actions { display:flex; gap:6px; flex-shrink:0; }
+
+  /* ── PUBLIC LINK ── */
+  .publink-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  .publink-url {
+    flex: 1;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    word-break: break-all;
+    line-height: 1.6;
+    user-select: all;
+  }
+  .publink-copy {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .publink-copy:hover { background: #6a57e8; }
+
+  .qr-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+    background: #fff;
+    border-radius: 8px;
+    margin: 10px 0;
+  }
+
+  .app-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: var(--surface3);
+    margin: 3px;
+    color: var(--text);
+  }
+
+  .pub-history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .pub-history-item:last-child { border-bottom: none; }
+  .pub-history-item:hover { background: rgba(124,106,247,0.04); }
 </style>
 </head>
 <body>
@@ -880,6 +951,7 @@
       <div class="header-actions">
         <button class="btn btn-success btn-sm" onclick="downloadM3U()">⬇ ดาวน์โหลด M3U</button>
         <button class="btn btn-secondary btn-sm" onclick="clearAll()">🗑 ล้างข้อมูล</button>
+        <button class="btn btn-primary btn-sm" onclick="switchTab('preview');setTimeout(publishM3U,300)" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">🔗 สร้าง Public Link</button>
       </div>
     </div>
   </div>
@@ -901,6 +973,7 @@
     <button class="tab-btn" onclick="switchTab('bulk')">⚡ แก้ไขเป็นชุด</button>
     <button class="tab-btn" onclick="switchTab('tags')">🏷 จัดการ Tags</button>
     <button class="tab-btn" onclick="switchTab('finder')">🔍 ค้นหา Stream</button>
+    <button class="tab-btn" onclick="switchTab('w3u')">🔀 W3U → M3U</button>
     <button class="tab-btn" onclick="switchTab('preview')">👁 ดูตัวอย่าง M3U</button>
     <button class="tab-btn" onclick="switchTab('cloud')">☁️ Firebase Cloud</button>
   </div>
@@ -1440,6 +1513,145 @@
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════ TAB: W3U ══ -->
+    <div id="tab-w3u" class="tab-content">
+      <div class="two-col">
+
+        <!-- Left: Input & Options -->
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>อัพโหลดไฟล์ W3U</div>
+            </div>
+            <div class="card-body">
+              <div class="drop-zone" id="w3uDropZone" style="margin-bottom:14px">
+                <input type="file" id="w3uFileInput" accept=".w3u,.json,.txt" multiple onchange="handleW3UFiles(this.files)">
+                <span class="drop-icon">📄</span>
+                <div class="drop-title">ลากวางไฟล์ .w3u หรือคลิกเพื่อเลือก</div>
+                <div class="drop-sub">.w3u · .json — รองรับหลายไฟล์พร้อมกัน</div>
+              </div>
+
+              <label>หรือวาง W3U / JSON ด้วยตนเอง</label>
+              <textarea id="w3uPasteInput" placeholder='วาง W3U JSON ได้เลย เช่น:
+{
+  "name": "My Playlist",
+  "channels": [
+    {
+      "name": "Channel 1",
+      "logo": "https://logo.png",
+      "group": "News",
+      "url": "https://stream.m3u8"
+    }
+  ]
+}' style="min-height:160px;font-size:11px"></textarea>
+              <button class="btn btn-primary" onclick="parseW3UFromPaste()">📋 แปลงจาก Text</button>
+            </div>
+          </div>
+
+          <!-- W3U Format Info -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>รูปแบบ W3U ที่รองรับ</div>
+            </div>
+            <div class="card-body" style="padding:14px">
+              <p class="text-muted" style="margin-bottom:12px">W3U เป็นไฟล์ JSON ที่ใช้ใน Wiseplay และ app อื่นๆ มีหลายรูปแบบ:</p>
+              <table>
+                <thead><tr><th>Field W3U</th><th>แปลงเป็น M3U</th></tr></thead>
+                <tbody>
+                  <tr><td>name / title</td><td>tvg-name + display name</td></tr>
+                  <tr><td>logo / image / icon</td><td>tvg-logo</td></tr>
+                  <tr><td>group / category / type</td><td>group-title</td></tr>
+                  <tr><td>url / stream / src</td><td>URL บรรทัด</td></tr>
+                  <tr><td>language / lang</td><td>tvg-language</td></tr>
+                  <tr><td>id / tvg_id</td><td>tvg-id</td></tr>
+                  <tr><td>epg / epg_id</td><td>tvg-epg</td></tr>
+                  <tr><td>country</td><td>tvg-country</td></tr>
+                  <tr><td>duration</td><td>duration ใน EXTINF</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Options + Result + Preview -->
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot"></span>ตัวเลือกการแปลง</div>
+            </div>
+            <div class="card-body">
+              <div class="check-row">
+                <input type="checkbox" id="w3uMerge" checked>
+                <label class="check-label" for="w3uMerge">รวมเข้ากับ Playlist ปัจจุบัน (ไม่ล้างของเดิม)</label>
+              </div>
+              <div class="check-row">
+                <input type="checkbox" id="w3uSkipEmpty" checked>
+                <label class="check-label" for="w3uSkipEmpty">ข้ามรายการที่ไม่มี URL</label>
+              </div>
+              <div class="check-row">
+                <input type="checkbox" id="w3uAutoGroup" checked>
+                <label class="check-label" for="w3uAutoGroup">ตั้งชื่อกลุ่มอัตโนมัติถ้าไม่มี</label>
+              </div>
+              <div>
+                <label>กลุ่มเริ่มต้น (ถ้าไม่ระบุในไฟล์)</label>
+                <input type="text" id="w3uDefaultGroup" placeholder="W3U Import" value="W3U Import">
+              </div>
+              <div>
+                <label>เพิ่ม Prefix ชื่อ (optional)</label>
+                <input type="text" id="w3uPrefix" placeholder="[W3U] ">
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversion result stats -->
+          <div class="card" style="margin-bottom:16px" id="w3uResultCard" style="display:none">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--green)"></span>ผลการแปลง</div>
+            </div>
+            <div class="card-body">
+              <div class="stats-bar" style="margin-bottom:12px">
+                <div class="stat-item"><div><div class="stat-num" id="w3uStatTotal">0</div><div class="stat-label">รายการ</div></div></div>
+                <div class="stat-item"><div><div class="stat-num" id="w3uStatOk">0</div><div class="stat-label">สำเร็จ</div></div></div>
+                <div class="stat-item"><div><div class="stat-num" id="w3uStatSkip">0</div><div class="stat-label">ข้าม</div></div></div>
+                <div class="stat-item"><div><div class="stat-num" id="w3uStatGroups">0</div><div class="stat-label">กลุ่ม</div></div></div>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-success" onclick="addW3UToPlaylist()">➕ เพิ่มเข้า Playlist</button>
+                <button class="btn btn-primary" onclick="downloadW3UasM3U()">⬇ ดาวน์โหลด M3U</button>
+                <button class="btn btn-secondary btn-sm" onclick="copyW3UasM3U()">📋 คัดลอก</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- M3U Preview -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--yellow)"></span>ตัวอย่าง M3U ที่แปลงแล้ว</div>
+              <span id="w3uConvertedCount" class="select-count">ยังไม่ได้แปลง</span>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div class="output-area" id="w3uPreviewOutput" style="border:none;border-radius:0 0 var(--radius) var(--radius);min-height:240px">
+# อัพโหลดไฟล์ W3U หรือวาง JSON เพื่อดูตัวอย่าง
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Converted entries table -->
+      <div style="margin-top:20px" id="w3uTableWrap" style="display:none">
+        <div class="section-header">
+          <div class="section-title">รายการที่แปลงแล้ว — ตรวจสอบก่อนเพิ่ม</div>
+          <div class="btn-group">
+            <button class="btn btn-success" onclick="addW3UToPlaylist()">➕ เพิ่มทั้งหมดเข้า Playlist</button>
+            <button class="btn btn-primary" onclick="downloadW3UasM3U()">⬇ ดาวน์โหลด M3U</button>
+          </div>
+        </div>
+        <div class="playlist-table-wrap" id="w3uConvertedTable"></div>
+      </div>
+    </div>
+
     <!-- ══════════════════════════════════════════════ TAB: PREVIEW ══ -->
     <div id="tab-preview" class="tab-content">
       <div class="two-col">
@@ -1493,6 +1705,80 @@
             </div>
             <div class="card-body" id="exportSummary">
               <div class="text-muted">กดรีเฟรชเพื่ออัพเดท</div>
+            </div>
+          </div>
+
+          <!-- ── PUBLIC LINK CARD ── -->
+          <div class="card" style="margin-top:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>🔗 Public Link — เปิดบนเครื่องเล่น</div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:14px">อัพโหลด M3U ขึ้น Firebase แล้วรับ URL สำหรับเปิดบน IPTV Player ได้เลย</p>
+
+              <label>ชื่อ Playlist (Public ID)</label>
+              <div style="display:flex;gap:8px;margin-bottom:12px">
+                <input type="text" id="pubSlotName" value="default" placeholder="ชื่อ playlist..." style="margin:0;flex:1">
+                <button class="btn btn-primary" id="pubBtn" onclick="publishM3U()">☁️ เผยแพร่</button>
+              </div>
+
+              <div class="check-row">
+                <input type="checkbox" id="pubAutoUpdate" checked>
+                <label class="check-label" for="pubAutoUpdate">อัพเดท Public Link อัตโนมัติเมื่อบันทึก</label>
+              </div>
+
+              <!-- Result area (hidden until published) -->
+              <div id="pubResultArea" style="display:none">
+                <hr>
+                <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--green)">✅ เผยแพร่แล้ว — Copy link ด้านล่าง</div>
+
+                <label>🎬 M3U Direct URL (วางใน Player)</label>
+                <div class="publink-box">
+                  <div class="publink-url" id="pubDirectUrl"></div>
+                  <button class="publink-copy" onclick="copyPubLink('pubDirectUrl')">📋 Copy</button>
+                </div>
+
+                <label>🌐 Proxy URL (ถ้า Player ต้องการ)</label>
+                <div class="publink-box">
+                  <div class="publink-url" id="pubProxyUrl"></div>
+                  <button class="publink-copy" onclick="copyPubLink('pubProxyUrl')">📋 Copy</button>
+                </div>
+
+                <label style="margin-top:10px">📱 QR Code (สแกนบนโทรทัศน์/มือถือ)</label>
+                <div class="qr-wrap" id="pubQrWrap">
+                  <canvas id="pubQrCanvas"></canvas>
+                </div>
+
+                <label>รองรับแอปเหล่านี้</label>
+                <div style="margin-top:6px;flex-wrap:wrap;display:flex">
+                  <span class="app-chip">📺 VLC</span>
+                  <span class="app-chip">📡 TiviMate</span>
+                  <span class="app-chip">🎬 Kodi</span>
+                  <span class="app-chip">📻 IPTV Smarters</span>
+                  <span class="app-chip">▶ Perfect Player</span>
+                  <span class="app-chip">🖥 Plex</span>
+                  <span class="app-chip">📲 GSE IPTV</span>
+                  <span class="app-chip">🌀 OTT Navigator</span>
+                </div>
+
+                <details style="margin-top:14px">
+                  <summary style="font-size:12px;font-weight:700;cursor:pointer;color:var(--text2)">📖 วิธีเพิ่มใน Player</summary>
+                  <div style="font-size:11px;color:var(--text2);line-height:1.9;margin-top:8px;font-family:'Space Mono',monospace">
+                    <b style="color:var(--accent)">VLC:</b> Media → Open Network Stream → วาง URL<br>
+                    <b style="color:var(--accent)">TiviMate:</b> Add Playlist → M3U URL → วาง URL<br>
+                    <b style="color:var(--accent)">Kodi:</b> Add-ons → PVR IPTV Simple → M3U URL<br>
+                    <b style="color:var(--accent)">IPTV Smarters:</b> Add User → Load Your Playlist → M3U URL<br>
+                    <b style="color:var(--accent)">GSE IPTV:</b> Remote Playlists → + → วาง URL
+                  </div>
+                </details>
+              </div>
+
+              <!-- Publish history -->
+              <div id="pubHistoryWrap" style="display:none;margin-top:14px">
+                <hr>
+                <div style="font-size:12px;font-weight:700;margin-bottom:8px">📋 ประวัติที่เผยแพร่</div>
+                <div id="pubHistoryList"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1696,7 +1982,7 @@ let urlCount = 1;
 function switchTab(id) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  const tabs = ['import','edit','bulk','tags','finder','preview','cloud'];
+  const tabs = ['import','edit','bulk','tags','finder','w3u','preview','cloud'];
   const idx = tabs.indexOf(id);
   if (idx < 0) return;
   document.querySelectorAll('.tab-btn')[idx].classList.add('active');
@@ -2709,8 +2995,375 @@ document.getElementById('cloudModal').addEventListener('click', function(e) {
 });
 
 // ══════════════════════════════════════════════════════════════
-//  FIREBASE INTEGRATION
+//  W3U → M3U CONVERTER
 // ══════════════════════════════════════════════════════════════
+let w3uConverted = []; // converted entries ready to add
+
+// ── Drag & Drop for W3U dropzone ──
+const w3udz = document.getElementById('w3uDropZone');
+w3udz.addEventListener('dragover', e => { e.preventDefault(); w3udz.classList.add('drag-over'); });
+w3udz.addEventListener('dragleave', () => w3udz.classList.remove('drag-over'));
+w3udz.addEventListener('drop', e => {
+  e.preventDefault(); w3udz.classList.remove('drag-over');
+  handleW3UFiles(e.dataTransfer.files);
+});
+
+function handleW3UFiles(files) {
+  let pending = files.length;
+  let allConverted = [];
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const converted = parseW3U(e.target.result, file.name);
+      allConverted.push(...converted);
+      pending--;
+      if (pending === 0) {
+        w3uConverted = allConverted;
+        renderW3UResult();
+        toast(`แปลง ${files.length} ไฟล์ — พบ ${allConverted.length} รายการ`, 'success');
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+function parseW3UFromPaste() {
+  const text = document.getElementById('w3uPasteInput').value.trim();
+  if (!text) { toast('กรุณาวาง W3U JSON', 'error'); return; }
+  const converted = parseW3U(text, 'paste');
+  if (!converted.length) { toast('ไม่พบข้อมูลที่แปลงได้ — ตรวจสอบรูปแบบ JSON', 'error'); return; }
+  w3uConverted = converted;
+  renderW3UResult();
+  toast(`แปลงสำเร็จ — พบ ${converted.length} รายการ`, 'success');
+}
+
+// ── Core parser: handles multiple W3U JSON structures ──
+function parseW3U(text, filename) {
+  const skipEmpty   = document.getElementById('w3uSkipEmpty').checked;
+  const autoGroup   = document.getElementById('w3uAutoGroup').checked;
+  const defGroup    = document.getElementById('w3uDefaultGroup').value.trim() || 'W3U Import';
+  const prefix      = document.getElementById('w3uPrefix').value;
+  const results     = [];
+
+  let json;
+  // 1) Try standard JSON parse
+  try { json = JSON.parse(text); }
+  catch(e) {
+    // 2) Try to extract JSON object/array from text
+    const match = text.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+    if (match) {
+      try { json = JSON.parse(match[1]); }
+      catch { toast('ไม่สามารถแยกวิเคราะห์ JSON ได้: ' + e.message, 'error'); return []; }
+    } else {
+      toast('ไม่พบ JSON ในไฟล์', 'error');
+      return [];
+    }
+  }
+
+  // 3) Normalise to array of channel objects
+  let channels = [];
+
+  if (Array.isArray(json)) {
+    // Root is an array of channels
+    channels = json;
+  } else if (json && typeof json === 'object') {
+    // Look for common wrapper keys
+    const arrayKey = ['channels','items','playlist','list','streams','entries','data','content']
+      .find(k => Array.isArray(json[k]));
+    if (arrayKey) {
+      channels = json[arrayKey];
+    } else if (json.url || json.stream || json.src) {
+      // Single channel object
+      channels = [json];
+    } else {
+      // Try every value that is an array
+      const arrVals = Object.values(json).filter(v => Array.isArray(v));
+      if (arrVals.length) channels = arrVals.flat();
+      else channels = [json];
+    }
+  }
+
+  // 4) Map each channel to M3U entry
+  channels.forEach((ch, idx) => {
+    if (!ch || typeof ch !== 'object') return;
+
+    // Extract URL — try many possible key names
+    const url = (
+      ch.url || ch.stream || ch.src || ch.stream_url || ch.streamUrl ||
+      ch.link || ch.address || ch.uri || ch.m3u8 || ch.hls || ch.source || ''
+    ).trim();
+
+    if (skipEmpty && !url) return;
+
+    // Extract name
+    const name = prefix + (
+      ch.name || ch.title || ch.channel || ch.channel_name ||
+      ch.channelName || ch.label || ch.displayName || `Channel ${idx+1}`
+    ).trim();
+
+    // Extract group
+    let group = (
+      ch.group || ch.group_title || ch.groupTitle || ch.category ||
+      ch.type || ch.genre || ch.folder || ''
+    ).trim();
+    if (!group && autoGroup) group = defGroup;
+
+    // Extract logo
+    const logo = (
+      ch.logo || ch.image || ch.icon || ch.thumbnail || ch.img ||
+      ch.logo_url || ch.logoUrl || ch.poster || ''
+    ).trim();
+
+    // Extract other tags
+    const lang    = (ch.language || ch.lang || '').trim();
+    const country = (ch.country || ch.region || '').trim();
+    const tvgId   = (ch.id || ch.tvg_id || ch.tvgId || ch.epg_id || '').trim();
+    const epg     = (ch.epg || ch.epg_url || ch.epgUrl || '').trim();
+    const duration= String(ch.duration || '-1');
+    const shift   = String(ch.tvg_shift || ch.shift || '').trim();
+    const catchup = (ch.catchup || '').trim();
+
+    const tags = {};
+    if (group)   tags['group-title']   = group;
+    if (logo)    tags['tvg-logo']      = logo;
+    if (lang)    tags['tvg-language']  = lang;
+    if (country) tags['tvg-country']   = country;
+    if (tvgId)   tags['tvg-id']        = tvgId;
+    if (epg)     tags['tvg-epg']       = epg;
+    if (shift)   tags['tvg-shift']     = shift;
+    if (catchup) tags['catchup']       = catchup;
+
+    results.push({ name, url, duration, tags, selected: false, _w3uOk: !!url });
+  });
+
+  return results;
+}
+
+// ── Render converted results ──
+function renderW3UResult() {
+  const total  = w3uConverted.length;
+  const ok     = w3uConverted.filter(e => e._w3uOk).length;
+  const skip   = total - ok;
+  const groups = new Set(w3uConverted.map(e => e.tags['group-title'] || '')).size;
+
+  // Stats
+  document.getElementById('w3uStatTotal').textContent  = total;
+  document.getElementById('w3uStatOk').textContent     = ok;
+  document.getElementById('w3uStatSkip').textContent   = skip;
+  document.getElementById('w3uStatGroups').textContent = groups;
+  document.getElementById('w3uResultCard').style.display = 'block';
+  document.getElementById('w3uTableWrap').style.display  = 'block';
+  document.getElementById('w3uConvertedCount').textContent = `${ok} รายการ`;
+
+  // M3U preview
+  renderW3UPreview();
+
+  // Converted table
+  const tableEl = document.getElementById('w3uConvertedTable');
+  if (!w3uConverted.length) { tableEl.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><div class="empty-text">ไม่มีรายการ</div></div>'; return; }
+
+  const rows = w3uConverted.map((e, i) => `
+    <tr style="${!e._w3uOk ? 'opacity:0.45' : ''}">
+      <td><span class="mono" style="color:var(--text2)">${i+1}</span></td>
+      <td>
+        <div style="font-weight:600;font-size:13px">${esc(e.name)}</div>
+        <div style="font-size:10px;color:var(--text2);font-family:'Space Mono',monospace;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.url||'—')}</div>
+      </td>
+      <td><span class="badge ${e.url && e.url.includes('.m3u8') ? 'badge-stream' : 'badge-video'}">${e.url ? (e.url.includes('.m3u8') ? 'HLS' : 'video') : 'no url'}</span></td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.tags['group-title']||'—')}</td>
+      <td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.tags['tvg-language']||'—')}</td>
+      <td>
+        ${e.tags['tvg-logo'] ? `<img src="${esc(e.tags['tvg-logo'])}" style="height:22px;border-radius:3px;background:#fff" onerror="this.style.display='none'">` : '—'}
+      </td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="removeW3UEntry(${i})">×</button>
+      </td>
+    </tr>
+  `).join('');
+
+  tableEl.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>#</th><th>ชื่อ / URL</th><th>ประเภท</th><th>กลุ่ม</th><th>ภาษา</th><th>โลโก้</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderW3UPreview() {
+  const el = document.getElementById('w3uPreviewOutput');
+  const entries = w3uConverted.filter(e => e._w3uOk || !document.getElementById('w3uSkipEmpty').checked);
+  if (!entries.length) { el.textContent = '# ไม่มีรายการ'; return; }
+
+  const lines = ['<span class="line-header">#EXTM3U</span>'];
+  entries.slice(0, 50).forEach(e => {  // preview first 50
+    const tags = { ...e.tags };
+    if (e.name) tags['tvg-name'] = e.name;
+    const attrStr = Object.entries(tags).filter(([,v])=>v).map(([k,v])=>`${k}="${v}"`).join(' ');
+    lines.push(`<span class="line-extinf">#EXTINF:${e.duration}${attrStr ? ' '+attrStr : ''},${esc(e.name)}</span>`);
+    lines.push(`<span class="line-url">${esc(e.url||'')}</span>`);
+    lines.push('');
+  });
+  if (entries.length > 50) lines.push(`<span style="color:var(--text2)">... และอีก ${entries.length-50} รายการ</span>`);
+  el.innerHTML = lines.join('\n');
+}
+
+function removeW3UEntry(i) {
+  w3uConverted.splice(i, 1);
+  renderW3UResult();
+}
+
+function addW3UToPlaylist() {
+  if (!w3uConverted.length) { toast('ไม่มีรายการที่แปลงแล้ว', 'error'); return; }
+  const merge = document.getElementById('w3uMerge').checked;
+  const validEntries = w3uConverted.filter(e => e._w3uOk || !document.getElementById('w3uSkipEmpty').checked)
+    .map(e => ({ ...e, _w3uOk: undefined }));
+
+  if (!merge) playlist = [];
+  playlist.push(...validEntries);
+  updateStats(); renderRecent();
+  toast(`เพิ่ม ${validEntries.length} รายการจาก W3U เข้า Playlist แล้ว`, 'success');
+}
+
+function generateW3UtoM3U() {
+  const skipEmpty = document.getElementById('w3uSkipEmpty').checked;
+  const entries = w3uConverted.filter(e => !skipEmpty || e._w3uOk);
+  const lines = ['#EXTM3U'];
+  entries.forEach(e => {
+    const tags = { ...e.tags };
+    if (e.name) tags['tvg-name'] = e.name;
+    const attrStr = Object.entries(tags).filter(([,v])=>v).map(([k,v])=>`${k}="${v}"`).join(' ');
+    lines.push(`#EXTINF:${e.duration}${attrStr ? ' '+attrStr : ''},${e.name}`);
+    lines.push(e.url || '');
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+function downloadW3UasM3U() {
+  if (!w3uConverted.length) { toast('ไม่มีรายการ', 'error'); return; }
+  const m3u = generateW3UtoM3U();
+  const blob = new Blob([m3u], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'converted_from_w3u.m3u';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('ดาวน์โหลด M3U แล้ว 🎉', 'success');
+}
+
+function copyW3UasM3U() {
+  if (!w3uConverted.length) { toast('ไม่มีรายการ', 'error'); return; }
+  navigator.clipboard.writeText(generateW3UtoM3U()).then(() => toast('คัดลอก M3U แล้ว', 'success'));
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PUBLIC LINK — Publish M3U to Firebase REST URL
+// ══════════════════════════════════════════════════════════════
+const FB_DB_URL = 'https://lineorder-69d5d-default-rtdb.asia-southeast1.firebasedatabase.app';
+let pubHistory  = JSON.parse((() => { try { return localStorage.getItem('m3u_pub_history') || '[]'; } catch{return '[]';} })());
+
+async function publishM3U() {
+  if (!playlist.length) { toast('ไม่มีรายการ — เพิ่มรายการก่อนเผยแพร่', 'error'); return; }
+  const slot = sanitizePubSlot(document.getElementById('pubSlotName').value.trim() || 'default');
+  document.getElementById('pubSlotName').value = slot;
+  const btn = document.getElementById('pubBtn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังเผยแพร่...';
+
+  try {
+    const m3uContent = generateM3U();
+    // Store to Firebase Realtime DB via REST API
+    const putUrl = `${FB_DB_URL}/m3u_studio/published/${slot}.json`;
+    const resp = await fetch(putUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: m3uContent, updatedAt: Date.now(), entries: playlist.length, slot })
+    });
+    if (!resp.ok) throw new Error(`Firebase PUT ล้มเหลว: HTTP ${resp.status} — ตรวจสอบ Database Rules ให้เปิด write`);
+
+    // Direct Firebase REST URL (returns JSON-encoded string)
+    const rawFirebaseUrl = `${FB_DB_URL}/m3u_studio/published/${slot}/content.json`;
+    // Proxy URL to strip JSON wrapper → ได้ plain text M3U
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawFirebaseUrl)}`;
+
+    // Save to local history
+    const histEntry = { slot, url: proxyUrl, rawUrl: rawFirebaseUrl, updatedAt: Date.now(), entries: playlist.length };
+    pubHistory = [histEntry, ...pubHistory.filter(h => h.slot !== slot)].slice(0, 20);
+    try { localStorage.setItem('m3u_pub_history', JSON.stringify(pubHistory)); } catch(e) {}
+
+    showPubResult(rawFirebaseUrl, proxyUrl);
+    renderPubHistory();
+    toast(`🔗 เผยแพร่ "${slot}" สำเร็จ — ${playlist.length} รายการ`, 'success');
+  } catch(e) {
+    toast('เผยแพร่ไม่สำเร็จ: ' + e.message, 'error');
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = '☁️ เผยแพร่';
+  }
+}
+
+function showPubResult(rawUrl, proxyUrl) {
+  document.getElementById('pubResultArea').style.display = 'block';
+  document.getElementById('pubDirectUrl').textContent = proxyUrl;
+  document.getElementById('pubProxyUrl').textContent  = rawUrl;
+  // QR code
+  const qrWrap = document.getElementById('pubQrWrap');
+  qrWrap.innerHTML = '';
+  try {
+    new QRCode(qrWrap, { text: proxyUrl, width: 160, height: 160,
+      colorDark: '#7c6af7', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  } catch(e) {
+    const img = document.createElement('img');
+    img.src = `https://chart.googleapis.com/chart?chs=160x160&cht=qr&chl=${encodeURIComponent(proxyUrl)}`;
+    img.alt = 'QR Code'; img.style.borderRadius = '8px';
+    qrWrap.appendChild(img);
+  }
+}
+
+function copyPubLink(elId) {
+  const text = document.getElementById(elId).textContent.trim();
+  navigator.clipboard.writeText(text).then(() => toast('คัดลอก URL แล้ว ✅', 'success'));
+}
+
+function renderPubHistory() {
+  const wrap = document.getElementById('pubHistoryWrap');
+  const list = document.getElementById('pubHistoryList');
+  if (!pubHistory.length) { if(wrap) wrap.style.display='none'; return; }
+  if(wrap) wrap.style.display='block';
+  if(!list) return;
+  list.innerHTML = pubHistory.map(h => `
+    <div class="pub-history-item">
+      <span style="font-size:16px">📋</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:12px">${esc(h.slot)}</div>
+        <div style="font-size:10px;color:var(--accent3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Space Mono',monospace">${esc(h.url)}</div>
+        <div style="font-size:10px;color:var(--text2)">${h.entries} รายการ · ${new Date(h.updatedAt).toLocaleString('th-TH')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <button class="btn btn-primary btn-sm" style="font-size:10px" onclick="rePubFromHistory('${esc(h.slot)}')">🔄 อัพเดท</button>
+        <button class="publink-copy" style="font-size:10px;padding:4px 8px" onclick="navigator.clipboard.writeText('${esc(h.url)}').then(()=>toast('คัดลอกแล้ว','success'))">📋 Copy</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function rePubFromHistory(slot) {
+  document.getElementById('pubSlotName').value = slot;
+  publishM3U();
+}
+
+function sanitizePubSlot(name) {
+  return name.replace(/[.#$/[\]\s]+/g,'_').replace(/^_+|_+$/g,'').toLowerCase() || 'default';
+}
+
+// Init pub history on load
+renderPubHistory();
+if (pubHistory.length) {
+  const latest = pubHistory[0];
+  document.getElementById('pubSlotName').value = latest.slot;
+  showPubResult(latest.rawUrl || latest.url, latest.url);
+}
+
 let fbReady       = false;
 let activeSlot    = 'default';
 let autoSave      = true;
@@ -2799,6 +3452,13 @@ async function fbSaveNow() {
 
     updateCloudStats();
     toast(`บันทึก "${activeSlot}" → Firebase แล้ว (${playlist.length} รายการ)`, 'success');
+
+    // Auto-publish public link if enabled
+    const autoPublish = document.getElementById('pubAutoUpdate');
+    if (autoPublish && autoPublish.checked) {
+      document.getElementById('pubSlotName').value = activeSlot;
+      await publishM3U();
+    }
   } catch(e) {
     setFbStatus('error', '❌ บันทึกไม่สำเร็จ: ' + e.message);
     if (saveEl) saveEl.textContent = '❌ ' + e.message;
