@@ -6,6 +6,33 @@
 <title>M3U Studio — Video & Stream Playlist Editor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, remove, onValue, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyCgwWtRfU-VP4JK8EegFEMgubAID2vmYUg",
+    authDomain: "lineorder-69d5d.firebaseapp.com",
+    databaseURL: "https://lineorder-69d5d-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "lineorder-69d5d",
+    storageBucket: "lineorder-69d5d.firebasestorage.app",
+    messagingSenderId: "325494140904",
+    appId: "1:325494140904:web:a0a6094cbf65cc3c817e5d"
+  };
+  const _fbApp = initializeApp(firebaseConfig);
+  const _db = getDatabase(_fbApp);
+  window.__db = _db;
+  window.__ref = ref;
+  window.__set = set;
+  window.__get = get;
+  window.__push = push;
+  window.__remove = remove;
+  window.__onValue = onValue;
+  window.__serverTimestamp = serverTimestamp;
+  window.__firebaseReady = true;
+  document.dispatchEvent(new CustomEvent("firebase-ready"));
+</script>
 <style>
   :root {
     --bg: #0a0a0f;
@@ -708,6 +735,134 @@
   .empty-icon { font-size: 36px; margin-bottom: 12px; display: block; }
   .empty-text { font-size: 14px; font-weight: 600; }
   .empty-sub  { font-size: 12px; margin-top: 4px; color: #50507080; }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  /* ── FINDER LOG ── */
+  .finder-log {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text2);
+    max-height: 80px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+
+  /* ── FOUND ITEM ── */
+  .found-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .found-item:last-child { border-bottom: none; }
+  .found-item:hover { background: rgba(124,106,247,0.04); }
+
+  .found-item-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .found-item-info { flex: 1; min-width: 0; }
+  .found-item-name {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .found-item-url {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent3);
+    word-break: break-all;
+    line-height: 1.5;
+  }
+  .found-item-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .found-item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── URL IMPORT STATUS ── */
+  .import-status-ok  { color: var(--green); }
+  .import-status-err { color: var(--red); }
+  .import-status-loading { color: var(--yellow); }
+
+  /* ── FIREBASE SYNC BAR ── */
+  .fb-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 600;
+    position: sticky; top: 83px; z-index: 90;
+  }
+  .fb-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); flex-shrink: 0;
+    transition: background 0.4s;
+  }
+  .fb-dot.connected  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .fb-dot.syncing    { background: var(--yellow); animation: pulse 1s infinite; }
+  .fb-dot.error      { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .fb-status { color: var(--text2); flex: 1; }
+  .fb-playlist-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; color: var(--accent);
+    background: rgba(124,106,247,0.12);
+    padding: 2px 8px; border-radius: 4px;
+    max-width: 200px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ── PLAYLIST SAVED CARDS ── */
+  .playlist-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .playlist-card:hover { background: rgba(124,106,247,0.06); }
+  .playlist-card:last-child { border-bottom: none; }
+  .playlist-card-icon { font-size: 24px; flex-shrink: 0; }
+  .playlist-card-info { flex: 1; min-width: 0; }
+  .playlist-card-name { font-size: 13px; font-weight: 700; }
+  .playlist-card-meta { font-size: 11px; color: var(--text2); font-family:'Space Mono',monospace; margin-top:3px; }
+  .playlist-card-actions { display:flex; gap:6px; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -730,13 +885,24 @@
   </div>
 </header>
 
+<!-- Firebase Sync Bar -->
+<div class="fb-bar" id="fbBar">
+  <div class="fb-dot" id="fbDot"></div>
+  <span class="fb-status" id="fbStatus">กำลังเชื่อมต่อ Firebase...</span>
+  <span class="fb-playlist-name" id="fbPlaylistLabel" style="display:none"></span>
+  <button class="btn btn-secondary btn-sm" onclick="openCloudModal()" style="margin-left:auto">☁️ Cloud</button>
+  <button class="btn btn-primary btn-sm" onclick="fbSaveNow()" id="fbSaveBtn" disabled>💾 บันทึก</button>
+</div>
+
 <div class="container">
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('import')">📥 นำเข้า/สร้าง</button>
     <button class="tab-btn" onclick="switchTab('edit')">✏️ แก้ไขรายการ</button>
     <button class="tab-btn" onclick="switchTab('bulk')">⚡ แก้ไขเป็นชุด</button>
     <button class="tab-btn" onclick="switchTab('tags')">🏷 จัดการ Tags</button>
+    <button class="tab-btn" onclick="switchTab('finder')">🔍 ค้นหา Stream</button>
     <button class="tab-btn" onclick="switchTab('preview')">👁 ดูตัวอย่าง M3U</button>
+    <button class="tab-btn" onclick="switchTab('cloud')">☁️ Firebase Cloud</button>
   </div>
 
   <div class="main-panel">
@@ -747,6 +913,38 @@
 
         <!-- Left: Input methods -->
         <div>
+          <!-- Import from URL -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>นำเข้าจาก URL</div>
+              <span class="header-badge" style="font-size:10px">LIVE FETCH</span>
+            </div>
+            <div class="card-body">
+              <label>URL ของไฟล์ M3U / M3U8</label>
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <input type="text" id="importUrl" placeholder="https://example.com/playlist.m3u8" style="margin:0;flex:1">
+                <button class="btn btn-primary" onclick="importFromUrl()" style="white-space:nowrap">📡 โหลด</button>
+              </div>
+              <div id="urlImportHistory" style="display:none">
+                <label>ประวัติ URL ล่าสุด</label>
+                <div id="urlHistoryList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+              </div>
+              <div id="importUrlStatus" style="display:none" class="text-muted mono" style="font-size:11px"></div>
+              <div style="margin-top:8px">
+                <label>CORS Proxy (ถ้า URL ไม่รองรับ CORS โดยตรง)</label>
+                <select id="corsProxy">
+                  <option value="direct">ตรง (Direct) — ถ้าเซิร์ฟเวอร์รองรับ CORS</option>
+                  <option value="allorigins">allorigins.win</option>
+                  <option value="corsproxy">corsproxy.io</option>
+                  <option value="custom">Custom Proxy...</option>
+                </select>
+                <div id="customProxyWrap" style="display:none">
+                  <input type="text" id="customProxyUrl" placeholder="https://myproxy.com/fetch?url=">
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Upload file -->
           <div class="card" style="margin-bottom:16px">
             <div class="card-header">
@@ -1123,6 +1321,125 @@
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════ TAB: FINDER ══ -->
+    <div id="tab-finder" class="tab-content">
+      <div class="two-col">
+        <!-- Left: controls -->
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>🔍 ค้นหา Streaming Links จากเว็บไซต์</div>
+            </div>
+            <div class="card-body">
+              <label>URL เว็บไซต์ที่ต้องการค้นหา</label>
+              <div style="display:flex;gap:8px;margin-bottom:12px">
+                <input type="text" id="finderUrl" placeholder="https://example.com/live" style="margin:0;flex:1">
+                <button class="btn btn-primary" onclick="runFinder()" id="finderBtn">🔎 ค้นหา</button>
+              </div>
+
+              <div class="check-row">
+                <input type="checkbox" id="finderDeep" checked>
+                <label class="check-label" for="finderDeep">วิเคราะห์เนื้อหาเชิงลึก (ผ่าน AI)</label>
+              </div>
+              <div class="check-row">
+                <input type="checkbox" id="finderM3u8" checked>
+                <label class="check-label" for="finderM3u8">ค้นหา .m3u8 / HLS streams</label>
+              </div>
+              <div class="check-row">
+                <input type="checkbox" id="finderMp4" checked>
+                <label class="check-label" for="finderMp4">ค้นหา .mp4 / video files</label>
+              </div>
+              <div class="check-row">
+                <input type="checkbox" id="finderRtmp">
+                <label class="check-label" for="finderRtmp">ค้นหา rtmp:// / rtsp://</label>
+              </div>
+
+              <hr>
+              <label>CORS Proxy สำหรับดึงหน้าเว็บ</label>
+              <select id="finderProxy">
+                <option value="allorigins">allorigins.win (แนะนำ)</option>
+                <option value="corsproxy">corsproxy.io</option>
+                <option value="direct">ตรง (Direct)</option>
+              </select>
+
+              <hr>
+              <label>ชื่อเริ่มต้นสำหรับรายการที่พบ</label>
+              <input type="text" id="finderDefaultName" placeholder="Stream จาก {domain}">
+              <label>กลุ่ม (group-title)</label>
+              <input type="text" id="finderDefaultGroup" placeholder="Found Streams">
+            </div>
+          </div>
+
+          <!-- Batch URLs -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--yellow)"></span>ค้นหาหลาย URL พร้อมกัน</div>
+              <button class="btn btn-secondary btn-sm" onclick="addFinderUrlRow()">+ เพิ่ม</button>
+            </div>
+            <div class="card-body">
+              <div id="finderBatchList">
+                <div class="url-list-item">
+                  <input type="text" placeholder="https://site1.com/live" class="finder-batch-url">
+                  <button class="tag-remove" onclick="this.parentElement.remove()">×</button>
+                </div>
+              </div>
+              <button class="btn btn-primary mt-8" onclick="runBatchFinder()">🚀 ค้นหาทั้งหมด</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: results -->
+        <div>
+          <!-- Progress -->
+          <div id="finderProgress" style="display:none" class="card" style="margin-bottom:16px">
+            <div class="card-body">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                <div class="spinner"></div>
+                <span id="finderProgressText" style="font-size:13px;font-weight:600">กำลังค้นหา...</span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar" id="finderProgressBar" style="width:0%"></div>
+              </div>
+              <div id="finderLog" class="finder-log"></div>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--green)"></span>ผลลัพธ์ที่พบ</div>
+              <div class="btn-group">
+                <span id="finderResultCount" class="select-count">ยังไม่ได้ค้นหา</span>
+                <button class="btn btn-success btn-sm" onclick="addAllFoundToPlaylist()">➕ เพิ่มทั้งหมด</button>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div id="finderResults">
+                <div class="empty-state" style="padding:50px">
+                  <span class="empty-icon">🔭</span>
+                  <div class="empty-text">ยังไม่มีผลลัพธ์</div>
+                  <div class="empty-sub">กรอก URL แล้วกด ค้นหา</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Analysis -->
+          <div class="card" style="margin-top:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent)"></span>🤖 AI วิเคราะห์หน้าเว็บ</div>
+            </div>
+            <div class="card-body">
+              <label>วาง HTML / Source Code ของหน้าเว็บ</label>
+              <textarea id="finderHtmlInput" placeholder="วาง HTML source code หรือ JavaScript ของหน้าเว็บที่ต้องการค้นหา stream links..." style="min-height:100px;font-size:11px"></textarea>
+              <button class="btn btn-primary btn-sm" onclick="analyzeHtmlWithAI()">🤖 วิเคราะห์ด้วย AI</button>
+              <div id="aiAnalysisResult" style="display:none;margin-top:12px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══════════════════════════════════════════════ TAB: PREVIEW ══ -->
     <div id="tab-preview" class="tab-content">
       <div class="two-col">
@@ -1182,7 +1499,135 @@
       </div>
     </div>
 
-  </div><!-- main-panel -->
+    <!-- ══════════════════════════════════════════════ TAB: CLOUD ══ -->
+    <div id="tab-cloud" class="tab-content">
+      <div class="two-col">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--green)"></span>สถานะการเชื่อมต่อ</div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                <div class="fb-dot connected" style="width:12px;height:12px" id="cloudStatusDot"></div>
+                <span style="font-size:14px;font-weight:700" id="cloudStatusText">กำลังเชื่อมต่อ...</span>
+              </div>
+              <div class="three-col" style="margin-bottom:14px">
+                <div><div class="stat-num" id="cloudStatEntries">—</div><div class="stat-label">รายการ</div></div>
+                <div><div class="stat-num" id="cloudStatSaved">—</div><div class="stat-label">บันทึกล่าสุด</div></div>
+                <div><div class="stat-num" id="cloudStatSlots">—</div><div class="stat-label">Slots</div></div>
+              </div>
+              <div>
+                <label>Playlist ที่ใช้งาน</label>
+                <div style="display:flex;gap:8px">
+                  <input type="text" id="activePlaylistName" value="default" style="margin:0;flex:1">
+                  <button class="btn btn-primary" onclick="switchActivePlaylist()">เปลี่ยน</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent)"></span>บันทึกและโหลด</div>
+            </div>
+            <div class="card-body">
+              <div class="check-row">
+                <input type="checkbox" id="autoSaveToggle" checked onchange="toggleAutoSave(this.checked)">
+                <label class="check-label" for="autoSaveToggle">Auto-save ทุกครั้งที่แก้ไข</label>
+              </div>
+              <div class="check-row">
+                <input type="checkbox" id="realtimeSyncToggle" onchange="toggleRealtimeSync(this.checked)">
+                <label class="check-label" for="realtimeSyncToggle">Real-time sync (หลายอุปกรณ์)</label>
+              </div>
+              <hr>
+              <div class="btn-group">
+                <button class="btn btn-primary" onclick="fbSaveNow()">💾 บันทึกตอนนี้</button>
+                <button class="btn btn-secondary" onclick="fbLoadCurrent()">📂 โหลดจาก Firebase</button>
+                <button class="btn btn-danger btn-sm" onclick="fbDeletePlaylist()">🗑 ลบ Playlist นี้</button>
+              </div>
+              <div id="saveStatus" style="margin-top:10px;font-size:12px;font-family:'Space Mono',monospace;color:var(--text2)"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>ประวัติการบันทึก</div>
+              <button class="btn btn-secondary btn-sm" onclick="loadSaveHistory()">🔄 รีเฟรช</button>
+            </div>
+            <div class="card-body" id="saveHistoryList">
+              <div class="text-muted">กดรีเฟรชเพื่อดูประวัติ</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--yellow)"></span>Playlists ที่บันทึกใน Firebase</div>
+              <button class="btn btn-secondary btn-sm" onclick="loadPlaylistList()">🔄 รีเฟรช</button>
+            </div>
+            <div class="card-body" style="padding:0" id="firebasePlaylistList">
+              <div style="padding:20px" class="text-muted">กดรีเฟรชเพื่อดู playlists</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>Database Path Info</div>
+            </div>
+            <div class="card-body">
+              <label>Root Path</label>
+              <div class="output-area" style="min-height:auto;padding:10px;font-size:11px;color:var(--accent3)">m3u_studio/playlists/{playlistName}/entries</div>
+              <label style="margin-top:10px">โครงสร้างข้อมูล</label>
+              <div class="output-area" style="min-height:auto;padding:10px;font-size:10px">{
+  "name": "Channel Name",
+  "url": "https://...",
+  "duration": "-1",
+  "tags": {
+    "group-title": "...",
+    "tvg-logo": "...",
+    "tvg-language": "..."
+  },
+  "updatedAt": 1234567890
+}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- main-panel end -->
+
+  <!-- ══ CLOUD MODAL ══ -->
+  <div class="modal-overlay" id="cloudModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">☁️ Firebase Cloud — บันทึก/โหลด Playlist</div>
+        <button class="modal-close" onclick="document.getElementById('cloudModal').classList.remove('open')">×</button>
+      </div>
+      <div class="modal-body">
+        <label>ชื่อ Playlist (Slot)</label>
+        <input type="text" id="cloudPlaylistName" placeholder="เช่น My IPTV, Home TV, Work..." value="default">
+        <div class="btn-group mt-8" style="margin-bottom:16px">
+          <button class="btn btn-primary" onclick="fbSaveAs()">💾 บันทึกเป็นชื่อนี้</button>
+          <button class="btn btn-secondary" onclick="fbLoad()">📂 โหลด</button>
+          <button class="btn btn-danger" onclick="fbDeletePlaylist()">🗑 ลบ</button>
+        </div>
+        <hr>
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">📋 Playlists ที่บันทึกไว้</div>
+        <div id="cloudPlaylistList">
+          <div class="text-muted" style="font-size:12px">กำลังโหลด...</div>
+        </div>
+        <hr>
+        <div style="font-size:11px;color:var(--text2)">
+          🔄 Auto-save: บันทึกอัตโนมัติทุกครั้งที่แก้ไข<br>
+          📡 Real-time sync: หลายอุปกรณ์ใช้ playlist เดียวกันได้<br>
+          🗂 Path: <span class="mono" style="color:var(--accent3)">m3u_studio/playlists/{name}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div><!-- container -->
 
 <!-- ── EDIT MODAL ── -->
@@ -1249,14 +1694,16 @@ let urlCount = 1;
 //  TABS
 // ══════════════════════════════════════════════════════════════
 function switchTab(id) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  const tabs = ['import','edit','bulk','tags','preview'];
+  const tabs = ['import','edit','bulk','tags','finder','preview','cloud'];
   const idx = tabs.indexOf(id);
+  if (idx < 0) return;
   document.querySelectorAll('.tab-btn')[idx].classList.add('active');
   document.getElementById('tab-'+id).classList.add('active');
-  if (id === 'edit') renderTable();
+  if (id === 'edit')    renderTable();
   if (id === 'preview') refreshPreview();
+  if (id === 'cloud')   { loadPlaylistList(); loadSaveHistory(); updateCloudStats(); }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1839,10 +2286,766 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ══════════════════════════════════════════════════════════════
+//  IMPORT FROM URL
+// ══════════════════════════════════════════════════════════════
+let urlHistory = JSON.parse(localStorage.getItem('m3u_url_history') || '[]');
+
+document.getElementById('corsProxy').addEventListener('change', function() {
+  document.getElementById('customProxyWrap').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+function buildProxiedUrl(url, proxyKey) {
+  if (proxyKey === 'direct') return url;
+  if (proxyKey === 'allorigins') return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  if (proxyKey === 'corsproxy')  return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  if (proxyKey === 'custom') {
+    const base = document.getElementById('customProxyUrl').value.trim();
+    return base + encodeURIComponent(url);
+  }
+  return url;
+}
+
+async function importFromUrl() {
+  const url = document.getElementById('importUrl').value.trim();
+  if (!url) { toast('กรุณาใส่ URL','error'); return; }
+  const proxy = document.getElementById('corsProxy').value;
+  const status = document.getElementById('importUrlStatus');
+  status.style.display = 'block';
+  status.className = 'mono import-status-loading';
+  status.textContent = '⏳ กำลังโหลด...';
+
+  try {
+    const fetchUrl = buildProxiedUrl(url, proxy);
+    const res = await fetch(fetchUrl, { signal: AbortSignal.timeout(20000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+
+    if (!text.includes('#EXTM3U') && !text.includes('#EXTINF') && !text.includes('.m3u8') && !text.includes('.mp4')) {
+      throw new Error('ไม่พบเนื้อหา M3U ที่ถูกต้อง');
+    }
+
+    const before = playlist.length;
+    parseM3U(text);
+    const added = playlist.length - before;
+
+    status.className = 'mono import-status-ok';
+    status.textContent = `✅ โหลดสำเร็จ เพิ่ม ${added} รายการ`;
+
+    // Save to history
+    urlHistory = [url, ...urlHistory.filter(u => u !== url)].slice(0, 10);
+    try { localStorage.setItem('m3u_url_history', JSON.stringify(urlHistory)); } catch(e) {}
+    renderUrlHistory();
+  } catch(e) {
+    status.className = 'mono import-status-err';
+    status.textContent = `❌ โหลดไม่สำเร็จ: ${e.message}. ลอง CORS Proxy อื่น`;
+    toast('โหลด URL ล้มเหลว — ลองเปลี่ยน CORS Proxy', 'error');
+  }
+}
+
+function renderUrlHistory() {
+  const list = document.getElementById('urlHistoryList');
+  const wrap = document.getElementById('urlImportHistory');
+  if (!urlHistory.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = urlHistory.map(u => `
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--accent3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u)}</span>
+      <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:10px" onclick="document.getElementById('importUrl').value='${esc(u)}';importFromUrl()">↩ โหลด</button>
+      <button class="tag-remove" style="width:24px;height:24px;font-size:12px" onclick="removeUrlHistory('${esc(u)}')">×</button>
+    </div>
+  `).join('');
+}
+
+function removeUrlHistory(url) {
+  urlHistory = urlHistory.filter(u => u !== url);
+  try { localStorage.setItem('m3u_url_history', JSON.stringify(urlHistory)); } catch(e) {}
+  renderUrlHistory();
+}
+
+// Init history on load
+renderUrlHistory();
+
+// ══════════════════════════════════════════════════════════════
+//  STREAM FINDER
+// ══════════════════════════════════════════════════════════════
+let foundStreams = [];
+
+const STREAM_PATTERNS = [
+  { re: /https?:\/\/[^\s"'<>]+\.m3u8[^\s"'<>]*/gi,  type: 'hls',  label: 'HLS/M3U8',  icon: '📡' },
+  { re: /https?:\/\/[^\s"'<>]+\.mp4[^\s"'<>]*/gi,   type: 'mp4',  label: 'MP4',       icon: '🎬' },
+  { re: /https?:\/\/[^\s"'<>]+\.ts[^\s"'<>]*/gi,    type: 'ts',   label: 'MPEG-TS',   icon: '📺' },
+  { re: /rtmp:\/\/[^\s"'<>]+/gi,                    type: 'rtmp', label: 'RTMP',      icon: '🔴' },
+  { re: /rtsp:\/\/[^\s"'<>]+/gi,                    type: 'rtsp', label: 'RTSP',      icon: '📷' },
+  { re: /https?:\/\/[^\s"'<>]+\/manifest[^\s"'<>]*/gi, type: 'dash', label: 'DASH/Manifest', icon: '📦' },
+  { re: /https?:\/\/[^\s"'<>]+\/playlist[^\s"'<>]*\.m3u[^\s"'<>]*/gi, type: 'hls', label: 'Playlist', icon: '📋' },
+  { re: /["'](https?:\/\/[^\s"'<>]+(?:stream|live|video|play)[^\s"'<>]*)["']/gi, type: 'generic', label: 'Stream URL', icon: '🔗' },
+];
+
+function proxyUrlForFinder(url) {
+  const p = document.getElementById('finderProxy').value;
+  if (p === 'direct') return url;
+  if (p === 'allorigins') return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  if (p === 'corsproxy')  return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  return url;
+}
+
+function finderLog(msg) {
+  const log = document.getElementById('finderLog');
+  log.innerHTML += msg + '\n';
+  log.scrollTop = log.scrollHeight;
+}
+
+function setProgress(pct) {
+  document.getElementById('finderProgressBar').style.width = pct + '%';
+}
+
+async function runFinder() {
+  const url = document.getElementById('finderUrl').value.trim();
+  if (!url) { toast('กรุณาใส่ URL เว็บไซต์','error'); return; }
+  await runFinderOnUrl(url);
+}
+
+async function runFinderOnUrl(url) {
+  foundStreams = [];
+  document.getElementById('finderProgress').style.display = 'block';
+  document.getElementById('finderLog').textContent = '';
+  document.getElementById('finderBtn').disabled = true;
+  document.getElementById('finderProgressText').textContent = 'กำลังดึงหน้าเว็บ...';
+  setProgress(10);
+
+  try {
+    finderLog(`🌐 กำลังเข้าถึง: ${url}`);
+    const fetchUrl = proxyUrlForFinder(url);
+    const res = await fetch(fetchUrl, { signal: AbortSignal.timeout(25000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    setProgress(40);
+    finderLog(`📄 ดาวน์โหลดสำเร็จ (${(html.length/1024).toFixed(1)} KB)`);
+
+    document.getElementById('finderProgressText').textContent = 'วิเคราะห์เนื้อหา...';
+    setProgress(60);
+
+    // Extract streams from HTML
+    const streams = extractStreamsFromText(html, url);
+    finderLog(`🔍 พบ pattern ${streams.length} รายการ`);
+    setProgress(80);
+
+    // AI deep analysis
+    if (document.getElementById('finderDeep').checked && streams.length === 0) {
+      finderLog(`🤖 ไม่พบ pattern ตรงๆ — ส่งให้ AI วิเคราะห์...`);
+      document.getElementById('finderProgressText').textContent = 'AI กำลังวิเคราะห์...';
+      const aiStreams = await aiExtractFromHtml(html, url);
+      streams.push(...aiStreams);
+      finderLog(`🤖 AI พบเพิ่ม ${aiStreams.length} รายการ`);
+    }
+
+    foundStreams = dedupStreams(streams);
+    setProgress(100);
+    document.getElementById('finderProgressText').textContent = `✅ เสร็จสิ้น — พบ ${foundStreams.length} stream`;
+    finderLog(`✅ พบทั้งหมด ${foundStreams.length} รายการ (หลังกรองซ้ำ)`);
+
+    renderFinderResults();
+  } catch(e) {
+    finderLog(`❌ ข้อผิดพลาด: ${e.message}`);
+    document.getElementById('finderProgressText').textContent = '❌ ล้มเหลว: ' + e.message;
+    toast('ค้นหาล้มเหลว — ลองเปลี่ยน CORS Proxy', 'error');
+  } finally {
+    document.getElementById('finderBtn').disabled = false;
+    setTimeout(() => {
+      document.getElementById('finderProgress').style.display = 'none';
+    }, 3000);
+  }
+}
+
+function extractStreamsFromText(text, sourceUrl) {
+  const results = [];
+  const wantM3u8  = document.getElementById('finderM3u8').checked;
+  const wantMp4   = document.getElementById('finderMp4').checked;
+  const wantRtmp  = document.getElementById('finderRtmp').checked;
+
+  // Decode HTML entities for better matching
+  const decoded = text.replace(/&amp;/g,'&').replace(/&#x2F;/g,'/').replace(/&#47;/g,'/');
+
+  for (const pat of STREAM_PATTERNS) {
+    if (!wantM3u8 && (pat.type === 'hls' || pat.type === 'dash')) continue;
+    if (!wantMp4  && (pat.type === 'mp4' || pat.type === 'ts'))   continue;
+    if (!wantRtmp && (pat.type === 'rtmp' || pat.type === 'rtsp')) continue;
+
+    pat.re.lastIndex = 0;
+    let m;
+    while ((m = pat.re.exec(decoded)) !== null) {
+      let url = (m[1] || m[0]).replace(/['"\\]+$/, '').replace(/\\n.*$/,'').trim();
+      // Clean up common garbage
+      url = url.replace(/[,;)\]}>]+$/, '').replace(/\\u0026/g,'&');
+      if (url.length < 10) continue;
+      try { new URL(url); } catch { continue; }
+      results.push({ url, type: pat.type, label: pat.label, icon: pat.icon, source: sourceUrl });
+    }
+  }
+
+  // Also look for src= attributes containing video URLs
+  const srcRe = /src=["']([^"']+(?:\.m3u8|\.mp4|stream|live)[^"']*)["']/gi;
+  srcRe.lastIndex = 0;
+  let sm;
+  while ((sm = srcRe.exec(decoded)) !== null) {
+    let url = sm[1];
+    if (!url.startsWith('http')) {
+      try { url = new URL(url, sourceUrl).href; } catch { continue; }
+    }
+    try { new URL(url); } catch { continue; }
+    const isM3u8 = url.includes('.m3u8');
+    if ((isM3u8 && !wantM3u8) || (!isM3u8 && !wantMp4)) continue;
+    results.push({ url, type: isM3u8 ? 'hls' : 'mp4', label: isM3u8 ? 'HLS/M3U8' : 'MP4', icon: isM3u8 ? '📡' : '🎬', source: sourceUrl });
+  }
+
+  return results;
+}
+
+function dedupStreams(arr) {
+  const seen = new Set();
+  return arr.filter(s => {
+    if (seen.has(s.url)) return false;
+    seen.add(s.url);
+    return true;
+  });
+}
+
+async function aiExtractFromHtml(html, sourceUrl) {
+  // Send a trimmed version to Claude API
+  const snippet = html.slice(0, 12000); // first 12KB
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a stream URL extractor. Analyze HTML/JavaScript source code and extract ALL streaming video/audio URLs. Return ONLY a JSON array of objects with fields: url (string), type (hls|mp4|rtmp|rtsp|dash|generic), label (string). No explanation, no markdown, no backticks. Just the raw JSON array.`,
+        messages: [{ role: 'user', content: `Extract all streaming URLs from this source:\n\nPage: ${sourceUrl}\n\nSource:\n${snippet}` }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(c => c.type === 'text')?.text || '[]';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const arr = JSON.parse(clean);
+    return arr.map(item => ({
+      url: item.url,
+      type: item.type || 'generic',
+      label: item.label || 'Stream',
+      icon: item.type === 'hls' ? '📡' : item.type === 'mp4' ? '🎬' : item.type === 'rtmp' ? '🔴' : '🔗',
+      source: sourceUrl,
+      fromAI: true
+    }));
+  } catch(e) {
+    return [];
+  }
+}
+
+async function analyzeHtmlWithAI() {
+  const html = document.getElementById('finderHtmlInput').value.trim();
+  if (!html) { toast('กรุณาวาง HTML source code','error'); return; }
+
+  const resultEl = document.getElementById('aiAnalysisResult');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><div class="spinner"></div><span style="font-size:13px">AI กำลังวิเคราะห์...</span></div>`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: `You are a streaming URL extractor. Extract all video/audio streaming URLs from HTML/JS code. Return ONLY a JSON array: [{url, type, label, confidence}]. Types: hls, mp4, rtmp, rtsp, dash, generic. confidence: high/medium/low. No markdown, no backticks, raw JSON only.`,
+        messages: [{ role: 'user', content: `Extract streaming URLs:\n\n${html.slice(0,15000)}` }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(c => c.type === 'text')?.text || '[]';
+    const clean = text.replace(/```json|```/g,'').trim();
+    let items = [];
+    try { items = JSON.parse(clean); } catch { items = []; }
+
+    if (!items.length) {
+      resultEl.innerHTML = `<div style="color:var(--text2);font-size:13px">🤖 AI ไม่พบ streaming URL ในเนื้อหาที่ให้มา</div>`;
+      return;
+    }
+
+    // Add to foundStreams
+    items.forEach(item => {
+      foundStreams.push({
+        url: item.url,
+        type: item.type || 'generic',
+        label: item.label || 'AI Found',
+        icon: item.type === 'hls' ? '📡' : item.type === 'mp4' ? '🎬' : '🔗',
+        source: 'AI Analysis',
+        fromAI: true,
+        confidence: item.confidence
+      });
+    });
+    foundStreams = dedupStreams(foundStreams);
+    renderFinderResults();
+    resultEl.innerHTML = `<div style="color:var(--green);font-size:13px">✅ AI พบ ${items.length} รายการ — แสดงในผลลัพธ์ด้านบนแล้ว</div>`;
+  } catch(e) {
+    resultEl.innerHTML = `<div style="color:var(--red);font-size:13px">❌ AI วิเคราะห์ล้มเหลว: ${e.message}</div>`;
+  }
+}
+
+function renderFinderResults() {
+  const el = document.getElementById('finderResults');
+  const count = document.getElementById('finderResultCount');
+  count.textContent = `พบ ${foundStreams.length} รายการ`;
+
+  if (!foundStreams.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:40px"><span class="empty-icon">😔</span><div class="empty-text">ไม่พบ streaming links</div><div class="empty-sub">ลองเปลี่ยน CORS Proxy หรือวาง HTML ใน AI Analyzer</div></div>`;
+    return;
+  }
+
+  el.innerHTML = foundStreams.map((s, i) => `
+    <div class="found-item">
+      <div class="found-item-icon">${s.icon}</div>
+      <div class="found-item-info">
+        <div class="found-item-name">${esc(guessStreamName(s.url, i))} ${s.fromAI ? '<span class="badge" style="background:rgba(124,106,247,0.2);color:var(--accent)">AI</span>' : ''}</div>
+        <div class="found-item-url">${esc(s.url)}</div>
+        <div class="found-item-meta">
+          <span class="badge badge-stream">${s.label}</span>
+          ${s.confidence ? `<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--green)">${s.confidence}</span>` : ''}
+          <span class="text-muted" style="font-size:10px">${esc(getDomain(s.source))}</span>
+        </div>
+      </div>
+      <div class="found-item-actions">
+        <button class="btn btn-success btn-sm" onclick="addFoundToPlaylist(${i})">➕ เพิ่ม</button>
+        <button class="btn btn-secondary btn-sm" onclick="copyUrl('${esc(s.url)}')">📋</button>
+        <button class="btn btn-danger btn-sm" onclick="removeFound(${i})">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function guessStreamName(url, i) {
+  const defName = document.getElementById('finderDefaultName').value.trim();
+  if (defName && !defName.includes('{')) return `${defName} ${i+1}`;
+  try {
+    const u = new URL(url);
+    const domainName = u.hostname.replace('www.','');
+    if (defName.includes('{domain}')) return defName.replace('{domain}', domainName);
+    const path = u.pathname.split('/').filter(Boolean).pop() || 'stream';
+    return `${domainName} — ${path.replace(/\.[^.]+$/,'')}`.slice(0,60);
+  } catch { return `Stream ${i+1}`; }
+}
+
+function getDomain(url) {
+  try { return new URL(url).hostname; } catch { return url; }
+}
+
+function addFoundToPlaylist(i) {
+  const s = foundStreams[i];
+  const group = document.getElementById('finderDefaultGroup').value.trim() || 'Found Streams';
+  playlist.push({
+    name: guessStreamName(s.url, i),
+    url: s.url,
+    duration: '-1',
+    tags: { 'group-title': group },
+    selected: false
+  });
+  updateStats(); renderRecent();
+  toast(`เพิ่ม stream แล้ว`, 'success');
+}
+
+function addAllFoundToPlaylist() {
+  if (!foundStreams.length) { toast('ไม่มีรายการให้เพิ่ม','error'); return; }
+  const group = document.getElementById('finderDefaultGroup').value.trim() || 'Found Streams';
+  foundStreams.forEach((s, i) => {
+    playlist.push({
+      name: guessStreamName(s.url, i),
+      url: s.url,
+      duration: '-1',
+      tags: { 'group-title': group },
+      selected: false
+    });
+  });
+  updateStats(); renderRecent();
+  toast(`เพิ่ม ${foundStreams.length} stream เข้าเพลย์ลิสต์แล้ว`, 'success');
+}
+
+function removeFound(i) {
+  foundStreams.splice(i, 1);
+  renderFinderResults();
+}
+
+function copyUrl(url) {
+  navigator.clipboard.writeText(url).then(() => toast('คัดลอก URL แล้ว', 'success'));
+}
+
+function addFinderUrlRow() {
+  const div = document.createElement('div');
+  div.className = 'url-list-item';
+  div.innerHTML = `<input type="text" placeholder="https://..." class="finder-batch-url"><button class="tag-remove" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('finderBatchList').appendChild(div);
+}
+
+async function runBatchFinder() {
+  const urls = Array.from(document.querySelectorAll('.finder-batch-url'))
+    .map(i => i.value.trim()).filter(Boolean);
+  if (!urls.length) { toast('กรุณาใส่ URL อย่างน้อย 1 รายการ','error'); return; }
+
+  foundStreams = [];
+  for (let i = 0; i < urls.length; i++) {
+    document.getElementById('finderUrl').value = urls[i];
+    toast(`🔍 กำลังค้นหา ${i+1}/${urls.length}: ${getDomain(urls[i])}`, 'info');
+    await runFinderOnUrl(urls[i]);
+    await new Promise(r => setTimeout(r, 800));
+  }
+  toast(`เสร็จสิ้น — พบ ${foundStreams.length} stream จาก ${urls.length} URL`, 'success');
+}
+
 // Close modal on overlay click
 document.getElementById('editModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
+document.getElementById('cloudModal').addEventListener('click', function(e) {
+  if (e.target === this) e.target.classList.remove('open');
+});
+
+// ══════════════════════════════════════════════════════════════
+//  FIREBASE INTEGRATION
+// ══════════════════════════════════════════════════════════════
+let fbReady       = false;
+let activeSlot    = 'default';
+let autoSave      = true;
+let rtUnsubscribe = null;
+let saveTimer     = null;
+let lastSavedAt   = null;
+
+// ── Wait for Firebase module to signal ready ──
+document.addEventListener('firebase-ready', () => {
+  fbReady = true;
+  setFbStatus('connected', '🔥 Firebase พร้อมใช้งาน');
+  document.getElementById('fbSaveBtn').disabled = false;
+  loadPlaylistList();
+  fbLoadCurrent();
+});
+
+// Fallback: check after 5s
+setTimeout(() => {
+  if (!fbReady) setFbStatus('error', '⚠️ Firebase เชื่อมต่อไม่สำเร็จ — ตรวจสอบ Realtime DB rules');
+}, 5000);
+
+function setFbStatus(state, msg) {
+  const dot = document.getElementById('fbDot');
+  const status = document.getElementById('fbStatus');
+  dot.className = 'fb-dot ' + state;
+  status.textContent = msg;
+
+  // Also update cloud tab
+  const cdot = document.getElementById('cloudStatusDot');
+  const ctxt = document.getElementById('cloudStatusText');
+  if (cdot) cdot.className = 'fb-dot ' + state;
+  if (ctxt) ctxt.textContent = msg;
+}
+
+function fbPath(slot) {
+  return `m3u_studio/playlists/${slot}/entries`;
+}
+
+function fbMetaPath(slot) {
+  return `m3u_studio/playlists/${slot}/meta`;
+}
+
+// ── Save playlist to Firebase ──
+async function fbSaveNow() {
+  if (!fbReady) { toast('Firebase ยังไม่พร้อม', 'error'); return; }
+  if (!playlist.length) { toast('ไม่มีรายการให้บันทึก', 'error'); return; }
+
+  setFbStatus('syncing', '⏳ กำลังบันทึก...');
+  const saveEl = document.getElementById('saveStatus');
+  if (saveEl) saveEl.textContent = '⏳ กำลังบันทึก...';
+
+  try {
+    const db  = window.__db;
+    const ref = window.__ref;
+    const set = window.__set;
+    const ts  = window.__serverTimestamp;
+
+    // Serialize playlist (strip 'selected' flag, clean undefined)
+    const data = {};
+    playlist.forEach((e, i) => {
+      data[`entry_${String(i).padStart(5,'0')}`] = {
+        name:     e.name     || '',
+        url:      e.url      || '',
+        duration: e.duration || '-1',
+        tags:     e.tags     || {}
+      };
+    });
+
+    await set(ref(db, fbPath(activeSlot)), data);
+
+    // Save meta
+    await set(ref(db, fbMetaPath(activeSlot)), {
+      count:     playlist.length,
+      updatedAt: Date.now(),
+      slot:      activeSlot
+    });
+
+    lastSavedAt = new Date();
+    const timeStr = lastSavedAt.toLocaleTimeString('th-TH');
+    setFbStatus('connected', `✅ บันทึกแล้ว เวลา ${timeStr}`);
+    if (saveEl) saveEl.textContent = `✅ บันทึก ${playlist.length} รายการ เวลา ${timeStr}`;
+
+    const lbl = document.getElementById('fbPlaylistLabel');
+    lbl.style.display = 'inline';
+    lbl.textContent   = activeSlot;
+
+    updateCloudStats();
+    toast(`บันทึก "${activeSlot}" → Firebase แล้ว (${playlist.length} รายการ)`, 'success');
+  } catch(e) {
+    setFbStatus('error', '❌ บันทึกไม่สำเร็จ: ' + e.message);
+    if (saveEl) saveEl.textContent = '❌ ' + e.message;
+    toast('บันทึกล้มเหลว: ' + e.message, 'error');
+    console.error(e);
+  }
+}
+
+// ── Load playlist from Firebase ──
+async function fbLoadCurrent() {
+  if (!fbReady) { toast('Firebase ยังไม่พร้อม','error'); return; }
+  setFbStatus('syncing','⏳ กำลังโหลด...');
+
+  try {
+    const db  = window.__db;
+    const ref = window.__ref;
+    const get = window.__get;
+
+    const snap = await get(ref(db, fbPath(activeSlot)));
+    if (!snap.exists()) {
+      setFbStatus('connected', `☁️ ไม่พบข้อมูลใน slot "${activeSlot}" — เริ่มต้นใหม่`);
+      return;
+    }
+
+    const data = snap.val();
+    const loaded = Object.values(data).map(e => ({
+      name:     e.name     || '',
+      url:      e.url      || '',
+      duration: e.duration || '-1',
+      tags:     e.tags     || {},
+      selected: false
+    }));
+
+    playlist = loaded;
+    updateStats(); renderRecent(); renderTable();
+    setFbStatus('connected', `📂 โหลด "${activeSlot}" สำเร็จ (${loaded.length} รายการ)`);
+    toast(`โหลด "${activeSlot}" จาก Firebase แล้ว — ${loaded.length} รายการ`, 'success');
+    updateCloudStats();
+  } catch(e) {
+    setFbStatus('error','❌ โหลดไม่สำเร็จ: ' + e.message);
+    toast('โหลดล้มเหลว: ' + e.message, 'error');
+    console.error(e);
+  }
+}
+
+// ── Auto-save trigger (debounced 3s) ──
+function triggerAutoSave() {
+  if (!autoSave || !fbReady) return;
+  clearTimeout(saveTimer);
+  setFbStatus('syncing','⏳ รอ auto-save...');
+  saveTimer = setTimeout(fbSaveNow, 3000);
+}
+
+// ── Toggle auto-save ──
+function toggleAutoSave(val) {
+  autoSave = val;
+  toast(val ? 'เปิด Auto-save แล้ว' : 'ปิด Auto-save แล้ว', 'info');
+}
+
+// ── Toggle real-time sync ──
+function toggleRealtimeSync(val) {
+  if (val) {
+    startRealtimeSync();
+    toast('เปิด Real-time sync แล้ว', 'success');
+  } else {
+    if (rtUnsubscribe) { rtUnsubscribe(); rtUnsubscribe = null; }
+    toast('ปิด Real-time sync แล้ว', 'info');
+  }
+}
+
+function startRealtimeSync() {
+  if (!fbReady) return;
+  if (rtUnsubscribe) rtUnsubscribe();
+  const db      = window.__db;
+  const ref     = window.__ref;
+  const onValue = window.__onValue;
+
+  rtUnsubscribe = onValue(ref(db, fbPath(activeSlot)), snap => {
+    if (!snap.exists()) return;
+    const data = snap.val();
+    const loaded = Object.values(data).map(e => ({
+      name: e.name||'', url: e.url||'', duration: e.duration||'-1', tags: e.tags||{}, selected:false
+    }));
+    // Only update if different count (avoid loop)
+    if (loaded.length !== playlist.length) {
+      playlist = loaded;
+      updateStats(); renderRecent(); renderTable();
+      setFbStatus('connected','🔄 Real-time sync อัพเดทแล้ว');
+    }
+  });
+}
+
+// ── Save As (from modal / cloud panel) ──
+async function fbSaveAs() {
+  const name = document.getElementById('cloudPlaylistName').value.trim();
+  if (!name) { toast('กรุณาใส่ชื่อ Playlist','error'); return; }
+  activeSlot = sanitizeSlot(name);
+  document.getElementById('activePlaylistName').value = activeSlot;
+  document.getElementById('cloudModal').classList.remove('open');
+  await fbSaveNow();
+  loadPlaylistList();
+}
+
+async function fbLoad() {
+  const name = document.getElementById('cloudPlaylistName').value.trim();
+  if (!name) { toast('กรุณาใส่ชื่อ Playlist','error'); return; }
+  activeSlot = sanitizeSlot(name);
+  document.getElementById('activePlaylistName').value = activeSlot;
+  document.getElementById('cloudModal').classList.remove('open');
+  await fbLoadCurrent();
+}
+
+async function fbDeletePlaylist() {
+  const name = document.getElementById('cloudPlaylistName').value.trim() || activeSlot;
+  if (!confirm(`ลบ Playlist "${name}" จาก Firebase?`)) return;
+  try {
+    const db  = window.__db;
+    const ref = window.__ref;
+    const rem = window.__remove;
+    await rem(ref(db, `m3u_studio/playlists/${sanitizeSlot(name)}`));
+    toast(`ลบ "${name}" แล้ว`, 'success');
+    loadPlaylistList();
+  } catch(e) { toast('ลบไม่สำเร็จ: '+e.message,'error'); }
+}
+
+function switchActivePlaylist() {
+  const name = document.getElementById('activePlaylistName').value.trim();
+  if (!name) return;
+  activeSlot = sanitizeSlot(name);
+  if (rtUnsubscribe) startRealtimeSync(); // re-attach to new path
+  fbLoadCurrent();
+}
+
+function sanitizeSlot(name) {
+  return name.replace(/[.#$/[\]]/g,'_').trim() || 'default';
+}
+
+// ── Load list of all saved playlists ──
+async function loadPlaylistList() {
+  if (!fbReady) return;
+  try {
+    const db  = window.__db;
+    const ref = window.__ref;
+    const get = window.__get;
+
+    const snap = await get(ref(db, 'm3u_studio/playlists'));
+    const listEl = document.getElementById('firebasePlaylistList');
+    const modalListEl = document.getElementById('cloudPlaylistList');
+
+    if (!snap.exists()) {
+      const empty = '<div style="padding:20px" class="text-muted">ยังไม่มี Playlist ที่บันทึกไว้</div>';
+      if (listEl) listEl.innerHTML = empty;
+      if (modalListEl) modalListEl.innerHTML = empty;
+      document.getElementById('cloudStatSlots').textContent = '0';
+      return;
+    }
+
+    const slots = snap.val();
+    const keys = Object.keys(slots);
+    document.getElementById('cloudStatSlots').textContent = keys.length;
+
+    const renderCard = (key) => {
+      const meta  = slots[key]?.meta || {};
+      const count = meta.count || Object.keys(slots[key]?.entries||{}).length;
+      const ts    = meta.updatedAt ? new Date(meta.updatedAt).toLocaleString('th-TH') : '—';
+      const isActive = key === activeSlot;
+      return `
+        <div class="playlist-card" onclick="loadSlot('${esc(key)}')">
+          <div class="playlist-card-icon">${isActive ? '📌' : '📋'}</div>
+          <div class="playlist-card-info">
+            <div class="playlist-card-name">${esc(key)} ${isActive ? '<span class="badge badge-stream">active</span>' : ''}</div>
+            <div class="playlist-card-meta">${count} รายการ · บันทึก ${ts}</div>
+          </div>
+          <div class="playlist-card-actions">
+            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();loadSlot('${esc(key)}')">📂 โหลด</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteSlot('${esc(key)}')">🗑</button>
+          </div>
+        </div>`;
+    };
+
+    const html = keys.map(renderCard).join('');
+    if (listEl) listEl.innerHTML = html;
+    if (modalListEl) modalListEl.innerHTML = html;
+  } catch(e) {
+    console.error('loadPlaylistList error:', e);
+  }
+}
+
+async function loadSlot(key) {
+  activeSlot = key;
+  document.getElementById('activePlaylistName').value = key;
+  document.getElementById('cloudPlaylistName').value  = key;
+  document.getElementById('cloudModal').classList.remove('open');
+  await fbLoadCurrent();
+  loadPlaylistList();
+}
+
+async function deleteSlot(key) {
+  if (!confirm(`ลบ Playlist "${key}"?`)) return;
+  try {
+    const db  = window.__db;
+    const ref = window.__ref;
+    const rem = window.__remove;
+    await rem(ref(db, `m3u_studio/playlists/${key}`));
+    toast(`ลบ "${key}" แล้ว`, 'success');
+    loadPlaylistList();
+  } catch(e) { toast('ลบไม่สำเร็จ','error'); }
+}
+
+async function loadSaveHistory() {
+  // Show last 10 meta snapshots (stored as time-keyed children)
+  const el = document.getElementById('saveHistoryList');
+  if (!el) return;
+  el.innerHTML = '<div class="text-muted">กำลังโหลด...</div>';
+  try {
+    const db  = window.__db;
+    const ref = window.__ref;
+    const get = window.__get;
+    const snap = await get(ref(db, fbMetaPath(activeSlot)));
+    if (!snap.exists()) { el.innerHTML='<div class="text-muted">ไม่มีประวัติ</div>'; return; }
+    const m = snap.val();
+    el.innerHTML = `<div style="padding:10px;font-size:12px;font-family:'Space Mono',monospace">
+      <div>📋 Slot: <span style="color:var(--accent)">${esc(m.slot||activeSlot)}</span></div>
+      <div>📦 รายการ: <span style="color:var(--green)">${m.count||0}</span></div>
+      <div>🕐 อัพเดท: <span style="color:var(--accent3)">${m.updatedAt ? new Date(m.updatedAt).toLocaleString('th-TH') : '—'}</span></div>
+    </div>`;
+  } catch(e) { el.innerHTML=`<div class="text-muted">โหลดไม่สำเร็จ: ${e.message}</div>`; }
+}
+
+function updateCloudStats() {
+  const el1 = document.getElementById('cloudStatEntries');
+  const el2 = document.getElementById('cloudStatSaved');
+  if (el1) el1.textContent = playlist.length;
+  if (el2) el2.textContent = lastSavedAt ? lastSavedAt.toLocaleTimeString('th-TH') : '—';
+}
+
+function openCloudModal() {
+  loadPlaylistList();
+  document.getElementById('cloudModal').classList.add('open');
+}
+
+// ── Patch playlist-mutating functions to trigger auto-save ──
+const _origUpdateStats = updateStats;
+window.updateStats = function() {
+  _origUpdateStats();
+  triggerAutoSave();
+};
 </script>
 </body>
 </html>
