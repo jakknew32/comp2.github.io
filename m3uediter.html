@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M3U Studio — Video & Stream Playlist Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --surface3: #22222f;
+    --border: #2a2a3d;
+    --accent: #7c6af7;
+    --accent2: #f06292;
+    --accent3: #26d0ce;
+    --text: #e8e8f0;
+    --text2: #9090b0;
+    --text3: #5050708;
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow blobs */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(124,106,247,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 28px 0 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(16px);
+    z-index: 100;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .header-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    background: rgba(38,208,206,0.1);
+    border: 1px solid rgba(38,208,206,0.25);
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+
+  .header-actions { display: flex; gap: 10px; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 20px 0 0;
+    position: relative; z-index: 1;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+
+  .tab-btn.active {
+    background: var(--surface);
+    border-color: var(--border);
+    border-bottom-color: var(--surface);
+    color: var(--text);
+    margin-bottom: -1px;
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .tab-btn { position: relative; }
+
+  /* ── MAIN PANEL ── */
+  .main-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    min-height: 70vh;
+    margin-bottom: 40px;
+  }
+
+  .tab-content { display: none; padding: 24px; }
+  .tab-content.active { display: block; }
+
+  /* ── GRID LAYOUTS ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .two-col, .three-col { grid-template-columns: 1fr; }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .card-body { padding: 18px; }
+
+  /* ── FORM ELEMENTS ── */
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text2);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  input[type="text"], input[type="url"], input[type="number"], select, textarea {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    padding: 9px 12px;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,106,247,0.15);
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.6;
+  }
+
+  select option { background: var(--surface3); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 7px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.18s;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #6a57e8; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,106,247,0.4); }
+
+  .btn-secondary {
+    background: var(--surface3);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn-secondary:hover { background: var(--surface2); border-color: var(--accent); }
+
+  .btn-danger {
+    background: rgba(248,113,113,0.15);
+    color: var(--red);
+    border-color: rgba(248,113,113,0.3);
+  }
+  .btn-danger:hover { background: rgba(248,113,113,0.25); }
+
+  .btn-success {
+    background: rgba(74,222,128,0.15);
+    color: var(--green);
+    border-color: rgba(74,222,128,0.3);
+  }
+  .btn-success:hover { background: rgba(74,222,128,0.25); }
+
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ── DROP ZONE ── */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(124,106,247,0.06);
+  }
+
+  .drop-zone input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+    margin: 0;
+  }
+
+  .drop-icon {
+    font-size: 38px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .drop-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .drop-sub {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── PLAYLIST TABLE ── */
+  .playlist-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  th {
+    background: var(--surface3);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text2);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(42,42,61,0.6);
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(124,106,247,0.04); }
+
+  td input[type="text"] {
+    margin: 0;
+    padding: 5px 8px;
+    font-size: 11px;
+    background: var(--surface3);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-video { background: rgba(124,106,247,0.2); color: var(--accent); }
+  .badge-stream { background: rgba(38,208,206,0.2); color: var(--accent3); }
+  .badge-m3u { background: rgba(251,191,36,0.2); color: var(--yellow); }
+
+  /* ── OUTPUT ── */
+  .output-area {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--accent3);
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .output-area .line-extinf { color: var(--accent); }
+  .output-area .line-url { color: var(--accent3); }
+  .output-area .line-header { color: var(--yellow); font-weight: 700; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    padding: 12px 0;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    color: var(--text2);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── BULK EDIT ── */
+  .bulk-field {
+    display: grid;
+    grid-template-columns: 140px 1fr 80px;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 10px;
+  }
+
+  .bulk-field select, .bulk-field input { margin-bottom: 0; }
+
+  /* ── TAG BUILDER ── */
+  .tag-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 36px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+
+  .tag-row select, .tag-row input { margin-bottom: 0; }
+
+  .tag-remove {
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.25);
+    color: var(--red);
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+
+  .tag-remove:hover { background: rgba(248,113,113,0.25); }
+
+  /* ── ENTRY EDITOR MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(5,5,10,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .modal-close {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .modal-close:hover { color: var(--text); background: var(--surface2); }
+
+  .modal-body { padding: 22px; }
+
+  /* ── TOAST ── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: toastIn 0.3s ease;
+    min-width: 240px;
+  }
+
+  .toast.success { border-color: rgba(74,222,128,0.4); }
+  .toast.error   { border-color: rgba(248,113,113,0.4); }
+  .toast.info    { border-color: rgba(124,106,247,0.4); }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  /* ── URL LIST ── */
+  .url-list-item {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+
+  .url-list-item input { margin: 0; flex: 1; }
+
+  /* ── CHECKBOX ── */
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .check-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* ── SELECT ALL ── */
+  .table-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .select-count {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── SEARCH/FILTER BAR ── */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .filter-bar input, .filter-bar select {
+    margin: 0;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  .mono { font-family: 'Space Mono', monospace; }
+
+  .text-accent { color: var(--accent); }
+  .text-muted  { color: var(--text2); font-size: 12px; }
+
+  .mt-8  { margin-top: 8px; }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .gap-8 { gap: 8px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text2);
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 12px; display: block; }
+  .empty-text { font-size: 14px; font-weight: 600; }
+  .empty-sub  { font-size: 12px; margin-top: 4px; color: #50507080; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">▶</div>
+        <div>
+          <div class="logo-text">M3U <span>Studio</span></div>
+        </div>
+      </div>
+      <div class="header-badge">VIDEO → M3U CONVERTER</div>
+      <div class="header-actions">
+        <button class="btn btn-success btn-sm" onclick="downloadM3U()">⬇ ดาวน์โหลด M3U</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearAll()">🗑 ล้างข้อมูล</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('import')">📥 นำเข้า/สร้าง</button>
+    <button class="tab-btn" onclick="switchTab('edit')">✏️ แก้ไขรายการ</button>
+    <button class="tab-btn" onclick="switchTab('bulk')">⚡ แก้ไขเป็นชุด</button>
+    <button class="tab-btn" onclick="switchTab('tags')">🏷 จัดการ Tags</button>
+    <button class="tab-btn" onclick="switchTab('preview')">👁 ดูตัวอย่าง M3U</button>
+  </div>
+
+  <div class="main-panel">
+
+    <!-- ══════════════════════════════════════════════ TAB: IMPORT ══ -->
+    <div id="tab-import" class="tab-content active">
+      <div class="two-col">
+
+        <!-- Left: Input methods -->
+        <div>
+          <!-- Upload file -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot"></span>อัพโหลดไฟล์</div>
+            </div>
+            <div class="card-body">
+              <div class="drop-zone" id="dropZone">
+                <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt" multiple onchange="handleFileUpload(this.files)">
+                <span class="drop-icon">📂</span>
+                <div class="drop-title">ลากวางไฟล์ หรือคลิกเพื่อเลือก</div>
+                <div class="drop-sub">.m3u · .m3u8 · .txt — รองรับหลายไฟล์พร้อมกัน</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add URLs manually -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>เพิ่ม URL ด้วยตนเอง</div>
+              <button class="btn btn-secondary btn-sm" onclick="addUrlRow()">+ เพิ่ม</button>
+            </div>
+            <div class="card-body">
+              <div id="urlList">
+                <div class="url-list-item">
+                  <input type="text" placeholder="https://example.com/video.mp4 หรือ stream.m3u8" id="urlInput0">
+                  <button class="tag-remove" onclick="this.parentElement.remove()">×</button>
+                </div>
+              </div>
+              <hr>
+              <div class="three-col">
+                <div>
+                  <label>ชื่อช่อง (tvg-name)</label>
+                  <input type="text" id="quickName" placeholder="ชื่อช่อง">
+                </div>
+                <div>
+                  <label>กลุ่ม (group-title)</label>
+                  <input type="text" id="quickGroup" placeholder="Movies, Sports...">
+                </div>
+                <div>
+                  <label>ภาษา (tvg-language)</label>
+                  <input type="text" id="quickLang" placeholder="Thai, English">
+                </div>
+              </div>
+              <div class="two-col">
+                <div>
+                  <label>โลโก้ (tvg-logo)</label>
+                  <input type="text" id="quickLogo" placeholder="https://logo.png">
+                </div>
+                <div>
+                  <label>tvg-id</label>
+                  <input type="text" id="quickId" placeholder="channel.th">
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="addUrlsToPlaylist()">➕ เพิ่มลงเพลย์ลิสต์</button>
+            </div>
+          </div>
+
+          <!-- Paste raw text -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>วาง M3U Text</div>
+            </div>
+            <div class="card-body">
+              <textarea id="rawPaste" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-name=&quot;Channel 1&quot;,Channel 1&#10;https://example.com/stream.m3u8&#10;&#10;วางเนื้อหา M3U/M3U8 ได้เลย..."></textarea>
+              <button class="btn btn-primary" onclick="parsePaste()">📋 แยกวิเคราะห์และนำเข้า</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Stats + recent -->
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--green)"></span>สถิติเพลย์ลิสต์</div>
+            </div>
+            <div class="card-body">
+              <div class="stats-bar">
+                <div class="stat-item">
+                  <div>
+                    <div class="stat-num" id="statTotal">0</div>
+                    <div class="stat-label">รายการทั้งหมด</div>
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div>
+                    <div class="stat-num" id="statGroups">0</div>
+                    <div class="stat-label">กลุ่ม</div>
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div>
+                    <div class="stat-num" id="statVideo">0</div>
+                    <div class="stat-label">Video</div>
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div>
+                    <div class="stat-num" id="statStream">0</div>
+                    <div class="stat-label">Stream</div>
+                  </div>
+                </div>
+              </div>
+              <hr>
+              <div class="check-row">
+                <input type="checkbox" id="optExtm3u" checked>
+                <label class="check-label" for="optExtm3u">เพิ่ม #EXTM3U header</label>
+              </div>
+              <div>
+                <label>Header Attributes (เช่น url-tvg="")</label>
+                <input type="text" id="headerAttrs" placeholder='url-tvg="http://epg.example.com/epg.xml"'>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--yellow)"></span>รายการล่าสุด</div>
+            </div>
+            <div class="card-body" id="recentList">
+              <div class="empty-state">
+                <span class="empty-icon">📝</span>
+                <div class="empty-text">ยังไม่มีรายการ</div>
+                <div class="empty-sub">เพิ่มรายการจากด้านซ้าย</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ TAB: EDIT ══ -->
+    <div id="tab-edit" class="tab-content">
+      <div class="section-header">
+        <div class="section-title">รายการเพลย์ลิสต์ทั้งหมด</div>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="sortEntries('name')">🔤 เรียงชื่อ</button>
+          <button class="btn btn-secondary btn-sm" onclick="sortEntries('group')">📂 เรียงกลุ่ม</button>
+          <button class="btn btn-secondary btn-sm" onclick="sortEntries('url')">🔗 เรียง URL</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="filterSearch" placeholder="🔍 ค้นหาชื่อ / URL / กลุ่ม..." oninput="renderTable()">
+        <select id="filterGroup" onchange="renderTable()">
+          <option value="">กลุ่มทั้งหมด</option>
+        </select>
+        <select id="filterType" onchange="renderTable()">
+          <option value="">ประเภททั้งหมด</option>
+          <option value="video">Video</option>
+          <option value="stream">Stream (m3u8)</option>
+        </select>
+      </div>
+
+      <div class="table-actions">
+        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)">
+        <label class="check-label" for="selectAll">เลือกทั้งหมด</label>
+        <span class="select-count" id="selectCount">0 รายการ</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteSelected()">🗑 ลบที่เลือก</button>
+        <button class="btn btn-secondary btn-sm" onclick="duplicateSelected()">📋 ทำสำเนา</button>
+        <button class="btn btn-secondary btn-sm" onclick="moveSelectedUp()">↑ ขึ้น</button>
+        <button class="btn btn-secondary btn-sm" onclick="moveSelectedDown()">↓ ลง</button>
+      </div>
+
+      <div class="playlist-table-wrap" id="tableWrap">
+        <div class="empty-state" style="padding:60px 20px">
+          <span class="empty-icon">🎬</span>
+          <div class="empty-text">เพลย์ลิสต์ว่างเปล่า</div>
+          <div class="empty-sub">ไปที่แท็บ "นำเข้า/สร้าง" เพื่อเพิ่มรายการ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ TAB: BULK ══ -->
+    <div id="tab-bulk" class="tab-content">
+      <div class="two-col">
+
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot"></span>แก้ไขเป็นชุด — ตั้งค่า</div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:14px">กำหนดค่าที่ต้องการเปลี่ยน (เว้นว่างเพื่อไม่เปลี่ยน)</p>
+
+              <div id="bulkFields">
+                <div class="bulk-field">
+                  <select onchange="">
+                    <option value="group-title">group-title</option>
+                    <option value="tvg-language">tvg-language</option>
+                    <option value="tvg-logo">tvg-logo</option>
+                    <option value="tvg-id">tvg-id</option>
+                    <option value="tvg-name">tvg-name</option>
+                    <option value="tvg-country">tvg-country</option>
+                    <option value="radio">radio</option>
+                  </select>
+                  <input type="text" placeholder="ค่าใหม่...">
+                  <button class="btn btn-danger btn-sm" onclick="this.closest('.bulk-field').remove()">×</button>
+                </div>
+              </div>
+
+              <button class="btn btn-secondary btn-sm mt-8" onclick="addBulkField()">+ เพิ่มฟิลด์</button>
+
+              <hr>
+              <label>ขอบเขตการแก้ไข</label>
+              <select id="bulkScope">
+                <option value="all">รายการทั้งหมด</option>
+                <option value="selected">เฉพาะรายการที่เลือก</option>
+                <option value="group">เฉพาะกลุ่มที่ระบุ</option>
+              </select>
+
+              <div id="bulkGroupFilter" style="display:none">
+                <label>ชื่อกลุ่ม</label>
+                <input type="text" id="bulkGroupName" placeholder="ชื่อกลุ่ม...">
+              </div>
+
+              <button class="btn btn-primary mt-12" onclick="applyBulkEdit()">⚡ ใช้การแก้ไข</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>Find & Replace URL</div>
+            </div>
+            <div class="card-body">
+              <label>ค้นหา (ใน URL)</label>
+              <input type="text" id="findUrl" placeholder="https://old-server.com">
+              <label>แทนที่ด้วย</label>
+              <input type="text" id="replaceUrl" placeholder="https://new-server.com">
+              <div class="check-row mt-8">
+                <input type="checkbox" id="findRegex">
+                <label class="check-label" for="findRegex">ใช้ Regular Expression</label>
+              </div>
+              <button class="btn btn-primary mt-8" onclick="applyFindReplace()">🔄 แทนที่ URL</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>เพิ่ม/ลบ Prefix ชื่อ</div>
+            </div>
+            <div class="card-body">
+              <label>เพิ่ม Prefix ที่ต้นชื่อ</label>
+              <input type="text" id="addPrefix" placeholder="[TH] ">
+              <label>เพิ่ม Suffix ที่ท้ายชื่อ</label>
+              <input type="text" id="addSuffix" placeholder=" (HD)">
+              <label>ลบข้อความออกจากชื่อ</label>
+              <input type="text" id="removeText" placeholder="ข้อความที่ต้องการลบ">
+              <div class="btn-group mt-8">
+                <button class="btn btn-primary" onclick="applyNameTransform()">✅ ใช้กับชื่อ</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--yellow)"></span>จัดการกลุ่ม</div>
+            </div>
+            <div class="card-body">
+              <label>เปลี่ยนชื่อกลุ่ม</label>
+              <input type="text" id="renameGroupFrom" placeholder="ชื่อกลุ่มเดิม">
+              <input type="text" id="renameGroupTo" placeholder="ชื่อกลุ่มใหม่">
+              <button class="btn btn-primary btn-sm mt-8" onclick="renameGroup()">↪ เปลี่ยนชื่อกลุ่ม</button>
+              <hr>
+              <label>ย้ายกลุ่ม → กลุ่มใหม่</label>
+              <input type="text" id="mergeGroupFrom" placeholder="กลุ่มที่จะย้าย">
+              <input type="text" id="mergeGroupTo" placeholder="กลุ่มปลายทาง">
+              <button class="btn btn-secondary btn-sm mt-8" onclick="mergeGroup()">🔀 รวมกลุ่ม</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ TAB: TAGS ══ -->
+    <div id="tab-tags" class="tab-content">
+      <div class="two-col">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot"></span>Tag Builder — เพิ่ม Tag ให้รายการที่เลือก</div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:14px">เพิ่ม tag attributes ให้กับรายการที่เลือกในแท็บ แก้ไขรายการ</p>
+              <div id="tagRows">
+                <div class="tag-row">
+                  <select>
+                    <option value="tvg-name">tvg-name</option>
+                    <option value="tvg-id">tvg-id</option>
+                    <option value="tvg-logo">tvg-logo</option>
+                    <option value="tvg-language">tvg-language</option>
+                    <option value="tvg-country">tvg-country</option>
+                    <option value="tvg-epg">tvg-epg</option>
+                    <option value="group-title">group-title</option>
+                    <option value="radio">radio</option>
+                    <option value="tvg-shift">tvg-shift</option>
+                    <option value="catchup">catchup</option>
+                    <option value="catchup-source">catchup-source</option>
+                    <option value="catchup-days">catchup-days</option>
+                    <option value="custom">custom...</option>
+                  </select>
+                  <input type="text" placeholder="ค่า tag...">
+                  <button class="tag-remove" onclick="this.closest('.tag-row').remove()">×</button>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm mt-8" onclick="addTagRow()">+ เพิ่ม Tag</button>
+              <hr>
+              <button class="btn btn-primary" onclick="applyTagsToSelected()">🏷 ใส่ Tags ให้รายการที่เลือก</button>
+              <button class="btn btn-secondary mt-8" onclick="applyTagsToAll()" style="margin-left:8px">🌐 ใส่ Tags ให้ทุกรายการ</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--red)"></span>ลบ Tag</div>
+            </div>
+            <div class="card-body">
+              <label>เลือก Tag ที่จะลบ</label>
+              <select id="removeTagKey">
+                <option value="tvg-logo">tvg-logo</option>
+                <option value="tvg-language">tvg-language</option>
+                <option value="tvg-country">tvg-country</option>
+                <option value="tvg-id">tvg-id</option>
+                <option value="tvg-epg">tvg-epg</option>
+                <option value="catchup">catchup</option>
+                <option value="catchup-source">catchup-source</option>
+                <option value="radio">radio</option>
+              </select>
+              <div class="btn-group mt-8">
+                <button class="btn btn-danger btn-sm" onclick="removeTagFromSelected()">🗑 ลบจากรายการที่เลือก</button>
+                <button class="btn btn-danger btn-sm" onclick="removeTagFromAll()">🗑 ลบจากทุกรายการ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>Tag Reference</div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:14px">รายการ tag มาตรฐาน M3U/IPTV</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tag</th>
+                    <th>คำอธิบาย</th>
+                    <th>ตัวอย่าง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>tvg-name</td><td>ชื่อช่อง</td><td>CH3 HD</td></tr>
+                  <tr><td>tvg-id</td><td>รหัสช่องสำหรับ EPG</td><td>ch3.th</td></tr>
+                  <tr><td>tvg-logo</td><td>URL โลโก้</td><td>http://logo.png</td></tr>
+                  <tr><td>tvg-language</td><td>ภาษา</td><td>Thai</td></tr>
+                  <tr><td>tvg-country</td><td>ประเทศ</td><td>TH</td></tr>
+                  <tr><td>tvg-shift</td><td>ปรับเวลา EPG</td><td>+7</td></tr>
+                  <tr><td>group-title</td><td>ชื่อกลุ่ม/หมวดหมู่</td><td>News</td></tr>
+                  <tr><td>radio</td><td>ระบุว่าเป็นวิทยุ</td><td>true</td></tr>
+                  <tr><td>catchup</td><td>ประเภท Catchup</td><td>default</td></tr>
+                  <tr><td>catchup-days</td><td>จำนวนวัน catchup</td><td>7</td></tr>
+                  <tr><td>catchup-source</td><td>แหล่ง catchup</td><td>http://...</td></tr>
+                  <tr><td>tvg-epg</td><td>URL ข้อมูล EPG</td><td>http://epg...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ TAB: PREVIEW ══ -->
+    <div id="tab-preview" class="tab-content">
+      <div class="two-col">
+        <div>
+          <div class="section-header">
+            <div class="section-title">ตัวอย่างไฟล์ M3U</div>
+            <div class="btn-group">
+              <button class="btn btn-secondary btn-sm" onclick="refreshPreview()">🔄 รีเฟรช</button>
+              <button class="btn btn-primary btn-sm" onclick="copyM3U()">📋 คัดลอก</button>
+              <button class="btn btn-success btn-sm" onclick="downloadM3U()">⬇ ดาวน์โหลด</button>
+            </div>
+          </div>
+          <div class="output-area" id="previewOutput">
+            # กดปุ่ม "รีเฟรช" หรือเพิ่มรายการเพื่อดูตัวอย่าง
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title"><span class="dot"></span>ตัวเลือกการส่งออก</div>
+            </div>
+            <div class="card-body">
+              <label>ชื่อไฟล์</label>
+              <input type="text" id="exportFilename" value="playlist.m3u" placeholder="playlist.m3u">
+
+              <label>การเข้ารหัส</label>
+              <select id="exportEncoding">
+                <option value="utf-8">UTF-8 (แนะนำ)</option>
+                <option value="utf-8-bom">UTF-8 with BOM</option>
+              </select>
+
+              <div class="check-row">
+                <input type="checkbox" id="exportSortGroup">
+                <label class="check-label" for="exportSortGroup">เรียงตามกลุ่มก่อนส่งออก</label>
+              </div>
+              <div class="check-row">
+                <input type="checkbox" id="exportRemoveEmpty">
+                <label class="check-label" for="exportRemoveEmpty">ลบรายการที่ไม่มี URL</label>
+              </div>
+              <div class="check-row">
+                <input type="checkbox" id="exportAddDuration" checked>
+                <label class="check-label" for="exportAddDuration">ใส่ duration (-1) ใน EXTINF</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--green)"></span>สรุปก่อนส่งออก</div>
+            </div>
+            <div class="card-body" id="exportSummary">
+              <div class="text-muted">กดรีเฟรชเพื่ออัพเดท</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- main-panel -->
+</div><!-- container -->
+
+<!-- ── EDIT MODAL ── -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ แก้ไขรายการ</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editIdx">
+      <label>ชื่อรายการ (tvg-name / Display Name)</label>
+      <input type="text" id="editName" placeholder="ชื่อช่องหรือวิดีโอ">
+      <label>URL (video / stream)</label>
+      <input type="text" id="editUrl" placeholder="https://...">
+      <label>Duration (ค่าเริ่มต้น -1)</label>
+      <input type="text" id="editDuration" placeholder="-1" value="-1">
+
+      <hr>
+      <div class="three-col">
+        <div>
+          <label>tvg-id</label>
+          <input type="text" id="editTvgId" placeholder="">
+        </div>
+        <div>
+          <label>tvg-language</label>
+          <input type="text" id="editLang" placeholder="Thai">
+        </div>
+        <div>
+          <label>tvg-country</label>
+          <input type="text" id="editCountry" placeholder="TH">
+        </div>
+      </div>
+      <label>tvg-logo</label>
+      <input type="text" id="editLogo" placeholder="https://logo.png">
+      <label>group-title</label>
+      <input type="text" id="editGroup" placeholder="Movies, Sports, News...">
+
+      <hr>
+      <label>Tags เพิ่มเติม (key=value คั่นด้วยช่องว่าง)</label>
+      <input type="text" id="editExtra" placeholder='catchup="default" catchup-days="7"'>
+
+      <div class="btn-group mt-16">
+        <button class="btn btn-primary" onclick="saveEdit()">💾 บันทึก</button>
+        <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let playlist = []; // array of entry objects
+let urlCount = 1;
+
+// Entry structure:
+// { name, url, duration, tags: { tvg-id, tvg-logo, tvg-language, tvg-country, group-title, ...extra }, selected }
+
+// ══════════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const tabs = ['import','edit','bulk','tags','preview'];
+  const idx = tabs.indexOf(id);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  if (id === 'edit') renderTable();
+  if (id === 'preview') refreshPreview();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  IMPORT — FILE
+// ══════════════════════════════════════════════════════════════
+function handleFileUpload(files) {
+  for (const file of files) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      parseM3U(e.target.result);
+      toast(`นำเข้า "${file.name}" สำเร็จ`, 'success');
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+}
+
+// Drag & drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  handleFileUpload(e.dataTransfer.files);
+});
+
+// ══════════════════════════════════════════════════════════════
+//  PARSE M3U
+// ══════════════════════════════════════════════════════════════
+function parseM3U(text) {
+  const lines = text.split(/\r?\n/);
+  let i = 0, added = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (line.startsWith('#EXTINF:')) {
+      const entry = parseExtinf(line);
+      // Next non-empty, non-comment line is URL
+      let j = i + 1;
+      while (j < lines.length && (lines[j].trim() === '' || lines[j].trim().startsWith('#'))) j++;
+      if (j < lines.length && lines[j].trim() !== '') {
+        entry.url = lines[j].trim();
+        playlist.push(entry);
+        added++;
+        i = j + 1;
+        continue;
+      }
+    }
+    i++;
+  }
+  updateStats();
+  renderRecent();
+  toast(`เพิ่ม ${added} รายการ`, 'success');
+}
+
+function parseExtinf(line) {
+  // #EXTINF:-1 key="val" key2="val2",Display Name
+  const entry = { name: '', url: '', duration: '-1', tags: {}, selected: false };
+
+  // Extract duration
+  const durMatch = line.match(/^#EXTINF:([-\d.]+)/);
+  if (durMatch) entry.duration = durMatch[1];
+
+  // Extract display name (after last comma)
+  const commaIdx = line.lastIndexOf(',');
+  if (commaIdx !== -1) entry.name = line.slice(commaIdx + 1).trim();
+
+  // Extract key="value" pairs
+  const attrStr = commaIdx !== -1 ? line.slice(0, commaIdx) : line;
+  const attrRe = /([\w-]+)="([^"]*)"/g;
+  let m;
+  while ((m = attrRe.exec(attrStr)) !== null) {
+    entry.tags[m[1]] = m[2];
+  }
+  // tvg-name as default name if no display name
+  if (!entry.name && entry.tags['tvg-name']) entry.name = entry.tags['tvg-name'];
+  return entry;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ADD URLs MANUALLY
+// ══════════════════════════════════════════════════════════════
+function addUrlRow() {
+  const div = document.createElement('div');
+  div.className = 'url-list-item';
+  div.innerHTML = `<input type="text" placeholder="https://..." id="urlInput${urlCount++}"><button class="tag-remove" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('urlList').appendChild(div);
+}
+
+function addUrlsToPlaylist() {
+  const urls = Array.from(document.querySelectorAll('#urlList input[type="text"]'))
+    .map(i => i.value.trim()).filter(Boolean);
+  if (!urls.length) { toast('กรุณาใส่ URL อย่างน้อย 1 รายการ', 'error'); return; }
+
+  const baseTags = {};
+  const lang = document.getElementById('quickLang').value.trim();
+  const logo = document.getElementById('quickLogo').value.trim();
+  const id   = document.getElementById('quickId').value.trim();
+  const grp  = document.getElementById('quickGroup').value.trim();
+  const name = document.getElementById('quickName').value.trim();
+  if (lang) baseTags['tvg-language'] = lang;
+  if (logo) baseTags['tvg-logo'] = logo;
+  if (id)   baseTags['tvg-id'] = id;
+  if (grp)  baseTags['group-title'] = grp;
+
+  urls.forEach((url, i) => {
+    playlist.push({
+      name: name || guessName(url, i),
+      url,
+      duration: '-1',
+      tags: { ...baseTags },
+      selected: false
+    });
+  });
+
+  updateStats(); renderRecent();
+  toast(`เพิ่ม ${urls.length} รายการ`, 'success');
+}
+
+function guessName(url, i) {
+  try {
+    const p = new URL(url).pathname;
+    const base = p.split('/').pop().replace(/\.[^.]+$/, '');
+    return base || `Entry ${playlist.length + i + 1}`;
+  } catch { return `Entry ${playlist.length + i + 1}`; }
+}
+
+function parsePaste() {
+  const text = document.getElementById('rawPaste').value.trim();
+  if (!text) { toast('กรุณาวางข้อมูล M3U', 'error'); return; }
+  parseM3U(text);
+  document.getElementById('rawPaste').value = '';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  STATS + RECENT
+// ══════════════════════════════════════════════════════════════
+function updateStats() {
+  document.getElementById('statTotal').textContent = playlist.length;
+  const groups = new Set(playlist.map(e => e.tags['group-title'] || '')).size;
+  document.getElementById('statGroups').textContent = groups;
+  const videos = playlist.filter(e => !e.url.includes('.m3u8')).length;
+  document.getElementById('statVideo').textContent = videos;
+  document.getElementById('statStream').textContent = playlist.length - videos;
+}
+
+function renderRecent() {
+  const el = document.getElementById('recentList');
+  const recent = playlist.slice(-8).reverse();
+  if (!recent.length) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">📝</span><div class="empty-text">ยังไม่มีรายการ</div></div>`;
+    return;
+  }
+  el.innerHTML = recent.map((e,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:16px">${e.url.includes('.m3u8') ? '📡' : '🎬'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.name || 'ไม่มีชื่อ')}</div>
+        <div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Space Mono',monospace">${esc(e.url)}</div>
+      </div>
+      <span class="badge ${e.url.includes('.m3u8') ? 'badge-stream' : 'badge-video'}">${e.url.includes('.m3u8') ? 'm3u8' : 'video'}</span>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EDIT TABLE
+// ══════════════════════════════════════════════════════════════
+function renderTable() {
+  const search = (document.getElementById('filterSearch').value || '').toLowerCase();
+  const grpF   = document.getElementById('filterGroup').value;
+  const typeF  = document.getElementById('filterType').value;
+
+  const filtered = playlist.map((e,i) => ({...e, _idx: i})).filter(e => {
+    if (search && !e.name.toLowerCase().includes(search) && !e.url.toLowerCase().includes(search) &&
+        !(e.tags['group-title']||'').toLowerCase().includes(search)) return false;
+    if (grpF && (e.tags['group-title']||'') !== grpF) return false;
+    if (typeF === 'video' && e.url.includes('.m3u8')) return false;
+    if (typeF === 'stream' && !e.url.includes('.m3u8')) return false;
+    return true;
+  });
+
+  // Update group filter
+  const groups = [...new Set(playlist.map(e => e.tags['group-title']||'').filter(Boolean))].sort();
+  const gSel = document.getElementById('filterGroup');
+  const gCur = gSel.value;
+  gSel.innerHTML = '<option value="">กลุ่มทั้งหมด</option>' + groups.map(g => `<option value="${esc(g)}" ${g===gCur?'selected':''}>${esc(g)}</option>`).join('');
+
+  const wrap = document.getElementById('tableWrap');
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:60px"><span class="empty-icon">🎬</span><div class="empty-text">${playlist.length ? 'ไม่พบรายการที่ค้นหา' : 'เพลย์ลิสต์ว่างเปล่า'}</div></div>`;
+    return;
+  }
+
+  const rows = filtered.map(e => `
+    <tr>
+      <td><input type="checkbox" onchange="toggleSelect(${e._idx}, this.checked)" ${e.selected?'checked':''}></td>
+      <td><span class="mono" style="color:var(--text2)">${e._idx+1}</span></td>
+      <td>
+        <div style="font-weight:600;font-size:13px">${esc(e.name || '<ไม่มีชื่อ>')}</div>
+        <div style="font-size:10px;color:var(--text2);font-family:'Space Mono',monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.url)}</div>
+      </td>
+      <td><span class="badge ${e.url.includes('.m3u8') ? 'badge-stream' : 'badge-video'}">${e.url.includes('.m3u8') ? 'stream' : 'video'}</span></td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.tags['group-title']||'—')}</td>
+      <td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.tags['tvg-language']||'—')}</td>
+      <td>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="openEdit(${e._idx})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEntry(${e._idx})">🗑</button>
+          <button class="btn btn-secondary btn-sm" onclick="moveEntry(${e._idx},-1)">↑</button>
+          <button class="btn btn-secondary btn-sm" onclick="moveEntry(${e._idx},1)">↓</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" id="selectAll2" onchange="toggleSelectAll(this.checked)"></th>
+        <th>#</th><th>ชื่อ / URL</th><th>ประเภท</th><th>กลุ่ม</th><th>ภาษา</th><th>จัดการ</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  const sel = playlist.filter(e => e.selected).length;
+  document.getElementById('selectCount').textContent = `${sel} รายการที่เลือก`;
+}
+
+function toggleSelect(idx, val) { playlist[idx].selected = val; updateSelectCount(); }
+function toggleSelectAll(val) { playlist.forEach(e => e.selected = val); renderTable(); }
+function updateSelectCount() {
+  const c = playlist.filter(e=>e.selected).length;
+  document.getElementById('selectCount').textContent = `${c} รายการที่เลือก`;
+}
+
+function deleteEntry(idx) { playlist.splice(idx,1); renderTable(); updateStats(); renderRecent(); }
+function deleteSelected() {
+  playlist = playlist.filter(e => !e.selected);
+  renderTable(); updateStats(); renderRecent();
+  toast('ลบรายการที่เลือกแล้ว','success');
+}
+function duplicateSelected() {
+  const dup = playlist.filter(e=>e.selected).map(e => ({...e, name: e.name+' (สำเนา)', selected: false, tags:{...e.tags}}));
+  playlist.push(...dup);
+  renderTable(); updateStats();
+  toast(`ทำสำเนา ${dup.length} รายการ`,'success');
+}
+function moveEntry(idx, dir) {
+  const ni = idx + dir;
+  if (ni < 0 || ni >= playlist.length) return;
+  [playlist[idx], playlist[ni]] = [playlist[ni], playlist[idx]];
+  renderTable();
+}
+function moveSelectedUp() {
+  for (let i = 1; i < playlist.length; i++) {
+    if (playlist[i].selected && !playlist[i-1].selected) [playlist[i],playlist[i-1]]=[playlist[i-1],playlist[i]];
+  }
+  renderTable();
+}
+function moveSelectedDown() {
+  for (let i = playlist.length-2; i >= 0; i--) {
+    if (playlist[i].selected && !playlist[i+1].selected) [playlist[i],playlist[i+1]]=[playlist[i+1],playlist[i]];
+  }
+  renderTable();
+}
+function sortEntries(by) {
+  if (by==='name') playlist.sort((a,b) => a.name.localeCompare(b.name));
+  if (by==='group') playlist.sort((a,b) => (a.tags['group-title']||'').localeCompare(b.tags['group-title']||''));
+  if (by==='url') playlist.sort((a,b) => a.url.localeCompare(b.url));
+  renderTable();
+  toast('เรียงลำดับแล้ว','info');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EDIT MODAL
+// ══════════════════════════════════════════════════════════════
+function openEdit(idx) {
+  const e = playlist[idx];
+  document.getElementById('editIdx').value = idx;
+  document.getElementById('editName').value = e.name;
+  document.getElementById('editUrl').value = e.url;
+  document.getElementById('editDuration').value = e.duration;
+  document.getElementById('editTvgId').value = e.tags['tvg-id'] || '';
+  document.getElementById('editLang').value = e.tags['tvg-language'] || '';
+  document.getElementById('editCountry').value = e.tags['tvg-country'] || '';
+  document.getElementById('editLogo').value = e.tags['tvg-logo'] || '';
+  document.getElementById('editGroup').value = e.tags['group-title'] || '';
+  // Extra tags
+  const reserved = new Set(['tvg-id','tvg-language','tvg-country','tvg-logo','group-title','tvg-name']);
+  const extra = Object.entries(e.tags).filter(([k]) => !reserved.has(k)).map(([k,v]) => `${k}="${v}"`).join(' ');
+  document.getElementById('editExtra').value = extra;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('editModal').classList.remove('open'); }
+
+function saveEdit() {
+  const idx = +document.getElementById('editIdx').value;
+  const e = playlist[idx];
+  e.name = document.getElementById('editName').value.trim();
+  e.url  = document.getElementById('editUrl').value.trim();
+  e.duration = document.getElementById('editDuration').value.trim() || '-1';
+  e.tags['tvg-id'] = document.getElementById('editTvgId').value.trim();
+  e.tags['tvg-language'] = document.getElementById('editLang').value.trim();
+  e.tags['tvg-country'] = document.getElementById('editCountry').value.trim();
+  e.tags['tvg-logo'] = document.getElementById('editLogo').value.trim();
+  e.tags['group-title'] = document.getElementById('editGroup').value.trim();
+  // Parse extra
+  const extra = document.getElementById('editExtra').value;
+  const re = /([\w-]+)="([^"]*)"/g; let m;
+  while ((m = re.exec(extra)) !== null) e.tags[m[1]] = m[2];
+  closeModal(); renderTable(); updateStats(); renderRecent();
+  toast('บันทึกแล้ว','success');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BULK EDIT
+// ══════════════════════════════════════════════════════════════
+function addBulkField() {
+  const div = document.createElement('div');
+  div.className = 'bulk-field';
+  div.innerHTML = `
+    <select>
+      <option value="group-title">group-title</option>
+      <option value="tvg-language">tvg-language</option>
+      <option value="tvg-logo">tvg-logo</option>
+      <option value="tvg-id">tvg-id</option>
+      <option value="tvg-name">tvg-name</option>
+      <option value="tvg-country">tvg-country</option>
+    </select>
+    <input type="text" placeholder="ค่าใหม่...">
+    <button class="btn btn-danger btn-sm" onclick="this.closest('.bulk-field').remove()">×</button>
+  `;
+  document.getElementById('bulkFields').appendChild(div);
+}
+
+document.getElementById('bulkScope').addEventListener('change', function() {
+  document.getElementById('bulkGroupFilter').style.display = this.value === 'group' ? 'block' : 'none';
+});
+
+function applyBulkEdit() {
+  const fields = Array.from(document.querySelectorAll('#bulkFields .bulk-field')).map(row => ({
+    key: row.querySelector('select').value,
+    val: row.querySelector('input').value
+  })).filter(f => f.val !== '');
+
+  if (!fields.length) { toast('ไม่มีฟิลด์ที่ต้องการเปลี่ยน','error'); return; }
+
+  const scope = document.getElementById('bulkScope').value;
+  const grpName = document.getElementById('bulkGroupName').value.trim();
+
+  let targets = playlist;
+  if (scope === 'selected') targets = playlist.filter(e => e.selected);
+  if (scope === 'group')    targets = playlist.filter(e => (e.tags['group-title']||'') === grpName);
+
+  targets.forEach(e => {
+    fields.forEach(f => {
+      if (f.key === 'tvg-name') e.name = f.val;
+      else e.tags[f.key] = f.val;
+    });
+  });
+
+  renderTable(); updateStats(); renderRecent();
+  toast(`แก้ไข ${targets.length} รายการแล้ว`, 'success');
+}
+
+function applyFindReplace() {
+  const find = document.getElementById('findUrl').value;
+  const rep  = document.getElementById('replaceUrl').value;
+  if (!find) { toast('กรุณาใส่ข้อความที่ต้องการค้นหา','error'); return; }
+  const useRe = document.getElementById('findRegex').checked;
+  let count = 0;
+  playlist.forEach(e => {
+    const orig = e.url;
+    e.url = useRe ? e.url.replace(new RegExp(find,'g'), rep) : e.url.replaceAll(find, rep);
+    if (e.url !== orig) count++;
+  });
+  renderTable();
+  toast(`เปลี่ยน URL ${count} รายการ`, 'success');
+}
+
+function applyNameTransform() {
+  const pre  = document.getElementById('addPrefix').value;
+  const suf  = document.getElementById('addSuffix').value;
+  const rem  = document.getElementById('removeText').value;
+  let count = 0;
+  playlist.forEach(e => {
+    if (rem && e.name.includes(rem)) { e.name = e.name.replaceAll(rem,''); count++; }
+    if (pre) { e.name = pre + e.name; count++; }
+    if (suf) { e.name = e.name + suf; count++; }
+  });
+  renderTable();
+  toast(`แก้ไขชื่อแล้ว`, 'success');
+}
+
+function renameGroup() {
+  const from = document.getElementById('renameGroupFrom').value.trim();
+  const to   = document.getElementById('renameGroupTo').value.trim();
+  if (!from || !to) { toast('กรุณาใส่ชื่อกลุ่ม','error'); return; }
+  let count = 0;
+  playlist.forEach(e => { if ((e.tags['group-title']||'') === from) { e.tags['group-title'] = to; count++; } });
+  renderTable();
+  toast(`เปลี่ยนชื่อกลุ่ม "${from}" → "${to}" (${count} รายการ)`, 'success');
+}
+
+function mergeGroup() {
+  const from = document.getElementById('mergeGroupFrom').value.trim();
+  const to   = document.getElementById('mergeGroupTo').value.trim();
+  if (!from || !to) { toast('กรุณาใส่ชื่อกลุ่ม','error'); return; }
+  let count = 0;
+  playlist.forEach(e => { if ((e.tags['group-title']||'') === from) { e.tags['group-title'] = to; count++; } });
+  renderTable();
+  toast(`ย้าย ${count} รายการ จากกลุ่ม "${from}" ไป "${to}"`, 'success');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TAGS
+// ══════════════════════════════════════════════════════════════
+function addTagRow() {
+  const div = document.createElement('div');
+  div.className = 'tag-row';
+  div.innerHTML = `
+    <select>
+      <option>tvg-name</option><option>tvg-id</option><option>tvg-logo</option>
+      <option>tvg-language</option><option>tvg-country</option><option>tvg-epg</option>
+      <option>group-title</option><option>radio</option><option>tvg-shift</option>
+      <option>catchup</option><option>catchup-source</option><option>catchup-days</option>
+      <option>custom...</option>
+    </select>
+    <input type="text" placeholder="ค่า...">
+    <button class="tag-remove" onclick="this.closest('.tag-row').remove()">×</button>
+  `;
+  document.getElementById('tagRows').appendChild(div);
+}
+
+function getTagRowValues() {
+  return Array.from(document.querySelectorAll('#tagRows .tag-row')).map(row => {
+    let key = row.querySelector('select').value;
+    const val = row.querySelector('input').value.trim();
+    return { key, val };
+  }).filter(t => t.val);
+}
+
+function applyTagsToSelected() {
+  const tags = getTagRowValues();
+  const targets = playlist.filter(e => e.selected);
+  if (!targets.length) { toast('กรุณาเลือกรายการก่อน (ในแท็บ แก้ไขรายการ)','error'); return; }
+  targets.forEach(e => tags.forEach(t => { e.tags[t.key] = t.val; }));
+  toast(`ใส่ Tags ให้ ${targets.length} รายการ`, 'success');
+}
+
+function applyTagsToAll() {
+  const tags = getTagRowValues();
+  playlist.forEach(e => tags.forEach(t => { e.tags[t.key] = t.val; }));
+  toast(`ใส่ Tags ให้ทุกรายการ (${playlist.length})`, 'success');
+}
+
+function removeTagFromSelected() {
+  const key = document.getElementById('removeTagKey').value;
+  const targets = playlist.filter(e => e.selected);
+  targets.forEach(e => delete e.tags[key]);
+  toast(`ลบ tag "${key}" จาก ${targets.length} รายการ`, 'success');
+}
+
+function removeTagFromAll() {
+  const key = document.getElementById('removeTagKey').value;
+  playlist.forEach(e => delete e.tags[key]);
+  toast(`ลบ tag "${key}" จากทุกรายการ`, 'success');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GENERATE M3U
+// ══════════════════════════════════════════════════════════════
+function generateM3U() {
+  let entries = [...playlist];
+  if (document.getElementById('exportSortGroup').checked) {
+    entries.sort((a,b) => (a.tags['group-title']||'').localeCompare(b.tags['group-title']||''));
+  }
+  if (document.getElementById('exportRemoveEmpty').checked) {
+    entries = entries.filter(e => e.url.trim());
+  }
+
+  const lines = [];
+  if (document.getElementById('optExtm3u').checked) {
+    const ha = document.getElementById('headerAttrs').value.trim();
+    lines.push('#EXTM3U' + (ha ? ' ' + ha : ''));
+  }
+
+  const addDur = document.getElementById('exportAddDuration').checked;
+
+  entries.forEach(e => {
+    // Build EXTINF
+    const tags = { ...e.tags };
+    if (e.name && !tags['tvg-name']) tags['tvg-name'] = e.name;
+    const attrStr = Object.entries(tags)
+      .filter(([,v]) => v !== '' && v !== undefined)
+      .map(([k,v]) => `${k}="${v}"`)
+      .join(' ');
+    const dur = addDur ? (e.duration || '-1') : '';
+    const extinf = `#EXTINF:${dur}${attrStr ? ' ' + attrStr : ''},${e.name || ''}`;
+    lines.push(extinf);
+    lines.push(e.url);
+    lines.push('');
+  });
+
+  return lines.join('\n');
+}
+
+function refreshPreview() {
+  const m3u = generateM3U();
+  const el = document.getElementById('previewOutput');
+  // Syntax highlight
+  const html = m3u.split('\n').map(line => {
+    if (line.startsWith('#EXTM3U')) return `<span class="line-header">${esc(line)}</span>`;
+    if (line.startsWith('#EXTINF')) return `<span class="line-extinf">${esc(line)}</span>`;
+    if (line.startsWith('http') || line.startsWith('rtmp') || line.startsWith('rtsp'))
+      return `<span class="line-url">${esc(line)}</span>`;
+    return esc(line);
+  }).join('\n');
+  el.innerHTML = html;
+
+  // Summary
+  const lines = m3u.split('\n').filter(Boolean).length;
+  const size = new Blob([m3u]).size;
+  document.getElementById('exportSummary').innerHTML = `
+    <div class="stats-bar" style="flex-direction:column;gap:8px">
+      <div class="stat-item"><span class="stat-num">${playlist.length}</span><span class="stat-label" style="margin-left:8px">รายการ</span></div>
+      <div class="stat-item"><span class="stat-num">${lines}</span><span class="stat-label" style="margin-left:8px">บรรทัด</span></div>
+      <div class="stat-item"><span class="stat-num">${(size/1024).toFixed(1)} KB</span><span class="stat-label" style="margin-left:8px">ขนาดไฟล์</span></div>
+    </div>
+  `;
+}
+
+function downloadM3U() {
+  const m3u = generateM3U();
+  const enc = document.getElementById('exportEncoding').value;
+  const filename = document.getElementById('exportFilename').value || 'playlist.m3u';
+  let blob;
+  if (enc === 'utf-8-bom') {
+    blob = new Blob(['\uFEFF' + m3u], { type: 'text/plain;charset=utf-8' });
+  } else {
+    blob = new Blob([m3u], { type: 'text/plain;charset=utf-8' });
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('ดาวน์โหลดไฟล์ M3U แล้ว 🎉','success');
+}
+
+function copyM3U() {
+  navigator.clipboard.writeText(generateM3U()).then(() => toast('คัดลอกแล้ว','success'));
+}
+
+function clearAll() {
+  if (!playlist.length || confirm('ล้างข้อมูลทั้งหมด?')) {
+    playlist = [];
+    updateStats(); renderRecent(); renderTable();
+    toast('ล้างข้อมูลแล้ว','info');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════════
+function toast(msg, type = 'info') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(),300); }, 2800);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Close modal on overlay click
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
