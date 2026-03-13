@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมออกใบเสร็จรับเงิน | Receipt Generator</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .input-form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .item-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .item-row input {
+            flex: 1;
+        }
+
+        .receipt-container {
+            width: 204mm;
+            min-height: 142mm;
+            margin: 0 auto;
+            padding: 5mm;
+            background: white;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 4px;
+        }
+
+        .company-info {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 3px;
+            object-fit: contain;
+        }
+
+        .company-info h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .company-info p {
+            margin: 1px 0;
+            font-size: 10px;
+        }
+
+        .receipt-title {
+            text-align: right;
+            flex: 1;
+        }
+
+        .receipt-title h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .receipt-title h3 {
+            margin: 0;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .receipt-fields {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 3px;
+            margin-top: 8px;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .field-label {
+            min-width: 70px;
+            text-align: right;
+            font-size: 10px;
+        }
+
+        .field-value {
+            border-bottom: 1px solid #000;
+            min-width: 80px;
+            text-align: center;
+            font-size: 10px;
+            min-height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .customer-section {
+            margin-bottom: 15px;
+        }
+
+        .customer-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .customer-field {
+            width: 100%;
+        }
+
+        .customer-info {
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .customer-name {
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        .customer-address {
+            font-size: 10px;
+            line-height: 1.3;
+            color: #555;
+        }
+
+        .customer-tax {
+            font-size: 9px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .customer-phone {
+            font-size: 9px;
+            color: #666;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+            font-size: 10px;
+        }
+
+        .items-table th,
+        .items-table td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: left;
+        }
+
+        .items-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .items-table .description {
+            width: 50%;
+        }
+
+        .items-table .units {
+            width: 15%;
+            text-align: center;
+        }
+
+        .items-table .unit-price {
+            width: 15%;
+            text-align: right;
+        }
+
+        .items-table .amount {
+            width: 20%;
+            text-align: right;
+        }
+
+        .summary-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 6px;
+        }
+
+        .summary-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 250px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+        }
+
+        .summary-row.grand-total {
+            font-weight: bold;
+            border-top: 2px solid #000;
+            padding-top: 5px;
+        }
+
+        .amount-text {
+            text-align: right;
+            font-size: 10px;
+            color: #333;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .payment-section {
+            margin-bottom: 6px;
+        }
+
+        .payment-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 10px;
+        }
+
+        .payment-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .payment-field {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 9px;
+        }
+
+        .terms-section {
+            margin-bottom: 20px;
+            font-size: 11px;
+        }
+
+        .terms-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .terms-list li {
+            margin-bottom: 5px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .terms-list li::before {
+            content: attr(data-number);
+            position: absolute;
+            left: 0;
+        }
+
+        .signatures-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .signature-field {
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            margin-bottom: 3px;
+            height: 25px;
+        }
+
+        .signature-field p {
+            margin: 0;
+            font-size: 10px;
+        }
+
+        .footer-note {
+            font-size: 8px;
+            color: #666;
+            text-align: left;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 90mm;
+            right: 6mm;
+            width: 5cm;
+            height: auto;
+            opacity: 0.28;
+            transform: rotate(-35deg);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .receipt-container {
+            position: relative;
+        }
+
+        .contact-section {
+            display: none;
+        }
+
+        .buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .buttons button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .buttons button:hover {
+            background: #0056b3;
+        }
+
+        @page {
+            size: A5 landscape;
+            margin: 3mm;
+        }
+
+        @media print {
+            html, body {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: none !important;
+                width: auto !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            .container {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
+                width: auto !important;
+                background: none !important;
+            }
+
+            .form-section,
+            .buttons {
+                display: none !important;
+            }
+
+            .receipt-container {
+                display: block !important;
+                width: 204mm !important;
+                height: 142mm !important;
+                max-height: 142mm !important;
+                min-height: unset !important;
+                margin: 0 !important;
+                padding: 4mm !important;
+                border: none !important;
+                box-shadow: none !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
+                break-before: avoid !important;
+                break-after: avoid !important;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h1>โปรแกรมออกใบเสร็จรับเงิน</h1>
+            
+            <!-- Form for input -->
+            <div class="input-form">
+                <h2>ข้อมูลใบเสร็จ</h2>
+                
+                <div class="form-group">
+                    <label>เลขที่ใบเสร็จ:</label>
+                    <input type="text" id="receiptNo" value="">
+                </div>
+                
+                <div class="form-group">
+                    <label>วันที่:</label>
+                    <input type="date" id="receiptDate">
+                </div>
+                
+                <div class="form-group">
+                    <label>เดือน:</label>
+                    <input type="text" id="receiptMonth" placeholder="เช่น มกราคม">
+                </div>
+                
+                <div class="form-group">
+                    <label>ชื่อลูกค้า:</label>
+                    <input type="text" id="customerName" value="บริษัท เชียงใหม่เฟรชมิลค์ จำกัด">
+                </div>
+                
+                <div class="form-group">
+                    <label>ที่อยู่ลูกค้า:</label>
+                    <input type="text" id="customerAddress" value="57/1 ม.6 ต.ท่าวังตาล อ.สารภี จ.เชียงใหม่ 50140 เลขที่ผู้เสียภาษี 0-5055-35000-70-7 (สำนักงานใหญ่) โทร: 089-635-4687">
+                </div>
+                
+                <div class="form-group">
+                    <label>รายการสินค้า:</label>
+                    <div id="itemsContainer">
+                        <div class="item-row">
+                            <input type="text" placeholder="รายการ" class="item-description">
+                            <input type="number" placeholder="จำนวน" class="item-units" value="1">
+                            <input type="number" placeholder="ราคาต่อหน่วย" class="item-price">
+                        </div>
+                    </div>
+                    <button type="button" onclick="addItem()">เพิ่มรายการ</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>วิธีการชำระเงิน:</label>
+                    <select id="paymentMethod">
+                        <option value="cash">เงินสด</option>
+                        <option value="transfer">เงินโอน</option>
+                        <option value="check">เช็ค</option>
+                    </select>
+                </div>
+                
+                <div class="buttons">
+                    <button type="button" onclick="generateReceipt()">สร้างใบเสร็จ</button>
+                    <button type="button" id="printButton" onclick="printReceipt()">พิมพ์ใบเสร็จ</button>
+                    <button type="button" onclick="exportToPDF()">ส่งออก PDF</button>
+                    <button type="button" onclick="showReceiptHistory()">ประวัติใบเสร็จ</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Receipt Preview -->
+        <div class="receipt-container" id="receiptContent">
+            <!-- Watermark -->
+            <img src="https://img2.pic.in.th/unnamed-10ff8f98be50f3155.png" alt="Watermark" class="watermark">
+            
+            <!-- Header Section -->
+            <div class="receipt-header">
+                <div class="company-info">
+                    <img src="https://img2.pic.in.th/unnamed-10ff8f98be50f3155.png" alt="Company Logo" class="company-logo">
+                    <div>
+                        <h3>CM Smart Store (ซีเอ็ม สมาร์ท สโตร์)</h3>
+                        <p>อาคารไอคอน ไอที เชียงใหม่ (Icon IT Chiangmai) ชั้น2 29</p>
+                        <p>ถนนหัสดิเสวี ตำบลศรีภูมิ อำเภอเมืองเชียงใหม่</p>
+                        <p>จังหวัดเชียงใหม่ 50200</p>
+                        <p>โทร: 0844642323</p>
+                    </div>
+                </div>
+                <div class="receipt-title">
+                    <h2>ต้นฉบับใบเสร็จรับเงิน</h2>
+                    <h3>ORIGINAL RECEIPT</h3>
+                    <div class="receipt-fields">
+                        <div class="field-row">
+                            <span class="field-label">เลขที่/No.</span>
+                            <span class="field-value" id="displayReceiptNo"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">วันที่/Date</span>
+                            <span class="field-value" id="displayDate"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">เดือน/Month</span>
+                            <span class="field-value" id="displayMonth"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Customer Section -->
+            <div class="customer-section">
+                <div class="customer-info">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">ลูกค้า / Customer</div>
+                    <div class="customer-name" id="displayCustomerName"></div>
+                    <div class="customer-address" id="displayCustomerAddress"></div>
+                </div>
+            </div>
+            
+            <!-- Items Table -->
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th class="description">รายการ Description</th>
+                        <th class="units">จำนวนหน่วย Units</th>
+                        <th class="unit-price">ราคาต่อหน่วย Unit Price</th>
+                        <th class="amount">จำนวนเงิน Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTableBody">
+                </tbody>
+            </table>
+            
+            <!-- Summary Section -->
+            <div class="summary-section">
+                <div class="summary-fields">
+                    <div class="summary-row">
+                        <span>รวมเงิน/Total:</span>
+                        <span id="displayTotal">0.00</span>
+                    </div>
+                    <div class="summary-row grand-total">
+                        <span>รวมเงินทั้งสิ้น/Grand Total:</span>
+                        <span id="displayGrandTotal">0.00</span>
+                    </div>
+                    <div class="amount-text" id="displayAmountText"></div>
+                </div>
+            </div>
+            
+            <!-- Payment Section -->
+            <div class="payment-section">
+                <div class="payment-options">
+                    <div class="payment-option">
+                        <input type="checkbox" id="cashPayment">
+                        <label for="cashPayment">เงินสด</label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="checkbox" id="transferPayment">
+                        <label for="transferPayment">เงินโอน</label>
+                    </div>
+                </div>
+                <div class="payment-details">
+                    <div class="payment-field">
+                        <label>วันที่:</label>
+                        <span class="field-value" id="displayPaymentDate"></span>
+                    </div>
+                </div>
+            </div>
+                        
+            <!-- Signatures Section -->
+            <div class="signatures-section">
+                <div class="signature-field">
+                    <div class="signature-line"></div>
+                    <p>ผู้รับเงิน</p>
+                </div>
+                <div class="signature-field">
+                    <div class="signature-line"></div>
+                    <p>ผู้มีอำนาจลงนาม</p>
+                </div>
+            </div>
+            
+            <!-- Footer Note -->
+            <div class="footer-note">
+                *กรุณาตรวจสอบสินค้าก่อนออกจากร้าน เปลี่ยนสินค้าและใบเสร็จได้ภายในวันที่ซื้อเท่านั้น
+            </div>
+            
+            <!-- Contact Section removed -->
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'th';
+        let db;
+        let customers = [];
+        let receipts = [];
+        let receiptCounter = 1;
+        
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvRpmlD2y5jbWr9khsePymuTMjuONhK_o",
+            authDomain: "reciept-ad7c9.firebaseapp.com",
+            projectId: "reciept-ad7c9",
+            storageBucket: "reciept-ad7c9.firebasestorage.app",
+            messagingSenderId: "497299470603",
+            appId: "1:497299470603:web:0288ce093895514afa0a0e"
+        };
+        
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('Firebase connected');
+        } catch (error) {
+            console.log('Firebase initialization failed, using local storage');
+        }
+
+        function addItem() {
+            const container = document.getElementById('itemsContainer');
+            const newItem = document.createElement('div');
+            newItem.className = 'item-row';
+            newItem.innerHTML = `
+                <input type="text" placeholder="รายการ" class="item-description">
+                <input type="number" placeholder="จำนวน" class="item-units" value="1">
+                <input type="number" placeholder="ราคาต่อหน่วย" class="item-price">
+            `;
+            container.appendChild(newItem);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('th-TH');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('th-TH', {
+                style: 'currency',
+                currency: 'THB'
+            }).format(amount);
+        }
+
+        function convertToThaiText(amount) {
+            const numbers = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
+            const tens = ['', 'สิบ', 'ยี่สิบ', 'สามสิบ', 'สี่สิบ', 'ห้าสิบ', 'หกสิบ', 'เจ็ดสิบ', 'แปดสิบ', 'เก้าสิบ'];
+            const units = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
+            
+            if (amount === 0) return 'ศูนย์บาทถ้วน';
+            
+            let text = '';
+            let baht = Math.floor(amount);
+            let satang = Math.round((amount - baht) * 100);
+            
+            // Convert baht
+            if (baht > 0) {
+                let str = baht.toString();
+                let length = str.length;
+                
+                for (let i = 0; i < length; i++) {
+                    let digit = parseInt(str[i]);
+                    let pos = length - i - 1;
+                    
+                    if (digit > 0) {
+                        if (pos === 1 && digit === 1) {
+                            text += 'สิบ';
+                        } else if (pos === 1 && digit === 2) {
+                            text += 'ยี่สิบ';
+                        } else if (pos === 0 && digit === 1 && baht > 1) {
+                            text += 'เอ็ด';
+                        } else {
+                            text += numbers[digit] + units[pos];
+                        }
+                    }
+                }
+                text += 'บาท';
+            }
+            
+            // Convert satang
+            if (satang > 0) {
+                if (satang > 0) {
+                    if (satang === 1) {
+                        text += 'หนึ่งสตางค์';
+                    } else if (satang === 2) {
+                        text += 'สองสตางค์';
+                    } else if (satang <= 9) {
+                        text += numbers[satang] + 'สตางค์';
+                    } else if (satang === 10) {
+                        text += 'สิบสตางค์';
+                    } else if (satang === 20) {
+                        text += 'ยี่สิบสตางค์';
+                    } else if (satang <= 99) {
+                        let ten = Math.floor(satang / 10);
+                        let unit = satang % 10;
+                        if (ten === 1) {
+                            text += 'สิบ';
+                        } else if (ten === 2) {
+                            text += 'ยี่สิบ';
+                        } else {
+                            text += numbers[ten] + 'สิบ';
+                        }
+                        if (unit > 0) {
+                            text += numbers[unit] + 'สตางค์';
+                        } else {
+                            text += 'สตางค์';
+                        }
+                    }
+                }
+            } else {
+                text += 'ถ้วน';
+            }
+            
+            return text;
+        }
+
+        function generateReceipt() {
+            // Get form values
+            const receiptNo = document.getElementById('receiptNo').value || `R${String(receiptCounter).padStart(4, '0')}`;
+            const receiptDate = document.getElementById('receiptDate').value;
+            const receiptMonth = document.getElementById('receiptMonth').value;
+            const customerName = document.getElementById('customerName').value;
+            const customerAddress = document.getElementById('customerAddress').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+
+            // Update receipt display
+            document.getElementById('displayReceiptNo').textContent = receiptNo;
+            document.getElementById('displayDate').textContent = formatDate(receiptDate);
+            document.getElementById('displayMonth').textContent = receiptMonth || '';
+            document.getElementById('displayCustomerName').textContent = customerName || '';
+            document.getElementById('displayCustomerAddress').textContent = customerAddress || '';
+            document.getElementById('displayPaymentDate').textContent = formatDate(receiptDate);
+
+            // Update payment checkboxes
+            document.getElementById('cashPayment').checked = paymentMethod === 'cash';
+            document.getElementById('transferPayment').checked = paymentMethod === 'transfer';
+
+            // Update items table
+            const itemRows = document.querySelectorAll('#itemsContainer .item-row');
+            const tableBody = document.getElementById('itemsTableBody');
+            let grandTotal = 0;
+            const items = [];
+            
+            tableBody.innerHTML = '';
+            
+            itemRows.forEach(row => {
+                const description = row.querySelector('.item-description').value;
+                const units = parseFloat(row.querySelector('.item-units').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const amount = units * price;
+                
+                if (description && units > 0 && price > 0) {
+                    grandTotal += amount;
+                    items.push({ description, units, price, amount });
+                    const rowHtml = `
+                        <td>${description}</td>
+                        <td class="units">${units}</td>
+                        <td class="unit-price">${formatCurrency(price)}</td>
+                        <td class="amount">${formatCurrency(amount)}</td>
+                    `;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = rowHtml;
+                    tableBody.appendChild(tr);
+                }
+            });
+
+            // Update totals
+            document.getElementById('displayTotal').textContent = formatCurrency(grandTotal);
+            document.getElementById('displayGrandTotal').textContent = formatCurrency(grandTotal);
+            document.getElementById('displayAmountText').textContent = convertToThaiText(grandTotal);
+            
+            // Auto-increment receipt number
+            if (!document.getElementById('receiptNo').value) {
+                receiptCounter++;
+            }
+        }
+
+        function exportToPDF() {
+            // Generate receipt first
+            generateReceipt();
+            
+            // Collect receipt data for saving
+            const receiptData = {
+                receiptNo: document.getElementById('displayReceiptNo').textContent,
+                date: document.getElementById('receiptDate').value,
+                month: document.getElementById('receiptMonth').value,
+                customerName: document.getElementById('customerName').value,
+                customerAddress: document.getElementById('customerAddress').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                items: [],
+                total: 0,
+                createdAt: new Date().toISOString()
+            };
+            
+            // Get items data
+            const itemRows = document.querySelectorAll('#itemsContainer .item-row');
+            itemRows.forEach(row => {
+                const description = row.querySelector('.item-description').value;
+                const units = parseFloat(row.querySelector('.item-units').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const amount = units * price;
+                if (description && units > 0 && price > 0) {
+                    receiptData.items.push({ description, units, price, amount });
+                    receiptData.total += amount;
+                }
+            });
+            
+            // Save receipt in background
+            saveReceipt(receiptData).catch(err => console.error('Save error:', err));
+            
+            // Create filename
+            const filename = `ใบเสร็จ_${receiptData.receiptNo}_${receiptData.customerName.replace(/[^a-zA-Z0-9ก-๙]/g, '_')}.pdf`;
+            
+            // Use window.print with PDF destination
+            setTimeout(() => {
+                window.print();
+            }, 300);
+            
+            // Show instruction
+            alert('กำลังเปิดหน้าต่างพิมพ์\n\nกรุณาเลือก "บันทึกเป็น PDF" หรือ "Save as PDF" ในตัวเลือกเครื่องพิมพ์\n\nชื่อไฟล์ที่แนะนำ: ' + filename);
+        }
+
+        function printReceipt() {
+            // Generate receipt first
+            generateReceipt();
+            
+            // Collect receipt data for saving (in background)
+            const receiptData = {
+                receiptNo: document.getElementById('displayReceiptNo').textContent,
+                date: document.getElementById('receiptDate').value,
+                month: document.getElementById('receiptMonth').value,
+                customerName: document.getElementById('customerName').value,
+                customerAddress: document.getElementById('customerAddress').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                items: [],
+                total: 0,
+                createdAt: new Date().toISOString()
+            };
+            
+            const itemRows = document.querySelectorAll('#itemsContainer .item-row');
+            itemRows.forEach(row => {
+                const description = row.querySelector('.item-description').value;
+                const units = parseFloat(row.querySelector('.item-units').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const amount = units * price;
+                if (description && units > 0 && price > 0) {
+                    receiptData.items.push({ description, units, price, amount });
+                    receiptData.total += amount;
+                }
+            });
+            
+            // Save in background (don't wait for it)
+            saveReceipt(receiptData).catch(err => console.error('Save error:', err));
+            
+            // Print immediately after short render delay
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        }
+        
+        async function saveReceipt(receiptData) {
+            try {
+                if (db) {
+                    await db.collection('receipts').add(receiptData);
+                    console.log('Receipt saved to Firebase');
+                } else {
+                    receipts.push(receiptData);
+                    localStorage.setItem('receipts', JSON.stringify(receipts));
+                    console.log('Receipt saved to local storage');
+                }
+            } catch (error) {
+                console.error('Error saving receipt:', error);
+                receipts.push(receiptData);
+                localStorage.setItem('receipts', JSON.stringify(receipts));
+            }
+        }
+        
+        function loadReceipts() {
+            try {
+                if (db) {
+                    db.collection('receipts').get().then(snapshot => {
+                        receipts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        receiptCounter = receipts.length + 1;
+                    });
+                } else {
+                    const stored = localStorage.getItem('receipts');
+                    receipts = stored ? JSON.parse(stored) : [];
+                    receiptCounter = receipts.length + 1;
+                }
+            } catch (error) {
+                console.error('Error loading receipts:', error);
+                const stored = localStorage.getItem('receipts');
+                receipts = stored ? JSON.parse(stored) : [];
+                receiptCounter = receipts.length + 1;
+            }
+        }
+        
+        function showReceiptHistory() {
+            const historyWindow = window.open('', '_blank', 'width=800,height=600');
+            let html = `
+                <html>
+                <head>
+                    <title>ประวัติใบเสร็จ</title>
+                    <style>
+                        body { font-family: 'Kanit', sans-serif; padding: 20px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                    </style>
+                </head>
+                <body>
+                    <h1>ประวัติใบเสร็จที่พิมพ์ไปแล้ว</h1>
+                    <table>
+                        <tr>
+                            <th>เลขที่</th>
+                            <th>วันที่</th>
+                            <th>ลูกค้า</th>
+                            <th>ยอดรวม</th>
+                            <th>วิธีชำระ</th>
+                        </tr>
+            `;
+            
+            receipts.forEach(receipt => {
+                html += `
+                    <tr>
+                        <td>${receipt.receiptNo}</td>
+                        <td>${formatDate(receipt.date)}</td>
+                        <td>${receipt.customerName}</td>
+                        <td>${formatCurrency(receipt.total)}</td>
+                        <td>${receipt.paymentMethod}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </table>
+                </body>
+                </html>
+            `;
+            
+            historyWindow.document.write(html);
+            historyWindow.document.close();
+        }
+
+        // Initialize with today's date
+        document.getElementById('receiptDate').valueAsDate = new Date();
+        
+        // Set current month in Thai
+        const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+        const currentMonth = months[new Date().getMonth()];
+        document.getElementById('receiptMonth').value = currentMonth;
+        
+        // Load receipts on startup
+        loadReceipts();
+        
+        // Add print button event listener as backup
+        document.getElementById('printButton').addEventListener('click', function(e) {
+            e.preventDefault();
+            printReceipt();
+        });
+        
+        // Generate initial receipt
+        generateReceipt();
+    </script>
+</body>
+</html>
