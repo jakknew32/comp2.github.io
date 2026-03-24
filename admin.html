@@ -172,6 +172,9 @@
   .empty-state { padding:40px 20px; text-align:center; color:var(--muted); }
   .empty-state .emo { font-size:40px; margin-bottom:8px; }
 
+  .btn-delete { background:none; border:none; cursor:pointer; color:var(--muted); font-size:14px; padding:4px 6px; border-radius:6px; transition:all .2s; line-height:1; flex-shrink:0; margin-top:2px; }
+  .btn-delete:hover { background:rgba(248,113,113,0.15); color:var(--red); }
+
   @media(max-width:1000px){
     .shell { grid-template-columns:1fr; height:auto; }
     .form-side { border-right:none; border-bottom:1px solid var(--border); height:80vh; }
@@ -315,141 +318,105 @@
 
 <div id="toast"></div>
 
-<script>
-// --- CSV UPLOAD ---
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, push, remove, onValue, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
+  authDomain: "fleet-a49df.firebaseapp.com",
+  projectId: "fleet-a49df",
+  storageBucket: "fleet-a49df.firebasestorage.app",
+  messagingSenderId: "324785731593",
+  appId: "1:324785731593:web:b24e7977a2cccac01b60d8",
+  databaseURL: "https://fleet-a49df-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const ordersRef = ref(db, 'orders');
+
+// ── STATE ──
+let orders = [];
+let currentFilter = 'all';
+let selectedId = null;
+
+const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
+const SC={pending:'#fbbf24',transit:'#22d3ee',delivered:'#34d399',failed:'#f87171'};
+const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
+
+function now(){
+  const d=new Date();
+  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
+    +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── REALTIME LISTENER (sync ทุกเครื่องทันที) ──
+onValue(ordersRef, snap => {
+  const data = snap.val() || {};
+  orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
+  renderAll();
+  if(selectedId) renderDetail();
+});
+
+// ── CSV UPLOAD ──
 function uploadCSV() {
   const fileInput = document.getElementById('csvUpload');
   if (!fileInput.files.length) { showToast('⚠️ กรุณาเลือกไฟล์ CSV','warn'); return; }
   const file = fileInput.files[0];
   const reader = new FileReader();
   reader.onload = function(e) {
-    // ถอดรหัสอัตโนมัติ: ลอง UTF-8 ก่อน ถ้าไม่ผ่านให้ใช้ Windows-874 (TIS-620)
     let text;
     try {
-      const utf8 = new TextDecoder('utf-8', { fatal: true }).decode(e.target.result);
-      text = utf8;
+      text = new TextDecoder('utf-8', { fatal: true }).decode(e.target.result);
     } catch(err) {
-      try {
-        text = new TextDecoder('windows-874').decode(e.target.result);
-      } catch(err2) {
-        text = new TextDecoder('utf-8', { fatal: false }).decode(e.target.result);
-      }
+      try { text = new TextDecoder('windows-874').decode(e.target.result); }
+      catch(err2) { text = new TextDecoder('utf-8', { fatal: false }).decode(e.target.result); }
     }
-    // Remove BOM if present (for UTF-8 with BOM)
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-    // Use a robust CSV parser to handle quoted fields and commas inside fields
     function parseCSV(str) {
       const rows = [];
-      let row = [], col = '', inQuotes = false, i = 0;
-      while (i < str.length) {
-        const c = str[i];
-        if (inQuotes) {
-          if (c === '"') {
-            if (str[i+1] === '"') { col += '"'; i++; } // Escaped quote
-            else inQuotes = false;
-          } else {
-            col += c;
-          }
-        } else {
-          if (c === '"') inQuotes = true;
-          else if (c === ',') { row.push(col); col = ''; }
-          else if (c === '\n' || c === '\r') {
-            if (col !== '' || row.length > 0) { row.push(col); rows.push(row); }
-            row = []; col = '';
-            // Handle \r\n
-            if (c === '\r' && str[i+1] === '\n') i++;
-          } else {
-            col += c;
-          }
-        }
+      let row=[], col='', inQuotes=false, i=0;
+      while(i<str.length){
+        const c=str[i];
+        if(inQuotes){ if(c==='"'){ if(str[i+1]==='"'){col+='"';i++;}else inQuotes=false; }else col+=c; }
+        else{ if(c==='"') inQuotes=true; else if(c===','){row.push(col);col='';}
+          else if(c==='\n'||c==='\r'){ if(col!==''||row.length>0){row.push(col);rows.push(row);} row=[];col=''; if(c==='\r'&&str[i+1]==='\n')i++; }
+          else col+=c; }
         i++;
       }
-      if (col !== '' || row.length > 0) { row.push(col); rows.push(row); }
+      if(col!==''||row.length>0){row.push(col);rows.push(row);}
       return rows;
     }
     const rows = parseCSV(text).filter(r=>r.join('').trim());
-    if (rows.length < 2) { showToast('⚠️ ไฟล์ไม่มีข้อมูล','warn'); return; }
-    let count = 0;
-    for (let i = 1; i < rows.length; i++) {
-      const cols = rows[i];
-      if (cols.length < 5) continue; // ข้อมูลไม่ครบ
-      const orderid = (cols[0]||'').trim();
-      if (!orderid) continue;
-      const o = {
-        id: orderid,
-        orderid: orderid,
-        name: (cols[1]||'').trim(),
-        phone: (cols[2]||'').trim(),
-        address: (cols[3]||'').trim(),
-        mapsLink: (cols[4]||'').trim(),
-        items: (cols[5]||'').trim(),
-        weight: parseFloat(cols[6])||0,
-        cod: parseFloat(cols[7])||0,
-        courier: (cols[8]||'').trim(),
-        date: (cols[9]||'').trim(),
-        note: (cols[10]||'').trim(),
-        status: 'pending',
-        timeline: [{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
+    if(rows.length<2){ showToast('⚠️ ไฟล์ไม่มีข้อมูล','warn'); return; }
+    let count=0;
+    for(let i=1;i<rows.length;i++){
+      const cols=rows[i];
+      if(cols.length<5) continue;
+      const orderid=(cols[0]||'').trim();
+      if(!orderid) continue;
+      const o={
+        id:orderid, orderid,
+        name:(cols[1]||'').trim(), phone:(cols[2]||'').trim(),
+        address:(cols[3]||'').trim(), mapsLink:(cols[4]||'').trim(),
+        items:(cols[5]||'').trim(), weight:parseFloat(cols[6])||0,
+        cod:parseFloat(cols[7])||0, courier:(cols[8]||'').trim(),
+        date:(cols[9]||'').trim(), note:(cols[10]||'').trim(),
+        status:'pending', createdAt: Date.now(),
+        timeline:[{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
       };
-      orders.unshift(o);
-      if (typeof db !== 'undefined' && db.ref) {
-        db.ref('orders').push(o);
-      }
+      push(ordersRef, o);
       count++;
     }
-    save();
-    renderAll();
     showToast('✅ เพิ่ม '+count+' รายการจาก CSV');
-    fileInput.value = '';
+    fileInput.value='';
   };
-  // อ่านเป็น ArrayBuffer เพื่อรองรับการถอดรหัสหลาย encoding
   reader.readAsArrayBuffer(file);
 }
-let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
-let currentFilter = 'all';
-let selectedId = null;
-
-function save(){ localStorage.setItem('ff_orders', JSON.stringify(orders)); }
-function now(){
-  const d=new Date();
-  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
-    +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-}
-function genId(){ return 'FF-'+String(orders.length+1).padStart(4,'0'); }
-
-const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
-const SC={pending:'#fbbf24',transit:'#22d3ee',delivered:'#34d399',failed:'#f87171'};
-const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
-
-if(orders.length===0){
-  orders=[
-    {id:'FF-0001',name:'คุณสมชาย ใจดี',phone:'0812345678',
-     address:'123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กทม. 10110',
-     mapsLink:'https://maps.app.goo.gl/example1',
-     items:'สมาร์ทโฟน 1 เครื่อง',weight:0.5,cod:15900,
-     courier:'สมบัติ รักงาน',date:'2025-03-25',note:'โทรก่อน 30 นาที',
-     status:'transit',
-     timeline:[{text:'รับคำสั่งจัดส่ง',time:'24/03/2025 09:00',color:'#fbbf24'},
-               {text:'พนักงานรับพัสดุแล้ว',time:'24/03/2025 10:30',color:'#22d3ee'}]},
-    {id:'FF-0002',name:'คุณมาลี สวยงาม',phone:'0898765432',
-     address:'456 ถ.รัชดาภิเษก แขวงห้วยขวาง เขตห้วยขวาง กทม.',
-     mapsLink:'https://maps.app.goo.gl/example2',
-     items:'หูฟัง Bluetooth 2 ชิ้น',weight:0.8,cod:0,
-     courier:'วิชัย ขยันดี',date:'2025-03-25',note:'',
-     status:'pending',
-     timeline:[{text:'รับคำสั่งจัดส่ง',time:'24/03/2025 11:00',color:'#fbbf24'}]},
-    {id:'FF-0003',name:'คุณประทีป มีสุข',phone:'0656789012',
-     address:'789 ถ.ลาดพร้าว แขวงลาดพร้าว เขตลาดพร้าว กทม.',
-     mapsLink:'',
-     items:'กระเป๋าหนัง 1 ใบ',weight:1.2,cod:2500,
-     courier:'นภา ส่งไว',date:'2025-03-24',note:'บ้านชั้น 2',
-     status:'delivered',
-     timeline:[{text:'รับคำสั่งจัดส่ง',time:'23/03/2025 08:00',color:'#fbbf24'},
-               {text:'พนักงานรับพัสดุแล้ว',time:'23/03/2025 09:00',color:'#22d3ee'},
-               {text:'ส่งสำเร็จ',time:'24/03/2025 13:45',color:'#34d399'}]},
-  ];
-  save();
-}
+window.uploadCSV = uploadCSV;
 
 // ── MAPS ──
 function isValidMapsLink(url){
@@ -457,28 +424,13 @@ function isValidMapsLink(url){
 }
 function validateMapsLink(val){
   const h=document.getElementById('mapsHint');
-  if(!val){
-    h.className='maps-hint';
-    h.innerHTML='📌 วิธีแชร์: เปิด Google Maps → แตะชื่อสถานที่ → กด <strong>แชร์</strong> → <strong>คัดลอกลิงก์</strong>';
-    return;
-  }
-  if(isValidMapsLink(val)){
-    h.className='maps-hint valid';
-    h.innerHTML='✓ ลิงก์ถูกต้อง — กด ↗ เพื่อทดสอบเปิด';
-  } else {
-    h.className='maps-hint invalid';
-    h.innerHTML='✗ ลิงก์ไม่ถูกต้อง ควรเป็น maps.app.goo.gl หรือ google.com/maps';
-  }
+  if(!val){ h.className='maps-hint'; h.innerHTML='📌 วิธีแชร์: เปิด Google Maps → แตะชื่อสถานที่ → กด <strong>แชร์</strong> → <strong>คัดลอกลิงก์</strong>'; return; }
+  if(isValidMapsLink(val)){ h.className='maps-hint valid'; h.innerHTML='✓ ลิงก์ถูกต้อง — กด ↗ เพื่อทดสอบเปิด'; }
+  else { h.className='maps-hint invalid'; h.innerHTML='✗ ลิงก์ไม่ถูกต้อง ควรเป็น maps.app.goo.gl หรือ google.com/maps'; }
 }
-function clearMaps(){
-  document.getElementById('f_maps').value='';
-  validateMapsLink('');
-}
-function previewMaps(){
-  const url=document.getElementById('f_maps').value.trim();
-  if(!url){ showToast('⚠️ ยังไม่ได้วางลิงก์ Maps','warn'); return; }
-  window.open(url,'_blank');
-}
+function clearMaps(){ document.getElementById('f_maps').value=''; validateMapsLink(''); }
+function previewMaps(){ const url=document.getElementById('f_maps').value.trim(); if(!url){showToast('⚠️ ยังไม่ได้วางลิงก์ Maps','warn');return;} window.open(url,'_blank'); }
+window.validateMapsLink=validateMapsLink; window.clearMaps=clearMaps; window.previewMaps=previewMaps;
 
 // ── TABS ──
 function switchTab(name,btn){
@@ -487,6 +439,7 @@ function switchTab(name,btn){
   btn.classList.add('active');
   document.getElementById('pane-'+name).classList.add('active');
 }
+window.switchTab=switchTab;
 
 // ── ADD ──
 function addOrder(){
@@ -496,59 +449,51 @@ function addOrder(){
   if(!name||!address||!items){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
   const mapsLink=document.getElementById('f_maps').value.trim();
   if(mapsLink&&!isValidMapsLink(mapsLink)){ showToast('⚠️ ลิงก์ Google Maps ไม่ถูกต้อง','warn'); return; }
-  // ใช้เลขออเดอร์ที่กรอกเท่านั้น
-  const orderid = document.getElementById('f_orderid').value.trim();
-  if (!orderid) { showToast('⚠️ กรุณากรอกเลขออเดอร์','warn'); return; }
+  const orderid=document.getElementById('f_orderid').value.trim();
+  if(!orderid){ showToast('⚠️ กรุณากรอกเลขออเดอร์','warn'); return; }
   const o={
     id:orderid, orderid, name, address, mapsLink,
-    phone:document.getElementById('f_phone').value.trim(),
-    items,
+    phone:document.getElementById('f_phone').value.trim(), items,
     weight:parseFloat(document.getElementById('f_weight').value)||0,
     cod:parseFloat(document.getElementById('f_cod').value)||0,
     courier:document.getElementById('f_courier').value,
     date:document.getElementById('f_date').value,
     note:document.getElementById('f_note').value.trim(),
-    status:'pending',
+    status:'pending', createdAt: Date.now(),
     timeline:[{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
   };
-  orders.unshift(o);
-  save();
-  // --- เพิ่มบันทึกลง Firebase (id อัตโนมัติ) ---
-  if (typeof db !== 'undefined' && db.ref) {
-    db.ref('orders').push(o);
-  }
-  // แสดงเลขออเดอร์ในฟอร์มหลังบันทึก
-  document.getElementById('f_orderid').value='';
-  document.getElementById('f_name').value='';
-  document.getElementById('f_phone').value='';
-  document.getElementById('f_address').value='';
-  document.getElementById('f_maps').value='';
-  document.getElementById('f_items').value='';
-  document.getElementById('f_weight').value='';
-  document.getElementById('f_cod').value='';
-  document.getElementById('f_note').value='';
+  push(ordersRef, o);
+  ['f_orderid','f_name','f_phone','f_address','f_maps','f_items','f_weight','f_cod','f_note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_courier').value='';
   document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
   validateMapsLink('');
-  showToast('📦 เพิ่มคำสั่งจัดส่ง '+o.orderid+' สำเร็จ');
-  selectedId=o.id;
-  renderAll();
-  renderDetail();
+  showToast('📦 เพิ่มคำสั่งจัดส่ง '+orderid+' สำเร็จ');
+  selectedId=orderid;
   switchTab('list',document.getElementById('tab-list'));
 }
+window.addOrder=addOrder;
+
+// ── DELETE ──
+function deleteOrder(id){
+  if(!confirm('ลบรายการนี้ออกจากระบบ?\nไม่สามารถกู้คืนได้')) return;
+  const o=orders.find(x=>x.id===id);
+  if(!o) return;
+  remove(ref(db,'orders/'+o._fbKey));
+  if(selectedId===id){ selectedId=null; document.getElementById('detailSide').innerHTML='<div class="detail-empty"><div class="emo">📋</div><div>เลือกคำสั่งจัดส่งเพื่อดูรายละเอียด</div></div>'; }
+  showToast('🗑 ลบรายการแล้ว','warn');
+}
+window.deleteOrder=deleteOrder;
 
 // ── STATUS ──
 function changeStatus(id,newStatus){
   const o=orders.find(x=>x.id===id);
   if(!o||o.status===newStatus) return;
-  o.status=newStatus;
   const msgs={transit:'พนักงานรับพัสดุและออกจัดส่ง',delivered:'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว',failed:'ส่งไม่สำเร็จ — ไม่มีผู้รับ',pending:'รีเซ็ตสถานะเป็น รอดำเนินการ'};
-  o.timeline.push({text:msgs[newStatus],time:now(),color:SC[newStatus]});
-  save();
+  const newTimeline=[...(o.timeline||[]),{text:msgs[newStatus],time:now(),color:SC[newStatus]}];
+  update(ref(db,'orders/'+o._fbKey),{status:newStatus, timeline:newTimeline});
   showToast('✅ อัพเดท: '+SL[newStatus]);
-  renderStats(); renderList();
-  if(selectedId===id) renderDetail();
 }
+window.changeStatus=changeStatus;
 
 // ── FILTER ──
 function setFilter(f,btn){
@@ -557,11 +502,11 @@ function setFilter(f,btn){
   btn.classList.add('active');
   renderList();
 }
+window.setFilter=setFilter;
 
 // ── SELECT ──
-function selectOrder(id){
-  selectedId=id; renderList(); renderDetail();
-}
+function selectOrder(id){ selectedId=id; renderList(); renderDetail(); }
+window.selectOrder=selectOrder;
 
 // ── RENDER ──
 function renderAll(){ renderStats(); renderList(); }
@@ -576,35 +521,37 @@ function renderStats(){
 }
 
 function renderList(){
-  const f=currentFilter==='all'?orders:orders.filter(o=>o.status===currentFilter);
+  const statusOrder={pending:0,transit:1,failed:2,delivered:3};
+  const allSorted=[...orders].sort((a,b)=>{
+    const sd=(statusOrder[a.status]??9)-(statusOrder[b.status]??9);
+    if(sd!==0) return sd;
+    return (b.createdAt||0)-(a.createdAt||0);
+  });
+  const f=currentFilter==='all'?allSorted:allSorted.filter(o=>o.status===currentFilter);
   document.getElementById('listCount').textContent=f.length+' รายการ';
   if(!f.length){ document.getElementById('orderList').innerHTML='<div class="empty-state"><div class="emo">🔍</div><div>ไม่พบรายการ</div></div>'; return; }
-  document.getElementById('orderList').innerHTML=f.map(o=>{
-    let editBtn = '';
-    // อนุญาตแก้ไขเฉพาะ pending, transit, failed
-    if(o.status==='pending'||o.status==='transit'||o.status==='failed'){
-      editBtn = `<button class="btn-link" style="margin-left:8px;font-size:11px;padding:2px 10px;" onclick="event.stopPropagation(); editOrder('${o.id}')">✏️ แก้ไข</button>`;
-    }
-    return `
+  document.getElementById('orderList').innerHTML=f.map(o=>`
     <div class="order-item ${selectedId===o.id?'sel':''}" onclick="selectOrder('${o.id}')">
       <div class="oi-left">
-        <div class="oi-id">${o.orderid||o.id}${editBtn}</div>
+        <div class="oi-id">${o.orderid||o.id}</div>
         <div class="oi-name">${o.name}</div>
         <div class="oi-addr">${o.address}</div>
         <div class="oi-meta">
           ${o.courier?`<span class="oi-courier">🛵 ${o.courier}</span>`:''}
           ${o.mapsLink?`<span class="oi-maps-tag">📍 Maps</span>`:`<span class="oi-no-maps">📍 ไม่มีลิงก์</span>`}
           <select class="status-sel-sm" onclick="event.stopPropagation()" onchange="changeStatus('${o.id}',this.value)">
-            <option value="pending"   ${o.status==='pending'  ?'selected':''}>⏳ รอ</option>
-            <option value="transit"   ${o.status==='transit'  ?'selected':''}>🚚 ส่ง</option>
+            <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอ</option>
+            <option value="transit" ${o.status==='transit'?'selected':''}>🚚 ส่ง</option>
             <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
-            <option value="failed"    ${o.status==='failed'   ?'selected':''}>❌ ไม่สำเร็จ</option>
+            <option value="failed" ${o.status==='failed'?'selected':''}>❌ ไม่สำเร็จ</option>
           </select>
         </div>
       </div>
-      <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
-    </div>`;
-  }).join('');
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
+        <button class="btn-delete" title="ลบรายการนี้" onclick="event.stopPropagation(); deleteOrder('${o.id}')">🗑</button>
+      </div>
+    </div>`).join('');
 }
 
 function renderDetail(){
@@ -616,27 +563,20 @@ function renderDetail(){
       <div class="d-id">${o.id}</div>
       <div class="d-name">${o.name}</div>
       <span class="badge ${BC[o.status]}" style="margin-top:6px;display:inline-block">${SL[o.status]}</span>
-
       <div class="d-section">
         <div class="ds-title">ข้อมูลผู้รับ</div>
         <div class="ds-row"><span class="k">โทร</span><span class="v">${o.phone||'-'}</span></div>
         <div class="ds-row"><span class="k">ที่อยู่</span><span class="v">${o.address}</span></div>
       </div>
-
       <div class="d-section">
         <div class="ds-title">ตำแหน่ง Google Maps</div>
         ${o.mapsLink
-          ? `<a class="maps-cta" href="${o.mapsLink}" target="_blank" rel="noopener">
-               <span class="maps-cta-icon">🗺</span>
-               <span class="maps-cta-body">
-                 <div class="maps-cta-title">เปิดใน Google Maps</div>
-                 <div class="maps-cta-sub">แตะเพื่อนำทางไปยังตำแหน่งจัดส่ง</div>
-               </span>
-               <span class="maps-cta-arrow">↗</span>
-             </a>`
-          : `<div class="no-maps-box">📍 ไม่มีลิงก์ Google Maps สำหรับคำสั่งนี้</div>`}
+          ?`<a class="maps-cta" href="${o.mapsLink}" target="_blank" rel="noopener">
+              <span class="maps-cta-icon">🗺</span>
+              <span class="maps-cta-body"><div class="maps-cta-title">เปิดใน Google Maps</div><div class="maps-cta-sub">แตะเพื่อนำทางไปยังตำแหน่งจัดส่ง</div></span>
+              <span class="maps-cta-arrow">↗</span></a>`
+          :`<div class="no-maps-box">📍 ไม่มีลิงก์ Google Maps สำหรับคำสั่งนี้</div>`}
       </div>
-
       <div class="d-section">
         <div class="ds-title">พัสดุ</div>
         <div class="ds-row"><span class="k">สินค้า</span><span class="v">${o.items}</span></div>
@@ -646,20 +586,18 @@ function renderDetail(){
         <div class="ds-row"><span class="k">พนักงาน</span><span class="v">${o.courier||'ยังไม่กำหนด'}</span></div>
         ${o.note?`<div class="ds-row"><span class="k">หมายเหตุ</span><span class="v">${o.note}</span></div>`:''}
       </div>
-
       <div class="d-section">
         <div class="ds-title">อัพเดทสถานะ</div>
         <select class="f-select-full" onchange="changeStatus('${o.id}',this.value)">
-          <option value="pending"   ${o.status==='pending'  ?'selected':''}>⏳ รอดำเนินการ</option>
-          <option value="transit"   ${o.status==='transit'  ?'selected':''}>🚚 กำลังส่ง</option>
+          <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอดำเนินการ</option>
+          <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
-          <option value="failed"    ${o.status==='failed'   ?'selected':''}>❌ ส่งไม่สำเร็จ</option>
+          <option value="failed" ${o.status==='failed'?'selected':''}>❌ ส่งไม่สำเร็จ</option>
         </select>
       </div>
-
       <div class="d-section">
         <div class="ds-title">ประวัติสถานะ</div>
-        ${o.timeline.map(t=>`
+        ${(o.timeline||[]).map(t=>`
           <div class="tl-item">
             <div class="tl-dot" style="background:${t.color}"></div>
             <div><div class="tl-text">${t.text}</div><div class="tl-time">${t.time}</div></div>
@@ -673,9 +611,9 @@ function showToast(msg,type){
   t.textContent=msg; t.className=type==='warn'?'warn':'';
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800);
 }
+window.showToast=showToast;
 
 document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
-renderAll();
 </script>
 </body>
 </html>

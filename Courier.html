@@ -145,28 +145,28 @@
   }
   .status-label { font-size:12px; color:var(--muted); font-weight:600; white-space:nowrap; }
   .status-select {
-    flex:1; padding:9px 12px; border-radius:10px;
-    border:1.5px solid var(--border); background:#fff;
-    font-family:var(--font); font-size:13px; font-weight:700;
+    flex:1; padding:10px 14px; border-radius:10px;
+    border:2px solid var(--border); background:#fff;
+    font-family:var(--font); font-size:14px; font-weight:700;
     color:var(--text); cursor:pointer; outline:none;
-    transition:border-color .2s; appearance:none;
+    transition:all .2s; appearance:none;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat:no-repeat; background-position:right 12px center;
-    padding-right:34px;
+    padding-right:36px;
   }
   .status-select:focus { border-color:var(--orange); }
-  .status-select.s-pending  { border-color:var(--yellow-b); color:var(--yellow); }
-  .status-select.s-transit  { border-color:var(--cyan-b);   color:var(--cyan); }
-  .status-select.s-delivered{ border-color:var(--green-b);  color:var(--green); }
-  .status-select.s-failed   { border-color:var(--red-b);    color:var(--red); }
+  .status-select.s-pending  { border-color:var(--yellow); background-color:var(--yellow-l); color:var(--yellow); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b45309' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  .status-select.s-transit  { border-color:var(--cyan);   background-color:var(--cyan-l);   color:var(--cyan);   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230891b2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  .status-select.s-delivered{ border-color:var(--green);  background-color:var(--green-l);  color:var(--green);  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23059669' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  .status-select.s-failed   { border-color:var(--red);    background-color:var(--red-l);    color:var(--red);    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23dc2626' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
 
   .btn-map {
-    padding:9px 14px; border-radius:10px; border:1.5px solid var(--border);
-    background:#fff; color:var(--muted); font-family:var(--font);
-    font-size:13px; cursor:pointer; transition:all .2s; white-space:nowrap;
-    text-decoration:none; display:inline-flex; align-items:center;
+    padding:10px 18px; border-radius:10px; border:2px solid var(--green);
+    background:var(--green-l); color:var(--green); font-family:var(--font);
+    font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; white-space:nowrap;
+    text-decoration:none; display:inline-flex; align-items:center; gap:6px;
   }
-  .btn-map:hover { border-color:var(--orange); color:var(--orange); background:var(--orange-l); }
+  .btn-map:hover { background:var(--green); color:#fff; box-shadow:0 4px 12px rgba(5,150,105,0.3); }
 
   /* ── MAP MODAL ── */
   .modal-bg {
@@ -266,9 +266,28 @@
 
 <div id="toast"></div>
 
-<script>
-let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
-let currentFilter = 'pending';
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
+  authDomain: "fleet-a49df.firebaseapp.com",
+  projectId: "fleet-a49df",
+  storageBucket: "fleet-a49df.firebasestorage.app",
+  messagingSenderId: "324785731593",
+  appId: "1:324785731593:web:b24e7977a2cccac01b60d8",
+  databaseURL: "https://fleet-a49df-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const ordersRef = ref(db, 'orders');
+
+let orders = [];
+let currentFilter = 'all';
 
 const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
 const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
@@ -278,10 +297,13 @@ function now(){
   return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
     +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
-function save(){ localStorage.setItem('ff_orders',JSON.stringify(orders)); }
 
-// reload from storage on focus (admin may have updated)
-window.addEventListener('focus', ()=>{ orders=JSON.parse(localStorage.getItem('ff_orders')||'[]'); renderAll(); });
+// ── REALTIME LISTENER ──
+onValue(ordersRef, snap => {
+  const data = snap.val() || {};
+  orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
+  renderAll();
+});
 
 // ── DATE ──
 const d = new Date();
@@ -295,25 +317,22 @@ function setFilter(f,btn){
   btn.classList.add('active');
   renderCards();
 }
+window.setFilter=setFilter;
 
 // ── STATUS CHANGE ──
 function changeStatus(id, newStatus){
   const o=orders.find(x=>x.id===id);
-  if(!o) return;
-  const old=o.status;
-  if(newStatus===old) return;
-  o.status=newStatus;
+  if(!o||newStatus===o.status) return;
   const msgs={transit:'พนักงานรับพัสดุและออกจัดส่ง',delivered:'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว',failed:'ส่งไม่สำเร็จ — ไม่มีผู้รับ',pending:'รีเซ็ตสถานะ'};
   const cs={transit:'#0891b2',delivered:'#059669',failed:'#dc2626',pending:'#b45309'};
-  o.timeline.push({text:msgs[newStatus],time:now(),color:cs[newStatus]});
-  save();
-  renderAll();
+  const newTimeline=[...(o.timeline||[]),{text:msgs[newStatus],time:now(),color:cs[newStatus]}];
+  update(ref(db,'orders/'+o._fbKey),{status:newStatus, timeline:newTimeline});
   if(newStatus==='delivered') showToast('✅ ส่งสำเร็จ! '+o.name,'green');
   else if(newStatus==='transit') showToast('🚚 ออกจัดส่งแล้ว');
   else if(newStatus==='failed') showToast('❌ บันทึก: ส่งไม่สำเร็จ','red');
   else showToast('🔄 อัพเดทสถานะแล้ว');
 }
-
+window.changeStatus=changeStatus;
 
 // ── RENDER ──
 function renderAll(){ renderStats(); renderCards(); }
@@ -332,7 +351,13 @@ function renderStats(){
 }
 
 function renderCards(){
-  const filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
+  const statusOrder={pending:0,transit:1,failed:2,delivered:3};
+  const allSorted=[...orders].sort((a,b)=>{
+    const sd=(statusOrder[a.status]??9)-(statusOrder[b.status]??9);
+    if(sd!==0) return sd;
+    return (b.createdAt||0)-(a.createdAt||0);
+  });
+  const filtered=currentFilter==='all'?allSorted:allSorted.filter(o=>o.status===currentFilter);
   if(!filtered.length){
     document.getElementById('mainGrid').innerHTML=`<div class="empty"><div class="emo">📭</div><div>ไม่มีรายการจัดส่ง</div></div>`;
     return;
@@ -347,10 +372,7 @@ function renderCards(){
         <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
       </div>
       <div class="card-body">
-        <div class="info-row">
-          <span class="ico">📍</span>
-          <span class="val">${o.address}</span>
-        </div>
+        <div class="info-row"><span class="ico">📍</span><span class="val">${o.address}</span></div>
         ${o.phone?`<div class="info-row"><span class="ico">📞</span><span class="val"><a href="tel:${o.phone}" style="color:#ea580c;font-weight:600">${o.phone}</a></span></div>`:''}
         <div class="info-row">
           <span class="ico">📦</span>
@@ -379,8 +401,6 @@ function showToast(msg, type){
   t.textContent=msg; t.className='show'+(type?' '+type:'');
   setTimeout(()=>t.className='',2500);
 }
-
-renderAll();
 </script>
 </body>
 </html>
