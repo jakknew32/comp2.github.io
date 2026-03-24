@@ -114,6 +114,7 @@
   }
   .card-id { font-family:var(--mono); font-size:12px; color:var(--muted); }
   .card-name { font-size:17px; font-weight:700; margin-top:2px; }
+  .product-name-big { font-size:20px; font-weight:700; color:var(--orange); }
 
   .badge { padding:4px 12px; border-radius:100px; font-size:11px; font-weight:800; }
   .b-pending  { background:var(--yellow-l); color:var(--yellow); }
@@ -376,7 +377,7 @@ function renderCards(){
         ${o.phone?`<div class="info-row"><span class="ico">📞</span><span class="val"><a href="tel:${o.phone}" style="color:#ea580c;font-weight:600">${o.phone}</a></span></div>`:''}
         <div class="info-row">
           <span class="ico">📦</span>
-          <span class="val">${o.items} · <span style="color:var(--muted)">${o.weight} กก.</span>
+          <span class="val"><span class="product-name-big">${o.items}</span> · <span style="color:var(--muted)">${o.weight} กก.</span>
           ${o.cod>0?`&nbsp;<span class="cod-tag">💰 COD ${o.cod.toLocaleString()} ฿</span>`:''}</span>
         </div>
         ${o.note?`<div class="info-row"><span class="ico">📝</span><span class="val" style="color:var(--muted);font-style:italic">${o.note}</span></div>`:''}
