@@ -204,12 +204,17 @@
     <!-- FORM -->
     <div class="tab-pane active" id="pane-form">
       <div class="form-scroll">
-
         <div class="f-row half">
+          <div>
+            <span class="f-label">เลขออเดอร์</span>
+            <input class="f-input" id="f_orderid" placeholder="เช่น OD20260324-001">
+          </div>
           <div>
             <span class="f-label">ชื่อผู้รับ *</span>
             <input class="f-input" id="f_name" placeholder="คุณสมชาย ใจดี">
           </div>
+        </div>
+        <div class="f-row half">
           <div>
             <span class="f-label">เบอร์โทร</span>
             <input class="f-input" id="f_phone" placeholder="0812345678">
@@ -421,6 +426,7 @@ function addOrder(){
     db.ref('orders').push(o);
   }
   // แสดงเลขออเดอร์ในฟอร์มหลังบันทึก
+  document.getElementById('f_orderid').value='';
   document.getElementById('f_name').value='';
   document.getElementById('f_phone').value='';
   document.getElementById('f_address').value='';
