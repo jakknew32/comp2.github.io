@@ -311,7 +311,9 @@
 <script>
 let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
 let currentFilter = 'all';
+
 let selectedId = null;
+let editId = null; // ใช้สำหรับโหมดแก้ไข
 
 function save(){ localStorage.setItem('ff_orders', JSON.stringify(orders)); }
 function now(){
@@ -400,8 +402,10 @@ function addOrder(){
   if(!name||!address||!items){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
   const mapsLink=document.getElementById('f_maps').value.trim();
   if(mapsLink&&!isValidMapsLink(mapsLink)){ showToast('⚠️ ลิงก์ Google Maps ไม่ถูกต้อง','warn'); return; }
-  const o={
-    id:genId(), name, address, mapsLink,
+  const data = {
+    name,
+    address,
+    mapsLink,
     phone:document.getElementById('f_phone').value.trim(),
     items,
     weight:parseFloat(document.getElementById('f_weight').value)||0,
@@ -409,17 +413,40 @@ function addOrder(){
     courier:document.getElementById('f_courier').value,
     date:document.getElementById('f_date').value,
     note:document.getElementById('f_note').value.trim(),
-    status:'pending',
-    timeline:[{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
   };
-  orders.unshift(o);
-  save();
+  if(editId){
+    // โหมดแก้ไข: อัปเดตข้อมูลรายการเดิม
+    const idx = orders.findIndex(x=>x.id===editId);
+    if(idx!==-1){
+      // เก็บสถานะและ timeline เดิม
+      data.id = orders[idx].id;
+      data.status = orders[idx].status;
+      data.timeline = orders[idx].timeline;
+      orders[idx] = data;
+      save();
+      showToast('✏️ แก้ไขคำสั่ง '+data.id+' สำเร็จ');
+      selectedId = data.id;
+      editId = null;
+      document.querySelector('.btn-submit').textContent = '📦 บันทึกคำสั่งจัดส่ง';
+    }
+  }else{
+    // โหมดเพิ่มใหม่
+    const o={
+      id:genId(),
+      ...data,
+      status:'pending',
+      timeline:[{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
+    };
+    orders.unshift(o);
+    save();
+    showToast('📦 เพิ่มคำสั่งจัดส่ง '+o.id+' สำเร็จ');
+    selectedId=o.id;
+  }
+  // ล้างฟอร์ม
   ['f_name','f_phone','f_address','f_maps','f_items','f_weight','f_cod','f_note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_courier').value='';
   document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
   validateMapsLink('');
-  showToast('📦 เพิ่มคำสั่งจัดส่ง '+o.id+' สำเร็จ');
-  selectedId=o.id;
   renderAll();
   renderDetail();
   switchTab('list',document.getElementById('tab-list'));
@@ -467,10 +494,15 @@ function renderList(){
   const f=currentFilter==='all'?orders:orders.filter(o=>o.status===currentFilter);
   document.getElementById('listCount').textContent=f.length+' รายการ';
   if(!f.length){ document.getElementById('orderList').innerHTML='<div class="empty-state"><div class="emo">🔍</div><div>ไม่พบรายการ</div></div>'; return; }
-  document.getElementById('orderList').innerHTML=f.map(o=>`
+  document.getElementById('orderList').innerHTML=f.map(o=>{
+    let editBtn = '';
+    if(o.status==='pending'||o.status==='transit'){
+      editBtn = `<button class="btn-link" style="margin-left:8px;font-size:11px;padding:2px 10px;" onclick="event.stopPropagation(); editOrder('${o.id}')">✏️ แก้ไข</button>`;
+    }
+    return `
     <div class="order-item ${selectedId===o.id?'sel':''}" onclick="selectOrder('${o.id}')">
       <div class="oi-left">
-        <div class="oi-id">${o.id}</div>
+        <div class="oi-id">${o.id}${editBtn}</div>
         <div class="oi-name">${o.name}</div>
         <div class="oi-addr">${o.address}</div>
         <div class="oi-meta">
@@ -485,7 +517,27 @@ function renderList(){
         </div>
       </div>
       <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+// ฟังก์ชันสำหรับแก้ไขรายการ
+function editOrder(id){
+  const o = orders.find(x=>x.id===id);
+  if(!o) return;
+  editId = id;
+  document.getElementById('f_name').value = o.name||'';
+  document.getElementById('f_phone').value = o.phone||'';
+  document.getElementById('f_address').value = o.address||'';
+  document.getElementById('f_maps').value = o.mapsLink||'';
+  document.getElementById('f_items').value = o.items||'';
+  document.getElementById('f_weight').value = o.weight||'';
+  document.getElementById('f_cod').value = o.cod||'';
+  document.getElementById('f_courier').value = o.courier||'';
+  document.getElementById('f_date').value = o.date||'';
+  document.getElementById('f_note').value = o.note||'';
+  validateMapsLink(o.mapsLink||'');
+  document.querySelector('.btn-submit').textContent = '✏️ บันทึกการแก้ไข';
+  switchTab('form',document.getElementById('tab-form'));
 }
 
 function renderDetail(){
