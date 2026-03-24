@@ -351,7 +351,17 @@ function renderStats(){
   const total=orders.length,
     pending=orders.filter(o=>o.status==='pending').length,
     transit=orders.filter(o=>o.status==='transit').length,
-    delivered=orders.filter(o=>o.status==='delivered').length;
+    delivered=orders.filter(o=>o.status==='delivered').length,
+    failed=orders.filter(o=>o.status==='failed').length;
+  // Update filter button text with counts
+  const btns = document.querySelectorAll('.f-pill');
+  if(btns.length>=5){
+    btns[0].innerHTML = `ทั้งหมด <span style='color:#64748b'>(${total})</span>`;
+    btns[1].innerHTML = `⏳ รอส่ง <span style='color:#b45309'>(${pending})</span>`;
+    btns[2].innerHTML = `🚚 กำลังส่ง <span style='color:#0891b2'>(${transit})</span>`;
+    btns[3].innerHTML = `✅ ส่งสำเร็จ <span style='color:#059669'>(${delivered})</span>`;
+    btns[4].innerHTML = `❌ ไม่สำเร็จ <span style='color:#dc2626'>(${failed})</span>`;
+  }
   const stats = [
     {n:total,l:'ทั้งหมด',c:'#1e293b',f:'all'},
     {n:pending,l:'รอส่ง',c:'#b45309',f:'pending'},

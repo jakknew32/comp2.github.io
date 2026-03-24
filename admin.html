@@ -780,5 +780,20 @@ renderAll();
   // The rest of the code (render, filter, etc.) remains unchanged, but now uses the global 'orders' array which is synced with RTDB.
 </script>
 
+<!-- ตัวอย่างการส่งข้อมูลไป Google Sheets API ผ่าน Apps Script Web App -->
+<script>
+// ตัวอย่างการส่งข้อมูล (เปลี่ยน URL เป็นของคุณเอง)
+function sendToGoogleSheetsExample() {
+  fetch('https://script.google.com/macros/s/AKfycbyEKNqB9CAU0Zg0s-fdWix-B7-mbR7KoaN6nvywe_S3XCo9hivHDKIN-MLQuCmIXQJ8/exec', {
+    method: 'POST',
+    body: JSON.stringify({name: 'สมชาย', phone: '0812345678', status: 'pending'}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  .then(res => res.text())
+  .then(txt => alert('Google Sheets response: '+txt));
+}
+// เรียกใช้: sendToGoogleSheetsExample();
+</script>
+
 </body>
 </html>
