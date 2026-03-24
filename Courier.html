@@ -393,11 +393,12 @@ function renderCards(){
   });
   let filtered=currentFilter==='all'?allSorted:allSorted.filter(o=>o.status===currentFilter);
   if(searchTerm) {
-    filtered = filtered.filter(o =>
-      (o.id && o.id.toLowerCase().includes(searchTerm)) ||
-      (o.orderid && o.orderid.toLowerCase().includes(searchTerm)) ||
-      (o.name && o.name.toLowerCase().includes(searchTerm))
-    );
+    filtered = filtered.filter(o => {
+      const fields = [
+        o.id, o.orderid, o.name, o.address, o.phone, o.items, o.courier, o.note, o.date
+      ];
+      return fields.some(f => f && f.toString().toLowerCase().includes(searchTerm));
+    });
   }
   if(!filtered.length){
     document.getElementById('mainGrid').innerHTML=`<div class="empty"><div class="emo">📭</div><div>ไม่มีรายการจัดส่ง</div></div>`;
