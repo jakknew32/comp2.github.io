@@ -558,5 +558,29 @@ function showToast(msg,type){
 document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
 renderAll();
 </script>
+
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- Add Firebase products that you want to use -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
+    authDomain: "fleet-a49df.firebaseapp.com",
+    projectId: "fleet-a49df",
+    storageBucket: "fleet-a49df.firebasestorage.app",
+    messagingSenderId: "324785731593",
+    appId: "1:324785731593:web:b24e7977a2cccac01b60d8",
+    measurementId: "G-V056SHCR18"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  // Now you can use 'db' to read/write Firestore data
+</script>
+
 </body>
 </html>

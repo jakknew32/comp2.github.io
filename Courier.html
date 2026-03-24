@@ -381,5 +381,59 @@ function showToast(msg, type){
 
 renderAll();
 </script>
+
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- Add Firebase products that you want to use -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
+    authDomain: "fleet-a49df.firebaseapp.com",
+    projectId: "fleet-a49df",
+    storageBucket: "fleet-a49df.firebasestorage.app",
+    messagingSenderId: "324785731593",
+    appId: "1:324785731593:web:b24e7977a2cccac01b60d8",
+    measurementId: "G-V056SHCR18"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // Example: Add courier data to Firestore
+  function addCourierData() {
+    const name = document.getElementById('courierName').value;
+    const phone = document.getElementById('courierPhone').value;
+    if (!name || !phone) {
+      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
+    db.collection('couriers').add({
+      name: name,
+      phone: phone,
+      timestamp: new Date()
+    })
+    .then((docRef) => {
+      alert('เพิ่มข้อมูลพนักงานส่งของเรียบร้อย! ID: ' + docRef.id);
+      document.getElementById('courierName').value = '';
+      document.getElementById('courierPhone').value = '';
+    })
+    .catch((error) => {
+      alert('เกิดข้อผิดพลาด: ' + error);
+    });
+  }
+</script>
+
+<!-- Example form to add courier data to Firestore -->
+<form onsubmit="event.preventDefault(); addCourierData();" style="margin:32px auto; max-width:320px; background:#fff; padding:24px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+  <h3 style="margin-bottom:16px;">เพิ่มข้อมูลพนักงานส่งของ</h3>
+  <input id="courierName" placeholder="ชื่อพนักงาน" required style="width:100%;margin-bottom:10px;padding:8px;" />
+  <input id="courierPhone" placeholder="เบอร์โทรศัพท์" required style="width:100%;margin-bottom:10px;padding:8px;" />
+  <button type="submit" style="width:100%;padding:10px;background:#ea580c;color:#fff;border:none;border-radius:6px;font-weight:700;">บันทึก</button>
+</form>
+
 </body>
 </html>
