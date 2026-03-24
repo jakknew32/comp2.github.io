@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetFlow — พนักงานส่งของ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --border: #dde3ec;
+    --s1: #f8fafc;
+    --orange: #ea580c;
+    --orange-l: #fff3ee;
+    --orange-b: #fed7aa;
+    --cyan: #0891b2;
+    --cyan-l: #ecfeff;
+    --cyan-b: #a5f3fc;
+    --green: #059669;
+    --green-l: #ecfdf5;
+    --green-b: #a7f3d0;
+    --yellow: #b45309;
+    --yellow-l: #fffbeb;
+    --yellow-b: #fde68a;
+    --red: #dc2626;
+    --red-l: #fef2f2;
+    --red-b: #fecaca;
+    --text: #1e293b;
+    --muted: #64748b;
+    --font: 'Sarabun', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* ── NAV ── */
+  nav {
+    background:#fff; border-bottom:1px solid var(--border);
+    padding:0 20px; height:56px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:100;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  }
+  .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
+  .logo em { color:var(--orange); font-style:normal; }
+  .logo sup { font-size:9px; color:var(--muted); letter-spacing:1px; }
+  .courier-badge {
+    background:var(--orange-l); border:1px solid var(--orange-b);
+    color:var(--orange); padding:5px 14px; border-radius:100px;
+    font-size:12px; font-weight:700;
+  }
+
+  /* ── HEADER ── */
+  .page-head {
+    background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+    padding:24px 20px 20px;
+    color:#fff;
+  }
+  .ph-greeting { font-size:13px; opacity:.8; }
+  .ph-title { font-size:24px; font-weight:700; margin-top:2px; }
+  .ph-sub { font-size:13px; opacity:.7; margin-top:4px; }
+
+  /* ── STATS ── */
+  .stats-row {
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:0; background:#fff; border-bottom:1px solid var(--border);
+  }
+  .stat-cell {
+    padding:14px 12px; text-align:center;
+    border-right:1px solid var(--border);
+  }
+  .stat-cell:last-child { border:none; }
+  .sc-n { font-family:var(--mono); font-size:22px; font-weight:700; }
+  .sc-l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+
+  /* ── FILTERS ── */
+  .filter-scroll {
+    padding:14px 16px; background:#fff; border-bottom:1px solid var(--border);
+    display:flex; gap:8px; overflow-x:auto;
+  }
+  .filter-scroll::-webkit-scrollbar { display:none; }
+  .f-pill {
+    padding:6px 16px; border-radius:100px; border:1.5px solid var(--border);
+    background:transparent; color:var(--muted); font-family:var(--font);
+    font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
+    transition:all .2s;
+  }
+  .f-pill:hover { border-color:var(--orange); color:var(--orange); }
+  .f-pill.active { border-color:var(--orange); background:var(--orange-l); color:var(--orange); }
+
+  /* ── MAIN ── */
+  .main { padding:16px; max-width:800px; margin:0 auto; }
+
+  /* ── CARD ── */
+  .delivery-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; margin-bottom:14px; overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,0.04);
+    transition:box-shadow .2s, transform .15s;
+  }
+  .delivery-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.1); transform:translateY(-1px); }
+
+  /* card accent by status */
+  .delivery-card.pending  { border-left:4px solid var(--yellow); }
+  .delivery-card.transit  { border-left:4px solid var(--cyan); }
+  .delivery-card.delivered{ border-left:4px solid var(--green); }
+  .delivery-card.failed   { border-left:4px solid var(--red); }
+
+  .card-head {
+    padding:14px 16px 10px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+  }
+  .card-id { font-family:var(--mono); font-size:12px; color:var(--muted); }
+  .card-name { font-size:17px; font-weight:700; margin-top:2px; }
+
+  .badge { padding:4px 12px; border-radius:100px; font-size:11px; font-weight:800; }
+  .b-pending  { background:var(--yellow-l); color:var(--yellow); }
+  .b-transit  { background:var(--cyan-l);   color:var(--cyan); }
+  .b-delivered{ background:var(--green-l);  color:var(--green); }
+  .b-failed   { background:var(--red-l);    color:var(--red); }
+
+  .card-body { padding:0 16px 12px; }
+  .info-row {
+    display:flex; align-items:flex-start; gap:10px;
+    padding:7px 0; border-bottom:1px solid var(--s1);
+    font-size:13px;
+  }
+  .info-row:last-child { border:none; }
+  .info-row .ico { width:20px; text-align:center; flex-shrink:0; font-size:15px; color:var(--muted); }
+  .info-row .val { color:var(--text); line-height:1.5; }
+  .cod-tag {
+    display:inline-flex; align-items:center; gap:4px;
+    background:var(--yellow-l); border:1px solid var(--yellow-b);
+    color:var(--yellow); padding:2px 10px; border-radius:100px;
+    font-size:12px; font-weight:700;
+  }
+
+  /* ── STATUS DROPDOWN ── */
+  .card-foot {
+    padding:12px 16px;
+    background:var(--s1); border-top:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
+  }
+  .status-label { font-size:12px; color:var(--muted); font-weight:600; white-space:nowrap; }
+  .status-select {
+    flex:1; padding:9px 12px; border-radius:10px;
+    border:1.5px solid var(--border); background:#fff;
+    font-family:var(--font); font-size:13px; font-weight:700;
+    color:var(--text); cursor:pointer; outline:none;
+    transition:border-color .2s; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center;
+    padding-right:34px;
+  }
+  .status-select:focus { border-color:var(--orange); }
+  .status-select.s-pending  { border-color:var(--yellow-b); color:var(--yellow); }
+  .status-select.s-transit  { border-color:var(--cyan-b);   color:var(--cyan); }
+  .status-select.s-delivered{ border-color:var(--green-b);  color:var(--green); }
+  .status-select.s-failed   { border-color:var(--red-b);    color:var(--red); }
+
+  .btn-map {
+    padding:9px 14px; border-radius:10px; border:1.5px solid var(--border);
+    background:#fff; color:var(--muted); font-family:var(--font);
+    font-size:13px; cursor:pointer; transition:all .2s; white-space:nowrap;
+    text-decoration:none; display:inline-flex; align-items:center;
+  }
+  .btn-map:hover { border-color:var(--orange); color:var(--orange); background:var(--orange-l); }
+
+  /* ── MAP MODAL ── */
+  .modal-bg {
+    position:fixed; inset:0; background:rgba(0,0,0,0.5);
+    z-index:500; display:flex; align-items:center; justify-content:center;
+    padding:20px; backdrop-filter:blur(4px);
+    opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .modal-bg.open { opacity:1; pointer-events:all; }
+  .modal {
+    background:#fff; border-radius:20px; width:100%; max-width:500px;
+    overflow:hidden; transform:translateY(20px); transition:transform .25s;
+    box-shadow:0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal-bg.open .modal { transform:translateY(0); }
+  .modal-head {
+    padding:16px 20px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .modal-title { font-size:16px; font-weight:700; }
+  .btn-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted); }
+  .modal-map {
+    height:280px; position:relative; background:#f0f4f8;
+    overflow:hidden; cursor:crosshair;
+  }
+  .modal-grid {
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);
+    background-size:32px 32px;
+  }
+  .modal-road-h, .modal-road-v { position:absolute; background:rgba(200,200,200,0.8); }
+  .modal-road-h { height:2px; width:100%; }
+  .modal-road-v { width:2px; height:100%; }
+  .modal-road-label { position:absolute; font-size:9px; color:#999; font-family:var(--mono); }
+  .modal-pin {
+    position:absolute; transform:translate(-50%,-100%);
+    display:flex; flex-direction:column; align-items:center;
+    pointer-events:none;
+  }
+  .modal-body { padding:16px 20px; }
+  .addr-display { font-size:13px; color:var(--text); line-height:1.6; }
+  .copy-btn {
+    margin-top:10px; display:block; width:100%; padding:10px;
+    background:var(--orange-l); border:1px solid var(--orange-b);
+    border-radius:8px; color:var(--orange); font-family:var(--font);
+    font-weight:700; font-size:13px; cursor:pointer; transition:all .2s;
+  }
+  .copy-btn:hover { background:var(--orange); color:#fff; }
+
+  /* ── EMPTY ── */
+  .empty {
+    text-align:center; padding:80px 20px; color:var(--muted);
+  }
+  .empty .emo { font-size:56px; margin-bottom:12px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px);
+    background:var(--text); color:#fff; padding:12px 22px;
+    border-radius:100px; font-size:13px; font-weight:600;
+    z-index:999; opacity:0; transition:all .3s; white-space:nowrap;
+  }
+  #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+  #toast.green { background:var(--green); }
+  #toast.red { background:var(--red); }
+
+  @media(max-width:500px){ .stats-row{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><em>FLEET</em>FLOW <sup>COURIER</sup></div>
+  <span class="courier-badge">🛵 พนักงานส่งของ</span>
+</nav>
+
+<div class="page-head">
+  <div class="ph-greeting">สวัสดี, พนักงานส่งของ 👋</div>
+  <div class="ph-title">งานจัดส่งของคุณ</div>
+  <div class="ph-sub" id="dateDisplay"></div>
+</div>
+
+<div class="stats-row" id="statsRow"></div>
+
+<div class="filter-scroll">
+  <button class="f-pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
+  <button class="f-pill" onclick="setFilter('pending',this)">⏳ รอส่ง</button>
+  <button class="f-pill" onclick="setFilter('transit',this)">🚚 กำลังส่ง</button>
+  <button class="f-pill" onclick="setFilter('delivered',this)">✅ ส่งสำเร็จ</button>
+  <button class="f-pill" onclick="setFilter('failed',this)">❌ ไม่สำเร็จ</button>
+</div>
+
+<div class="main" id="mainGrid"></div>
+
+
+<div id="toast"></div>
+
+<script>
+let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
+let currentFilter = 'all';
+
+const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
+const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
+
+function now(){
+  const d=new Date();
+  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
+    +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
+function save(){ localStorage.setItem('ff_orders',JSON.stringify(orders)); }
+
+// reload from storage on focus (admin may have updated)
+window.addEventListener('focus', ()=>{ orders=JSON.parse(localStorage.getItem('ff_orders')||'[]'); renderAll(); });
+
+// ── DATE ──
+const d = new Date();
+document.getElementById('dateDisplay').textContent =
+  d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+// ── FILTER ──
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.f-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+// ── STATUS CHANGE ──
+function changeStatus(id, newStatus){
+  const o=orders.find(x=>x.id===id);
+  if(!o) return;
+  const old=o.status;
+  if(newStatus===old) return;
+  o.status=newStatus;
+  const msgs={transit:'พนักงานรับพัสดุและออกจัดส่ง',delivered:'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว',failed:'ส่งไม่สำเร็จ — ไม่มีผู้รับ',pending:'รีเซ็ตสถานะ'};
+  const cs={transit:'#0891b2',delivered:'#059669',failed:'#dc2626',pending:'#b45309'};
+  o.timeline.push({text:msgs[newStatus],time:now(),color:cs[newStatus]});
+  save();
+  renderAll();
+  if(newStatus==='delivered') showToast('✅ ส่งสำเร็จ! '+o.name,'green');
+  else if(newStatus==='transit') showToast('🚚 ออกจัดส่งแล้ว');
+  else if(newStatus==='failed') showToast('❌ บันทึก: ส่งไม่สำเร็จ','red');
+  else showToast('🔄 อัพเดทสถานะแล้ว');
+}
+
+
+// ── RENDER ──
+function renderAll(){ renderStats(); renderCards(); }
+
+function renderStats(){
+  const total=orders.length,
+    pending=orders.filter(o=>o.status==='pending').length,
+    transit=orders.filter(o=>o.status==='transit').length,
+    delivered=orders.filter(o=>o.status==='delivered').length;
+  document.getElementById('statsRow').innerHTML=[
+    {n:total,l:'ทั้งหมด',c:'#1e293b'},
+    {n:pending,l:'รอส่ง',c:'#b45309'},
+    {n:transit,l:'กำลังส่ง',c:'#0891b2'},
+    {n:delivered,l:'สำเร็จ',c:'#059669'}
+  ].map(s=>`<div class="stat-cell"><div class="sc-n" style="color:${s.c}">${s.n}</div><div class="sc-l">${s.l}</div></div>`).join('');
+}
+
+function renderCards(){
+  const filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
+  if(!filtered.length){
+    document.getElementById('mainGrid').innerHTML=`<div class="empty"><div class="emo">📭</div><div>ไม่มีรายการจัดส่ง</div></div>`;
+    return;
+  }
+  document.getElementById('mainGrid').innerHTML = filtered.map(o=>`
+    <div class="delivery-card ${o.status}">
+      <div class="card-head">
+        <div>
+          <div class="card-id">${o.id} ${o.date?'· กำหนดส่ง '+o.date:''}</div>
+          <div class="card-name">${o.name}</div>
+        </div>
+        <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="ico">📍</span>
+          <span class="val">${o.address}</span>
+        </div>
+        ${o.phone?`<div class="info-row"><span class="ico">📞</span><span class="val"><a href="tel:${o.phone}" style="color:#ea580c;font-weight:600">${o.phone}</a></span></div>`:''}
+        <div class="info-row">
+          <span class="ico">📦</span>
+          <span class="val">${o.items} · <span style="color:var(--muted)">${o.weight} กก.</span>
+          ${o.cod>0?`&nbsp;<span class="cod-tag">💰 COD ${o.cod.toLocaleString()} ฿</span>`:''}</span>
+        </div>
+        ${o.note?`<div class="info-row"><span class="ico">📝</span><span class="val" style="color:var(--muted);font-style:italic">${o.note}</span></div>`:''}
+        ${o.courier?`<div class="info-row"><span class="ico">🛵</span><span class="val" style="color:var(--orange);font-weight:600">${o.courier}</span></div>`:''}
+      </div>
+      <div class="card-foot">
+        <span class="status-label">สถานะ:</span>
+        <select class="status-select s-${o.status}" onchange="changeStatus('${o.id}',this.value)">
+          <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอดำเนินการ</option>
+          <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
+          <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
+          <option value="failed" ${o.status==='failed'?'selected':''}>❌ ส่งไม่สำเร็จ</option>
+        </select>
+        ${o.mapsLink?`<a class="btn-map" href="${o.mapsLink}" target="_blank" rel="noopener">🗺 นำทาง</a>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ── TOAST ──
+function showToast(msg, type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show'+(type?' '+type:'');
+  setTimeout(()=>t.className='',2500);
+}
+
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetFlow — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060910;
+    --s1: #0d1117;
+    --s2: #161b27;
+    --border: #222d40;
+    --cyan: #22d3ee;
+    --orange: #f97316;
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font: 'Sarabun', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(ellipse 700px 400px at 5% 15%, rgba(34,211,238,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 500px 400px at 95% 85%, rgba(249,115,22,0.04) 0%, transparent 70%);
+  }
+
+  /* NAV */
+  nav {
+    position:sticky; top:0; z-index:200;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 28px; height:58px;
+    background:rgba(6,9,16,0.94); border-bottom:1px solid var(--border);
+    backdrop-filter:blur(20px);
+  }
+  .logo { font-family:var(--mono); font-size:17px; font-weight:700; letter-spacing:3px; }
+  .logo em { color:var(--cyan); font-style:normal; }
+  .logo sup { color:var(--orange); font-size:10px; letter-spacing:1px; }
+  .nav-right { display:flex; align-items:center; gap:12px; }
+  .nav-badge { background:rgba(249,115,22,0.15); border:1px solid rgba(249,115,22,0.4); color:var(--orange); padding:5px 14px; border-radius:100px; font-size:12px; font-weight:700; }
+  .btn-link { color:var(--muted); font-size:13px; text-decoration:none; padding:6px 14px; border:1px solid var(--border); border-radius:8px; transition:all .2s; }
+  .btn-link:hover { color:var(--cyan); border-color:var(--cyan); }
+
+  /* SHELL */
+  .shell { display:grid; grid-template-columns:480px 1fr; height:calc(100vh - 58px); position:relative; z-index:1; }
+
+  /* LEFT */
+  .form-side { border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+  .stats-bar { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .stat { padding:10px 14px; border-right:1px solid var(--border); text-align:center; }
+  .stat:last-child { border:none; }
+  .stat-n { font-family:var(--mono); font-size:20px; font-weight:700; }
+  .stat-l { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:1px; }
+
+  .side-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .side-tab { flex:1; padding:13px; text-align:center; font-size:13px; font-weight:700; color:var(--muted); cursor:pointer; border:none; background:none; font-family:var(--font); position:relative; transition:color .2s; }
+  .side-tab.active { color:var(--cyan); }
+  .side-tab.active::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--cyan); }
+
+  .tab-pane { flex:1; overflow:hidden; display:none; flex-direction:column; }
+  .tab-pane.active { display:flex; }
+  .tab-pane::-webkit-scrollbar { width:4px; }
+  .tab-pane::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+  /* FORM */
+  .form-scroll { flex:1; overflow-y:auto; padding:20px; }
+  .form-scroll::-webkit-scrollbar { width:4px; }
+  .form-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .f-row { margin-bottom:14px; }
+  .f-row.half { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .f-label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; display:block; }
+  .f-input,.f-select,.f-textarea { width:100%; background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-family:var(--font); font-size:13px; outline:none; transition:border-color .2s; }
+  .f-input:focus,.f-select:focus,.f-textarea:focus { border-color:var(--cyan); }
+  .f-select option { background:var(--s2); }
+  .f-textarea { resize:vertical; min-height:60px; }
+
+  /* Maps link field */
+  .maps-input-wrap { position:relative; }
+  .maps-input-wrap .f-input { padding-right:80px; }
+  .maps-actions { position:absolute; right:6px; top:50%; transform:translateY(-50%); display:flex; gap:4px; }
+  .maps-icon-btn { background:none; border:none; cursor:pointer; font-size:15px; padding:4px 6px; color:var(--muted); border-radius:6px; transition:all .2s; line-height:1; }
+  .maps-icon-btn:hover { background:var(--border); color:var(--text); }
+  .maps-hint { margin-top:6px; font-size:11px; color:var(--muted); padding:8px 12px; background:rgba(255,255,255,0.03); border-radius:6px; border:1px solid var(--border); line-height:1.6; }
+  .maps-hint.valid { border-color:rgba(52,211,153,0.3); background:rgba(52,211,153,0.04); color:var(--green); }
+  .maps-hint.invalid { border-color:rgba(248,113,113,0.3); background:rgba(248,113,113,0.04); color:var(--red); }
+
+  .btn-submit { width:100%; padding:13px; background:var(--cyan); color:#000; border:none; border-radius:10px; font-family:var(--font); font-weight:700; font-size:15px; cursor:pointer; transition:all .2s; margin-top:4px; }
+  .btn-submit:hover { background:#67e8f9; transform:translateY(-1px); }
+
+  /* LIST */
+  .list-head { padding:13px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .filters { padding:10px 20px; border-bottom:1px solid var(--border); display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0; }
+  .f-chip { padding:4px 12px; border-radius:100px; font-size:11px; font-weight:700; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; font-family:var(--font); transition:all .2s; }
+  .f-chip.active { border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.08); }
+  .f-chip:hover { border-color:var(--muted); color:var(--text); }
+  .order-scroll { flex:1; overflow-y:auto; }
+  .order-scroll::-webkit-scrollbar { width:4px; }
+  .order-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+  .order-item { padding:13px 20px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; display:flex; gap:12px; align-items:flex-start; }
+  .order-item:hover { background:var(--s2); }
+  .order-item.sel { background:rgba(34,211,238,0.06); border-left:2px solid var(--cyan); padding-left:18px; }
+  .order-item:last-child { border-bottom:none; }
+  .oi-left { flex:1; min-width:0; }
+  .oi-id { font-family:var(--mono); font-size:11px; color:var(--cyan); }
+  .oi-name { font-weight:600; font-size:14px; margin-top:1px; }
+  .oi-addr { font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .oi-meta { display:flex; gap:8px; margin-top:5px; align-items:center; flex-wrap:wrap; }
+  .oi-courier { font-size:11px; color:var(--orange); }
+  .oi-maps-tag { font-size:11px; color:var(--green); }
+  .oi-no-maps { font-size:11px; color:var(--muted); }
+
+  .status-sel-sm { background:var(--s2); border:1px solid var(--border); border-radius:6px; padding:3px 7px; color:var(--text); font-family:var(--font); font-size:11px; font-weight:700; cursor:pointer; outline:none; transition:border-color .2s; }
+  .status-sel-sm:focus { border-color:var(--cyan); }
+  .status-sel-sm option { background:var(--s2); }
+
+  .badge { padding:3px 10px; border-radius:100px; font-size:10px; font-weight:800; white-space:nowrap; }
+  .b-pending  { background:rgba(251,191,36,.12);  color:var(--yellow); }
+  .b-transit  { background:rgba(34,211,238,.12);  color:var(--cyan); }
+  .b-delivered{ background:rgba(52,211,153,.12);  color:var(--green); }
+  .b-failed   { background:rgba(248,113,113,.12); color:var(--red); }
+
+  /* RIGHT DETAIL */
+  .detail-side { overflow-y:auto; }
+  .detail-side::-webkit-scrollbar { width:4px; }
+  .detail-side::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .detail-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--muted); }
+  .detail-empty .emo { font-size:56px; }
+  .detail-wrap { padding:28px 32px; }
+  .d-id { font-family:var(--mono); font-size:12px; color:var(--cyan); }
+  .d-name { font-size:24px; font-weight:700; margin-top:3px; }
+  .d-section { margin-top:24px; }
+  .ds-title { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; }
+  .ds-row { display:flex; justify-content:space-between; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; gap:16px; }
+  .ds-row:last-child { border:none; }
+  .ds-row .k { color:var(--muted); white-space:nowrap; flex-shrink:0; }
+  .ds-row .v { font-weight:500; text-align:right; word-break:break-all; }
+
+  /* Maps open button — large CTA */
+  .maps-cta {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px; border-radius:12px; margin-top:8px;
+    background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.22);
+    color:var(--text); text-decoration:none; transition:all .2s; cursor:pointer;
+  }
+  .maps-cta:hover { background:rgba(34,211,238,0.13); border-color:var(--cyan); transform:translateY(-1px); box-shadow:0 4px 20px rgba(34,211,238,0.1); }
+  .maps-cta-icon { font-size:28px; flex-shrink:0; }
+  .maps-cta-body { flex:1; }
+  .maps-cta-title { font-size:14px; font-weight:700; color:var(--cyan); }
+  .maps-cta-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+  .maps-cta-arrow { font-size:18px; color:var(--muted); flex-shrink:0; }
+  .no-maps-box { padding:14px; border-radius:10px; background:var(--s2); border:1px dashed var(--border); color:var(--muted); font-size:12px; text-align:center; margin-top:8px; }
+
+  .f-select-full { width:100%; background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-family:var(--font); font-size:14px; font-weight:600; outline:none; cursor:pointer; transition:border-color .2s; }
+  .f-select-full:focus { border-color:var(--cyan); }
+  .f-select-full option { background:var(--s2); }
+
+  .tl-item { display:flex; gap:10px; margin-bottom:14px; align-items:flex-start; }
+  .tl-dot { width:9px; height:9px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+  .tl-text { font-size:13px; }
+  .tl-time { font-size:10px; color:var(--muted); font-family:var(--mono); margin-top:2px; }
+
+  #toast { position:fixed; bottom:24px; right:24px; background:var(--s2); border:1px solid var(--green); border-radius:10px; padding:11px 18px; color:var(--green); font-weight:700; font-size:13px; z-index:999; transform:translateY(60px); opacity:0; transition:all .3s; pointer-events:none; }
+  #toast.show { transform:translateY(0); opacity:1; }
+  #toast.warn { border-color:var(--orange); color:var(--orange); }
+
+  .empty-state { padding:40px 20px; text-align:center; color:var(--muted); }
+  .empty-state .emo { font-size:40px; margin-bottom:8px; }
+
+  @media(max-width:1000px){
+    .shell { grid-template-columns:1fr; height:auto; }
+    .form-side { border-right:none; border-bottom:1px solid var(--border); height:80vh; }
+    .detail-side { min-height:400px; }
+    .stats-bar { grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><em>FLEET</em>FLOW <sup>ADMIN</sup></div>
+  <div class="nav-right">
+    <span class="nav-badge">🛡 แอดมิน</span>
+    <a href="courier.html" class="btn-link">🛵 หน้าพนักงาน →</a>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- ═══ LEFT ═══ -->
+  <div class="form-side">
+    <div class="stats-bar" id="statsBar"></div>
+
+    <div class="side-tabs">
+      <button class="side-tab active" id="tab-form" onclick="switchTab('form',this)">➕ เพิ่มงาน</button>
+      <button class="side-tab" id="tab-list" onclick="switchTab('list',this)">📋 รายการ</button>
+    </div>
+
+    <!-- FORM -->
+    <div class="tab-pane active" id="pane-form">
+      <div class="form-scroll">
+
+        <div class="f-row half">
+          <div>
+            <span class="f-label">ชื่อผู้รับ *</span>
+            <input class="f-input" id="f_name" placeholder="คุณสมชาย ใจดี">
+          </div>
+          <div>
+            <span class="f-label">เบอร์โทร</span>
+            <input class="f-input" id="f_phone" placeholder="0812345678">
+          </div>
+        </div>
+
+        <div class="f-row">
+          <span class="f-label">ที่อยู่จัดส่ง *</span>
+          <input class="f-input" id="f_address" placeholder="บ้านเลขที่ ถนน แขวง เขต จังหวัด">
+        </div>
+
+        <!-- ── GOOGLE MAPS LINK ── -->
+        <div class="f-row">
+          <span class="f-label">🗺 ลิงก์ Google Maps</span>
+          <div class="maps-input-wrap">
+            <input class="f-input" id="f_maps"
+              placeholder="วางลิงก์ที่แชร์จาก Google Maps"
+              oninput="validateMapsLink(this.value)">
+            <div class="maps-actions">
+              <button class="maps-icon-btn" title="ล้างลิงก์" onclick="clearMaps()">✕</button>
+              <button class="maps-icon-btn" title="เปิดทดสอบ" onclick="previewMaps()">↗</button>
+            </div>
+          </div>
+          <div class="maps-hint" id="mapsHint">
+            📌 วิธีแชร์: เปิด Google Maps → แตะชื่อสถานที่ → กด <strong>แชร์</strong> → <strong>คัดลอกลิงก์</strong>
+          </div>
+        </div>
+
+        <div class="f-row">
+          <span class="f-label">รายการสินค้า *</span>
+          <input class="f-input" id="f_items" placeholder="เช่น สมาร์ทโฟน 1 เครื่อง">
+        </div>
+
+        <div class="f-row half">
+          <div>
+            <span class="f-label">น้ำหนัก (กก.)</span>
+            <input class="f-input" type="number" id="f_weight" placeholder="1.5" step="0.1" min="0">
+          </div>
+          <div>
+            <span class="f-label">COD (฿)</span>
+            <input class="f-input" type="number" id="f_cod" placeholder="0" min="0">
+          </div>
+        </div>
+
+        <div class="f-row half">
+          <div>
+            <span class="f-label">พนักงานส่ง</span>
+            <select class="f-select" id="f_courier">
+              <option value="">-- ยังไม่กำหนด --</option>
+              <option>สมบัติ รักงาน</option>
+              <option>วิชัย ขยันดี</option>
+              <option>นภา ส่งไว</option>
+              <option>อนันต์ มุ่งมั่น</option>
+            </select>
+          </div>
+          <div>
+            <span class="f-label">วันกำหนดส่ง</span>
+            <input class="f-input" type="date" id="f_date">
+          </div>
+        </div>
+
+        <div class="f-row">
+          <span class="f-label">หมายเหตุ</span>
+          <textarea class="f-textarea" id="f_note" placeholder="โทรก่อนส่ง, ฝากไว้ที่ประตู, ฯลฯ"></textarea>
+        </div>
+
+        <button class="btn-submit" onclick="addOrder()">📦 บันทึกคำสั่งจัดส่ง</button>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div class="tab-pane" id="pane-list">
+      <div class="list-head">
+        <span style="font-weight:700;font-size:14px">คำสั่งทั้งหมด</span>
+        <span id="listCount" style="font-family:var(--mono);color:var(--muted);font-size:12px"></span>
+      </div>
+      <div class="filters">
+        <button class="f-chip active" onclick="setFilter('all',this)">ทั้งหมด</button>
+        <button class="f-chip" onclick="setFilter('pending',this)">รอดำเนินการ</button>
+        <button class="f-chip" onclick="setFilter('transit',this)">กำลังส่ง</button>
+        <button class="f-chip" onclick="setFilter('delivered',this)">ส่งสำเร็จ</button>
+        <button class="f-chip" onclick="setFilter('failed',this)">ไม่สำเร็จ</button>
+      </div>
+      <div class="order-scroll" id="orderList"></div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT: DETAIL ═══ -->
+  <div class="detail-side" id="detailSide">
+    <div class="detail-empty">
+      <div class="emo">📋</div>
+      <div>เลือกคำสั่งจัดส่งเพื่อดูรายละเอียด</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
+let currentFilter = 'all';
+let selectedId = null;
+
+function save(){ localStorage.setItem('ff_orders', JSON.stringify(orders)); }
+function now(){
+  const d=new Date();
+  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
+    +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
+function genId(){ return 'FF-'+String(orders.length+1).padStart(4,'0'); }
+
+const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
+const SC={pending:'#fbbf24',transit:'#22d3ee',delivered:'#34d399',failed:'#f87171'};
+const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
+
+if(orders.length===0){
+  orders=[
+    {id:'FF-0001',name:'คุณสมชาย ใจดี',phone:'0812345678',
+     address:'123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กทม. 10110',
+     mapsLink:'https://maps.app.goo.gl/example1',
+     items:'สมาร์ทโฟน 1 เครื่อง',weight:0.5,cod:15900,
+     courier:'สมบัติ รักงาน',date:'2025-03-25',note:'โทรก่อน 30 นาที',
+     status:'transit',
+     timeline:[{text:'รับคำสั่งจัดส่ง',time:'24/03/2025 09:00',color:'#fbbf24'},
+               {text:'พนักงานรับพัสดุแล้ว',time:'24/03/2025 10:30',color:'#22d3ee'}]},
+    {id:'FF-0002',name:'คุณมาลี สวยงาม',phone:'0898765432',
+     address:'456 ถ.รัชดาภิเษก แขวงห้วยขวาง เขตห้วยขวาง กทม.',
+     mapsLink:'https://maps.app.goo.gl/example2',
+     items:'หูฟัง Bluetooth 2 ชิ้น',weight:0.8,cod:0,
+     courier:'วิชัย ขยันดี',date:'2025-03-25',note:'',
+     status:'pending',
+     timeline:[{text:'รับคำสั่งจัดส่ง',time:'24/03/2025 11:00',color:'#fbbf24'}]},
+    {id:'FF-0003',name:'คุณประทีป มีสุข',phone:'0656789012',
+     address:'789 ถ.ลาดพร้าว แขวงลาดพร้าว เขตลาดพร้าว กทม.',
+     mapsLink:'',
+     items:'กระเป๋าหนัง 1 ใบ',weight:1.2,cod:2500,
+     courier:'นภา ส่งไว',date:'2025-03-24',note:'บ้านชั้น 2',
+     status:'delivered',
+     timeline:[{text:'รับคำสั่งจัดส่ง',time:'23/03/2025 08:00',color:'#fbbf24'},
+               {text:'พนักงานรับพัสดุแล้ว',time:'23/03/2025 09:00',color:'#22d3ee'},
+               {text:'ส่งสำเร็จ',time:'24/03/2025 13:45',color:'#34d399'}]},
+  ];
+  save();
+}
+
+// ── MAPS ──
+function isValidMapsLink(url){
+  return /https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|google\.com\/maps|maps\.google\.com)/.test(url||'');
+}
+function validateMapsLink(val){
+  const h=document.getElementById('mapsHint');
+  if(!val){
+    h.className='maps-hint';
+    h.innerHTML='📌 วิธีแชร์: เปิด Google Maps → แตะชื่อสถานที่ → กด <strong>แชร์</strong> → <strong>คัดลอกลิงก์</strong>';
+    return;
+  }
+  if(isValidMapsLink(val)){
+    h.className='maps-hint valid';
+    h.innerHTML='✓ ลิงก์ถูกต้อง — กด ↗ เพื่อทดสอบเปิด';
+  } else {
+    h.className='maps-hint invalid';
+    h.innerHTML='✗ ลิงก์ไม่ถูกต้อง ควรเป็น maps.app.goo.gl หรือ google.com/maps';
+  }
+}
+function clearMaps(){
+  document.getElementById('f_maps').value='';
+  validateMapsLink('');
+}
+function previewMaps(){
+  const url=document.getElementById('f_maps').value.trim();
+  if(!url){ showToast('⚠️ ยังไม่ได้วางลิงก์ Maps','warn'); return; }
+  window.open(url,'_blank');
+}
+
+// ── TABS ──
+function switchTab(name,btn){
+  document.querySelectorAll('.side-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pane-'+name).classList.add('active');
+}
+
+// ── ADD ──
+function addOrder(){
+  const name=document.getElementById('f_name').value.trim();
+  const address=document.getElementById('f_address').value.trim();
+  const items=document.getElementById('f_items').value.trim();
+  if(!name||!address||!items){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
+  const mapsLink=document.getElementById('f_maps').value.trim();
+  if(mapsLink&&!isValidMapsLink(mapsLink)){ showToast('⚠️ ลิงก์ Google Maps ไม่ถูกต้อง','warn'); return; }
+  const o={
+    id:genId(), name, address, mapsLink,
+    phone:document.getElementById('f_phone').value.trim(),
+    items,
+    weight:parseFloat(document.getElementById('f_weight').value)||0,
+    cod:parseFloat(document.getElementById('f_cod').value)||0,
+    courier:document.getElementById('f_courier').value,
+    date:document.getElementById('f_date').value,
+    note:document.getElementById('f_note').value.trim(),
+    status:'pending',
+    timeline:[{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
+  };
+  orders.unshift(o);
+  save();
+  ['f_name','f_phone','f_address','f_maps','f_items','f_weight','f_cod','f_note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_courier').value='';
+  document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
+  validateMapsLink('');
+  showToast('📦 เพิ่มคำสั่งจัดส่ง '+o.id+' สำเร็จ');
+  selectedId=o.id;
+  renderAll();
+  renderDetail();
+  switchTab('list',document.getElementById('tab-list'));
+}
+
+// ── STATUS ──
+function changeStatus(id,newStatus){
+  const o=orders.find(x=>x.id===id);
+  if(!o||o.status===newStatus) return;
+  o.status=newStatus;
+  const msgs={transit:'พนักงานรับพัสดุและออกจัดส่ง',delivered:'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว',failed:'ส่งไม่สำเร็จ — ไม่มีผู้รับ',pending:'รีเซ็ตสถานะเป็น รอดำเนินการ'};
+  o.timeline.push({text:msgs[newStatus],time:now(),color:SC[newStatus]});
+  save();
+  showToast('✅ อัพเดท: '+SL[newStatus]);
+  renderStats(); renderList();
+  if(selectedId===id) renderDetail();
+}
+
+// ── FILTER ──
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.f-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+// ── SELECT ──
+function selectOrder(id){
+  selectedId=id; renderList(); renderDetail();
+}
+
+// ── RENDER ──
+function renderAll(){ renderStats(); renderList(); }
+
+function renderStats(){
+  const t=orders.length,p=orders.filter(o=>o.status==='pending').length,
+    tr=orders.filter(o=>o.status==='transit').length,d=orders.filter(o=>o.status==='delivered').length;
+  document.getElementById('statsBar').innerHTML=[
+    {n:t,l:'ทั้งหมด',c:'var(--cyan)'},{n:p,l:'รอส่ง',c:'var(--yellow)'},
+    {n:tr,l:'กำลังส่ง',c:'var(--cyan)'},{n:d,l:'สำเร็จ',c:'var(--green)'}
+  ].map(s=>`<div class="stat"><div class="stat-n" style="color:${s.c}">${s.n}</div><div class="stat-l">${s.l}</div></div>`).join('');
+}
+
+function renderList(){
+  const f=currentFilter==='all'?orders:orders.filter(o=>o.status===currentFilter);
+  document.getElementById('listCount').textContent=f.length+' รายการ';
+  if(!f.length){ document.getElementById('orderList').innerHTML='<div class="empty-state"><div class="emo">🔍</div><div>ไม่พบรายการ</div></div>'; return; }
+  document.getElementById('orderList').innerHTML=f.map(o=>`
+    <div class="order-item ${selectedId===o.id?'sel':''}" onclick="selectOrder('${o.id}')">
+      <div class="oi-left">
+        <div class="oi-id">${o.id}</div>
+        <div class="oi-name">${o.name}</div>
+        <div class="oi-addr">${o.address}</div>
+        <div class="oi-meta">
+          ${o.courier?`<span class="oi-courier">🛵 ${o.courier}</span>`:''}
+          ${o.mapsLink?`<span class="oi-maps-tag">📍 Maps</span>`:`<span class="oi-no-maps">📍 ไม่มีลิงก์</span>`}
+          <select class="status-sel-sm" onclick="event.stopPropagation()" onchange="changeStatus('${o.id}',this.value)">
+            <option value="pending"   ${o.status==='pending'  ?'selected':''}>⏳ รอ</option>
+            <option value="transit"   ${o.status==='transit'  ?'selected':''}>🚚 ส่ง</option>
+            <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
+            <option value="failed"    ${o.status==='failed'   ?'selected':''}>❌ ไม่สำเร็จ</option>
+          </select>
+        </div>
+      </div>
+      <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
+    </div>`).join('');
+}
+
+function renderDetail(){
+  if(!selectedId) return;
+  const o=orders.find(x=>x.id===selectedId);
+  if(!o) return;
+  document.getElementById('detailSide').innerHTML=`
+    <div class="detail-wrap">
+      <div class="d-id">${o.id}</div>
+      <div class="d-name">${o.name}</div>
+      <span class="badge ${BC[o.status]}" style="margin-top:6px;display:inline-block">${SL[o.status]}</span>
+
+      <div class="d-section">
+        <div class="ds-title">ข้อมูลผู้รับ</div>
+        <div class="ds-row"><span class="k">โทร</span><span class="v">${o.phone||'-'}</span></div>
+        <div class="ds-row"><span class="k">ที่อยู่</span><span class="v">${o.address}</span></div>
+      </div>
+
+      <div class="d-section">
+        <div class="ds-title">ตำแหน่ง Google Maps</div>
+        ${o.mapsLink
+          ? `<a class="maps-cta" href="${o.mapsLink}" target="_blank" rel="noopener">
+               <span class="maps-cta-icon">🗺</span>
+               <span class="maps-cta-body">
+                 <div class="maps-cta-title">เปิดใน Google Maps</div>
+                 <div class="maps-cta-sub">แตะเพื่อนำทางไปยังตำแหน่งจัดส่ง</div>
+               </span>
+               <span class="maps-cta-arrow">↗</span>
+             </a>`
+          : `<div class="no-maps-box">📍 ไม่มีลิงก์ Google Maps สำหรับคำสั่งนี้</div>`}
+      </div>
+
+      <div class="d-section">
+        <div class="ds-title">พัสดุ</div>
+        <div class="ds-row"><span class="k">สินค้า</span><span class="v">${o.items}</span></div>
+        <div class="ds-row"><span class="k">น้ำหนัก</span><span class="v">${o.weight} กก.</span></div>
+        <div class="ds-row"><span class="k">COD</span><span class="v" style="color:${o.cod>0?'var(--yellow)':'var(--muted)'}">${o.cod>0?o.cod.toLocaleString()+' ฿':'ไม่มี'}</span></div>
+        <div class="ds-row"><span class="k">กำหนดส่ง</span><span class="v">${o.date||'-'}</span></div>
+        <div class="ds-row"><span class="k">พนักงาน</span><span class="v">${o.courier||'ยังไม่กำหนด'}</span></div>
+        ${o.note?`<div class="ds-row"><span class="k">หมายเหตุ</span><span class="v">${o.note}</span></div>`:''}
+      </div>
+
+      <div class="d-section">
+        <div class="ds-title">อัพเดทสถานะ</div>
+        <select class="f-select-full" onchange="changeStatus('${o.id}',this.value)">
+          <option value="pending"   ${o.status==='pending'  ?'selected':''}>⏳ รอดำเนินการ</option>
+          <option value="transit"   ${o.status==='transit'  ?'selected':''}>🚚 กำลังส่ง</option>
+          <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
+          <option value="failed"    ${o.status==='failed'   ?'selected':''}>❌ ส่งไม่สำเร็จ</option>
+        </select>
+      </div>
+
+      <div class="d-section">
+        <div class="ds-title">ประวัติสถานะ</div>
+        ${o.timeline.map(t=>`
+          <div class="tl-item">
+            <div class="tl-dot" style="background:${t.color}"></div>
+            <div><div class="tl-text">${t.text}</div><div class="tl-time">${t.time}</div></div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=type==='warn'?'warn':'';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
+renderAll();
+</script>
+</body>
+</html>
