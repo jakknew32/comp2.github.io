@@ -267,7 +267,7 @@
 
 <script>
 let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
-let currentFilter = 'all';
+let currentFilter = 'pending';
 
 const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
 const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};

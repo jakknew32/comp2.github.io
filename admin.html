@@ -400,8 +400,10 @@ function addOrder(){
   if(!name||!address||!items){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
   const mapsLink=document.getElementById('f_maps').value.trim();
   if(mapsLink&&!isValidMapsLink(mapsLink)){ showToast('⚠️ ลิงก์ Google Maps ไม่ถูกต้อง','warn'); return; }
+  // สร้างเลขออเดอร์อัตโนมัติ (orderid)
+  const orderid = 'OD' + Date.now();
   const o={
-    id:genId(), name, address, mapsLink,
+    id:orderid, orderid, name, address, mapsLink,
     phone:document.getElementById('f_phone').value.trim(),
     items,
     weight:parseFloat(document.getElementById('f_weight').value)||0,
@@ -418,11 +420,19 @@ function addOrder(){
   if (typeof db !== 'undefined' && db.ref) {
     db.ref('orders').push(o);
   }
-  ['f_name','f_phone','f_address','f_maps','f_items','f_weight','f_cod','f_note'].forEach(id=>document.getElementById(id).value='');
+  // แสดงเลขออเดอร์ในฟอร์มหลังบันทึก
+  document.getElementById('f_name').value='';
+  document.getElementById('f_phone').value='';
+  document.getElementById('f_address').value='';
+  document.getElementById('f_maps').value='';
+  document.getElementById('f_items').value='';
+  document.getElementById('f_weight').value='';
+  document.getElementById('f_cod').value='';
+  document.getElementById('f_note').value='';
   document.getElementById('f_courier').value='';
   document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
   validateMapsLink('');
-  showToast('📦 เพิ่มคำสั่งจัดส่ง '+o.id+' สำเร็จ');
+  showToast('📦 เพิ่มคำสั่งจัดส่ง '+o.orderid+' สำเร็จ');
   selectedId=o.id;
   renderAll();
   renderDetail();
@@ -471,10 +481,16 @@ function renderList(){
   const f=currentFilter==='all'?orders:orders.filter(o=>o.status===currentFilter);
   document.getElementById('listCount').textContent=f.length+' รายการ';
   if(!f.length){ document.getElementById('orderList').innerHTML='<div class="empty-state"><div class="emo">🔍</div><div>ไม่พบรายการ</div></div>'; return; }
-  document.getElementById('orderList').innerHTML=f.map(o=>`
+  document.getElementById('orderList').innerHTML=f.map(o=>{
+    let editBtn = '';
+    // อนุญาตแก้ไขเฉพาะ pending, transit, failed
+    if(o.status==='pending'||o.status==='transit'||o.status==='failed'){
+      editBtn = `<button class="btn-link" style="margin-left:8px;font-size:11px;padding:2px 10px;" onclick="event.stopPropagation(); editOrder('${o.id}')">✏️ แก้ไข</button>`;
+    }
+    return `
     <div class="order-item ${selectedId===o.id?'sel':''}" onclick="selectOrder('${o.id}')">
       <div class="oi-left">
-        <div class="oi-id">${o.id}</div>
+        <div class="oi-id">${o.orderid||o.id}${editBtn}</div>
         <div class="oi-name">${o.name}</div>
         <div class="oi-addr">${o.address}</div>
         <div class="oi-meta">
@@ -489,7 +505,8 @@ function renderList(){
         </div>
       </div>
       <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderDetail(){
