@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FleetFlow — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #060910;
@@ -18,7 +18,7 @@
     --red: #f87171;
     --text: #e2e8f0;
     --muted: #64748b;
-    --font: 'Sarabun', sans-serif;
+    --font: 'Kanit', sans-serif;
     --mono: 'JetBrains Mono', monospace;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -324,11 +324,7 @@
 
 <script>
 
-let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
-let currentFilter = 'all';
-let selectedId = null;
-let editId = null; // ใช้สำหรับโหมดแก้ไข
-let itemsArr = [];
+// (Removed: now declared in RTDB section)
 
 function save(){ localStorage.setItem('ff_orders', JSON.stringify(orders)); }
 function now(){
@@ -628,9 +624,10 @@ renderAll();
 </script>
 
 <!-- Firebase App (the core Firebase SDK) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<!-- Add Firebase products that you want to use -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- Firebase Modular v9+ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
 
 <script>
   // Your web app's Firebase configuration
@@ -645,9 +642,142 @@ renderAll();
   };
 
   // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  // Now you can use 'db' to read/write Firestore data
+  const app = firebase.initializeApp ? firebase.initializeApp(firebaseConfig) : firebase.initializeApp(firebaseConfig);
+  const database = firebase.database ? firebase.database() : getDatabase();
+
+  // --- RTDB ORDER SYNC ---
+  const ORDERS_PATH = 'orders';
+  let orders = [];
+  let currentFilter = 'all';
+  let selectedId = null;
+  let editId = null;
+  let itemsArr = [];
+  let rtdbConnected = false;
+
+  // Connection status
+  function updateConnectionStatus(connected) {
+    rtdbConnected = connected;
+    showToast(connected ? '✅ เชื่อมต่อ Firebase เรียบร้อย' : '⚠️ ขาดการเชื่อมต่อ Firebase', connected ? '' : 'warn');
+  }
+
+  // Listen for connection
+  firebase.database().ref(".info/connected").on("value", function(snap) {
+    updateConnectionStatus(!!snap.val());
+  });
+
+  // Listen for order changes
+  firebase.database().ref(ORDERS_PATH).on('value', function(snapshot) {
+    const val = snapshot.val() || {};
+    orders = Object.values(val).sort((a, b) => (b.timeline?.[0]?.time || '').localeCompare(a.timeline?.[0]?.time || ''));
+    renderAll();
+    renderDetail();
+  });
+
+  // Save order (add or update)
+  function saveOrderToFirebase(order) {
+    const id = order.id;
+    firebase.database().ref(ORDERS_PATH + '/' + id).set(order);
+  }
+
+  // Add order
+  function addOrder() {
+    const orderid = document.getElementById('f_orderid').value.trim();
+    const name = document.getElementById('f_name').value.trim();
+    const address = document.getElementById('f_address').value.trim();
+    if (!orderid || !name || !address || itemsArr.length === 0) { showToast('⚠️ กรุณากรอกข้อมูลให้ครบ', 'warn'); return; }
+    const mapsLink = document.getElementById('f_maps').value.trim();
+    if (mapsLink && !isValidMapsLink(mapsLink)) { showToast('⚠️ ลิงก์ Google Maps ไม่ถูกต้อง', 'warn'); return; }
+    const data = {
+      orderid,
+      name,
+      address,
+      mapsLink,
+      phone: document.getElementById('f_phone').value.trim(),
+      items: JSON.parse(JSON.stringify(itemsArr)),
+      weight: parseFloat(document.getElementById('f_weight').value) || 0,
+      cod: parseFloat(document.getElementById('f_cod').value) || 0,
+      courier: document.getElementById('f_courier').value,
+      date: document.getElementById('f_date').value,
+      note: document.getElementById('f_note').value.trim(),
+    };
+    if (editId) {
+      // Edit mode
+      const idx = orders.findIndex(x => x.id === editId);
+      if (idx !== -1) {
+        data.id = orders[idx].id;
+        data.status = orders[idx].status;
+        data.timeline = orders[idx].timeline;
+        saveOrderToFirebase(data);
+        showToast('✏️ แก้ไขคำสั่ง ' + data.id + ' สำเร็จ');
+        selectedId = data.id;
+        editId = null;
+        document.querySelector('.btn-submit').textContent = '📦 บันทึกคำสั่งจัดส่ง';
+      }
+    } else {
+      // Add new
+      const o = {
+        id: genId(),
+        ...data,
+        status: 'pending',
+        timeline: [{ text: 'รับคำสั่งจัดส่ง', time: now(), color: '#fbbf24' }]
+      };
+      saveOrderToFirebase(o);
+      showToast('📦 เพิ่มคำสั่งจัดส่ง ' + o.id + ' สำเร็จ');
+      selectedId = o.id;
+    }
+    // Clear form
+    ['f_orderid', 'f_name', 'f_phone', 'f_address', 'f_maps', 'f_weight', 'f_cod', 'f_note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f_courier').value = '';
+    document.getElementById('f_date').valueAsDate = new Date(Date.now() + 86400000);
+    itemsArr = [];
+    renderItemsList();
+    validateMapsLink('');
+    renderAll();
+    renderDetail();
+    switchTab('list', document.getElementById('tab-list'));
+  }
+
+  // Change status
+  function changeStatus(id, newStatus) {
+    const o = orders.find(x => x.id === id);
+    if (!o || o.status === newStatus) return;
+    o.status = newStatus;
+    const msgs = { transit: 'พนักงานรับพัสดุและออกจัดส่ง', delivered: 'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว', failed: 'ส่งไม่สำเร็จ — ไม่มีผู้รับ', pending: 'รีเซ็ตสถานะเป็น รอดำเนินการ' };
+    o.timeline.push({ text: msgs[newStatus], time: now(), color: SC[newStatus] });
+    saveOrderToFirebase(o);
+    showToast('✅ อัพเดท: ' + SL[newStatus]);
+    renderStats(); renderList();
+    if (selectedId === id) renderDetail();
+  }
+
+  // Edit order
+  function editOrder(id) {
+    const o = orders.find(x => x.id === id);
+    if (!o) return;
+    editId = id;
+    document.getElementById('f_orderid').value = o.orderid || '';
+    document.getElementById('f_name').value = o.name || '';
+    document.getElementById('f_phone').value = o.phone || '';
+    document.getElementById('f_address').value = o.address || '';
+    document.getElementById('f_maps').value = o.mapsLink || '';
+    itemsArr = Array.isArray(o.items) ? JSON.parse(JSON.stringify(o.items)) : [];
+    renderItemsList();
+    document.getElementById('f_weight').value = o.weight || '';
+    document.getElementById('f_cod').value = o.cod || '';
+    document.getElementById('f_courier').value = o.courier || '';
+    document.getElementById('f_date').value = o.date || '';
+    document.getElementById('f_note').value = o.note || '';
+    validateMapsLink(o.mapsLink || '');
+    document.querySelector('.btn-submit').textContent = '✏️ บันทึกการแก้ไข';
+    switchTab('form', document.getElementById('tab-form'));
+  }
+
+  // Generate ID (RTDB: use timestamp-based for uniqueness)
+  function genId() {
+    return 'FF-' + Date.now();
+  }
+
+  // The rest of the code (render, filter, etc.) remains unchanged, but now uses the global 'orders' array which is synced with RTDB.
 </script>
 
 </body>
