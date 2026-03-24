@@ -323,7 +323,18 @@ function uploadCSV() {
   const file = fileInput.files[0];
   const reader = new FileReader();
   reader.onload = function(e) {
-    let text = e.target.result;
+    // ถอดรหัสอัตโนมัติ: ลอง UTF-8 ก่อน ถ้าไม่ผ่านให้ใช้ Windows-874 (TIS-620)
+    let text;
+    try {
+      const utf8 = new TextDecoder('utf-8', { fatal: true }).decode(e.target.result);
+      text = utf8;
+    } catch(err) {
+      try {
+        text = new TextDecoder('windows-874').decode(e.target.result);
+      } catch(err2) {
+        text = new TextDecoder('utf-8', { fatal: false }).decode(e.target.result);
+      }
+    }
     // Remove BOM if present (for UTF-8 with BOM)
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
     // Use a robust CSV parser to handle quoted fields and commas inside fields
@@ -391,8 +402,8 @@ function uploadCSV() {
     showToast('✅ เพิ่ม '+count+' รายการจาก CSV');
     fileInput.value = '';
   };
-  // Always read as UTF-8
-  reader.readAsText(file, 'utf-8');
+  // อ่านเป็น ArrayBuffer เพื่อรองรับการถอดรหัสหลาย encoding
+  reader.readAsArrayBuffer(file);
 }
 let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
 let currentFilter = 'all';
