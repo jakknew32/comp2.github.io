@@ -323,30 +323,60 @@ function uploadCSV() {
   const file = fileInput.files[0];
   const reader = new FileReader();
   reader.onload = function(e) {
-    const text = e.target.result;
-    const rows = text.split(/\r?\n/).filter(r=>r.trim());
+    let text = e.target.result;
+    // Remove BOM if present (for UTF-8 with BOM)
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    // Use a robust CSV parser to handle quoted fields and commas inside fields
+    function parseCSV(str) {
+      const rows = [];
+      let row = [], col = '', inQuotes = false, i = 0;
+      while (i < str.length) {
+        const c = str[i];
+        if (inQuotes) {
+          if (c === '"') {
+            if (str[i+1] === '"') { col += '"'; i++; } // Escaped quote
+            else inQuotes = false;
+          } else {
+            col += c;
+          }
+        } else {
+          if (c === '"') inQuotes = true;
+          else if (c === ',') { row.push(col); col = ''; }
+          else if (c === '\n' || c === '\r') {
+            if (col !== '' || row.length > 0) { row.push(col); rows.push(row); }
+            row = []; col = '';
+            // Handle \r\n
+            if (c === '\r' && str[i+1] === '\n') i++;
+          } else {
+            col += c;
+          }
+        }
+        i++;
+      }
+      if (col !== '' || row.length > 0) { row.push(col); rows.push(row); }
+      return rows;
+    }
+    const rows = parseCSV(text).filter(r=>r.join('').trim());
     if (rows.length < 2) { showToast('⚠️ ไฟล์ไม่มีข้อมูล','warn'); return; }
-    // แปลง header
-    // 0:เลขออเดอร์, 1:ชื่อผู้รับ, 2:เบอร์โทร, 3:ที่อยู่จัดส่ง, 4:ลิงก์ Google Maps, 5:รายการสินค้า, 6:น้ำหนัก, 7:COD, 8:พนักงาน, 9:วันกำหนดส่ง, 10:หมายเหตุ
     let count = 0;
     for (let i = 1; i < rows.length; i++) {
-      const cols = rows[i].split(',');
+      const cols = rows[i];
       if (cols.length < 5) continue; // ข้อมูลไม่ครบ
-      const orderid = cols[0].trim();
+      const orderid = (cols[0]||'').trim();
       if (!orderid) continue;
       const o = {
         id: orderid,
         orderid: orderid,
-        name: cols[1]?.trim()||'',
-        phone: cols[2]?.trim()||'',
-        address: cols[3]?.trim()||'',
-        mapsLink: cols[4]?.trim()||'',
-        items: cols[5]?.trim()||'',
+        name: (cols[1]||'').trim(),
+        phone: (cols[2]||'').trim(),
+        address: (cols[3]||'').trim(),
+        mapsLink: (cols[4]||'').trim(),
+        items: (cols[5]||'').trim(),
         weight: parseFloat(cols[6])||0,
         cod: parseFloat(cols[7])||0,
-        courier: cols[8]?.trim()||'',
-        date: cols[9]?.trim()||'',
-        note: cols[10]?.trim()||'',
+        courier: (cols[8]||'').trim(),
+        date: (cols[9]||'').trim(),
+        note: (cols[10]||'').trim(),
         status: 'pending',
         timeline: [{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
       };
@@ -361,7 +391,8 @@ function uploadCSV() {
     showToast('✅ เพิ่ม '+count+' รายการจาก CSV');
     fileInput.value = '';
   };
-  reader.readAsText(file);
+  // Always read as UTF-8
+  reader.readAsText(file, 'utf-8');
 }
 let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
 let currentFilter = 'all';
