@@ -6,6 +6,29 @@
 <title>FleetFlow — พนักงานส่งของ</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
+    .search-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 16px 0 16px;
+      background: #fff;
+    }
+    .search-input {
+      width: 100%;
+      max-width: 340px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-size: 15px;
+      font-family: var(--font);
+      color: var(--text);
+      background: #f8fafc;
+      transition: border-color .2s;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: var(--orange);
+    }
   :root {
     --bg: #f0f4f8;
     --card: #ffffff;
@@ -262,6 +285,9 @@
   <button class="f-pill" onclick="setFilter('failed',this)">❌ ไม่สำเร็จ</button>
 </div>
 
+<div class="search-row">
+  <input class="search-input" id="searchInput" placeholder="ค้นหาเลขออเดอร์ หรือชื่อผู้รับ..." oninput="onSearchChange()">
+</div>
 <div class="main" id="mainGrid"></div>
 
 
@@ -287,8 +313,15 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const ordersRef = ref(db, 'orders');
 
+
 let orders = [];
 let currentFilter = 'all';
+let searchTerm = '';
+function onSearchChange() {
+  searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+  renderCards();
+}
+window.onSearchChange = onSearchChange;
 
 const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
 const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
@@ -358,7 +391,14 @@ function renderCards(){
     if(sd!==0) return sd;
     return (b.createdAt||0)-(a.createdAt||0);
   });
-  const filtered=currentFilter==='all'?allSorted:allSorted.filter(o=>o.status===currentFilter);
+  let filtered=currentFilter==='all'?allSorted:allSorted.filter(o=>o.status===currentFilter);
+  if(searchTerm) {
+    filtered = filtered.filter(o =>
+      (o.id && o.id.toLowerCase().includes(searchTerm)) ||
+      (o.orderid && o.orderid.toLowerCase().includes(searchTerm)) ||
+      (o.name && o.name.toLowerCase().includes(searchTerm))
+    );
+  }
   if(!filtered.length){
     document.getElementById('mainGrid').innerHTML=`<div class="empty"><div class="emo">📭</div><div>ไม่มีรายการจัดส่ง</div></div>`;
     return;
