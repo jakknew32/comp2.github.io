@@ -205,20 +205,27 @@
     <div class="tab-pane active" id="pane-form">
       <div class="form-scroll">
 
+
         <div class="f-row half">
+          <div>
+            <span class="f-label">หมายเลขออเดอร์ *</span>
+            <input class="f-input" id="f_orderid" placeholder="เช่น 20240324-001">
+          </div>
           <div>
             <span class="f-label">ชื่อผู้รับ *</span>
             <input class="f-input" id="f_name" placeholder="คุณสมชาย ใจดี">
           </div>
+        </div>
+
+        <div class="f-row half">
           <div>
             <span class="f-label">เบอร์โทร</span>
             <input class="f-input" id="f_phone" placeholder="0812345678">
           </div>
-        </div>
-
-        <div class="f-row">
-          <span class="f-label">ที่อยู่จัดส่ง *</span>
-          <input class="f-input" id="f_address" placeholder="บ้านเลขที่ ถนน แขวง เขต จังหวัด">
+          <div>
+            <span class="f-label">ที่อยู่จัดส่ง *</span>
+            <input class="f-input" id="f_address" placeholder="บ้านเลขที่ ถนน แขวง เขต จังหวัด">
+          </div>
         </div>
 
         <!-- ── GOOGLE MAPS LINK ── -->
@@ -239,8 +246,15 @@
         </div>
 
         <div class="f-row">
+
+        <div class="f-row">
           <span class="f-label">รายการสินค้า *</span>
-          <input class="f-input" id="f_items" placeholder="เช่น สมาร์ทโฟน 1 เครื่อง">
+          <div id="items-list"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <input class="f-input" id="item_name" placeholder="ชื่อสินค้า" style="flex:2;">
+            <input class="f-input" id="item_qty" type="number" min="1" value="1" style="flex:1;max-width:80px;">
+            <button type="button" class="btn-link" style="padding:8px 14px;" onclick="addItemRow()">➕ เพิ่ม</button>
+          </div>
         </div>
 
         <div class="f-row half">
@@ -309,11 +323,12 @@
 <div id="toast"></div>
 
 <script>
+
 let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
 let currentFilter = 'all';
-
 let selectedId = null;
 let editId = null; // ใช้สำหรับโหมดแก้ไข
+let itemsArr = [];
 
 function save(){ localStorage.setItem('ff_orders', JSON.stringify(orders)); }
 function now(){
@@ -326,36 +341,6 @@ function genId(){ return 'FF-'+String(orders.length+1).padStart(4,'0'); }
 const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
 const SC={pending:'#fbbf24',transit:'#22d3ee',delivered:'#34d399',failed:'#f87171'};
 const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
-
-if(orders.length===0){
-  orders=[
-    {id:'FF-0001',name:'คุณสมชาย ใจดี',phone:'0812345678',
-     address:'123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กทม. 10110',
-     mapsLink:'https://maps.app.goo.gl/example1',
-     items:'สมาร์ทโฟน 1 เครื่อง',weight:0.5,cod:15900,
-     courier:'สมบัติ รักงาน',date:'2025-03-25',note:'โทรก่อน 30 นาที',
-     status:'transit',
-     timeline:[{text:'รับคำสั่งจัดส่ง',time:'24/03/2025 09:00',color:'#fbbf24'},
-               {text:'พนักงานรับพัสดุแล้ว',time:'24/03/2025 10:30',color:'#22d3ee'}]},
-    {id:'FF-0002',name:'คุณมาลี สวยงาม',phone:'0898765432',
-     address:'456 ถ.รัชดาภิเษก แขวงห้วยขวาง เขตห้วยขวาง กทม.',
-     mapsLink:'https://maps.app.goo.gl/example2',
-     items:'หูฟัง Bluetooth 2 ชิ้น',weight:0.8,cod:0,
-     courier:'วิชัย ขยันดี',date:'2025-03-25',note:'',
-     status:'pending',
-     timeline:[{text:'รับคำสั่งจัดส่ง',time:'24/03/2025 11:00',color:'#fbbf24'}]},
-    {id:'FF-0003',name:'คุณประทีป มีสุข',phone:'0656789012',
-     address:'789 ถ.ลาดพร้าว แขวงลาดพร้าว เขตลาดพร้าว กทม.',
-     mapsLink:'',
-     items:'กระเป๋าหนัง 1 ใบ',weight:1.2,cod:2500,
-     courier:'นภา ส่งไว',date:'2025-03-24',note:'บ้านชั้น 2',
-     status:'delivered',
-     timeline:[{text:'รับคำสั่งจัดส่ง',time:'23/03/2025 08:00',color:'#fbbf24'},
-               {text:'พนักงานรับพัสดุแล้ว',time:'23/03/2025 09:00',color:'#22d3ee'},
-               {text:'ส่งสำเร็จ',time:'24/03/2025 13:45',color:'#34d399'}]},
-  ];
-  save();
-}
 
 // ── MAPS ──
 function isValidMapsLink(url){
@@ -396,18 +381,19 @@ function switchTab(name,btn){
 
 // ── ADD ──
 function addOrder(){
+  const orderid=document.getElementById('f_orderid').value.trim();
   const name=document.getElementById('f_name').value.trim();
   const address=document.getElementById('f_address').value.trim();
-  const items=document.getElementById('f_items').value.trim();
-  if(!name||!address||!items){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
+  if(!orderid||!name||!address||itemsArr.length===0){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
   const mapsLink=document.getElementById('f_maps').value.trim();
   if(mapsLink&&!isValidMapsLink(mapsLink)){ showToast('⚠️ ลิงก์ Google Maps ไม่ถูกต้อง','warn'); return; }
   const data = {
+    orderid,
     name,
     address,
     mapsLink,
     phone:document.getElementById('f_phone').value.trim(),
-    items,
+    items: JSON.parse(JSON.stringify(itemsArr)),
     weight:parseFloat(document.getElementById('f_weight').value)||0,
     cod:parseFloat(document.getElementById('f_cod').value)||0,
     courier:document.getElementById('f_courier').value,
@@ -418,7 +404,6 @@ function addOrder(){
     // โหมดแก้ไข: อัปเดตข้อมูลรายการเดิม
     const idx = orders.findIndex(x=>x.id===editId);
     if(idx!==-1){
-      // เก็บสถานะและ timeline เดิม
       data.id = orders[idx].id;
       data.status = orders[idx].status;
       data.timeline = orders[idx].timeline;
@@ -443,13 +428,41 @@ function addOrder(){
     selectedId=o.id;
   }
   // ล้างฟอร์ม
-  ['f_name','f_phone','f_address','f_maps','f_items','f_weight','f_cod','f_note'].forEach(id=>document.getElementById(id).value='');
+  ['f_orderid','f_name','f_phone','f_address','f_maps','f_weight','f_cod','f_note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_courier').value='';
   document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
+  itemsArr = [];
+  renderItemsList();
   validateMapsLink('');
   renderAll();
   renderDetail();
   switchTab('list',document.getElementById('tab-list'));
+// จัดการรายการสินค้าแบบหลายรายการ
+function addItemRow(){
+  const name = document.getElementById('item_name').value.trim();
+  const qty = parseInt(document.getElementById('item_qty').value,10)||1;
+  if(!name){ showToast('⚠️ กรุณากรอกชื่อสินค้า','warn'); return; }
+  itemsArr.push({name,qty});
+  document.getElementById('item_name').value = '';
+  document.getElementById('item_qty').value = 1;
+  renderItemsList();
+}
+function removeItemRow(idx){
+  itemsArr.splice(idx,1);
+  renderItemsList();
+}
+function renderItemsList(){
+  const el = document.getElementById('items-list');
+  if(!el) return;
+  if(itemsArr.length===0){ el.innerHTML = '<div style="color:var(--muted);font-size:12px;">ยังไม่มีสินค้า</div>'; return; }
+  el.innerHTML = itemsArr.map((it,i)=>
+    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <span style="flex:2;">${it.name}</span>
+      <span style="flex:1;">x${it.qty}</span>
+      <button type="button" class="btn-link" style="padding:2px 8px;font-size:12px;" onclick="removeItemRow(${i})">ลบ</button>
+    </div>`
+  ).join('');
+}
 }
 
 // ── STATUS ──
@@ -525,11 +538,13 @@ function editOrder(id){
   const o = orders.find(x=>x.id===id);
   if(!o) return;
   editId = id;
+  document.getElementById('f_orderid').value = o.orderid||'';
   document.getElementById('f_name').value = o.name||'';
   document.getElementById('f_phone').value = o.phone||'';
   document.getElementById('f_address').value = o.address||'';
   document.getElementById('f_maps').value = o.mapsLink||'';
-  document.getElementById('f_items').value = o.items||'';
+  itemsArr = Array.isArray(o.items) ? JSON.parse(JSON.stringify(o.items)) : [];
+  renderItemsList();
   document.getElementById('f_weight').value = o.weight||'';
   document.getElementById('f_cod').value = o.cod||'';
   document.getElementById('f_courier').value = o.courier||'';
@@ -572,7 +587,7 @@ function renderDetail(){
 
       <div class="d-section">
         <div class="ds-title">พัสดุ</div>
-        <div class="ds-row"><span class="k">สินค้า</span><span class="v">${o.items}</span></div>
+        <div class="ds-row"><span class="k">สินค้า</span><span class="v">${Array.isArray(o.items)?o.items.map(it=>`${it.name} x${it.qty}`).join('<br>'):'-'}</span></div>
         <div class="ds-row"><span class="k">น้ำหนัก</span><span class="v">${o.weight} กก.</span></div>
         <div class="ds-row"><span class="k">COD</span><span class="v" style="color:${o.cod>0?'var(--yellow)':'var(--muted)'}">${o.cod>0?o.cod.toLocaleString()+' ฿':'ไม่มี'}</span></div>
         <div class="ds-row"><span class="k">กำหนดส่ง</span><span class="v">${o.date||'-'}</span></div>
@@ -608,6 +623,7 @@ function showToast(msg,type){
 }
 
 document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
+renderItemsList();
 renderAll();
 </script>
 

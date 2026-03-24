@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FleetFlow — พนักงานส่งของ</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>CFMFleetFlow — พนักงานส่งของ</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f0f4f8;
@@ -28,7 +28,7 @@
     --red-b: #fecaca;
     --text: #1e293b;
     --muted: #64748b;
-    --font: 'Sarabun', sans-serif;
+    --font: 'Kanit', sans-serif;
     --mono: 'JetBrains Mono', monospace;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -242,6 +242,7 @@
 <nav>
   <div class="logo"><em>FLEET</em>FLOW <sup>COURIER</sup></div>
   <span class="courier-badge">🛵 พนักงานส่งของ</span>
+  <span id="firebase-status" style="font-size:12px;color:#0891b2;margin-left:10px;">⏳ กำลังเชื่อมต่อ...</span>
 </nav>
 
 <div class="page-head">
@@ -253,7 +254,7 @@
 <div class="stats-row" id="statsRow"></div>
 
 <div class="filter-scroll">
-  <button class="f-pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
+  <button class="f-pill" onclick="setFilter('all',this)">ทั้งหมด</button>
   <button class="f-pill" onclick="setFilter('pending',this)">⏳ รอส่ง</button>
   <button class="f-pill" onclick="setFilter('transit',this)">🚚 กำลังส่ง</button>
   <button class="f-pill" onclick="setFilter('delivered',this)">✅ ส่งสำเร็จ</button>
@@ -266,8 +267,10 @@
 <div id="toast"></div>
 
 <script>
-let orders = JSON.parse(localStorage.getItem('ff_orders')||'[]');
-let currentFilter = 'all';
+
+let orders = [];
+let currentFilter = 'pending'; // default ให้ดูที่รอส่ง
+let firebaseStatus = document.getElementById('firebase-status');
 
 const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
 const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
@@ -277,10 +280,35 @@ function now(){
   return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
     +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
-function save(){ localStorage.setItem('ff_orders',JSON.stringify(orders)); }
 
-// reload from storage on focus (admin may have updated)
-window.addEventListener('focus', ()=>{ orders=JSON.parse(localStorage.getItem('ff_orders')||'[]'); renderAll(); });
+// --- Firestore sync ---
+const ORDERS_COLLECTION = "orders";
+function setFirebaseStatus(msg, color) {
+  if(firebaseStatus) {
+    firebaseStatus.textContent = msg;
+    if(color) firebaseStatus.style.color = color;
+  }
+}
+function fetchOrdersFromFirebase() {
+  setFirebaseStatus('⏳ กำลังโหลดข้อมูล...', '#0891b2');
+  db.collection(ORDERS_COLLECTION).orderBy('date','desc').get()
+    .then(snapshot => {
+      orders = snapshot.docs.map(doc => ({...doc.data(), id: doc.id }));
+      setFirebaseStatus('✅ เชื่อมต่อสำเร็จ', '#059669');
+      renderAll();
+    })
+    .catch(e => {
+      setFirebaseStatus('❌ เกิดข้อผิดพลาด', '#dc2626');
+    });
+}
+function saveOrderToFirebase(order, cb) {
+  if(order.id) {
+    db.collection(ORDERS_COLLECTION).doc(order.id).set(order)
+      .then(()=>{ setFirebaseStatus('✅ อัปเดตสำเร็จ', '#059669'); if(cb)cb(); fetchOrdersFromFirebase(); })
+      .catch(()=>setFirebaseStatus('❌ บันทึกผิดพลาด', '#dc2626'));
+  }
+}
+// --- END Firestore sync ---
 
 // ── DATE ──
 const d = new Date();
@@ -304,13 +332,15 @@ function changeStatus(id, newStatus){
   o.status=newStatus;
   const msgs={transit:'พนักงานรับพัสดุและออกจัดส่ง',delivered:'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว',failed:'ส่งไม่สำเร็จ — ไม่มีผู้รับ',pending:'รีเซ็ตสถานะ'};
   const cs={transit:'#0891b2',delivered:'#059669',failed:'#dc2626',pending:'#b45309'};
+  o.timeline = o.timeline || [];
   o.timeline.push({text:msgs[newStatus],time:now(),color:cs[newStatus]});
-  save();
-  renderAll();
-  if(newStatus==='delivered') showToast('✅ ส่งสำเร็จ! '+o.name,'green');
-  else if(newStatus==='transit') showToast('🚚 ออกจัดส่งแล้ว');
-  else if(newStatus==='failed') showToast('❌ บันทึก: ส่งไม่สำเร็จ','red');
-  else showToast('🔄 อัพเดทสถานะแล้ว');
+  saveOrderToFirebase(o, ()=>{
+    renderAll();
+    if(newStatus==='delivered') showToast('✅ ส่งสำเร็จ! '+o.name,'green');
+    else if(newStatus==='transit') showToast('🚚 ออกจัดส่งแล้ว');
+    else if(newStatus==='failed') showToast('❌ บันทึก: ส่งไม่สำเร็จ','red');
+    else showToast('🔄 อัพเดทสถานะแล้ว');
+  });
 }
 
 
@@ -322,12 +352,30 @@ function renderStats(){
     pending=orders.filter(o=>o.status==='pending').length,
     transit=orders.filter(o=>o.status==='transit').length,
     delivered=orders.filter(o=>o.status==='delivered').length;
-  document.getElementById('statsRow').innerHTML=[
-    {n:total,l:'ทั้งหมด',c:'#1e293b'},
-    {n:pending,l:'รอส่ง',c:'#b45309'},
-    {n:transit,l:'กำลังส่ง',c:'#0891b2'},
-    {n:delivered,l:'สำเร็จ',c:'#059669'}
-  ].map(s=>`<div class="stat-cell"><div class="sc-n" style="color:${s.c}">${s.n}</div><div class="sc-l">${s.l}</div></div>`).join('');
+  const stats = [
+    {n:total,l:'ทั้งหมด',c:'#1e293b',f:'all'},
+    {n:pending,l:'รอส่ง',c:'#b45309',f:'pending'},
+    {n:transit,l:'กำลังส่ง',c:'#0891b2',f:'transit'},
+    {n:delivered,l:'สำเร็จ',c:'#059669',f:'delivered'}
+  ];
+  document.getElementById('statsRow').innerHTML=stats.map(s=>
+    `<div class="stat-cell" style="cursor:pointer" onclick="clickStat('${s.f}')">
+      <div class="sc-n" style="color:${s.c}">${s.n}</div><div class="sc-l">${s.l}</div>
+    </div>`
+  ).join('');
+// คลิกที่ตัวเลขรวมของแต่ละสถานะเพื่อดูรายการ
+function clickStat(f){
+  const btns = document.querySelectorAll('.f-pill');
+  btns.forEach(b=>b.classList.remove('active'));
+  let idx = 0;
+  if(f==='all') idx=0;
+  else if(f==='pending') idx=1;
+  else if(f==='transit') idx=2;
+  else if(f==='delivered') idx=3;
+  else if(f==='failed') idx=4;
+  if(btns[idx]) btns[idx].classList.add('active');
+  setFilter(f, btns[idx]);
+}
 }
 
 function renderCards(){
@@ -340,7 +388,7 @@ function renderCards(){
     <div class="delivery-card ${o.status}">
       <div class="card-head">
         <div>
-          <div class="card-id">${o.id} ${o.date?'· กำหนดส่ง '+o.date:''}</div>
+          <div class="card-id">${o.orderid?o.orderid:o.id} ${o.date?'· กำหนดส่ง '+o.date:''}</div>
           <div class="card-name">${o.name}</div>
         </div>
         <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
@@ -353,7 +401,7 @@ function renderCards(){
         ${o.phone?`<div class="info-row"><span class="ico">📞</span><span class="val"><a href="tel:${o.phone}" style="color:#ea580c;font-weight:600">${o.phone}</a></span></div>`:''}
         <div class="info-row">
           <span class="ico">📦</span>
-          <span class="val">${o.items} · <span style="color:var(--muted)">${o.weight} กก.</span>
+          <span class="val">${Array.isArray(o.items)?o.items.map(it=>`${it.name} x${it.qty}`).join('<br>'):'-'} · <span style="color:var(--muted)">${o.weight} กก.</span>
           ${o.cod>0?`&nbsp;<span class="cod-tag">💰 COD ${o.cod.toLocaleString()} ฿</span>`:''}</span>
         </div>
         ${o.note?`<div class="info-row"><span class="ico">📝</span><span class="val" style="color:var(--muted);font-style:italic">${o.note}</span></div>`:''}
@@ -379,7 +427,13 @@ function showToast(msg, type){
   setTimeout(()=>t.className='',2500);
 }
 
-renderAll();
+// ตั้งค่า default ปุ่ม active ที่ 'รอส่ง'
+window.addEventListener('DOMContentLoaded',()=>{
+  const btns = document.querySelectorAll('.f-pill');
+  btns.forEach(b=>b.classList.remove('active'));
+  if(btns[1]) btns[1].classList.add('active');
+});
+fetchOrdersFromFirebase();
 </script>
 
 <!-- Firebase App (the core Firebase SDK) -->
