@@ -41,7 +41,7 @@
     --cyan-l: #ecfeff;
     --cyan-b: #a5f3fc;
     --green: #059669;
-    --green-l: #ecfdf5;
+    --green-l: #bbf7d0;
     --green-b: #a7f3d0;
     --yellow: #b45309;
     --yellow-l: #fffbeb;
@@ -130,8 +130,18 @@
   .delivery-card.transit  { border-left:4px solid var(--cyan); }
   .delivery-card.delivered{
     border-left:4px solid var(--green);
-    background:var(--green-l);
-    box-shadow:0 2px 12px rgba(5,150,105,0.10);
+    background:linear-gradient(135deg, #34d399 0%, #059669 100%);
+    box-shadow:0 2px 16px rgba(5,150,105,0.13);
+    color:#fff;
+  }
+  .delivery-card.delivered .card-id,
+  .delivery-card.delivered .info-row .val,
+  .delivery-card.delivered .product-name-big {
+    color:#fff !important;
+  }
+  .delivery-card.delivered .badge {
+    background:rgba(255,255,255,0.18);
+    color:#fff;
   }
   .delivery-card.failed   { border-left:4px solid var(--red); }
 
