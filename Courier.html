@@ -34,7 +34,7 @@
     --card: #ffffff;
     --border: #dde3ec;
     --s1: #f8fafc;
-    --orange: #ea580c;
+    --orange: #f85903;
     --orange-l: #fff3ee;
     --orange-b: #fed7aa;
     --cyan: #0891b2;
@@ -91,12 +91,42 @@
     gap:0; background:#fff; border-bottom:1px solid var(--border);
   }
   .stat-cell {
-    padding:14px 12px; text-align:center;
+    padding:18px 12px 10px 12px; text-align:center;
     border-right:1px solid var(--border);
+    cursor:pointer;
+    transition:background .15s, box-shadow .15s;
+    user-select:none;
   }
   .stat-cell:last-child { border:none; }
-  .sc-n { font-family:var(--mono); font-size:22px; font-weight:700; }
-  .sc-l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+  .stat-cell.active, .stat-cell:hover {
+    background:var(--orange-l);
+    box-shadow:0 2px 8px rgba(250,120,20,0.06);
+  }
+  .sc-n {
+    font-family:var(--mono);
+    font-size:32px;
+    font-weight:800;
+    letter-spacing:1px;
+    color:var(--orange);
+    line-height:1.1;
+    margin-bottom:2px;
+    transition:color .2s;
+  }
+  .stat-cell.active .sc-n {
+    color:#fff;
+    background:var(--orange);
+    border-radius:12px;
+    padding:2px 10px;
+    box-shadow:0 2px 8px rgba(250,120,20,0.13);
+  }
+  .sc-l {
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-top:2px;
+    font-weight:600;
+  }
 
   /* ── FILTERS ── */
   .filter-scroll {
@@ -390,12 +420,18 @@ function renderStats(){
     pending=orders.filter(o=>o.status==='pending').length,
     transit=orders.filter(o=>o.status==='transit').length,
     delivered=orders.filter(o=>o.status==='delivered').length;
-  document.getElementById('statsRow').innerHTML=[
-    {n:total,l:'ทั้งหมด',c:'#1e293b'},
-    {n:pending,l:'รอส่ง',c:'#b45309'},
-    {n:transit,l:'กำลังส่ง',c:'#0891b2'},
-    {n:delivered,l:'สำเร็จ',c:'#059669'}
-  ].map(s=>`<div class="stat-cell"><div class="sc-n" style="color:${s.c}">${s.n}</div><div class="sc-l">${s.l}</div></div>`).join('');
+  const statList = [
+    {n:total,l:'ทั้งหมด',c:'#1e293b',f:'all'},
+    {n:pending,l:'รอส่ง',c:'#b45309',f:'pending'},
+    {n:transit,l:'กำลังส่ง',c:'#0891b2',f:'transit'},
+    {n:delivered,l:'สำเร็จ',c:'#059669',f:'delivered'}
+  ];
+  document.getElementById('statsRow').innerHTML = statList.map(s=>
+    `<div class="stat-cell${currentFilter===s.f?' active':''}" onclick="setFilter('${s.f}',this)">
+      <div class="sc-n">${s.n}</div>
+      <div class="sc-l">${s.l}</div>
+    </div>`
+  ).join('');
 }
 
 function renderCards(){
