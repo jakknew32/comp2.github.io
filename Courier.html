@@ -391,6 +391,17 @@ document.getElementById('dateDisplay').textContent =
 // ── FILTER ──
 function setFilter(f,btn){
   currentFilter=f;
+  // Remove highlight from all stat-cells
+  document.querySelectorAll('.stat-cell').forEach(b=>b.classList.remove('active'));
+  // Highlight the correct stat-cell
+  const statCells = document.querySelectorAll('.stat-cell');
+  if (statCells && statCells.length) {
+    if(f==='all') statCells[0].classList.add('active');
+    else if(f==='pending') statCells[1].classList.add('active');
+    else if(f==='transit') statCells[2].classList.add('active');
+    else if(f==='delivered') statCells[3].classList.add('active');
+  }
+  // Remove highlight from all pills
   document.querySelectorAll('.f-pill').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderCards();
