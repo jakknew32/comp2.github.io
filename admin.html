@@ -247,7 +247,7 @@
         </div>
 
         <div class="f-row">
-          <span class="f-label">รายการสินค้า * <span style='color:var(--muted);font-size:11px;'>(เลือกได้สูงสุด 3 ช่อง)</span></span>
+          <span class="f-label">รายการสินค้า * <span style='color:var(--muted);font-size:11px;'>(เลือกได้สูงสุด 3 ช่อง หรือกรอกเองเพิ่มเติม)</span></span>
           <div style="display: flex; gap: 8px; flex-direction: column;">
             <div>
               <select class="f-select" id="f_item1" onchange="onItemChange(1)">
@@ -288,6 +288,7 @@
               </select>
               <input class="f-input" id="f_item3_other" placeholder="ระบุสินค้าอื่น ๆ" style="display:none;margin-top:6px;" oninput="onOtherInput(3)">
             </div>
+            <textarea class="f-textarea" id="f_items_free" placeholder="กรอกสินค้าเพิ่มเติม (1 รายการต่อ 1 บรรทัด)" style="margin-top:8px;min-height:48px"></textarea>
           </div>
         </div>
 
@@ -485,7 +486,7 @@ window.switchTab=switchTab;
 function addOrder(){
   const name=document.getElementById('f_name').value.trim();
   const address=document.getElementById('f_address').value.trim();
-  const itemsArr = [];
+  let itemsArr = [];
   for(let i=1;i<=3;i++){
     const sel = document.getElementById('f_item'+i).value;
     if(sel==="__other"){
@@ -494,6 +495,12 @@ function addOrder(){
     } else if(sel) {
       itemsArr.push(sel);
     }
+  }
+  // เพิ่มสินค้าจาก textarea (f_items_free)
+  const freeText = document.getElementById('f_items_free').value.trim();
+  if(freeText){
+    const freeItems = freeText.split(/\r?\n/).map(x=>x.trim()).filter(x=>x);
+    itemsArr = itemsArr.concat(freeItems);
   }
   if(!name||!address||itemsArr.length===0){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
   const mapsLink=document.getElementById('f_maps').value.trim();
@@ -519,6 +526,7 @@ function addOrder(){
     document.getElementById('f_item'+i+'_other').value='';
     document.getElementById('f_item'+i+'_other').style.display='none';
   }
+  document.getElementById('f_items_free').value='';
   // แสดง/ซ่อนช่องระบุเอง ถ้าเลือก 'อื่นๆ' ในแต่ละช่อง
   function onItemChange(idx) {
     const sel = document.getElementById('f_item'+idx).value;
