@@ -247,8 +247,8 @@
         </div>
 
         <div class="f-row">
-          <span class="f-label">รายการสินค้า *</span>
-          <input class="f-input" id="f_items" placeholder="เช่น สมาร์ทโฟน 1 เครื่อง">
+          <span class="f-label">รายการสินค้า * <span style='color:var(--muted);font-size:11px;'>(เพิ่มได้หลายรายการ, 1 รายการต่อ 1 บรรทัด)</span></span>
+          <textarea class="f-textarea" id="f_items" placeholder="เช่น สมาร์ทโฟน 1 เครื่อง\nเคสมือถือ 2 ชิ้น" style="min-height:60px"></textarea>
         </div>
 
         <div class="f-row half">
@@ -445,15 +445,17 @@ window.switchTab=switchTab;
 function addOrder(){
   const name=document.getElementById('f_name').value.trim();
   const address=document.getElementById('f_address').value.trim();
-  const items=document.getElementById('f_items').value.trim();
-  if(!name||!address||!items){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
+  const itemsRaw=document.getElementById('f_items').value.trim();
+  if(!name||!address||!itemsRaw){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
+  const itemsArr = itemsRaw.split(/\r?\n/).map(x=>x.trim()).filter(x=>x);
   const mapsLink=document.getElementById('f_maps').value.trim();
   if(mapsLink&&!isValidMapsLink(mapsLink)){ showToast('⚠️ ลิงก์ Google Maps ไม่ถูกต้อง','warn'); return; }
   const orderid=document.getElementById('f_orderid').value.trim();
   if(!orderid){ showToast('⚠️ กรุณากรอกเลขออเดอร์','warn'); return; }
   const o={
     id:orderid, orderid, name, address, mapsLink,
-    phone:document.getElementById('f_phone').value.trim(), items,
+    phone:document.getElementById('f_phone').value.trim(),
+    items: itemsArr,
     weight:parseFloat(document.getElementById('f_weight').value)||0,
     cod:parseFloat(document.getElementById('f_cod').value)||0,
     courier:document.getElementById('f_courier').value,
@@ -579,7 +581,7 @@ function renderDetail(){
       </div>
       <div class="d-section">
         <div class="ds-title">พัสดุ</div>
-        <div class="ds-row"><span class="k">สินค้า</span><span class="v">${o.items}</span></div>
+        <div class="ds-row"><span class="k">สินค้า</span><span class="v">${Array.isArray(o.items)?o.items.map(i=>`<div>• ${i}</div>`).join(''):o.items}</span></div>
         <div class="ds-row"><span class="k">น้ำหนัก</span><span class="v">${o.weight} กก.</span></div>
         <div class="ds-row"><span class="k">COD</span><span class="v" style="color:${o.cod>0?'var(--yellow)':'var(--muted)'}">${o.cod>0?o.cod.toLocaleString()+' ฿':'ไม่มี'}</span></div>
         <div class="ds-row"><span class="k">กำหนดส่ง</span><span class="v">${o.date||'-'}</span></div>
