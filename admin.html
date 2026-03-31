@@ -314,10 +314,10 @@
               <option>อนันต์ มุ่งมั่น</option>
             </select>
           </div>
-          <div>
-            <span class="f-label">วันกำหนดส่ง</span>
-            <input class="f-input" type="date" id="f_date">
-          </div>
+            <div>
+              <span class="f-label">วันกำหนดส่ง</span>
+              <input class="f-input" type="date" id="f_date" value="">
+            </div>
         </div>
 
         <div class="f-row">
@@ -514,7 +514,7 @@ function addOrder(){
     weight:parseFloat(document.getElementById('f_weight').value)||0,
     cod:parseFloat(document.getElementById('f_cod').value)||0,
     courier:document.getElementById('f_courier').value,
-    date:document.getElementById('f_date').value,
+      date:document.getElementById('f_date').valueAsDate = new Date(Date.now()+3*86400000),
     note:document.getElementById('f_note').value.trim(),
     status:'pending', createdAt: Date.now(),
     timeline:[{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
@@ -538,7 +538,7 @@ function addOrder(){
   window.onItemChange = onItemChange;
   window.onOtherInput = onOtherInput;
   document.getElementById('f_courier').value='';
-  document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
+    document.getElementById('f_date').valueAsDate=new Date(Date.now()+3*86400000);
   validateMapsLink('');
   showToast('📦 เพิ่มคำสั่งจัดส่ง '+orderid+' สำเร็จ');
   selectedId=orderid;
