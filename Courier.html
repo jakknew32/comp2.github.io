@@ -486,7 +486,7 @@ function renderCards(){
         </div>
         ${o.note?`<div class="info-row"><span class="ico">📝</span><span class="val" style="color:var(--muted);font-style:italic">${o.note}</span></div>`:''}
         ${o.courier?`<div class="info-row"><span class="ico">🛵</span><span class="val" style="color:var(--orange);font-weight:600">${o.courier}</span></div>`:''}
-        ${(o.status!=='delivered') ? `<div style='margin-top:8px;text-align:right;'><button class='btn-edit' onclick='editOrderModal("${o._fbKey}")' style='padding:6px 16px;border-radius:8px;border:1.5px solid var(--orange);background:var(--orange-l);color:var(--orange);font-weight:700;cursor:pointer;'>✏️ แก้ไข</button></div>` : ''}
+        <!-- ปุ่มแก้ไขถูกปิดใช้งานสำหรับผู้ส่ง -->
       </div>
       <div class="card-foot">
         <span class="status-label">สถานะ:</span>
@@ -499,59 +499,7 @@ function renderCards(){
         ${o.mapsLink?`<a class="btn-map" href="${o.mapsLink}" target="_blank" rel="noopener">🗺 นำทาง</a>`:''}
       </div>
     </div>`).join('');
-// ── MODAL แก้ไขออเดอร์ ──
-let editModalDiv = null;
-function editOrderModal(fbKey) {
-  const o = orders.find(x=>x._fbKey===fbKey);
-  if(!o) return;
-  if(editModalDiv) editModalDiv.remove();
-  editModalDiv = document.createElement('div');
-  editModalDiv.className = 'modal-bg open';
-  editModalDiv.innerHTML = `
-    <div class='modal' style='max-width:420px;'>
-      <div class='modal-head'><div class='modal-title'>แก้ไขข้อมูลออเดอร์</div><button class='btn-close' onclick='closeEditModal()'>&times;</button></div>
-      <div class='modal-body'>
-        <div style='margin-bottom:10px;'>เลขออเดอร์: <b>${o.id}</b></div>
-        <div style='margin-bottom:8px;'><input class='f-input' id='edit_name' placeholder='ชื่อผู้รับ' value='${o.name||''}'></div>
-        <div style='margin-bottom:8px;'><input class='f-input' id='edit_phone' placeholder='เบอร์โทร' value='${o.phone||''}'></div>
-        <div style='margin-bottom:8px;'><input class='f-input' id='edit_address' placeholder='ที่อยู่' value='${o.address||''}'></div>
-        <div style='margin-bottom:8px;'><input class='f-input' id='edit_maps' placeholder='ลิงก์ Google Maps' value='${o.mapsLink||''}'></div>
-        <div style='margin-bottom:8px;'><textarea class='f-textarea' id='edit_items' placeholder='สินค้า (1 รายการต่อ 1 บรรทัด)' style='min-height:48px'>${Array.isArray(o.items)?o.items.join('\n'):o.items||''}</textarea></div>
-        <div style='margin-bottom:8px;'><input class='f-input' id='edit_weight' type='number' step='0.01' placeholder='น้ำหนัก (กก.)' value='${o.weight||''}'></div>
-        <div style='margin-bottom:8px;'><input class='f-input' id='edit_cod' type='number' placeholder='COD (฿)' value='${o.cod||''}'></div>
-        <div style='margin-bottom:8px;'><input class='f-input' id='edit_note' placeholder='หมายเหตุ' value='${o.note||''}'></div>
-        <div style='margin-bottom:8px;'><input class='f-input' id='edit_date' type='text' placeholder='กำหนดส่ง' value='${o.date||''}'></div>
-        <button class='btn-submit' style='width:100%;margin-top:10px;' onclick='saveEditOrder("${fbKey}")'>💾 บันทึกการแก้ไข</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(editModalDiv);
-}
-function closeEditModal() {
-  if(editModalDiv) { editModalDiv.remove(); editModalDiv=null; }
-}
-window.editOrderModal = editOrderModal;
-window.closeEditModal = closeEditModal;
-async function saveEditOrder(fbKey) {
-  const o = orders.find(x=>x._fbKey===fbKey);
-  if(!o) return;
-  const name = document.getElementById('edit_name').value.trim();
-  const phone = document.getElementById('edit_phone').value.trim();
-  const address = document.getElementById('edit_address').value.trim();
-  const mapsLink = document.getElementById('edit_maps').value.trim();
-  const itemsRaw = document.getElementById('edit_items').value.trim();
-  const itemsArr = itemsRaw.split(/\r?\n/).map(x=>x.trim()).filter(x=>x);
-  const weight = parseFloat(document.getElementById('edit_weight').value)||0;
-  const cod = parseFloat(document.getElementById('edit_cod').value)||0;
-  const note = document.getElementById('edit_note').value.trim();
-  const date = document.getElementById('edit_date').value.trim();
-  if(!name||!address||!itemsArr.length){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','red'); return; }
-  await update(ref(db,'orders/'+fbKey),{
-    name, phone, address, mapsLink, items: itemsArr, weight, cod, note, date
-  });
-  closeEditModal();
-  showToast('✅ บันทึกข้อมูลใหม่แล้ว','green');
-}
+
 }
 
 // ── TOAST ──
