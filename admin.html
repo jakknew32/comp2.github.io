@@ -247,17 +247,48 @@
         </div>
 
         <div class="f-row">
-          <span class="f-label">รายการสินค้า * <span style='color:var(--muted);font-size:11px;'>(เลือกได้สูงสุด 3 รายการ)</span></span>
-          <select class="f-select" id="f_items" multiple size="5" style="min-height:90px" onchange="onItemsChange()">
-            <option value="Mulk+HighProtein จืด 10กล่อง">Mulk+HighProtein จืด 10กล่อง</option>
-            <option value="Mulk+HighProtein จืด 20กล่อง">Mulk+HighProtein จืด 20กล่อง</option>
-            <option value="Mulk+HighProtein ช็อกโกแลต 10กล่อง">Mulk+HighProtein ช็อกโกแลต 10กล่อง</option>
-            <option value="Mulk+HighProtein ช็อกโกแลต 20กล่อง">Mulk+HighProtein ช็อกโกแลต 20กล่อง</option>
-            <option value="Mulk+HighProtein น้ำผึ้ง 10กล่อง">Mulk+HighProtein น้ำผึ้ง 10กล่อง</option>
-            <option value="Mulk+HighProtein น้ำผึ้ง 20กล่อง">Mulk+HighProtein น้ำผึ้ง 20กล่อง</option>
-            <option value="__other">อื่นๆ (ระบุเอง...)</option>
-          </select>
-          <input class="f-input" id="f_items_other" placeholder="ระบุสินค้าอื่น ๆ" style="display:none;margin-top:8px;" oninput="onOtherInput()">
+          <span class="f-label">รายการสินค้า * <span style='color:var(--muted);font-size:11px;'>(เลือกได้สูงสุด 3 ช่อง)</span></span>
+          <div style="display: flex; gap: 8px; flex-direction: column;">
+            <div>
+              <select class="f-select" id="f_item1" onchange="onItemChange(1)">
+                <option value="">-- เลือกรายการ --</option>
+                <option value="Mulk+HighProtein จืด 10กล่อง">Mulk+HighProtein จืด 10กล่อง</option>
+                <option value="Mulk+HighProtein จืด 20กล่อง">Mulk+HighProtein จืด 20กล่อง</option>
+                <option value="Mulk+HighProtein ช็อกโกแลต 10กล่อง">Mulk+HighProtein ช็อกโกแลต 10กล่อง</option>
+                <option value="Mulk+HighProtein ช็อกโกแลต 20กล่อง">Mulk+HighProtein ช็อกโกแลต 20กล่อง</option>
+                <option value="Mulk+HighProtein น้ำผึ้ง 10กล่อง">Mulk+HighProtein น้ำผึ้ง 10กล่อง</option>
+                <option value="Mulk+HighProtein น้ำผึ้ง 20กล่อง">Mulk+HighProtein น้ำผึ้ง 20กล่อง</option>
+                <option value="__other">อื่นๆ (ระบุเอง...)</option>
+              </select>
+              <input class="f-input" id="f_item1_other" placeholder="ระบุสินค้าอื่น ๆ" style="display:none;margin-top:6px;" oninput="onOtherInput(1)">
+            </div>
+            <div>
+              <select class="f-select" id="f_item2" onchange="onItemChange(2)">
+                <option value="">-- เลือกรายการ --</option>
+                <option value="Mulk+HighProtein จืด 10กล่อง">Mulk+HighProtein จืด 10กล่อง</option>
+                <option value="Mulk+HighProtein จืด 20กล่อง">Mulk+HighProtein จืด 20กล่อง</option>
+                <option value="Mulk+HighProtein ช็อกโกแลต 10กล่อง">Mulk+HighProtein ช็อกโกแลต 10กล่อง</option>
+                <option value="Mulk+HighProtein ช็อกโกแลต 20กล่อง">Mulk+HighProtein ช็อกโกแลต 20กล่อง</option>
+                <option value="Mulk+HighProtein น้ำผึ้ง 10กล่อง">Mulk+HighProtein น้ำผึ้ง 10กล่อง</option>
+                <option value="Mulk+HighProtein น้ำผึ้ง 20กล่อง">Mulk+HighProtein น้ำผึ้ง 20กล่อง</option>
+                <option value="__other">อื่นๆ (ระบุเอง...)</option>
+              </select>
+              <input class="f-input" id="f_item2_other" placeholder="ระบุสินค้าอื่น ๆ" style="display:none;margin-top:6px;" oninput="onOtherInput(2)">
+            </div>
+            <div>
+              <select class="f-select" id="f_item3" onchange="onItemChange(3)">
+                <option value="">-- เลือกรายการ --</option>
+                <option value="Mulk+HighProtein จืด 10กล่อง">Mulk+HighProtein จืด 10กล่อง</option>
+                <option value="Mulk+HighProtein จืด 20กล่อง">Mulk+HighProtein จืด 20กล่อง</option>
+                <option value="Mulk+HighProtein ช็อกโกแลต 10กล่อง">Mulk+HighProtein ช็อกโกแลต 10กล่อง</option>
+                <option value="Mulk+HighProtein ช็อกโกแลต 20กล่อง">Mulk+HighProtein ช็อกโกแลต 20กล่อง</option>
+                <option value="Mulk+HighProtein น้ำผึ้ง 10กล่อง">Mulk+HighProtein น้ำผึ้ง 10กล่อง</option>
+                <option value="Mulk+HighProtein น้ำผึ้ง 20กล่อง">Mulk+HighProtein น้ำผึ้ง 20กล่อง</option>
+                <option value="__other">อื่นๆ (ระบุเอง...)</option>
+              </select>
+              <input class="f-input" id="f_item3_other" placeholder="ระบุสินค้าอื่น ๆ" style="display:none;margin-top:6px;" oninput="onOtherInput(3)">
+            </div>
+          </div>
         </div>
 
         <div class="f-row half">
@@ -454,12 +485,17 @@ window.switchTab=switchTab;
 function addOrder(){
   const name=document.getElementById('f_name').value.trim();
   const address=document.getElementById('f_address').value.trim();
-  const itemsSel = Array.from(document.getElementById('f_items').selectedOptions).map(o=>o.value);
-  const otherVal = document.getElementById('f_items_other').value.trim();
-  let itemsArr = itemsSel.filter(i=>i!=="__other");
-  if(itemsSel.includes("__other") && otherVal) itemsArr.push(otherVal);
+  const itemsArr = [];
+  for(let i=1;i<=3;i++){
+    const sel = document.getElementById('f_item'+i).value;
+    if(sel==="__other"){
+      const otherVal = document.getElementById('f_item'+i+'_other').value.trim();
+      if(otherVal) itemsArr.push(otherVal);
+    } else if(sel) {
+      itemsArr.push(sel);
+    }
+  }
   if(!name||!address||itemsArr.length===0){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
-  if(itemsArr.length>3){ showToast('⚠️ เลือกสินค้าได้สูงสุด 3 รายการ','warn'); return; }
   const mapsLink=document.getElementById('f_maps').value.trim();
   if(mapsLink&&!isValidMapsLink(mapsLink)){ showToast('⚠️ ลิงก์ Google Maps ไม่ถูกต้อง','warn'); return; }
   const orderid=document.getElementById('f_orderid').value.trim();
@@ -477,19 +513,21 @@ function addOrder(){
     timeline:[{text:'รับคำสั่งจัดส่ง',time:now(),color:'#fbbf24'}]
   };
   push(ordersRef, o);
-  ['f_orderid','f_name','f_phone','f_address','f_maps','f_weight','f_cod','f_note','f_items_other'].forEach(id=>document.getElementById(id).value='');
-  const itemsSelEl = document.getElementById('f_items');
-  if(itemsSelEl) Array.from(itemsSelEl.options).forEach(o=>o.selected=false);
-  document.getElementById('f_items_other').style.display='none';
-  // แสดง/ซ่อนช่องระบุเอง ถ้าเลือก 'อื่นๆ'
-  function onItemsChange() {
-    const sel = Array.from(document.getElementById('f_items').selectedOptions).map(o=>o.value);
-    document.getElementById('f_items_other').style.display = sel.includes("__other") ? '' : 'none';
+  ['f_orderid','f_name','f_phone','f_address','f_maps','f_weight','f_cod','f_note'].forEach(id=>document.getElementById(id).value='');
+  for(let i=1;i<=3;i++){
+    document.getElementById('f_item'+i).value='';
+    document.getElementById('f_item'+i+'_other').value='';
+    document.getElementById('f_item'+i+'_other').style.display='none';
   }
-  function onOtherInput() {
+  // แสดง/ซ่อนช่องระบุเอง ถ้าเลือก 'อื่นๆ' ในแต่ละช่อง
+  function onItemChange(idx) {
+    const sel = document.getElementById('f_item'+idx).value;
+    document.getElementById('f_item'+idx+'_other').style.display = sel === "__other" ? '' : 'none';
+  }
+  function onOtherInput(idx) {
     // future: validate if needed
   }
-  window.onItemsChange = onItemsChange;
+  window.onItemChange = onItemChange;
   window.onOtherInput = onOtherInput;
   document.getElementById('f_courier').value='';
   document.getElementById('f_date').valueAsDate=new Date(Date.now()+86400000);
