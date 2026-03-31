@@ -612,7 +612,7 @@ function renderList(){
         <div class="oi-meta">
           ${o.courier?`<span class="oi-courier">🛵 ${o.courier}</span>`:''}
           ${o.mapsLink?`<span class="oi-maps-tag">📍 Maps</span>`:`<span class="oi-no-maps">📍 ไม่มีลิงก์</span>`}
-          <select class="status-sel-sm" onclick="event.stopPropagation()" onchange="changeStatus('${o.id}',this.value)">
+          <select class="status-sel-sm" onclick="event.stopPropagation()" onchange="changeStatus('${o.id}',this.value)" ${o.status==='delivered'?'disabled':''}>
             <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอ</option>
             <option value="transit" ${o.status==='transit'?'selected':''}>🚚 ส่ง</option>
             <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
@@ -623,6 +623,7 @@ function renderList(){
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
         <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
         <button class="btn-delete" title="ลบรายการนี้" onclick="event.stopPropagation(); deleteOrder('${o.id}')">🗑</button>
+        ${o.status!=='delivered'?`<button class="btn-link" style="margin-top:4px;" onclick="event.stopPropagation(); showEditModal('${o.id}')">✏️ แก้ไข</button>`:''}
       </div>
     </div>`).join('');
 }
@@ -661,13 +662,74 @@ function renderDetail(){
       </div>
       <div class="d-section">
         <div class="ds-title">อัพเดทสถานะ</div>
-        <select class="f-select-full" onchange="changeStatus('${o.id}',this.value)">
+        <select class="f-select-full" onchange="changeStatus('${o.id}',this.value)" ${o.status==='delivered'?'disabled':''}>
           <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอดำเนินการ</option>
           <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
           <option value="failed" ${o.status==='failed'?'selected':''}>❌ ส่งไม่สำเร็จ</option>
         </select>
+        ${o.status!=='delivered'?`<button class="btn-link" style="margin-top:10px;" onclick="showEditModal('${o.id}')">✏️ แก้ไขข้อมูล</button>`:''}
       </div>
+      </script>
+      <!-- Edit Modal -->
+      <div id="editOrderModal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;">
+        <div style="background:#161b27;padding:32px 24px 20px 24px;border-radius:14px;min-width:320px;max-width:95vw;box-shadow:0 8px 32px #0008;position:relative;">
+          <div style="font-weight:700;font-size:18px;margin-bottom:18px;">แก้ไขข้อมูลคำสั่งจัดส่ง</div>
+          <div id="editOrderForm"></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+            <button class="btn-link" onclick="closeEditModal()">ยกเลิก</button>
+            <button class="btn-submit" onclick="saveEditOrder()">บันทึก</button>
+          </div>
+        </div>
+      </div>
+      <script type="text/javascript">
+      function showEditModal(id){
+        const o=orders.find(x=>x.id===id);
+        if(!o) return;
+        window._editOrderId = id;
+        document.getElementById('editOrderModal').style.display='flex';
+        document.getElementById('editOrderForm').innerHTML = `
+          <div class='f-row'><span class='f-label'>ชื่อผู้รับ</span><input class='f-input' id='edit_name' value="${o.name||''}" /></div>
+          <div class='f-row'><span class='f-label'>เบอร์โทร</span><input class='f-input' id='edit_phone' value="${o.phone||''}" /></div>
+          <div class='f-row'><span class='f-label'>ที่อยู่</span><input class='f-input' id='edit_address' value="${o.address||''}" /></div>
+          <div class='f-row'><span class='f-label'>ลิงก์ Google Maps</span><input class='f-input' id='edit_maps' value="${o.mapsLink||''}" /></div>
+          <div class='f-row'><span class='f-label'>สินค้า (1 รายการต่อบรรทัด)</span><textarea class='f-textarea' id='edit_items'>${Array.isArray(o.items)?o.items.join('\\n'):o.items||''}</textarea></div>
+          <div class='f-row'><span class='f-label'>น้ำหนัก (กก.)</span><input class='f-input' id='edit_weight' type='number' value="${o.weight||0}" /></div>
+          <div class='f-row'><span class='f-label'>COD (฿)</span><input class='f-input' id='edit_cod' type='number' value="${o.cod||0}" /></div>
+          <div class='f-row'><span class='f-label'>พนักงานส่ง</span><input class='f-input' id='edit_courier' value="${o.courier||''}" /></div>
+          <div class='f-row'><span class='f-label'>วันกำหนดส่ง</span><input class='f-input' id='edit_date' type='date' value="${o.date||''}" /></div>
+          <div class='f-row'><span class='f-label'>หมายเหตุ</span><textarea class='f-textarea' id='edit_note'>${o.note||''}</textarea></div>
+        `;
+      }
+      function closeEditModal(){
+        document.getElementById('editOrderModal').style.display='none';
+        window._editOrderId = null;
+      }
+      function saveEditOrder(){
+        const id = window._editOrderId;
+        if(!id) return;
+        const o=orders.find(x=>x.id===id);
+        if(!o) return;
+        const name = document.getElementById('edit_name').value.trim();
+        const phone = document.getElementById('edit_phone').value.trim();
+        const address = document.getElementById('edit_address').value.trim();
+        const mapsLink = document.getElementById('edit_maps').value.trim();
+        const items = document.getElementById('edit_items').value.split(/\r?\n/).map(x=>x.trim()).filter(x=>x);
+        const weight = parseFloat(document.getElementById('edit_weight').value)||0;
+        const cod = parseFloat(document.getElementById('edit_cod').value)||0;
+        const courier = document.getElementById('edit_courier').value.trim();
+        const date = document.getElementById('edit_date').value;
+        const note = document.getElementById('edit_note').value.trim();
+        if(!name||!address||items.length===0){ showToast('⚠️ กรุณากรอกข้อมูลให้ครบ','warn'); return; }
+        update(ref(db,'orders/'+o._fbKey),{
+          name, phone, address, mapsLink, items, weight, cod, courier, date, note
+        });
+        closeEditModal();
+        showToast('✅ อัพเดทข้อมูลสำเร็จ');
+      }
+      window.showEditModal = showEditModal;
+      window.closeEditModal = closeEditModal;
+      window.saveEditOrder = saveEditOrder;
       <div class="d-section">
         <div class="ds-title">ประวัติสถานะ</div>
         ${(o.timeline||[]).map(t=>`
