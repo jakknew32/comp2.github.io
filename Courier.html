@@ -179,7 +179,7 @@
     padding:14px 16px 10px;
     display:flex; justify-content:space-between; align-items:flex-start;
   }
-  .card-id { font-family:var(--mono); font-size:12px; color:var(--muted); }
+  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); }
   .card-name { font-size:17px; font-weight:700; margin-top:2px; }
   .product-name-big { font-size:20px; font-weight:700; color:var(--orange); }
 
@@ -464,6 +464,9 @@ function renderCards(){
       <div class="card-head">
         <div>
           <div class="card-id">${o.id} ${o.date?'· กำหนดส่ง '+o.date:''}</div>
+          <div style="font-size:12px;color:#888;margin-top:2px;">
+            ${o.createdAt ? 'เพิ่มเมื่อ: ' + new Date(o.createdAt).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+          </div>
           <div class="card-name">${o.name}</div>
         </div>
         <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
