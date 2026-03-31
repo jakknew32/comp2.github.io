@@ -476,8 +476,13 @@ function renderCards(){
         ${o.phone?`<div class="info-row"><span class="ico">📞</span><span class="val"><a href="tel:${o.phone}" style="color:#ea580c;font-weight:600">${o.phone}</a></span></div>`:''}
         <div class="info-row">
           <span class="ico">📦</span>
-          <span class="val"><span class="product-name-big">${o.items}</span> · <span style="color:var(--muted)">${o.weight} กก.</span>
-          ${o.cod>0?`&nbsp;<span class="cod-tag">💰 COD ${o.cod.toLocaleString()} ฿</span>`:''}</span>
+          <span class="val">
+            <span class="product-name-big">
+              ${Array.isArray(o.items) ? `<ul style='margin:0 0 0 18px;padding:0;list-style:square;'>${o.items.map(i=>`<li style='margin-bottom:2px;'>${i}</li>`).join('')}</ul>` : o.items}
+            </span>
+            <span style="color:var(--muted)">${o.weight} กก.</span>
+            ${o.cod>0?`&nbsp;<span class="cod-tag">💰 COD ${o.cod.toLocaleString()} ฿</span>`:''}
+          </span>
         </div>
         ${o.note?`<div class="info-row"><span class="ico">📝</span><span class="val" style="color:var(--muted);font-style:italic">${o.note}</span></div>`:''}
         ${o.courier?`<div class="info-row"><span class="ico">🛵</span><span class="val" style="color:var(--orange);font-weight:600">${o.courier}</span></div>`:''}
