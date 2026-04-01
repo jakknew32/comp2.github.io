@@ -175,6 +175,7 @@ const ordersRef = ref(db, 'orders');
 let orders = [];
 let editMode = false;
 let editFbKey = null;
+let orderFilter = 'all'; // ตัวกรองสถานะ
 
 // ดึงข้อมูล Realtime
 onValue(ordersRef, snap => {
@@ -281,7 +282,12 @@ function clearForm() {
 
 window.renderList = function() {
   const list = document.getElementById('orderList');
-  list.innerHTML = orders.map(o => `
+  let filtered = orders;
+  if (orderFilter === 'delivered') filtered = orders.filter(o => o.status === 'delivered');
+  else if (orderFilter === 'pending') filtered = orders.filter(o => o.status !== 'delivered');
+  else if (orderFilter === 'problem') filtered = orders.filter(o => o.status === 'failed');
+  // 'all' = ไม่กรอง
+  list.innerHTML = filtered.map(o => `
     <div class="order-item" onclick="viewDetail('${o._fbKey}')">
       <div style="flex:1">
         <div class="oi-id">${o.orderid}</div>
@@ -334,13 +340,20 @@ function renderStats() {
   const stats = document.getElementById('statsBar');
   const count = orders.length;
   const delivered = orders.filter(o => o.status === 'delivered').length;
+  const pending = orders.filter(o => o.status !== 'delivered').length;
+  const problem = orders.filter(o => o.status === 'failed').length;
   stats.innerHTML = `
-    <div class="stat"><div class="stat-n">${count}</div><div class="stat-l">ทั้งหมด</div></div>
-    <div class="stat"><div class="stat-n" style="color:var(--green)">${delivered}</div><div class="stat-l">สำเร็จ</div></div>
-    <div class="stat"><div class="stat-n" style="color:var(--yellow)">${count - delivered}</div><div class="stat-l">ค้างส่ง</div></div>
-    <div class="stat"><div class="stat-n">0</div><div class="stat-l">ปัญหา</div></div>
+    <div class="stat" style="cursor:pointer" onclick="setOrderFilter('all')"><div class="stat-n">${count}</div><div class="stat-l">ทั้งหมด</div></div>
+    <div class="stat" style="cursor:pointer;color:var(--green)" onclick="setOrderFilter('delivered')"><div class="stat-n">${delivered}</div><div class="stat-l">สำเร็จ</div></div>
+    <div class="stat" style="cursor:pointer;color:var(--yellow)" onclick="setOrderFilter('pending')"><div class="stat-n">${pending}</div><div class="stat-l">ค้างส่ง</div></div>
+    <div class="stat" style="cursor:pointer;color:var(--red)" onclick="setOrderFilter('problem')"><div class="stat-n">${problem}</div><div class="stat-l">ปัญหา</div></div>
   `;
 }
+
+window.setOrderFilter = function(f) {
+  orderFilter = f;
+  renderList();
+};
 
 function showToast(m) {
   const t = document.getElementById('toast');
