@@ -6,29 +6,6 @@
 <title>CFM-FleetFlow — พนักงานส่งของ</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-    .search-row {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 12px 16px 0 16px;
-      background: #fff;
-    }
-    .search-input {
-      width: 100%;
-      max-width: 340px;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1.5px solid var(--border);
-      font-size: 15px;
-      font-family: var(--font);
-      color: var(--text);
-      background: #f8fafc;
-      transition: border-color .2s;
-      outline: none;
-    }
-    .search-input:focus {
-      border-color: var(--orange);
-    }
   :root {
     --bg: #f0f4f8;
     --card: #ffffff;
@@ -54,11 +31,29 @@
     --font: 'Kanit', sans-serif;
     --mono: 'JetBrains Mono', monospace;
   }
+
+  /* --- สไตล์สำหรับแท็ก New Order ที่เพิ่มใหม่ --- */
+  .badge-new {
+    background: #ef4444;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    margin-left: 6px;
+    display: inline-block;
+    vertical-align: middle;
+    animation: pulse-new 2s infinite;
+  }
+  @keyframes pulse-new {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
-  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
-
-  /* ── NAV ── */
+  
   nav {
     background:#fff; border-bottom:1px solid var(--border);
     padding:0 20px; height:56px;
@@ -75,7 +70,6 @@
     font-size:12px; font-weight:700;
   }
 
-  /* ── HEADER ── */
   .page-head {
     background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
     padding:24px 20px 20px;
@@ -85,7 +79,6 @@
   .ph-title { font-size:24px; font-weight:700; margin-top:2px; }
   .ph-sub { font-size:13px; opacity:.7; margin-top:4px; }
 
-  /* ── STATS ── */
   .stats-row {
     display:grid; grid-template-columns:repeat(4,1fr);
     gap:0; background:#fff; border-bottom:1px solid var(--border);
@@ -110,14 +103,12 @@
     color:var(--orange);
     line-height:1.1;
     margin-bottom:2px;
-    transition:color .2s;
   }
   .stat-cell.active .sc-n {
     color:#fff;
     background:var(--orange);
     border-radius:12px;
     padding:2px 10px;
-    box-shadow:0 2px 8px rgba(250,120,20,0.13);
   }
   .sc-l {
     font-size:12px;
@@ -128,40 +119,39 @@
     font-weight:600;
   }
 
-  /* ── FILTERS ── */
-  .filter-scroll {
-    padding:14px 16px; background:#fff; border-bottom:1px solid var(--border);
-    display:flex; gap:8px; overflow-x:auto;
+  .search-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 16px 0 16px;
+    background: #fff;
   }
-  .filter-scroll::-webkit-scrollbar { display:none; }
-  .f-pill {
-    padding:6px 16px; border-radius:100px; border:1.5px solid var(--border);
-    background:transparent; color:var(--muted); font-family:var(--font);
-    font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
-    transition:all .2s;
+  .search-input {
+    width: 100%;
+    max-width: 340px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    font-size: 15px;
+    font-family: var(--font);
+    color: var(--text);
+    background: #f8fafc;
+    outline: none;
   }
-  .f-pill:hover { border-color:var(--orange); color:var(--orange); }
-  .f-pill.active { border-color:var(--orange); background:var(--orange-l); color:var(--orange); }
 
-  /* ── MAIN ── */
   .main { padding:16px; max-width:800px; margin:0 auto; }
 
-  /* ── CARD ── */
   .delivery-card {
     background:var(--card); border:1px solid var(--border);
     border-radius:16px; margin-bottom:14px; overflow:hidden;
     box-shadow:0 2px 8px rgba(0,0,0,0.04);
     transition:box-shadow .2s, transform .15s;
   }
-  .delivery-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.1); transform:translateY(-1px); }
-
-  /* card accent by status */
   .delivery-card.pending  { border-left:4px solid var(--yellow); }
   .delivery-card.transit  { border-left:4px solid var(--cyan); }
   .delivery-card.delivered{
     border-left:4px solid var(--green);
     background:linear-gradient(135deg, #34d399 0%, #059669 100%);
-    box-shadow:0 2px 16px rgba(5,150,105,0.13);
     color:#fff;
   }
   .delivery-card.delivered .card-id,
@@ -169,11 +159,6 @@
   .delivery-card.delivered .product-name-big {
     color:#fff !important;
   }
-  .delivery-card.delivered .badge {
-    background:rgba(255,255,255,0.18);
-    color:#fff;
-  }
-  .delivery-card.failed   { border-left:4px solid var(--red); }
 
   .card-head {
     padding:14px 16px 10px;
@@ -195,7 +180,6 @@
     padding:7px 0; border-bottom:1px solid var(--s1);
     font-size:13px;
   }
-  .info-row:last-child { border:none; }
   .info-row .ico { width:20px; text-align:center; flex-shrink:0; font-size:15px; color:var(--muted); }
   .info-row .val { color:var(--text); line-height:1.5; }
   .cod-tag {
@@ -205,103 +189,34 @@
     font-size:12px; font-weight:700;
   }
 
-  /* ── STATUS DROPDOWN ── */
   .card-foot {
     padding:12px 16px;
     background:var(--s1); border-top:1px solid var(--border);
     display:flex; align-items:center; gap:10px;
   }
-  .status-label { font-size:12px; color:var(--muted); font-weight:600; white-space:nowrap; }
   .status-select {
     flex:1; padding:10px 14px; border-radius:10px;
     border:2px solid var(--border); background:#fff;
     font-family:var(--font); font-size:14px; font-weight:700;
     color:var(--text); cursor:pointer; outline:none;
-    transition:all .2s; appearance:none;
+    appearance:none;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat:no-repeat; background-position:right 12px center;
-    padding-right:36px;
   }
-  .status-select:focus { border-color:var(--orange); }
-  .status-select.s-pending  { border-color:var(--yellow); background-color:var(--yellow-l); color:var(--yellow); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b45309' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
-  .status-select.s-transit  { border-color:var(--cyan);   background-color:var(--cyan-l);   color:var(--cyan);   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230891b2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
-  .status-select.s-delivered{ border-color:var(--green);  background-color:var(--green-l);  color:var(--green);  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23059669' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
-  .status-select.s-failed   { border-color:var(--red);    background-color:var(--red-l);    color:var(--red);    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23dc2626' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
 
   .btn-map {
     padding:10px 18px; border-radius:10px; border:2px solid var(--green);
     background:var(--green-l); color:var(--green); font-family:var(--font);
-    font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; white-space:nowrap;
-    text-decoration:none; display:inline-flex; align-items:center; gap:6px;
+    font-size:14px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:6px;
   }
-  .btn-map:hover { background:var(--green); color:#fff; box-shadow:0 4px 12px rgba(5,150,105,0.3); }
 
-  /* ── MAP MODAL ── */
-  .modal-bg {
-    position:fixed; inset:0; background:rgba(0,0,0,0.5);
-    z-index:500; display:flex; align-items:center; justify-content:center;
-    padding:20px; backdrop-filter:blur(4px);
-    opacity:0; pointer-events:none; transition:opacity .25s;
-  }
-  .modal-bg.open { opacity:1; pointer-events:all; }
-  .modal {
-    background:#fff; border-radius:20px; width:100%; max-width:500px;
-    overflow:hidden; transform:translateY(20px); transition:transform .25s;
-    box-shadow:0 20px 60px rgba(0,0,0,0.2);
-  }
-  .modal-bg.open .modal { transform:translateY(0); }
-  .modal-head {
-    padding:16px 20px; border-bottom:1px solid var(--border);
-    display:flex; justify-content:space-between; align-items:center;
-  }
-  .modal-title { font-size:16px; font-weight:700; }
-  .btn-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted); }
-  .modal-map {
-    height:280px; position:relative; background:#f0f4f8;
-    overflow:hidden; cursor:crosshair;
-  }
-  .modal-grid {
-    position:absolute; inset:0;
-    background-image:
-      linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);
-    background-size:32px 32px;
-  }
-  .modal-road-h, .modal-road-v { position:absolute; background:rgba(200,200,200,0.8); }
-  .modal-road-h { height:2px; width:100%; }
-  .modal-road-v { width:2px; height:100%; }
-  .modal-road-label { position:absolute; font-size:9px; color:#999; font-family:var(--mono); }
-  .modal-pin {
-    position:absolute; transform:translate(-50%,-100%);
-    display:flex; flex-direction:column; align-items:center;
-    pointer-events:none;
-  }
-  .modal-body { padding:16px 20px; }
-  .addr-display { font-size:13px; color:var(--text); line-height:1.6; }
-  .copy-btn {
-    margin-top:10px; display:block; width:100%; padding:10px;
-    background:var(--orange-l); border:1px solid var(--orange-b);
-    border-radius:8px; color:var(--orange); font-family:var(--font);
-    font-weight:700; font-size:13px; cursor:pointer; transition:all .2s;
-  }
-  .copy-btn:hover { background:var(--orange); color:#fff; }
-
-  /* ── EMPTY ── */
-  .empty {
-    text-align:center; padding:80px 20px; color:var(--muted);
-  }
-  .empty .emo { font-size:56px; margin-bottom:12px; }
-
-  /* ── TOAST ── */
   #toast {
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px);
     background:var(--text); color:#fff; padding:12px 22px;
     border-radius:100px; font-size:13px; font-weight:600;
-    z-index:999; opacity:0; transition:all .3s; white-space:nowrap;
+    z-index:999; opacity:0; transition:all .3s;
   }
   #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
-  #toast.green { background:var(--green); }
-  #toast.red { background:var(--red); }
 
   @media(max-width:500px){ .stats-row{grid-template-columns:repeat(2,1fr);} }
 </style>
@@ -321,17 +236,13 @@
 
 <div class="stats-row" id="statsRow"></div>
 
-
-
 <div class="search-row">
   <input class="search-input" id="searchInput" placeholder="ค้นหาเลขออเดอร์ หรือชื่อผู้รับ..." oninput="onSearchChange()">
 </div>
 <div class="main" id="mainGrid"></div>
 
-
 <div id="toast"></div>
 
-<!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, update }
@@ -351,15 +262,9 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const ordersRef = ref(db, 'orders');
 
-
 let orders = [];
 let currentFilter = 'all';
 let searchTerm = '';
-function onSearchChange() {
-  searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-  renderCards();
-}
-window.onSearchChange = onSearchChange;
 
 const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
 const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
@@ -370,39 +275,28 @@ function now(){
     +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
 
-// ── REALTIME LISTENER ──
 onValue(ordersRef, snap => {
   const data = snap.val() || {};
   orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
   renderAll();
 });
 
-// ── DATE ──
 const d = new Date();
 document.getElementById('dateDisplay').textContent =
   d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-// ── FILTER ──
+function onSearchChange() {
+  searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+  renderCards();
+}
+window.onSearchChange = onSearchChange;
+
 function setFilter(f,btn){
   currentFilter=f;
-  // Remove highlight from all stat-cells
-  document.querySelectorAll('.stat-cell').forEach(b=>b.classList.remove('active'));
-  // Highlight the correct stat-cell
-  const statCells = document.querySelectorAll('.stat-cell');
-  if (statCells && statCells.length) {
-    if(f==='all') statCells[0].classList.add('active');
-    else if(f==='pending') statCells[1].classList.add('active');
-    else if(f==='transit') statCells[2].classList.add('active');
-    else if(f==='delivered') statCells[3].classList.add('active');
-  }
-  // Remove highlight from all pills
-  document.querySelectorAll('.f-pill').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderCards();
+  renderAll();
 }
 window.setFilter=setFilter;
 
-// ── STATUS CHANGE ──
 function changeStatus(id, newStatus){
   const o=orders.find(x=>x.id===id);
   if(!o||newStatus===o.status) return;
@@ -410,14 +304,10 @@ function changeStatus(id, newStatus){
   const cs={transit:'#0891b2',delivered:'#059669',failed:'#dc2626',pending:'#b45309'};
   const newTimeline=[...(o.timeline||[]),{text:msgs[newStatus],time:now(),color:cs[newStatus]}];
   update(ref(db,'orders/'+o._fbKey),{status:newStatus, timeline:newTimeline});
-  if(newStatus==='delivered') showToast('✅ ส่งสำเร็จ! '+o.name,'green');
-  else if(newStatus==='transit') showToast('🚚 ออกจัดส่งแล้ว');
-  else if(newStatus==='failed') showToast('❌ บันทึก: ส่งไม่สำเร็จ','red');
-  else showToast('🔄 อัพเดทสถานะแล้ว');
+  showToast('🔄 อัพเดทสถานะแล้ว');
 }
 window.changeStatus=changeStatus;
 
-// ── RENDER ──
 function renderAll(){ renderStats(); renderCards(); }
 
 function renderStats(){
@@ -426,10 +316,10 @@ function renderStats(){
     transit=orders.filter(o=>o.status==='transit').length,
     delivered=orders.filter(o=>o.status==='delivered').length;
   const statList = [
-    {n:total,l:'ทั้งหมด',c:'#1e293b',f:'all'},
-    {n:pending,l:'รอส่ง',c:'#b45309',f:'pending'},
-    {n:transit,l:'กำลังส่ง',c:'#0891b2',f:'transit'},
-    {n:delivered,l:'สำเร็จ',c:'#059669',f:'delivered'}
+    {n:total,l:'ทั้งหมด',f:'all'},
+    {n:pending,l:'รอส่ง',f:'pending'},
+    {n:transit,l:'กำลังส่ง',f:'transit'},
+    {n:delivered,l:'สำเร็จ',f:'delivered'}
   ];
   document.getElementById('statsRow').innerHTML = statList.map(s=>
     `<div class="stat-cell${currentFilter===s.f?' active':''}" onclick="setFilter('${s.f}',this)">
@@ -439,6 +329,7 @@ function renderStats(){
   ).join('');
 }
 
+/* --- แก้ไขฟังก์ชัน RENDER CARDS เพื่อเช็คเวลา 24 ชม. --- */
 function renderCards(){
   const statusOrder={pending:0,transit:1,failed:2,delivered:3};
   const allSorted=[...orders].sort((a,b)=>{
@@ -446,26 +337,35 @@ function renderCards(){
     if(sd!==0) return sd;
     return (b.createdAt||0)-(a.createdAt||0);
   });
+  
   let filtered=currentFilter==='all'?allSorted:allSorted.filter(o=>o.status===currentFilter);
   if(searchTerm) {
-    filtered = filtered.filter(o => {
-      const fields = [
-        o.id, o.orderid, o.name, o.address, o.phone, o.items, o.courier, o.note, o.date
-      ];
-      return fields.some(f => f && f.toString().toLowerCase().includes(searchTerm));
-    });
+    filtered = filtered.filter(o => [o.id, o.name, o.phone].some(f => f && f.toString().toLowerCase().includes(searchTerm)));
   }
+
   if(!filtered.length){
-    document.getElementById('mainGrid').innerHTML=`<div class="empty"><div class="emo">📭</div><div>ไม่มีรายการจัดส่ง</div></div>`;
+    document.getElementById('mainGrid').innerHTML=`<div class="empty" style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการ</div>`;
     return;
   }
-  document.getElementById('mainGrid').innerHTML = filtered.map(o=>`
+
+  // คำนวณเวลาปัจจุบันและค่า 24 ชั่วโมง (มิลลิวินาที)
+  const nowMs = Date.now();
+  const MS_24H = 24 * 60 * 60 * 1000;
+
+  document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
+    // เช็คว่าเป็นออเดอร์ใหม่หรือไม่ (ไม่เกิน 24 ชม)
+    const isNew = o.createdAt && (nowMs - o.createdAt < MS_24H);
+
+    return `
     <div class="delivery-card ${o.status}">
       <div class="card-head">
         <div>
-          <div class="card-id">${o.id} ${o.date?'· กำหนดส่ง '+o.date:''}</div>
+          <div class="card-id">
+            ${o.id} 
+            ${isNew ? '<span class="badge-new">NEW ORDER</span>' : ''}
+          </div>
           <div style="font-size:12px;color:#888;margin-top:2px;">
-            ${o.createdAt ? 'เพิ่มเมื่อ: ' + new Date(o.createdAt).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+            ${o.createdAt ? 'เพิ่มเมื่อ: ' + new Date(o.createdAt).toLocaleString('th-TH') : ''}
           </div>
           <div class="card-name">${o.name}</div>
         </div>
@@ -478,34 +378,28 @@ function renderCards(){
           <span class="ico">📦</span>
           <span class="val">
             <span class="product-name-big">
-              ${Array.isArray(o.items) ? `<ul style='margin:0 0 0 18px;padding:0;list-style:square;'>${o.items.map(i=>`<li style='margin-bottom:2px;'>${i}</li>`).join('')}</ul>` : o.items}
+              ${Array.isArray(o.items) ? o.items.join(', ') : o.items}
             </span>
-            <span style="color:var(--muted)">${o.weight} กก.</span>
             ${o.cod>0?`&nbsp;<span class="cod-tag">💰 COD ${o.cod.toLocaleString()} ฿</span>`:''}
           </span>
         </div>
-        ${o.note?`<div class="info-row"><span class="ico">📝</span><span class="val" style="color:var(--muted);font-style:italic">${o.note}</span></div>`:''}
-        ${o.courier?`<div class="info-row"><span class="ico">🛵</span><span class="val" style="color:var(--orange);font-weight:600">${o.courier}</span></div>`:''}
-        <!-- ปุ่มแก้ไขถูกปิดใช้งานสำหรับผู้ส่ง -->
       </div>
       <div class="card-foot">
-        <span class="status-label">สถานะ:</span>
-        <select class="status-select s-${o.status}" onchange="changeStatus('${o.id}',this.value)">
+        <select class="status-select" onchange="changeStatus('${o.id}',this.value)">
           <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอดำเนินการ</option>
           <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
           <option value="failed" ${o.status==='failed'?'selected':''}>❌ ส่งไม่สำเร็จ</option>
         </select>
-        ${o.mapsLink?`<a class="btn-map" href="${o.mapsLink}" target="_blank" rel="noopener">🗺 นำทาง</a>`:''}
+        ${o.mapsLink?`<a class="btn-map" href="${o.mapsLink}" target="_blank">🗺 นำทาง</a>`:''}
       </div>
-    </div>`).join('');
-
+    </div>`;
+  }).join('');
 }
 
-// ── TOAST ──
-function showToast(msg, type){
+function showToast(msg){
   const t=document.getElementById('toast');
-  t.textContent=msg; t.className='show'+(type?' '+type:'');
+  t.textContent=msg; t.className='show';
   setTimeout(()=>t.className='',2500);
 }
 </script>
