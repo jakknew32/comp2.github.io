@@ -177,47 +177,50 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow-x: auto;
         }
 
+        /* * ปรับ A4 เป็นแนวนอน (Landscape) เพื่อแบ่งซ้าย-ขวา 
+         */
         .a4-page {
-            width: 210mm;
-            min-height: 297mm;
+            width: 297mm; /* ความกว้าง A4 แนวนอน */
+            min-height: 210mm; /* ความสูง A4 แนวนอน */
             margin: 0 auto 20mm;
             background: white;
             padding: 0;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             page-break-after: always;
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* เรียงซ้าย-ขวา */
         }
 
         .a5-half {
-            width: 210mm;
-            height: 148.5mm;
-            padding: 4mm;
+            width: 148.5mm; /* ครึ่งนึงของ A4 แนวนอน = A5 แนวตั้งพอดี */
+            height: 210mm;
+            padding: 8mm;
             box-sizing: border-box;
-            border-bottom: 1px dashed #ccc;
+            border-right: 1px dashed #ccc; /* เส้นประแนวตั้งใช้ตัดแบ่ง */
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
         }
 
         .a5-half:last-child {
-            border-bottom: none;
+            border-right: none;
         }
 
         .photo-row {
             display: flex;
-            gap: 1mm;
-            margin-bottom: 1mm;
+            gap: 2mm;
+            margin-bottom: 2mm;
             justify-content: center;
         }
 
         .photo-container {
             position: relative;
             flex: 1;
-            max-width: 210mm;
-            height: 60mm; /* ปรับลดให้พอดีครึ่ง A5 */
+            max-width: 148.5mm;
+            height: 65mm; /* คืนสัดส่วนให้ใกล้เคียงเดิม */
             border: none;
             display: flex;
             align-items: center;
@@ -228,7 +231,7 @@
 
         .photo-container.full-width {
             max-width: 100%;
-            height: 65mm; /* ปรับลดให้พอดีครึ่ง A5 */
+            height: 105mm; /* คืนสัดส่วนรูปใหญ่ให้เหมือน A4 เดิม */
             cursor: pointer;
             border: 2px dashed #ccc;
         }
@@ -262,17 +265,18 @@
         }
 
         .page-text {
-            margin-top: 2mm;
-            padding: 2mm;
+            margin-top: auto;
+            padding-top: 4mm;
             text-align: center;
-            font-size: 12px;
+            font-size: 14px;
             color: #333;
             border-top: 1px solid #e0e0e0;
         }
 
+        /* ตั้งค่าหน้ากระดาษปริ้นให้เป็น Landscape อัตโนมัติ */
         @page {
             margin: 0;
-            size: A4;
+            size: A4 landscape; 
         }
 
         @media print {
@@ -297,11 +301,12 @@
             .print-area {
                 padding: 0;
                 box-shadow: none;
+                overflow: visible;
             }
 
             .a4-page {
-                width: 210mm;
-                height: 297mm;
+                width: 297mm;
+                height: 210mm;
                 margin: 0;
                 padding: 0;
                 box-shadow: none;
@@ -309,7 +314,7 @@
                 overflow: hidden;
                 box-sizing: border-box;
                 display: flex;
-                flex-direction: column;
+                flex-direction: row; /* คงการเรียงซ้าย-ขวาตอนปริ้น */
             }
 
             .a4-page:last-child {
@@ -317,16 +322,9 @@
             }
 
             .a5-half {
-                height: 148.5mm;
-                padding: 4mm;
-            }
-
-            .photo-container {
-                height: 60mm;
-            }
-
-            .photo-container.full-width {
-                height: 65mm;
+                width: 148.5mm;
+                height: 210mm;
+                padding: 8mm;
             }
         }
 
@@ -338,6 +336,16 @@
             .a4-page {
                 width: 100%;
                 min-height: auto;
+                flex-direction: column; /* มือถือให้เรียงบนล่างเพื่อง่ายต่อการดู */
+            }
+            .a5-half {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px dashed #ccc;
+            }
+            .a5-half:last-child {
+                border-bottom: none;
             }
         }
     </style>
@@ -564,7 +572,7 @@
                 const startIdx = pageNum * photosPerRow;
                 const endIdx = Math.min(startIdx + photosPerRow, row2Photos.length);
 
-                // ฟังก์ชันสร้างเนื้อหาครึ่งหน้า A5
+                // ฟังก์ชันสร้างเนื้อหา 1 ชุด (ขนาด A5 แนวตั้ง)
                 const buildA5Content = () => {
                     const a5Container = document.createElement('div');
                     a5Container.className = 'a5-half';
@@ -645,7 +653,7 @@
                     return a5Container;
                 };
 
-                // ใส่เนื้อหา A5 2 ชุดลงใน 1 หน้า A4
+                // ใส่เนื้อหา A5 2 ชุดลงใน 1 หน้า A4 แนวนอน (จะถูกจัดเรียงซ้าย-ขวา)
                 page.appendChild(buildA5Content());
                 page.appendChild(buildA5Content());
 
