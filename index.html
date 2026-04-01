@@ -334,14 +334,15 @@
             }
 
             .a4-page {
-                width: 100%;
-                min-height: auto;
-                flex-direction: column; /* มือถือให้เรียงบนล่างเพื่อง่ายต่อการดู */
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0 auto 20mm;
+                background: white;
+                padding: 0;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                page-break-after: always;
+                border: 3mm solid #333;
             }
-            .a5-half {
-                width: 100%;
-                height: auto;
-                border-right: none;
                 border-bottom: 1px dashed #ccc;
             }
             .a5-half:last-child {
@@ -948,18 +949,19 @@
                     <title>ฉลากจัดส่ง - Chiangmai Freshmilk</title>
                     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
                     <style>
-                        @page {
-                            size: 101.6mm 152.4mm;
-                            margin: 0;
-                        }
-                        * {
+                        .a4-page {
+                            width: 210mm;
+                            height: 297mm;
                             margin: 0;
                             padding: 0;
+                            box-shadow: none;
+                            page-break-after: always;
+                            overflow: hidden;
                             box-sizing: border-box;
+                            display: flex;
+                            flex-direction: column;
+                            border: 3mm solid #333;
                         }
-                        html, body {
-                            margin: 0;
-                            padding: 0;
                             width: 101.6mm;
                             height: 152.4mm;
                             font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif;
