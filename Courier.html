@@ -377,10 +377,16 @@ function renderCards(){
         <div class="info-row">
           <span class="ico">📦</span>
           <span class="val">
-            <span class="product-name-big">
-              ${Array.isArray(o.items) ? o.items.join(', ') : o.items}
-            </span>
-            ${o.cod>0?`&nbsp;<span class="cod-tag">💰 COD ${o.cod.toLocaleString()} ฿</span>`:''}
+            <div class="product-list-container">
+              ${Array.isArray(o.items) 
+                ? o.items.map((item, index) => `
+                    <div style="margin-bottom: 4px;">
+                      <strong style="color:var(--orange); font-size:18px;">${index + 1}. ${item}</strong>
+                    </div>`).join('')
+                : `<strong style="color:var(--orange); font-size:18px;">1. ${o.items}</strong>`
+              }
+            </div>
+            ${o.cod > 0 ? `<div style="margin-top:8px;"><span class="cod-tag" style="font-size:16px; padding:4px 12px;">💰 เก็บเงิน COD: ${o.cod.toLocaleString()} ฿</span></div>` : ''}
           </span>
         </div>
       </div>
