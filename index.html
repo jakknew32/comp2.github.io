@@ -6,24 +6,24 @@
     <title>ใบจ่ายชดเชยสินค้า - Chiangmai Freshmilk</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-                @media print {
-                    body, html {
-                        background: white !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }
-                    #labelPreview, .label {
-                        display: block !important;
-                        margin: 0 auto !important;
-                        box-shadow: none !important;
-                        border: 3mm solid #333 !important;
-                        background: white !important;
-                        width: 101.6mm !important;
-                        height: 152.4mm !important;
-                        padding: 6mm 6mm 3mm 6mm !important;
-                        page-break-after: always;
-                    }
-                }
+        @media print {
+            body, html {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            #labelPreview, .label {
+                display: block !important;
+                margin: 0 auto !important;
+                box-shadow: none !important;
+                border: 3mm solid #333 !important;
+                background: white !important;
+                width: 101.6mm !important;
+                height: 152.4mm !important;
+                padding: 6mm 6mm 3mm 6mm !important;
+                page-break-after: always;
+            }
+        }
         * {
             margin: 0;
             padding: 0;
@@ -187,6 +187,23 @@
             padding: 0;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             page-break-after: always;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .a5-half {
+            width: 210mm;
+            height: 148.5mm;
+            padding: 4mm;
+            box-sizing: border-box;
+            border-bottom: 1px dashed #ccc;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .a5-half:last-child {
+            border-bottom: none;
         }
 
         .photo-row {
@@ -200,7 +217,7 @@
             position: relative;
             flex: 1;
             max-width: 210mm;
-            height: 130mm;
+            height: 60mm; /* ปรับลดให้พอดีครึ่ง A5 */
             border: none;
             display: flex;
             align-items: center;
@@ -211,7 +228,7 @@
 
         .photo-container.full-width {
             max-width: 100%;
-            height: 148.5mm;
+            height: 65mm; /* ปรับลดให้พอดีครึ่ง A5 */
             cursor: pointer;
             border: 2px dashed #ccc;
         }
@@ -286,23 +303,30 @@
                 width: 210mm;
                 height: 297mm;
                 margin: 0;
-                padding: 4mm;
+                padding: 0;
                 box-shadow: none;
                 page-break-after: always;
                 overflow: hidden;
                 box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
             }
 
             .a4-page:last-child {
                 page-break-after: auto;
             }
 
+            .a5-half {
+                height: 148.5mm;
+                padding: 4mm;
+            }
+
             .photo-container {
-                height: 130mm;
+                height: 60mm;
             }
 
             .photo-container.full-width {
-                height: 148.5mm;
+                height: 65mm;
             }
         }
 
@@ -318,7 +342,6 @@
         }
     </style>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -404,8 +427,7 @@
         </div>
 
         <div class="print-area" id="printArea">
-            <!-- Pages will be generated here -->
-        </div>
+            </div>
     </div>
 
     <script>
@@ -413,6 +435,7 @@
         let row2Photos = [];
         let photosPerRow = 3;
         let pageText = '';
+        let currentDocumentNumber = '';
 
         // Generate document number
         function generateDocumentNumber() {
@@ -541,78 +564,90 @@
                 const startIdx = pageNum * photosPerRow;
                 const endIdx = Math.min(startIdx + photosPerRow, row2Photos.length);
 
-                // Row 1: Single full-width photo with drag/drop support
-                const row1 = document.createElement('div');
-                row1.className = 'photo-row';
-                
-                const photo1Container = document.createElement('div');
-                photo1Container.className = 'photo-container full-width';
-                
-                if (row1Photo) {
-                    const img = document.createElement('img');
-                    img.src = row1Photo;
-                    photo1Container.appendChild(img);
-                } else {
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'photo-placeholder';
-                    placeholder.innerHTML = 'Drop image, Paste (Ctrl+V), or Click to upload';
-                    photo1Container.appendChild(placeholder);
-                }
-                
-                // Click to upload for row 1
-                photo1Container.addEventListener('click', function() {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'image/*';
-                    input.onchange = function(e) {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = function(event) {
-                                row1Photo = event.target.result;
-                                renderPhotos();
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    };
-                    input.click();
-                });
-                
-                row1.appendChild(photo1Container);
-                page.appendChild(row1);
+                // ฟังก์ชันสร้างเนื้อหาครึ่งหน้า A5
+                const buildA5Content = () => {
+                    const a5Container = document.createElement('div');
+                    a5Container.className = 'a5-half';
 
-                // Row 2: Multiple photos based on photosPerRow
-                const row2 = document.createElement('div');
-                row2.className = 'photo-row';
-
-                for (let i = 0; i < photosPerRow; i++) {
-                    const photoIdx = startIdx + i;
-                    const photoContainer = document.createElement('div');
-                    photoContainer.className = 'photo-container';
-
-                    if (photoIdx < endIdx) {
+                    // Row 1: Single full-width photo with drag/drop support
+                    const row1 = document.createElement('div');
+                    row1.className = 'photo-row';
+                    
+                    const photo1Container = document.createElement('div');
+                    photo1Container.className = 'photo-container full-width';
+                    
+                    if (row1Photo) {
                         const img = document.createElement('img');
-                        img.src = row2Photos[photoIdx];
-                        photoContainer.appendChild(img);
+                        img.src = row1Photo;
+                        photo1Container.appendChild(img);
                     } else {
                         const placeholder = document.createElement('div');
                         placeholder.className = 'photo-placeholder';
-                        placeholder.textContent = 'Empty';
-                        photoContainer.appendChild(placeholder);
+                        placeholder.innerHTML = 'Drop image, Paste (Ctrl+V), or Click to upload';
+                        photo1Container.appendChild(placeholder);
+                    }
+                    
+                    // Click to upload for row 1
+                    photo1Container.addEventListener('click', function() {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = function(e) {
+                            const file = e.target.files[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = function(event) {
+                                    row1Photo = event.target.result;
+                                    renderPhotos();
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        };
+                        input.click();
+                    });
+                    
+                    row1.appendChild(photo1Container);
+                    a5Container.appendChild(row1);
+
+                    // Row 2: Multiple photos based on photosPerRow
+                    const row2 = document.createElement('div');
+                    row2.className = 'photo-row';
+
+                    for (let i = 0; i < photosPerRow; i++) {
+                        const photoIdx = startIdx + i;
+                        const photoContainer = document.createElement('div');
+                        photoContainer.className = 'photo-container';
+
+                        if (photoIdx < endIdx) {
+                            const img = document.createElement('img');
+                            img.src = row2Photos[photoIdx];
+                            photoContainer.appendChild(img);
+                        } else {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'photo-placeholder';
+                            placeholder.textContent = 'Empty';
+                            photoContainer.appendChild(placeholder);
+                        }
+
+                        row2.appendChild(photoContainer);
                     }
 
-                    row2.appendChild(photoContainer);
-                }
+                    a5Container.appendChild(row2);
 
-                page.appendChild(row2);
+                    // Add text below page if provided
+                    if (pageText.trim() !== '') {
+                        const textDiv = document.createElement('div');
+                        textDiv.className = 'page-text';
+                        textDiv.textContent = pageText;
+                        a5Container.appendChild(textDiv);
+                    }
 
-                // Add text below page if provided
-                if (pageText.trim() !== '') {
-                    const textDiv = document.createElement('div');
-                    textDiv.className = 'page-text';
-                    textDiv.textContent = pageText;
-                    page.appendChild(textDiv);
-                }
+                    return a5Container;
+                };
+
+                // ใส่เนื้อหา A5 2 ชุดลงใน 1 หน้า A4
+                page.appendChild(buildA5Content());
+                page.appendChild(buildA5Content());
 
                 printArea.appendChild(page);
             }
