@@ -180,47 +180,58 @@
             overflow-x: auto;
         }
 
-        /* * ปรับ A4 เป็นแนวนอน (Landscape) เพื่อแบ่งซ้าย-ขวา 
+        /* * กระดาษ A4 แนวนอน 
          */
         .a4-page {
-            width: 297mm; /* ความกว้าง A4 แนวนอน */
-            min-height: 210mm; /* ความสูง A4 แนวนอน */
+            width: 297mm;
+            height: 210mm;
             margin: 0 auto 20mm;
             background: white;
             padding: 0;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             page-break-after: always;
             display: flex;
-            flex-direction: row; /* เรียงซ้าย-ขวา */
+            flex-direction: row; 
         }
 
+        /* * ครึ่งหน้า (A5 แนวตั้ง) ยืดเต็มพื้นที่ 
+         */
         .a5-half {
-            width: 148.5mm; /* ครึ่งนึงของ A4 แนวนอน = A5 แนวตั้งพอดี */
+            width: 148.5mm;
             height: 210mm;
-            padding: 8mm;
+            padding: 3mm; /* ลดระยะขอบให้เหลือน้อยที่สุด (3mm เผื่อเครื่องปริ้นกินขอบ) */
             box-sizing: border-box;
-            border-right: 1px dashed #ccc; /* เส้นประแนวตั้งใช้ตัดแบ่ง */
+            border-right: 1px dashed #ccc;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
         }
 
         .a5-half:last-child {
             border-right: none;
         }
 
+        /* แถวสำหรับใส่รูป */
         .photo-row {
             display: flex;
             gap: 2mm;
             margin-bottom: 2mm;
-            justify-content: center;
+            width: 100%;
+        }
+
+        /* ให้แถวแรก (รูปใหญ่) ขยายตัวกินพื้นที่ 65% ของหน้ากระดาษ */
+        .a5-half > .photo-row:nth-child(1) {
+            flex: 1.8;
+        }
+
+        /* ให้แถวที่สอง (รูปเล็ก) กินพื้นที่ที่เหลือ 35% */
+        .a5-half > .photo-row:nth-child(2) {
+            flex: 1;
         }
 
         .photo-container {
             position: relative;
             flex: 1;
-            max-width: 148.5mm;
-            height: 65mm; /* คืนสัดส่วนให้ใกล้เคียงเดิม */
+            height: 100%; /* เปลี่ยนเป็น 100% ให้เต็มพื้นที่กล่องอัตโนมัติ */
             border: none;
             display: flex;
             align-items: center;
@@ -230,8 +241,7 @@
         }
 
         .photo-container.full-width {
-            max-width: 100%;
-            height: 105mm; /* คืนสัดส่วนรูปใหญ่ให้เหมือน A4 เดิม */
+            width: 100%;
             cursor: pointer;
             border: 2px dashed #ccc;
         }
@@ -249,6 +259,7 @@
             border: none;
         }
 
+        /* รูปแบบรูปภาพ */
         .photo-container img {
             width: 100%;
             height: 100%;
@@ -256,7 +267,7 @@
         }
 
         .photo-container.full-width img {
-            object-fit: contain;
+            object-fit: contain; /* รูปใหญ่พยายามให้เห็นครบที่สุด โดยไม่โดนตัด */
         }
 
         .photo-placeholder {
@@ -266,14 +277,13 @@
 
         .page-text {
             margin-top: auto;
-            padding-top: 4mm;
+            padding: 2mm 0;
             text-align: center;
             font-size: 14px;
             color: #333;
             border-top: 1px solid #e0e0e0;
         }
 
-        /* ตั้งค่าหน้ากระดาษปริ้นให้เป็น Landscape อัตโนมัติ */
         @page {
             margin: 0;
             size: A4 landscape; 
@@ -290,11 +300,7 @@
                 max-width: 100%;
             }
 
-            h1 {
-                display: none;
-            }
-
-            .controls {
+            h1, .controls {
                 display: none;
             }
 
@@ -314,7 +320,7 @@
                 overflow: hidden;
                 box-sizing: border-box;
                 display: flex;
-                flex-direction: row; /* คงการเรียงซ้าย-ขวาตอนปริ้น */
+                flex-direction: row;
             }
 
             .a4-page:last-child {
@@ -324,7 +330,7 @@
             .a5-half {
                 width: 148.5mm;
                 height: 210mm;
-                padding: 8mm;
+                padding: 3mm; /* ล็อกขอบ 3mm ชิดกระดาษแบบเต็มพื้นที่ */
             }
         }
 
@@ -334,15 +340,15 @@
             }
 
             .a4-page {
-                width: 210mm;
-                min-height: 297mm;
-                margin: 0 auto 20mm;
-                background: white;
-                padding: 0;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                page-break-after: always;
-                border: 3mm solid #333;
+                width: 100%;
+                height: auto;
+                min-height: auto;
+                flex-direction: column; 
             }
+            .a5-half {
+                width: 100%;
+                height: 100vh; /* มือถือให้สูงเต็มหน้าจอแต่ละส่วน */
+                border-right: none;
                 border-bottom: 1px dashed #ccc;
             }
             .a5-half:last-child {
@@ -654,7 +660,7 @@
                     return a5Container;
                 };
 
-                // ใส่เนื้อหา A5 2 ชุดลงใน 1 หน้า A4 แนวนอน (จะถูกจัดเรียงซ้าย-ขวา)
+                // ใส่เนื้อหา A5 2 ชุดลงใน 1 หน้า A4 แนวนอน
                 page.appendChild(buildA5Content());
                 page.appendChild(buildA5Content());
 
@@ -949,19 +955,18 @@
                     <title>ฉลากจัดส่ง - Chiangmai Freshmilk</title>
                     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
                     <style>
-                        .a4-page {
-                            width: 210mm;
-                            height: 297mm;
+                        @page {
+                            size: 101.6mm 152.4mm;
+                            margin: 0;
+                        }
+                        * {
                             margin: 0;
                             padding: 0;
-                            box-shadow: none;
-                            page-break-after: always;
-                            overflow: hidden;
                             box-sizing: border-box;
-                            display: flex;
-                            flex-direction: column;
-                            border: 3mm solid #333;
                         }
+                        html, body {
+                            margin: 0;
+                            padding: 0;
                             width: 101.6mm;
                             height: 152.4mm;
                             font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif;
