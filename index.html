@@ -6,24 +6,24 @@
     <title>ใบจ่ายชดเชยสินค้า - Chiangmai Freshmilk</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        @media print {
-            body, html {
-                background: white !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            #labelPreview, .label {
-                display: block !important;
-                margin: 0 auto !important;
-                box-shadow: none !important;
-                border: 3mm solid #333 !important;
-                background: white !important;
-                width: 101.6mm !important;
-                height: 152.4mm !important;
-                padding: 6mm 6mm 3mm 6mm !important;
-                page-break-after: always;
-            }
-        }
+                @media print {
+                    body, html {
+                        background: white !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    #labelPreview, .label {
+                        display: block !important;
+                        margin: 0 auto !important;
+                        box-shadow: none !important;
+                        border: 3mm solid #333 !important;
+                        background: white !important;
+                        width: 101.6mm !important;
+                        height: 152.4mm !important;
+                        padding: 6mm 6mm 3mm 6mm !important;
+                        page-break-after: always;
+                    }
+                }
         * {
             margin: 0;
             padding: 0;
@@ -177,61 +177,30 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            overflow-x: auto;
         }
 
-        /* * กระดาษ A4 แนวนอน 
-         */
         .a4-page {
-            width: 297mm;
-            height: 210mm;
+            width: 210mm;
+            min-height: 297mm;
             margin: 0 auto 20mm;
             background: white;
             padding: 0;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             page-break-after: always;
-            display: flex;
-            flex-direction: row; 
         }
 
-        /* * ครึ่งหน้า (A5 แนวตั้ง) ยืดเต็มพื้นที่ 
-         */
-        .a5-half {
-            width: 148.5mm;
-            height: 210mm;
-            padding: 3mm; /* ลดระยะขอบให้เหลือน้อยที่สุด (3mm เผื่อเครื่องปริ้นกินขอบ) */
-            box-sizing: border-box;
-            border-right: 1px dashed #ccc;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .a5-half:last-child {
-            border-right: none;
-        }
-
-        /* แถวสำหรับใส่รูป */
         .photo-row {
             display: flex;
-            gap: 2mm;
-            margin-bottom: 2mm;
-            width: 100%;
-        }
-
-        /* ให้แถวแรก (รูปใหญ่) ขยายตัวกินพื้นที่ 65% ของหน้ากระดาษ */
-        .a5-half > .photo-row:nth-child(1) {
-            flex: 1.8;
-        }
-
-        /* ให้แถวที่สอง (รูปเล็ก) กินพื้นที่ที่เหลือ 35% */
-        .a5-half > .photo-row:nth-child(2) {
-            flex: 1;
+            gap: 1mm;
+            margin-bottom: 1mm;
+            justify-content: center;
         }
 
         .photo-container {
             position: relative;
             flex: 1;
-            height: 100%; /* เปลี่ยนเป็น 100% ให้เต็มพื้นที่กล่องอัตโนมัติ */
+            max-width: 210mm;
+            height: 130mm;
             border: none;
             display: flex;
             align-items: center;
@@ -241,7 +210,8 @@
         }
 
         .photo-container.full-width {
-            width: 100%;
+            max-width: 100%;
+            height: 148.5mm;
             cursor: pointer;
             border: 2px dashed #ccc;
         }
@@ -259,7 +229,6 @@
             border: none;
         }
 
-        /* รูปแบบรูปภาพ */
         .photo-container img {
             width: 100%;
             height: 100%;
@@ -267,7 +236,7 @@
         }
 
         .photo-container.full-width img {
-            object-fit: contain; /* รูปใหญ่พยายามให้เห็นครบที่สุด โดยไม่โดนตัด */
+            object-fit: contain;
         }
 
         .photo-placeholder {
@@ -276,17 +245,17 @@
         }
 
         .page-text {
-            margin-top: auto;
-            padding: 2mm 0;
+            margin-top: 2mm;
+            padding: 2mm;
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
             color: #333;
             border-top: 1px solid #e0e0e0;
         }
 
         @page {
             margin: 0;
-            size: A4 landscape; 
+            size: A4;
         }
 
         @media print {
@@ -300,37 +269,40 @@
                 max-width: 100%;
             }
 
-            h1, .controls {
+            h1 {
+                display: none;
+            }
+
+            .controls {
                 display: none;
             }
 
             .print-area {
                 padding: 0;
                 box-shadow: none;
-                overflow: visible;
             }
 
             .a4-page {
-                width: 297mm;
-                height: 210mm;
+                width: 210mm;
+                height: 297mm;
                 margin: 0;
-                padding: 0;
+                padding: 4mm;
                 box-shadow: none;
                 page-break-after: always;
                 overflow: hidden;
                 box-sizing: border-box;
-                display: flex;
-                flex-direction: row;
             }
 
             .a4-page:last-child {
                 page-break-after: auto;
             }
 
-            .a5-half {
-                width: 148.5mm;
-                height: 210mm;
-                padding: 3mm; /* ล็อกขอบ 3mm ชิดกระดาษแบบเต็มพื้นที่ */
+            .photo-container {
+                height: 130mm;
+            }
+
+            .photo-container.full-width {
+                height: 148.5mm;
             }
         }
 
@@ -341,22 +313,12 @@
 
             .a4-page {
                 width: 100%;
-                height: auto;
                 min-height: auto;
-                flex-direction: column; 
-            }
-            .a5-half {
-                width: 100%;
-                height: 100vh; /* มือถือให้สูงเต็มหน้าจอแต่ละส่วน */
-                border-right: none;
-                border-bottom: 1px dashed #ccc;
-            }
-            .a5-half:last-child {
-                border-bottom: none;
             }
         }
     </style>
 
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -442,7 +404,8 @@
         </div>
 
         <div class="print-area" id="printArea">
-            </div>
+            <!-- Pages will be generated here -->
+        </div>
     </div>
 
     <script>
@@ -450,7 +413,6 @@
         let row2Photos = [];
         let photosPerRow = 3;
         let pageText = '';
-        let currentDocumentNumber = '';
 
         // Generate document number
         function generateDocumentNumber() {
@@ -579,90 +541,78 @@
                 const startIdx = pageNum * photosPerRow;
                 const endIdx = Math.min(startIdx + photosPerRow, row2Photos.length);
 
-                // ฟังก์ชันสร้างเนื้อหา 1 ชุด (ขนาด A5 แนวตั้ง)
-                const buildA5Content = () => {
-                    const a5Container = document.createElement('div');
-                    a5Container.className = 'a5-half';
+                // Row 1: Single full-width photo with drag/drop support
+                const row1 = document.createElement('div');
+                row1.className = 'photo-row';
+                
+                const photo1Container = document.createElement('div');
+                photo1Container.className = 'photo-container full-width';
+                
+                if (row1Photo) {
+                    const img = document.createElement('img');
+                    img.src = row1Photo;
+                    photo1Container.appendChild(img);
+                } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'photo-placeholder';
+                    placeholder.innerHTML = 'Drop image, Paste (Ctrl+V), or Click to upload';
+                    photo1Container.appendChild(placeholder);
+                }
+                
+                // Click to upload for row 1
+                photo1Container.addEventListener('click', function() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                row1Photo = event.target.result;
+                                renderPhotos();
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    };
+                    input.click();
+                });
+                
+                row1.appendChild(photo1Container);
+                page.appendChild(row1);
 
-                    // Row 1: Single full-width photo with drag/drop support
-                    const row1 = document.createElement('div');
-                    row1.className = 'photo-row';
-                    
-                    const photo1Container = document.createElement('div');
-                    photo1Container.className = 'photo-container full-width';
-                    
-                    if (row1Photo) {
+                // Row 2: Multiple photos based on photosPerRow
+                const row2 = document.createElement('div');
+                row2.className = 'photo-row';
+
+                for (let i = 0; i < photosPerRow; i++) {
+                    const photoIdx = startIdx + i;
+                    const photoContainer = document.createElement('div');
+                    photoContainer.className = 'photo-container';
+
+                    if (photoIdx < endIdx) {
                         const img = document.createElement('img');
-                        img.src = row1Photo;
-                        photo1Container.appendChild(img);
+                        img.src = row2Photos[photoIdx];
+                        photoContainer.appendChild(img);
                     } else {
                         const placeholder = document.createElement('div');
                         placeholder.className = 'photo-placeholder';
-                        placeholder.innerHTML = 'Drop image, Paste (Ctrl+V), or Click to upload';
-                        photo1Container.appendChild(placeholder);
-                    }
-                    
-                    // Click to upload for row 1
-                    photo1Container.addEventListener('click', function() {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = 'image/*';
-                        input.onchange = function(e) {
-                            const file = e.target.files[0];
-                            if (file) {
-                                const reader = new FileReader();
-                                reader.onload = function(event) {
-                                    row1Photo = event.target.result;
-                                    renderPhotos();
-                                };
-                                reader.readAsDataURL(file);
-                            }
-                        };
-                        input.click();
-                    });
-                    
-                    row1.appendChild(photo1Container);
-                    a5Container.appendChild(row1);
-
-                    // Row 2: Multiple photos based on photosPerRow
-                    const row2 = document.createElement('div');
-                    row2.className = 'photo-row';
-
-                    for (let i = 0; i < photosPerRow; i++) {
-                        const photoIdx = startIdx + i;
-                        const photoContainer = document.createElement('div');
-                        photoContainer.className = 'photo-container';
-
-                        if (photoIdx < endIdx) {
-                            const img = document.createElement('img');
-                            img.src = row2Photos[photoIdx];
-                            photoContainer.appendChild(img);
-                        } else {
-                            const placeholder = document.createElement('div');
-                            placeholder.className = 'photo-placeholder';
-                            placeholder.textContent = 'Empty';
-                            photoContainer.appendChild(placeholder);
-                        }
-
-                        row2.appendChild(photoContainer);
+                        placeholder.textContent = 'Empty';
+                        photoContainer.appendChild(placeholder);
                     }
 
-                    a5Container.appendChild(row2);
+                    row2.appendChild(photoContainer);
+                }
 
-                    // Add text below page if provided
-                    if (pageText.trim() !== '') {
-                        const textDiv = document.createElement('div');
-                        textDiv.className = 'page-text';
-                        textDiv.textContent = pageText;
-                        a5Container.appendChild(textDiv);
-                    }
+                page.appendChild(row2);
 
-                    return a5Container;
-                };
-
-                // ใส่เนื้อหา A5 2 ชุดลงใน 1 หน้า A4 แนวนอน
-                page.appendChild(buildA5Content());
-                page.appendChild(buildA5Content());
+                // Add text below page if provided
+                if (pageText.trim() !== '') {
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'page-text';
+                    textDiv.textContent = pageText;
+                    page.appendChild(textDiv);
+                }
 
                 printArea.appendChild(page);
             }
