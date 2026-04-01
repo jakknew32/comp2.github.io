@@ -185,6 +185,15 @@ onValue(ordersRef, snap => {
   renderList();
 });
 
+// แปลงสถานะเป็นภาษาไทย
+function getStatusLabel(status) {
+  if (status === 'delivered') return 'สำเร็จ';
+  if (status === 'failed') return 'ปัญหา';
+  if (status === 'pending') return 'ค้างส่ง';
+  if (status === 'transit') return 'กำลังส่ง';
+  return status;
+}
+
 // บันทึก หรือ อัปเดต
 window.saveOrder = function() {
   const o = {
@@ -284,7 +293,7 @@ window.renderList = function() {
   const list = document.getElementById('orderList');
   let filtered = orders;
   if (orderFilter === 'delivered') filtered = orders.filter(o => o.status === 'delivered');
-  else if (orderFilter === 'pending') filtered = orders.filter(o => o.status !== 'delivered');
+  else if (orderFilter === 'pending') filtered = orders.filter(o => o.status === 'pending' || o.status === 'transit');
   else if (orderFilter === 'problem') filtered = orders.filter(o => o.status === 'failed');
   // 'all' = ไม่กรอง
   list.innerHTML = filtered.map(o => `
@@ -295,7 +304,7 @@ window.renderList = function() {
         <div style="font-size:11px; color:var(--muted)">${o.address}</div>
       </div>
       <div style="text-align:right">
-        <span class="badge b-${o.status}">${o.status}</span>
+        <span class="badge b-${o.status}">${getStatusLabel(o.status)}</span>
         <div style="margin-top:8px">
           <button onclick="event.stopPropagation(); startEdit('${o._fbKey}')" style="background:none; border:none; color:var(--cyan); cursor:pointer; font-size:16px" title="แก้ไข">✎</button>
           <button onclick="event.stopPropagation(); deleteOrder('${o._fbKey}')" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:16px; margin-left:10px" title="ลบ">🗑</button>
@@ -340,7 +349,7 @@ function renderStats() {
   const stats = document.getElementById('statsBar');
   const count = orders.length;
   const delivered = orders.filter(o => o.status === 'delivered').length;
-  const pending = orders.filter(o => o.status !== 'delivered').length;
+  const pending = orders.filter(o => o.status === 'pending' || o.status === 'transit').length;
   const problem = orders.filter(o => o.status === 'failed').length;
   stats.innerHTML = `
     <div class="stat" style="cursor:pointer" onclick="setOrderFilter('all')"><div class="stat-n">${count}</div><div class="stat-l">ทั้งหมด</div></div>
