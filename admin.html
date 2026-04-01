@@ -99,7 +99,27 @@
           <span class="f-label">สินค้า (เลือกหรือระบุเอง)</span>
           <select class="f-select" id="f_item1" style="margin-bottom:5px">
             <option value="">-- เลือกรายการ --</option>
-            <option value="Mulk+HighProtein จืด 10กล่อง">Mulk+HighProtein จืด 10กล</option>
+            <option value="Mulk+HighProtein จืด 10กล">Mulk+HighProtein จืด 10กล</option>
+            <option value="Mulk+HighProtein จืด 20กล่อง">Mulk+HighProtein จืด 20กล่อง</option>
+            <option value="Mulk+HighProtein ช็อกโกแลต 10กล่อง">Mulk+HighProtein ช็อกโกแลต 10กล่อง</option>
+            <option value="Mulk+HighProtein ช็อกโกแลต 20กล่อง">Mulk+HighProtein ช็อกโกแลต 20กล่อง</option>
+            <option value="Mulk+HighProtein น้ำผึ้ง 10กล่อง">Mulk+HighProtein น้ำผึ้ง 10กล่อง</option>
+            <option value="Mulk+HighProtein น้ำผึ้ง 20กล่อง">Mulk+HighProtein น้ำผึ้ง 20กล่อง</option>
+            <option value="อื่นๆ (ระบุเอง...ข้างล่าง)">อื่นๆ (ระบุเอง...ข้างล่าง)</option>
+          </select>
+          <select class="f-select" id="f_item2" style="margin-bottom:5px">
+            <option value="">-- เลือกรายการ (ช่อง 2) --</option>
+            <option value="Mulk+HighProtein จืด 10กล">Mulk+HighProtein จืด 10กล</option>
+            <option value="Mulk+HighProtein จืด 20กล่อง">Mulk+HighProtein จืด 20กล่อง</option>
+            <option value="Mulk+HighProtein ช็อกโกแลต 10กล่อง">Mulk+HighProtein ช็อกโกแลต 10กล่อง</option>
+            <option value="Mulk+HighProtein ช็อกโกแลต 20กล่อง">Mulk+HighProtein ช็อกโกแลต 20กล่อง</option>
+            <option value="Mulk+HighProtein น้ำผึ้ง 10กล่อง">Mulk+HighProtein น้ำผึ้ง 10กล่อง</option>
+            <option value="Mulk+HighProtein น้ำผึ้ง 20กล่อง">Mulk+HighProtein น้ำผึ้ง 20กล่อง</option>
+            <option value="อื่นๆ (ระบุเอง...ข้างล่าง)">อื่นๆ (ระบุเอง...ข้างล่าง)</option>
+          </select>
+          <select class="f-select" id="f_item3" style="margin-bottom:5px">
+            <option value="">-- เลือกรายการ (ช่อง 3) --</option>
+            <option value="Mulk+HighProtein จืด 10กล">Mulk+HighProtein จืด 10กล</option>
             <option value="Mulk+HighProtein จืด 20กล่อง">Mulk+HighProtein จืด 20กล่อง</option>
             <option value="Mulk+HighProtein ช็อกโกแลต 10กล่อง">Mulk+HighProtein ช็อกโกแลต 10กล่อง</option>
             <option value="Mulk+HighProtein ช็อกโกแลต 20กล่อง">Mulk+HighProtein ช็อกโกแลต 20กล่อง</option>
@@ -175,7 +195,12 @@ window.saveOrder = function() {
     weight: document.getElementById('f_weight').value,
     cod: document.getElementById('f_cod').value,
     courier: document.getElementById('f_courier').value,
-    items: [document.getElementById('f_item1').value, ...document.getElementById('f_items_free').value.split('\n')].filter(x=>x),
+    items: [
+      document.getElementById('f_item1').value,
+      document.getElementById('f_item2').value,
+      document.getElementById('f_item3').value,
+      ...document.getElementById('f_items_free').value.split('\n')
+    ].filter(x=>x),
     status: editMode ? orders.find(x=>x._fbKey === editFbKey).status : 'pending',
     updatedAt: Date.now()
   };
@@ -212,7 +237,18 @@ window.startEdit = function(fbKey) {
   document.getElementById('f_weight').value = item.weight || '';
   document.getElementById('f_cod').value = item.cod || '';
   document.getElementById('f_courier').value = item.courier || '';
-  document.getElementById('f_items_free').value = Array.isArray(item.items) ? item.items.join('\n') : item.items;
+  // ใส่ข้อมูลลง select ทั้ง 3 ช่อง
+  if (Array.isArray(item.items)) {
+    document.getElementById('f_item1').value = item.items[0] || '';
+    document.getElementById('f_item2').value = item.items[1] || '';
+    document.getElementById('f_item3').value = item.items[2] || '';
+    document.getElementById('f_items_free').value = item.items.slice(3).join('\n');
+  } else {
+    document.getElementById('f_item1').value = '';
+    document.getElementById('f_item2').value = '';
+    document.getElementById('f_item3').value = '';
+    document.getElementById('f_items_free').value = item.items || '';
+  }
 
   // เปลี่ยน UI
   document.getElementById('form-title').innerText = "แก้ไขงาน";
@@ -238,6 +274,8 @@ function clearForm() {
     document.getElementById(id).value = '';
   });
   document.getElementById('f_item1').value = '';
+  document.getElementById('f_item2').value = '';
+  document.getElementById('f_item3').value = '';
   document.getElementById('f_courier').value = '';
 }
 
