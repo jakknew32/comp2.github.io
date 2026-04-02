@@ -60,8 +60,9 @@
   .product-box { margin-top:10px; background:rgba(0,0,0,0.02); padding:10px; border-radius:8px; }
   .product-item { font-size:16px; font-weight:600; color:var(--orange); margin-bottom:4px; display:block; }
   
-  /* สไตล์ใหม่สำหรับวันกำหนดส่ง */
   .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--cyan-l); border:1px solid var(--cyan-b); color:var(--cyan); padding:6px 14px; border-radius:100px; font-size:14px; font-weight:700; margin-top:12px; }
+  /* สไตล์แจ้งเตือนเลยกำหนด */
+  .overdue { background:var(--red-l); border-color:var(--red-b); color:var(--red); }
   
   .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
   .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; cursor:pointer; }
@@ -171,6 +172,7 @@ function renderStats(){
 }
 
 function renderCards(){
+  const now = new Date();
   const sorted = [...orders].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
   let filtered = currentFilter==='all' ? sorted : sorted.filter(o=>o.status===currentFilter);
   
@@ -182,23 +184,21 @@ function renderCards(){
 
   document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
     const displayId = o.orderid || o._fbKey.substring(0,6);
-    
-    // วันที่บันทึก
     const createdDateObj = o.createdAt ? new Date(o.createdAt) : null;
     const createdDateStr = createdDateObj ? createdDateObj.toLocaleString('th-TH', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
     
-    // คำนวณวันกำหนดส่ง (+3 วันจากวันที่บันทึก)
+    // คำนวณวันกำหนดส่ง (+3 วัน)
     let dueDateStr = '-';
+    let isOverdue = false;
     if(createdDateObj) {
         const dueDate = new Date(createdDateObj);
         dueDate.setDate(dueDate.getDate() + 3);
         dueDateStr = dueDate.toLocaleDateString('th-TH', {day:'2-digit', month:'long', year:'numeric'});
-    }
-
-    let deliveredHtml = '';
-    if(o.status === 'delivered' && o.timeline) {
-        const devEntry = [...o.timeline].reverse().find(t => t.status === 'delivered' || t.text.includes('สำเร็จ'));
-        if(devEntry) deliveredHtml = `<div style="font-size:11px; margin-top:4px; opacity:0.8;">🏁 จัดส่งจริงเมื่อ: ${devEntry.time}</div>`;
+        
+        // เช็คว่าเลยกำหนดหรือยัง (เฉพาะรายการที่ยังส่งไม่สำเร็จ)
+        if (now > dueDate && o.status !== 'delivered') {
+          isOverdue = true;
+        }
     }
 
     let itemsHtml = '';
@@ -214,9 +214,8 @@ function renderCards(){
       <div class="card-head">
         <div>
           <div class="card-id">#${displayId}</div>
-          <span class="time-head">📅 บันทึก: ${createdDateStr}</span>
+          <span class="time-head">บันทึก: ${createdDateStr}</span>
           <div class="card-name">${o.name || 'ไม่ระบุชื่อ'}</div>
-          ${deliveredHtml}
         </div>
         <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
       </div>
@@ -229,7 +228,9 @@ function renderCards(){
           ${itemsHtml}
         </div>
 
-        <div class="due-tag">📅 กำหนดส่งภายใน: ${dueDateStr}</div>
+        <div class="due-tag ${isOverdue ? 'overdue' : ''}">
+          ${isOverdue ? '⚠️ เลยกำหนดส่ง: ' : '📅 กำหนดส่งภายใน: '} ${dueDateStr}
+        </div>
       </div>
       <div class="card-foot">
         <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
