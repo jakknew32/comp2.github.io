@@ -20,24 +20,52 @@
   @keyframes pulse-new { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
+  
   nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
   .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
   .logo em { color:var(--orange); font-style:normal; }
   .courier-badge { background:var(--orange-l); border:1px solid var(--orange-b); color:var(--orange); padding:5px 14px; border-radius:100px; font-size:12px; font-weight:700; }
-  .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
+  
+  .page-head { 
+    background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); 
+    padding:24px 20px 20px; color:#fff; 
+  }
+  .ph-row { 
+    display: flex; justify-content: space-between; align-items: center; 
+  }
   .ph-title { font-size:24px; font-weight:700; }
+  
+  .btn-refresh {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .btn-refresh:active { transform: scale(0.95); background: rgba(255,255,255,0.3); }
+
   .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); }
   .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
   .stat-cell.active { background:var(--orange-l); }
   .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
+  
   .search-row { padding: 12px 16px 0; background: #fff; display:flex; justify-content:center; }
   .search-input { width: 100%; max-width: 340px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: #f8fafc; font-family: var(--font); }
+  
   .main { padding:16px; max-width:800px; margin:0 auto; }
   .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
   .delivery-card.pending { border-left:4px solid var(--yellow); }
   .delivery-card.transit { border-left:4px solid var(--cyan); }
   .delivery-card.delivered { border-left:4px solid var(--green); background:linear-gradient(135deg, #34d399 0%, #059669 100%); color:#fff; }
   .delivery-card.delivered .card-id, .delivery-card.delivered .info-row .val, .delivery-card.delivered .product-item { color:#fff !important; }
+  
   .card-head { padding:14px 16px 10px; display:flex; justify-content:space-between; }
   .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); }
   .card-name { font-size:18px; font-weight:700; margin-top:2px; }
@@ -45,14 +73,17 @@
   .b-pending { background:var(--yellow-l); color:var(--yellow); }
   .b-transit { background:var(--cyan-l); color:var(--cyan); }
   .b-delivered { background:var(--green-l); color:var(--green); }
+  
   .card-body { padding:0 16px 12px; }
   .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:14px; }
   .product-box { margin-top:10px; background:rgba(0,0,0,0.02); padding:10px; border-radius:8px; }
   .product-item { font-size:16px; font-weight:600; color:var(--orange); margin-bottom:4px; display:block; }
   .cod-tag { display:inline-flex; align-items:center; gap:4px; background:var(--yellow-l); border:1px solid var(--yellow-b); color:var(--yellow); padding:4px 12px; border-radius:100px; font-size:14px; font-weight:700; margin-top:10px; }
+  
   .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
   .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; cursor:pointer; }
   .btn-map { padding:10px 18px; border-radius:10px; border:2px solid var(--green); background:var(--green-l); color:var(--green); font-size:14px; font-weight:700; text-decoration:none; }
+  
   #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--text); color:#fff; padding:12px 22px; border-radius:100px; font-size:13px; font-weight:600; z-index:999; opacity:0; transition:all .3s; }
   #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 </style>
@@ -65,8 +96,11 @@
 </nav>
 
 <div class="page-head">
-  <div class="ph-title">งานจัดส่งของคุณ</div>
-  <div class="ph-sub" id="dateDisplay"></div>
+  <div class="ph-row">
+    <div class="ph-title">งานจัดส่งของคุณ</div>
+    <button class="btn-refresh" onclick="location.reload()">🔄 รีเฟรช</button>
+  </div>
+  <div class="ph-sub" id="dateDisplay" style="font-size: 14px; opacity: 0.8; margin-top: 4px;"></div>
 </div>
 
 <div class="stats-row" id="statsRow"></div>
@@ -140,7 +174,6 @@ function renderStats(){
     transit: orders.filter(o=>o.status==='transit').length,
     delivered: orders.filter(o=>o.status==='delivered').length
   };
-  const labels = {total:'ทั้งหมด', pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ'};
   document.getElementById('statsRow').innerHTML = [
     {n:stats.total, l:'ทั้งหมด', f:'all'},
     {n:stats.pending, l:'รอส่ง', f:'pending'},
@@ -165,14 +198,14 @@ function renderCards(){
   }
 
   document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
+    // ดึงเลข orderid จากฐานข้อมูลหน้า Admin
     const displayId = o.orderid || o._fbKey.substring(0,6);
     
-    // จัดการรายการสินค้าให้แยกเป็นลำดับ
+    // จัดรายการสินค้าแยกเป็นลำดับ
     let itemsHtml = '';
     if (Array.isArray(o.items)) {
       itemsHtml = o.items.map((item, i) => `<span class="product-item">${i+1}. ${item}</span>`).join('');
     } else if (o.items) {
-      // กรณีเป็นข้อความยาวๆ ที่แยกด้วยจุลภาค (comma) หรือบรรทัด
       const itemArray = o.items.split(/[,|\n]/).filter(x => x.trim() !== "");
       itemsHtml = itemArray.map((item, i) => `<span class="product-item">${i+1}. ${item.trim()}</span>`).join('');
     } else {
