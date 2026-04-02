@@ -26,7 +26,6 @@
   .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
   .ph-row { display: flex; justify-content: space-between; align-items: center; }
   .ph-title { font-size:24px; font-weight:700; }
-  
   .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
   .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); }
@@ -51,18 +50,25 @@
   .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--cyan-l); border:1px solid var(--cyan-b); color:var(--cyan); padding:6px 14px; border-radius:100px; font-size:14px; font-weight:700; margin-top:12px; }
   .overdue { background:var(--red-l); border-color:var(--red-b); color:var(--red); }
 
-  /* ส่วนหลักฐานการส่ง */
-  .proof-section { margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); }
-  .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  /* Modal สำหรับหลักฐานการส่ง */
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+  .modal.active { display:flex; }
+  .modal-content { background:#fff; width:100%; max-width:400px; border-radius:20px; padding:20px; position:relative; }
+  
+  .proof-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+  .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
   .proof-box { 
-    background: #fff; border: 2px dashed var(--border); border-radius: 12px; height: 100px;
+    background: #f8fafc; border: 2px dashed var(--border); border-radius: 12px; height: 120px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     font-size: 12px; color: var(--muted); cursor: pointer; position: relative; overflow: hidden;
   }
   .proof-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  canvas.sig-pad { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; width: 100%; height: 120px; touch-action: none; }
   
-  canvas.sig-pad { background: #fff; border: 1px solid var(--border); border-radius: 8px; width: 100%; height: 80px; touch-action: none; }
-  
+  .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn-save { background:var(--green); color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; cursor:pointer; }
+  .btn-cancel { background:var(--bg); color:var(--muted); border:none; padding:12px; border-radius:10px; font-weight:700; cursor:pointer; }
+
   .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
   .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; }
   .btn-map { padding:10px 18px; border-radius:10px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none; }
@@ -87,11 +93,34 @@
 </div>
 
 <div class="stats-row" id="statsRow"></div>
-
 <div class="main" id="mainGrid"></div>
-<div id="toast"></div>
 
-<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+<div id="proofModal" class="modal">
+  <div class="modal-content">
+    <div class="proof-header">
+      <h3 style="font-size:18px;">📸 บันทึกหลักฐานส่งสำเร็จ</h3>
+    </div>
+    
+    <div class="proof-grid">
+      <div class="proof-box" id="photoBox" onclick="openCamera()">
+        <span id="photoPlaceholder">📷 ถ่ายรูป/เลือกรูป</span>
+        <img id="photoPreview" style="display:none">
+      </div>
+      <div class="proof-box" style="cursor:default;">
+        <canvas id="modalSig" class="sig-pad"></canvas>
+        <div style="position:absolute; bottom:5px; font-size:10px; color:var(--muted)">✍️ เซ็นชื่อในช่องนี้</div>
+      </div>
+    </div>
+    
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-save" onclick="submitDelivered()">ยืนยันส่งสำเร็จ</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="cameraInput" accept="image/*" style="display:none">
+<div id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -113,7 +142,8 @@ const ordersRef = ref(db, 'orders');
 
 let orders = [];
 let currentFilter = 'pending'; 
-let currentOrderIdForCam = null;
+let activeOrderKey = null;
+let currentBase64Photo = null;
 
 onValue(ordersRef, snap => {
   const data = snap.val() || {};
@@ -121,62 +151,88 @@ onValue(ordersRef, snap => {
   renderAll();
 });
 
-// ฟังก์ชันเปิดกล้อง
-window.openCamera = (fbKey) => {
-  currentOrderIdForCam = fbKey;
-  document.getElementById('cameraInput').click();
+// จัดการ Modal
+window.openModal = (fbKey) => {
+  activeOrderKey = fbKey;
+  currentBase64Photo = null;
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPlaceholder').style.display = 'block';
+  document.getElementById('proofModal').classList.add('active');
+  initSigPad();
 };
 
-// จัดการรูปภาพที่ถ่าย
-document.getElementById('cameraInput').onchange = function(e) {
+window.closeModal = () => {
+  document.getElementById('proofModal').classList.remove('active');
+  renderCards(); // Reset select status
+};
+
+// เลือกรูป
+window.openCamera = () => document.getElementById('cameraInput').click();
+document.getElementById('cameraInput').onchange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(event) {
-    update(ref(db, `orders/${currentOrderIdForCam}`), { proofPhoto: event.target.result });
-    showToast('📸 บันทึกรูปภาพแล้ว');
+  reader.onload = (ev) => {
+    currentBase64Photo = ev.target.result;
+    document.getElementById('photoPreview').src = currentBase64Photo;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
   };
   reader.readAsDataURL(file);
 };
 
-// ระบบเซ็นชื่อ
-window.initSig = (fbKey) => {
-  const canvas = document.getElementById('sig-'+fbKey);
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let drawing = false;
+// ลายเซ็น
+let sigCtx, sigCanvas, drawing = false;
+function initSigPad() {
+  sigCanvas = document.getElementById('modalSig');
+  sigCtx = sigCanvas.getContext('2d');
+  sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
+  sigCtx.lineWidth = 3; sigCtx.strokeStyle = '#1e293b';
 
-  const start = (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(getX(e), getY(e)); };
-  const move = (e) => { if(!drawing) return; ctx.lineTo(getX(e), getY(e)); ctx.stroke(); };
-  const stop = () => { if(!drawing) return; drawing = false; saveSig(fbKey, canvas); };
+  const getPos = (e) => {
+    const rect = sigCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
 
-  const getX = (e) => (e.touches ? e.touches[0].clientX : e.clientX) - canvas.getBoundingClientRect().left;
-  const getY = (e) => (e.touches ? e.touches[0].clientY : e.clientY) - canvas.getBoundingClientRect().top;
+  const start = (e) => { drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); e.preventDefault(); };
+  const move = (e) => { if(!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); e.preventDefault(); };
+  const stop = () => drawing = false;
 
-  canvas.onmousedown = canvas.ontouchstart = start;
-  canvas.onmousemove = canvas.ontouchmove = move;
+  sigCanvas.onmousedown = sigCanvas.ontouchstart = start;
+  sigCanvas.onmousemove = sigCanvas.ontouchmove = move;
   window.onmouseup = window.ontouchend = stop;
-};
-
-function saveSig(fbKey, canvas) {
-  const data = canvas.toDataURL();
-  update(ref(db, `orders/${fbKey}`), { proofSig: data });
 }
 
-window.changeStatus = (fbKey, newStatus) => {
-  const o = orders.find(x => x._fbKey === fbKey);
-  if(newStatus === 'delivered' && (!o.proofPhoto || !o.proofSig)) {
-    showToast('⚠️ กรุณาถ่ายรูปและเซ็นชื่อก่อนส่งสำเร็จ');
-    renderCards(); // reset select
-    return;
-  }
+// ยืนยันส่งงาน
+window.submitDelivered = () => {
+  if(!currentBase64Photo) return alert('กรุณาถ่ายรูปพัสดุ');
+  const sigData = sigCanvas.toDataURL();
+  
   const time = new Date().toLocaleString('th-TH');
-  update(ref(db,'orders/'+fbKey),{status:newStatus, deliveredAt: time});
-  showToast('🔄 อัปเดตสถานะสำเร็จ');
+  update(ref(db, 'orders/'+activeOrderKey), {
+    status: 'delivered',
+    proofPhoto: currentBase64Photo,
+    proofSig: sigData,
+    deliveredAt: time
+  });
+  
+  showToast('✅ บันทึกส่งสำเร็จเรียบร้อย');
+  document.getElementById('proofModal').classList.remove('active');
+};
+
+window.changeStatus = (fbKey, newStatus) => {
+  if(newStatus === 'delivered') {
+    window.openModal(fbKey);
+  } else {
+    const time = new Date().toLocaleString('th-TH');
+    update(ref(db,'orders/'+fbKey),{status:newStatus});
+    showToast('🔄 อัปเดตสถานะแล้ว');
+  }
 };
 
 function renderAll(){ renderStats(); renderCards(); }
-
 function renderStats(){
   const stats = { total: orders.length, pending: orders.filter(o=>o.status==='pending').length, transit: orders.filter(o=>o.status==='transit').length, delivered: orders.filter(o=>o.status==='delivered').length };
   document.getElementById('statsRow').innerHTML = [{n:stats.total, l:'ทั้งหมด', f:'all'}, {n:stats.pending, l:'รอส่ง', f:'pending'}, {n:stats.transit, l:'กำลังส่ง', f:'transit'}, {n:stats.delivered, l:'สำเร็จ', f:'delivered'}].map(s => `<div class="stat-cell ${currentFilter===s.f?'active':''}" onclick="window.setFilter('${s.f}')"><div class="sc-n">${s.n}</div><div style="font-size:12px;color:var(--muted)">${s.l}</div></div>`).join('');
@@ -199,31 +255,24 @@ function renderCards(){
           <div class="card-id">#${displayId}</div>
           <div class="card-name">${o.name || 'ไม่ระบุ'}</div>
         </div>
-        <span class="badge b-${o.status}">${SL[o.status] || o.status}</span>
+        <span class="badge" style="background:var(--${o.status==='delivered'?'green':'yellow'}-l); color:var(--${o.status==='delivered'?'green':'yellow'})">
+          ${o.status==='delivered'?'ส่งสำเร็จ':'รอดำเนินการ'}
+        </span>
       </div>
       <div class="card-body">
         <div class="info-row">📍 ${o.address || '-'}</div>
         <div class="info-row">📞 <a href="tel:${o.phone}">${o.phone || '-'}</a></div>
-        
         <div class="product-box">
           ${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : o.items}
         </div>
-
-        <div class="due-tag ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ เลยกำหนด: ' : '📅 กำหนดส่ง: '}${dueDate.toLocaleDateString('th-TH')}</div>
-
-        ${o.status !== 'delivered' ? `
-        <div class="proof-section">
-          <div style="font-size:12px; font-weight:700; margin-bottom:8px;">📸 หลักฐานการจัดส่ง (จำเป็น)</div>
-          <div class="proof-grid">
-            <div class="proof-box" onclick="openCamera('${o._fbKey}')">
-              ${o.proofPhoto ? `<img src="${o.proofPhoto}">` : '📷 ถ่ายรูปพัสดุ'}
-            </div>
-            <div class="proof-box" onclick="initSig('${o._fbKey}')">
-              ${o.proofSig ? `<img src="${o.proofSig}">` : '✍️ แตะเพื่อเซ็นชื่อ'}
-              <canvas id="sig-${o._fbKey}" class="sig-pad" style="${o.proofSig?'display:none':''}"></canvas>
-            </div>
+        <div class="due-tag ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ เลยกำหนด' : '📅 กำหนดส่ง: '+dueDate.toLocaleDateString('th-TH')}</div>
+        
+        ${o.status === 'delivered' ? `
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
+            <img src="${o.proofPhoto}" style="width:100%; height:80px; object-fit:cover; border-radius:8px; border:1px solid var(--border)">
+            <img src="${o.proofSig}" style="width:100%; height:80px; object-fit:contain; border-radius:8px; border:1px solid var(--border); background:#fff;">
           </div>
-        </div>` : ''}
+        ` : ''}
       </div>
 
       <div class="card-foot">
@@ -239,7 +288,6 @@ function renderCards(){
   }).join('');
 }
 
-const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ไม่สำเร็จ'};
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show'; setTimeout(()=>t.className='',2500); }
 document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long'});
 </script>
