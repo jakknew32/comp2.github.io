@@ -22,38 +22,26 @@
   nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
   .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
   .logo em { color:var(--orange); font-style:normal; }
-  .courier-badge { background:var(--orange-l); border:1px solid var(--orange-b); color:var(--orange); padding:5px 14px; border-radius:100px; font-size:12px; font-weight:700; }
   
   .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
   .ph-row { display: flex; justify-content: space-between; align-items: center; }
   .ph-title { font-size:24px; font-weight:700; }
   
-  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
   .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); }
   .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
   .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
   .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
   
-  .search-row { padding: 12px 16px 0; background: #fff; display:flex; justify-content:center; }
-  .search-input { width: 100%; max-width: 340px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: #f8fafc; font-family: var(--font); }
-  
   .main { padding:16px; max-width:800px; margin:0 auto; }
   .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
   .delivery-card.pending { border-left:4px solid var(--yellow); }
-  .delivery-card.transit { border-left:4px solid var(--cyan); }
-  .delivery-card.delivered { border-left:4px solid var(--green); background:linear-gradient(135deg, #34d399 0%, #059669 100%); color:#fff; }
-  .delivery-card.delivered .card-id, .delivery-card.delivered .info-row .val, .delivery-card.delivered .product-item, .delivery-card.delivered .time-head, .delivery-card.delivered .due-tag { color:#fff !important; }
+  .delivery-card.delivered { border-left:4px solid var(--green); background:#f0fdf4; }
   
-  .card-head { padding:14px 16px 10px; display:flex; justify-content:space-between; align-items: flex-start; }
-  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); line-height: 1; }
-  .time-head { font-size: 11px; color: #888; margin-top: 4px; display: block; }
+  .card-head { padding:14px 16px 10px; display:flex; justify-content:space-between; }
+  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); }
   .card-name { font-size:18px; font-weight:700; margin-top:8px; }
-  
-  .badge { padding:4px 12px; border-radius:100px; font-size:11px; font-weight:800; }
-  .b-pending { background:var(--yellow-l); color:var(--yellow); }
-  .b-transit { background:var(--cyan-l); color:var(--cyan); }
-  .b-delivered { background:var(--green-l); color:var(--green); }
   
   .card-body { padding:0 16px 12px; }
   .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:14px; }
@@ -61,12 +49,23 @@
   .product-item { font-size:16px; font-weight:600; color:var(--orange); margin-bottom:4px; display:block; }
   
   .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--cyan-l); border:1px solid var(--cyan-b); color:var(--cyan); padding:6px 14px; border-radius:100px; font-size:14px; font-weight:700; margin-top:12px; }
-  /* สไตล์แจ้งเตือนเลยกำหนด */
   .overdue { background:var(--red-l); border-color:var(--red-b); color:var(--red); }
+
+  /* ส่วนหลักฐานการส่ง */
+  .proof-section { margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); }
+  .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .proof-box { 
+    background: #fff; border: 2px dashed var(--border); border-radius: 12px; height: 100px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--muted); cursor: pointer; position: relative; overflow: hidden;
+  }
+  .proof-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  
+  canvas.sig-pad { background: #fff; border: 1px solid var(--border); border-radius: 8px; width: 100%; height: 80px; touch-action: none; }
   
   .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
-  .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; cursor:pointer; }
-  .btn-map { padding:10px 18px; border-radius:10px; border:2px solid var(--green); background:var(--green-l); color:var(--green); font-size:14px; font-weight:700; text-decoration:none; }
+  .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; }
+  .btn-map { padding:10px 18px; border-radius:10px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none; }
   
   #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--text); color:#fff; padding:12px 22px; border-radius:100px; font-size:13px; font-weight:600; z-index:999; opacity:0; transition:all .3s; }
   #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
@@ -84,17 +83,15 @@
     <div class="ph-title">งานจัดส่งของคุณ</div>
     <button class="btn-refresh" onclick="location.reload()">🔄 รีเฟรช</button>
   </div>
-  <div class="ph-sub" id="dateDisplay" style="font-size: 14px; opacity: 0.8; margin-top: 4px;"></div>
+  <div id="dateDisplay" style="font-size: 14px; opacity: 0.8; margin-top: 4px;"></div>
 </div>
 
 <div class="stats-row" id="statsRow"></div>
 
-<div class="search-row">
-  <input class="search-input" id="searchInput" placeholder="ค้นหาเลขออเดอร์ หรือชื่อผู้รับ..." oninput="onSearchChange()">
-</div>
-
 <div class="main" id="mainGrid"></div>
 <div id="toast"></div>
+
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -116,10 +113,7 @@ const ordersRef = ref(db, 'orders');
 
 let orders = [];
 let currentFilter = 'pending'; 
-let searchTerm = '';
-
-const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
-const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
+let currentOrderIdForCam = null;
 
 onValue(ordersRef, snap => {
   const data = snap.val() || {};
@@ -127,111 +121,111 @@ onValue(ordersRef, snap => {
   renderAll();
 });
 
-window.onSearchChange = () => {
-  searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-  renderCards();
+// ฟังก์ชันเปิดกล้อง
+window.openCamera = (fbKey) => {
+  currentOrderIdForCam = fbKey;
+  document.getElementById('cameraInput').click();
 };
 
-window.setFilter = (f) => {
-  currentFilter=f;
-  renderAll();
+// จัดการรูปภาพที่ถ่าย
+document.getElementById('cameraInput').onchange = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    update(ref(db, `orders/${currentOrderIdForCam}`), { proofPhoto: event.target.result });
+    showToast('📸 บันทึกรูปภาพแล้ว');
+  };
+  reader.readAsDataURL(file);
 };
+
+// ระบบเซ็นชื่อ
+window.initSig = (fbKey) => {
+  const canvas = document.getElementById('sig-'+fbKey);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+
+  const start = (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(getX(e), getY(e)); };
+  const move = (e) => { if(!drawing) return; ctx.lineTo(getX(e), getY(e)); ctx.stroke(); };
+  const stop = () => { if(!drawing) return; drawing = false; saveSig(fbKey, canvas); };
+
+  const getX = (e) => (e.touches ? e.touches[0].clientX : e.clientX) - canvas.getBoundingClientRect().left;
+  const getY = (e) => (e.touches ? e.touches[0].clientY : e.clientY) - canvas.getBoundingClientRect().top;
+
+  canvas.onmousedown = canvas.ontouchstart = start;
+  canvas.onmousemove = canvas.ontouchmove = move;
+  window.onmouseup = window.ontouchend = stop;
+};
+
+function saveSig(fbKey, canvas) {
+  const data = canvas.toDataURL();
+  update(ref(db, `orders/${fbKey}`), { proofSig: data });
+}
 
 window.changeStatus = (fbKey, newStatus) => {
   const o = orders.find(x => x._fbKey === fbKey);
-  if(!o || newStatus === o.status) return;
+  if(newStatus === 'delivered' && (!o.proofPhoto || !o.proofSig)) {
+    showToast('⚠️ กรุณาถ่ายรูปและเซ็นชื่อก่อนส่งสำเร็จ');
+    renderCards(); // reset select
+    return;
+  }
   const time = new Date().toLocaleString('th-TH');
-  const newTimeline = [...(o.timeline||[]), { text: `อัปเดตเป็น ${SL[newStatus]}`, time: time, status: newStatus }];
-  update(ref(db,'orders/'+fbKey),{status:newStatus, timeline:newTimeline});
-  showToast('🔄 อัปเดตสถานะแล้ว');
+  update(ref(db,'orders/'+fbKey),{status:newStatus, deliveredAt: time});
+  showToast('🔄 อัปเดตสถานะสำเร็จ');
 };
 
-function renderAll(){
-  renderStats();
-  renderCards();
-}
+function renderAll(){ renderStats(); renderCards(); }
 
 function renderStats(){
-  const stats = {
-    total: orders.length,
-    pending: orders.filter(o=>o.status==='pending').length,
-    transit: orders.filter(o=>o.status==='transit').length,
-    delivered: orders.filter(o=>o.status==='delivered').length
-  };
-  document.getElementById('statsRow').innerHTML = [
-    {n:stats.total, l:'ทั้งหมด', f:'all'},
-    {n:stats.pending, l:'รอส่ง', f:'pending'},
-    {n:stats.transit, l:'กำลังส่ง', f:'transit'},
-    {n:stats.delivered, l:'สำเร็จ', f:'delivered'}
-  ].map(s => `
-    <div class="stat-cell ${currentFilter===s.f?'active':''}" onclick="setFilter('${s.f}')">
-      <div class="sc-n">${s.n}</div>
-      <div style="font-size:12px;color:var(--muted)">${s.l}</div>
-    </div>
-  `).join('');
+  const stats = { total: orders.length, pending: orders.filter(o=>o.status==='pending').length, transit: orders.filter(o=>o.status==='transit').length, delivered: orders.filter(o=>o.status==='delivered').length };
+  document.getElementById('statsRow').innerHTML = [{n:stats.total, l:'ทั้งหมด', f:'all'}, {n:stats.pending, l:'รอส่ง', f:'pending'}, {n:stats.transit, l:'กำลังส่ง', f:'transit'}, {n:stats.delivered, l:'สำเร็จ', f:'delivered'}].map(s => `<div class="stat-cell ${currentFilter===s.f?'active':''}" onclick="window.setFilter('${s.f}')"><div class="sc-n">${s.n}</div><div style="font-size:12px;color:var(--muted)">${s.l}</div></div>`).join('');
 }
+window.setFilter = (f) => { currentFilter=f; renderAll(); };
 
 function renderCards(){
   const now = new Date();
-  const sorted = [...orders].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-  let filtered = currentFilter==='all' ? sorted : sorted.filter(o=>o.status===currentFilter);
+  let filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
   
-  if(searchTerm) {
-    filtered = filtered.filter(o => 
-      [o.orderid, o.name, o.phone].some(f => f && f.toString().toLowerCase().includes(searchTerm))
-    );
-  }
-
-  document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
+  document.getElementById('mainGrid').innerHTML = filtered.reverse().map(o=> {
     const displayId = o.orderid || o._fbKey.substring(0,6);
-    const createdDateObj = o.createdAt ? new Date(o.createdAt) : null;
-    const createdDateStr = createdDateObj ? createdDateObj.toLocaleString('th-TH', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
-    
-    // คำนวณวันกำหนดส่ง (+3 วัน)
-    let dueDateStr = '-';
-    let isOverdue = false;
-    if(createdDateObj) {
-        const dueDate = new Date(createdDateObj);
-        dueDate.setDate(dueDate.getDate() + 3);
-        dueDateStr = dueDate.toLocaleDateString('th-TH', {day:'2-digit', month:'long', year:'numeric'});
-        
-        // เช็คว่าเลยกำหนดหรือยัง (เฉพาะรายการที่ยังส่งไม่สำเร็จ)
-        if (now > dueDate && o.status !== 'delivered') {
-          isOverdue = true;
-        }
-    }
-
-    let itemsHtml = '';
-    if (Array.isArray(o.items)) {
-      itemsHtml = o.items.map((item, i) => `<span class="product-item">${i+1}. ${item}</span>`).join('');
-    } else if (o.items) {
-      const itemArray = o.items.split(/[,|\n]/).filter(x => x.trim() !== "");
-      itemsHtml = itemArray.map((item, i) => `<span class="product-item">${i+1}. ${item.trim()}</span>`).join('');
-    }
+    const dueDate = new Date(o.createdAt); dueDate.setDate(dueDate.getDate()+3);
+    const isOverdue = now > dueDate && o.status !== 'delivered';
 
     return `
     <div class="delivery-card ${o.status}">
       <div class="card-head">
         <div>
           <div class="card-id">#${displayId}</div>
-          <span class="time-head">บันทึก: ${createdDateStr}</span>
-          <div class="card-name">${o.name || 'ไม่ระบุชื่อ'}</div>
+          <div class="card-name">${o.name || 'ไม่ระบุ'}</div>
         </div>
-        <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
+        <span class="badge b-${o.status}">${SL[o.status] || o.status}</span>
       </div>
       <div class="card-body">
-        <div class="info-row">📍 <span class="val">${o.address || '-'}</span></div>
-        <div class="info-row">📞 <span class="val"><a href="tel:${o.phone}" style="color:var(--orange); font-weight:700;">${o.phone || '-'}</a></span></div>
+        <div class="info-row">📍 ${o.address || '-'}</div>
+        <div class="info-row">📞 <a href="tel:${o.phone}">${o.phone || '-'}</a></div>
         
         <div class="product-box">
-          <div style="font-size:12px; color:var(--muted); margin-bottom:5px;">📦 รายการสินค้า:</div>
-          ${itemsHtml}
+          ${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : o.items}
         </div>
 
-        <div class="due-tag ${isOverdue ? 'overdue' : ''}">
-          ${isOverdue ? '⚠️ เลยกำหนดส่ง: ' : '📅 กำหนดส่งภายใน: '} ${dueDateStr}
-        </div>
+        <div class="due-tag ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ เลยกำหนด: ' : '📅 กำหนดส่ง: '}${dueDate.toLocaleDateString('th-TH')}</div>
+
+        ${o.status !== 'delivered' ? `
+        <div class="proof-section">
+          <div style="font-size:12px; font-weight:700; margin-bottom:8px;">📸 หลักฐานการจัดส่ง (จำเป็น)</div>
+          <div class="proof-grid">
+            <div class="proof-box" onclick="openCamera('${o._fbKey}')">
+              ${o.proofPhoto ? `<img src="${o.proofPhoto}">` : '📷 ถ่ายรูปพัสดุ'}
+            </div>
+            <div class="proof-box" onclick="initSig('${o._fbKey}')">
+              ${o.proofSig ? `<img src="${o.proofSig}">` : '✍️ แตะเพื่อเซ็นชื่อ'}
+              <canvas id="sig-${o._fbKey}" class="sig-pad" style="${o.proofSig?'display:none':''}"></canvas>
+            </div>
+          </div>
+        </div>` : ''}
       </div>
+
       <div class="card-foot">
         <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
           <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอส่ง</option>
@@ -242,15 +236,12 @@ function renderCards(){
         ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" class="btn-map">แผนที่</a>` : ''}
       </div>
     </div>`;
-  }).join('') || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่พบรายการ</div>';
+  }).join('');
 }
 
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className='show';
-  setTimeout(()=>t.className='',2500);
-}
-document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ไม่สำเร็จ'};
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show'; setTimeout(()=>t.className='',2500); }
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long'});
 </script>
 </body>
 </html>
