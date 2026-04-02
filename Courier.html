@@ -32,7 +32,6 @@
     --mono: 'JetBrains Mono', monospace;
   }
 
-  /* --- สไตล์สำหรับแท็ก New Order ที่เพิ่มใหม่ --- */
   .badge-new {
     background: #ef4444;
     color: #fff;
@@ -164,9 +163,8 @@
     padding:14px 16px 10px;
     display:flex; justify-content:space-between; align-items:flex-start;
   }
-  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); }
+  .card-id { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--muted); }
   .card-name { font-size:17px; font-weight:700; margin-top:2px; }
-  .product-name-big { font-size:20px; font-weight:700; color:var(--orange); }
 
   .badge { padding:4px 12px; border-radius:100px; font-size:11px; font-weight:800; }
   .b-pending  { background:var(--yellow-l); color:var(--yellow); }
@@ -297,13 +295,14 @@ function setFilter(f,btn){
 }
 window.setFilter=setFilter;
 
-function changeStatus(id, newStatus){
-  const o=orders.find(x=>x.id===id);
-  if(!o||newStatus===o.status) return;
+// แก้ไขฟังก์ชัน changeStatus ให้ใช้ _fbKey เป็นหลักเพื่อความแม่นยำ
+function changeStatus(fbKey, newStatus){
+  const o = orders.find(x => x._fbKey === fbKey);
+  if(!o || newStatus === o.status) return;
   const msgs={transit:'พนักงานรับพัสดุและออกจัดส่ง',delivered:'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว',failed:'ส่งไม่สำเร็จ — ไม่มีผู้รับ',pending:'รีเซ็ตสถานะ'};
   const cs={transit:'#0891b2',delivered:'#059669',failed:'#dc2626',pending:'#b45309'};
   const newTimeline=[...(o.timeline||[]),{text:msgs[newStatus],time:now(),color:cs[newStatus]}];
-  update(ref(db,'orders/'+o._fbKey),{status:newStatus, timeline:newTimeline});
+  update(ref(db,'orders/'+fbKey),{status:newStatus, timeline:newTimeline});
   showToast('🔄 อัพเดทสถานะแล้ว');
 }
 window.changeStatus=changeStatus;
@@ -329,7 +328,6 @@ function renderStats(){
   ).join('');
 }
 
-/* --- แก้ไขฟังก์ชัน RENDER CARDS เพื่อเช็คเวลา 24 ชม. --- */
 function renderCards(){
   const statusOrder={pending:0,transit:1,failed:2,delivered:3};
   const allSorted=[...orders].sort((a,b)=>{
@@ -340,7 +338,7 @@ function renderCards(){
   
   let filtered=currentFilter==='all'?allSorted:allSorted.filter(o=>o.status===currentFilter);
   if(searchTerm) {
-    filtered = filtered.filter(o => [o.id, o.name, o.phone].some(f => f && f.toString().toLowerCase().includes(searchTerm)));
+    filtered = filtered.filter(o => [o.id, o._fbKey, o.name, o.phone].some(f => f && f.toString().toLowerCase().includes(searchTerm)));
   }
 
   if(!filtered.length){
@@ -348,20 +346,20 @@ function renderCards(){
     return;
   }
 
-  // คำนวณเวลาปัจจุบันและค่า 24 ชั่วโมง (มิลลิวินาที)
   const nowMs = Date.now();
   const MS_24H = 24 * 60 * 60 * 1000;
 
   document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
-    // เช็คว่าเป็นออเดอร์ใหม่หรือไม่ (ไม่เกิน 24 ชม)
     const isNew = o.createdAt && (nowMs - o.createdAt < MS_24H);
+    // แก้ไข: กำหนดตัวแปรสำหรับแสดงผลเลข ID (ใช้ id ถ้ามี ถ้าไม่มีใช้ fbKey)
+    const displayId = o.id || o._fbKey;
 
     return `
     <div class="delivery-card ${o.status}">
       <div class="card-head">
         <div>
           <div class="card-id">
-            ${(o.id || o._fbKey)}
+            #${displayId}
             ${isNew ? '<span class="badge-new">NEW ORDER</span>' : ''}
           </div>
           <div style="font-size:12px;color:#888;margin-top:2px;">
@@ -391,7 +389,7 @@ function renderCards(){
         </div>
       </div>
       <div class="card-foot">
-        <select class="status-select" onchange="changeStatus('${o.id || o._fbKey}',this.value)">
+        <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
           <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอดำเนินการ</option>
           <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
