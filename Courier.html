@@ -53,7 +53,7 @@
 
   .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); }
   .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
-  .stat-cell.active { background:var(--orange-l); }
+  .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
   .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
   
   .search-row { padding: 12px 16px 0; background: #fff; display:flex; justify-content:center; }
@@ -131,7 +131,8 @@ const db  = getDatabase(app);
 const ordersRef = ref(db, 'orders');
 
 let orders = [];
-let currentFilter = 'all';
+// แก้ไข: ตั้งค่าเริ่มต้นเป็น 'pending' (รอส่ง)
+let currentFilter = 'pending'; 
 let searchTerm = '';
 
 const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
@@ -198,10 +199,8 @@ function renderCards(){
   }
 
   document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
-    // ดึงเลข orderid จากฐานข้อมูลหน้า Admin
     const displayId = o.orderid || o._fbKey.substring(0,6);
     
-    // จัดรายการสินค้าแยกเป็นลำดับ
     let itemsHtml = '';
     if (Array.isArray(o.items)) {
       itemsHtml = o.items.map((item, i) => `<span class="product-item">${i+1}. ${item}</span>`).join('');
