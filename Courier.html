@@ -33,21 +33,23 @@
   .search-row { padding: 12px 16px 0; background: #fff; display:flex; justify-content:center; }
   .search-input { width: 100%; max-width: 340px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: #f8fafc; font-family: var(--font); }
   .main { padding:16px; max-width:800px; margin:0 auto; }
-  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:transform .15s; }
+  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
   .delivery-card.pending { border-left:4px solid var(--yellow); }
   .delivery-card.transit { border-left:4px solid var(--cyan); }
   .delivery-card.delivered { border-left:4px solid var(--green); background:linear-gradient(135deg, #34d399 0%, #059669 100%); color:#fff; }
-  .delivery-card.delivered .card-id, .delivery-card.delivered .info-row .val { color:#fff !important; }
+  .delivery-card.delivered .card-id, .delivery-card.delivered .info-row .val, .delivery-card.delivered .product-item { color:#fff !important; }
   .card-head { padding:14px 16px 10px; display:flex; justify-content:space-between; }
   .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); }
-  .card-name { font-size:17px; font-weight:700; }
+  .card-name { font-size:18px; font-weight:700; margin-top:2px; }
   .badge { padding:4px 12px; border-radius:100px; font-size:11px; font-weight:800; }
   .b-pending { background:var(--yellow-l); color:var(--yellow); }
   .b-transit { background:var(--cyan-l); color:var(--cyan); }
   .b-delivered { background:var(--green-l); color:var(--green); }
   .card-body { padding:0 16px 12px; }
-  .info-row { display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--s1); font-size:13px; }
-  .cod-tag { display:inline-flex; align-items:center; gap:4px; background:var(--yellow-l); border:1px solid var(--yellow-b); color:var(--yellow); padding:2px 10px; border-radius:100px; font-size:12px; font-weight:700; }
+  .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:14px; }
+  .product-box { margin-top:10px; background:rgba(0,0,0,0.02); padding:10px; border-radius:8px; }
+  .product-item { font-size:16px; font-weight:600; color:var(--orange); margin-bottom:4px; display:block; }
+  .cod-tag { display:inline-flex; align-items:center; gap:4px; background:var(--yellow-l); border:1px solid var(--yellow-b); color:var(--yellow); padding:4px 12px; border-radius:100px; font-size:14px; font-weight:700; margin-top:10px; }
   .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
   .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; cursor:pointer; }
   .btn-map { padding:10px 18px; border-radius:10px; border:2px solid var(--green); background:var(--green-l); color:var(--green); font-size:14px; font-weight:700; text-decoration:none; }
@@ -58,12 +60,11 @@
 <body>
 
 <nav>
-  <div class="logo"><em>CFM</em>FLEET FLOW <sup>SENDER</sup></div>
+  <div class="logo"><em>CFM</em>FLEET FLOW</div>
   <span class="courier-badge">🛵 พนักงานส่งของ</span>
 </nav>
 
 <div class="page-head">
-  <div class="ph-greeting">สวัสดี, พนง.ส่งของ👋</div>
   <div class="ph-title">งานจัดส่งของคุณ</div>
   <div class="ph-sub" id="dateDisplay"></div>
 </div>
@@ -102,42 +103,35 @@ let searchTerm = '';
 const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
 const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
 
-function now(){
-  const d=new Date();
-  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
-    +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-}
-
 onValue(ordersRef, snap => {
   const data = snap.val() || {};
   orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
   renderAll();
 });
 
-function onSearchChange() {
+window.onSearchChange = () => {
   searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
   renderCards();
-}
-window.onSearchChange = onSearchChange;
+};
 
-function setFilter(f){
+window.setFilter = (f) => {
   currentFilter=f;
   renderAll();
-}
-window.setFilter=setFilter;
+};
 
-function changeStatus(fbKey, newStatus){
+window.changeStatus = (fbKey, newStatus) => {
   const o = orders.find(x => x._fbKey === fbKey);
   if(!o || newStatus === o.status) return;
-  const msgs={transit:'พนักงานรับพัสดุและออกจัดส่ง',delivered:'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว',failed:'ส่งไม่สำเร็จ — ไม่มีผู้รับ',pending:'รีเซ็ตสถานะ'};
-  const cs={transit:'#0891b2',delivered:'#059669',failed:'#dc2626',pending:'#b45309'};
-  const newTimeline=[...(o.timeline||[]),{text:msgs[newStatus],time:now(),color:cs[newStatus]}];
+  const time = new Date().toLocaleString('th-TH');
+  const newTimeline = [...(o.timeline||[]), { text: `อัปเดตเป็น ${SL[newStatus]}`, time: time }];
   update(ref(db,'orders/'+fbKey),{status:newStatus, timeline:newTimeline});
-  showToast('🔄 อัพเดทสถานะแล้ว');
-}
-window.changeStatus=changeStatus;
+  showToast('🔄 อัปเดตสถานะแล้ว');
+};
 
-function renderAll(){ renderStats(); renderCards(); }
+function renderAll(){
+  renderStats();
+  renderCards();
+}
 
 function renderStats(){
   const stats = {
@@ -146,77 +140,73 @@ function renderStats(){
     transit: orders.filter(o=>o.status==='transit').length,
     delivered: orders.filter(o=>o.status==='delivered').length
   };
-  const statList = [
-    {n:stats.total,l:'ทั้งหมด',f:'all'},
-    {n:stats.pending,l:'รอส่ง',f:'pending'},
-    {n:stats.transit,l:'กำลังส่ง',f:'transit'},
-    {n:stats.delivered,l:'สำเร็จ',f:'delivered'}
-  ];
-  document.getElementById('statsRow').innerHTML = statList.map(s=>
-    `<div class="stat-cell${currentFilter===s.f?' active':''}" onclick="setFilter('${s.f}')">
+  const labels = {total:'ทั้งหมด', pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ'};
+  document.getElementById('statsRow').innerHTML = [
+    {n:stats.total, l:'ทั้งหมด', f:'all'},
+    {n:stats.pending, l:'รอส่ง', f:'pending'},
+    {n:stats.transit, l:'กำลังส่ง', f:'transit'},
+    {n:stats.delivered, l:'สำเร็จ', f:'delivered'}
+  ].map(s => `
+    <div class="stat-cell ${currentFilter===s.f?'active':''}" onclick="setFilter('${s.f}')">
       <div class="sc-n">${s.n}</div>
-      <div class="sc-l">${s.l}</div>
-    </div>`
-  ).join('');
+      <div style="font-size:12px;color:var(--muted)">${s.l}</div>
+    </div>
+  `).join('');
 }
 
 function renderCards(){
-  const statusOrder={pending:0,transit:1,failed:2,delivered:3};
-  const sorted = [...orders].sort((a,b) => {
-    const sd=(statusOrder[a.status]??9)-(statusOrder[b.status]??9);
-    return sd !== 0 ? sd : (b.createdAt||0)-(a.createdAt||0);
-  });
-  
+  const sorted = [...orders].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
   let filtered = currentFilter==='all' ? sorted : sorted.filter(o=>o.status===currentFilter);
+  
   if(searchTerm) {
-    // แก้ไข: ค้นหาจาก orderid ตามฟิลด์ในหน้า Admin
-    filtered = filtered.filter(o => [o.orderid, o.name, o.phone].some(f => f && f.toString().toLowerCase().includes(searchTerm)));
+    filtered = filtered.filter(o => 
+      [o.orderid, o.name, o.phone].some(f => f && f.toString().toLowerCase().includes(searchTerm))
+    );
   }
 
-  const nowMs = Date.now();
-  const MS_24H = 24 * 60 * 60 * 1000;
-
   document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
-    const isNew = o.createdAt && (nowMs - o.createdAt < MS_24H);
-    // แก้ไข: แสดงค่า o.orderid (ที่คีย์มาจากหน้า Admin) ถ้าไม่มีให้ใช้ _fbKey
-    const displayId = o.orderid || o._fbKey;
+    const displayId = o.orderid || o._fbKey.substring(0,6);
+    
+    // จัดการรายการสินค้าให้แยกเป็นลำดับ
+    let itemsHtml = '';
+    if (Array.isArray(o.items)) {
+      itemsHtml = o.items.map((item, i) => `<span class="product-item">${i+1}. ${item}</span>`).join('');
+    } else if (o.items) {
+      // กรณีเป็นข้อความยาวๆ ที่แยกด้วยจุลภาค (comma) หรือบรรทัด
+      const itemArray = o.items.split(/[,|\n]/).filter(x => x.trim() !== "");
+      itemsHtml = itemArray.map((item, i) => `<span class="product-item">${i+1}. ${item.trim()}</span>`).join('');
+    } else {
+      itemsHtml = '<span class="product-item">- ไม่มีรายการสินค้า -</span>';
+    }
 
     return `
     <div class="delivery-card ${o.status}">
       <div class="card-head">
         <div>
-          <div class="card-id">
-            #${displayId}
-            ${isNew ? '<span class="badge-new">NEW ORDER</span>' : ''}
-          </div>
-          <div style="font-size:11px;color:#888;margin-top:2px;">
-            ${o.createdAt ? 'เข้าระบบ: ' + new Date(o.createdAt).toLocaleString('th-TH') : ''}
-          </div>
-          <div class="card-name">${o.name}</div>
+          <div class="card-id">#${displayId}</div>
+          <div class="card-name">${o.name || 'ไม่ระบุชื่อ'}</div>
         </div>
         <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
       </div>
       <div class="card-body">
-        <div class="info-row"><span class="ico">📍</span><span class="val">${o.address}</span></div>
-        ${o.phone?`<div class="info-row"><span class="ico">📞</span><span class="val"><a href="tel:${o.phone}" style="color:#ea580c;font-weight:600">${o.phone}</a></span></div>`:''}
-        <div class="info-row">
-          <span class="ico">📦</span>
-          <span class="val">
-            <div style="font-weight:700; color:var(--orange); font-size:16px;">
-              ${Array.isArray(o.items) ? o.items.join(', ') : o.items}
-            </div>
-            ${o.cod > 0 ? `<div class="cod-tag">💰 เก็บเงิน COD: ${Number(o.cod).toLocaleString()} ฿</div>` : ''}
-          </span>
+        <div class="info-row">📍 <span class="val">${o.address || '-'}</span></div>
+        <div class="info-row">📞 <span class="val"><a href="tel:${o.phone}" style="color:var(--orange); font-weight:700;">${o.phone || '-'}</a></span></div>
+        
+        <div class="product-box">
+          <div style="font-size:12px; color:var(--muted); margin-bottom:5px;">รายการสินค้า:</div>
+          ${itemsHtml}
         </div>
+
+        ${o.cod > 0 ? `<div class="cod-tag">💰 เก็บเงินปลายทาง: ${Number(o.cod).toLocaleString()} ฿</div>` : ''}
       </div>
       <div class="card-foot">
         <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
-          <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอดำเนินการ</option>
+          <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอส่ง</option>
           <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
-          <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
-          <option value="failed" ${o.status==='failed'?'selected':''}>❌ ส่งไม่สำเร็จ</option>
+          <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
+          <option value="failed" ${o.status==='failed'?'selected':''}>❌ ไม่สำเร็จ</option>
         </select>
-        ${o.mapsLink?`<a class="btn-map" href="${o.mapsLink}" target="_blank">🗺 แผนที่</a>`:''}
+        ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" class="btn-map">แผนที่</a>` : ''}
       </div>
     </div>`;
   }).join('') || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่พบรายการ</div>';
