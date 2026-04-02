@@ -361,7 +361,7 @@ function renderCards(){
       <div class="card-head">
         <div>
           <div class="card-id">
-            ${o.id} 
+            ${(o.id || o._fbKey)}
             ${isNew ? '<span class="badge-new">NEW ORDER</span>' : ''}
           </div>
           <div style="font-size:12px;color:#888;margin-top:2px;">
@@ -391,7 +391,7 @@ function renderCards(){
         </div>
       </div>
       <div class="card-foot">
-        <select class="status-select" onchange="changeStatus('${o.id}',this.value)">
+        <select class="status-select" onchange="changeStatus('${o.id || o._fbKey}',this.value)">
           <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอดำเนินการ</option>
           <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
