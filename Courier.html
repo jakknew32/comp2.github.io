@@ -30,15 +30,16 @@
   .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
   .stat-cell.active { background:var(--orange-l); }
   .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
-  .search-row { padding: 12px 16px; background: #fff; display:flex; justify-content:center; }
-  .search-input { width: 100%; max-width: 400px; padding: 10px; border-radius: 8px; border: 1.5px solid var(--border); background: #f8fafc; }
+  .search-row { padding: 12px 16px 0; background: #fff; display:flex; justify-content:center; }
+  .search-input { width: 100%; max-width: 340px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: #f8fafc; font-family: var(--font); }
   .main { padding:16px; max-width:800px; margin:0 auto; }
-  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); border-left:4px solid transparent; }
-  .delivery-card.pending { border-left-color: var(--yellow); }
-  .delivery-card.transit { border-left-color: var(--cyan); }
-  .delivery-card.delivered { border-left-color: var(--green); background: #f0fdf4; }
+  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:transform .15s; }
+  .delivery-card.pending { border-left:4px solid var(--yellow); }
+  .delivery-card.transit { border-left:4px solid var(--cyan); }
+  .delivery-card.delivered { border-left:4px solid var(--green); background:linear-gradient(135deg, #34d399 0%, #059669 100%); color:#fff; }
+  .delivery-card.delivered .card-id, .delivery-card.delivered .info-row .val { color:#fff !important; }
   .card-head { padding:14px 16px 10px; display:flex; justify-content:space-between; }
-  .card-id { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--orange); }
+  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); }
   .card-name { font-size:17px; font-weight:700; }
   .badge { padding:4px 12px; border-radius:100px; font-size:11px; font-weight:800; }
   .b-pending { background:var(--yellow-l); color:var(--yellow); }
@@ -46,30 +47,31 @@
   .b-delivered { background:var(--green-l); color:var(--green); }
   .card-body { padding:0 16px 12px; }
   .info-row { display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--s1); font-size:13px; }
-  .cod-tag { display:inline-block; background:var(--yellow-l); color:var(--yellow); padding:4px 12px; border-radius:100px; font-weight:700; margin-top:8px; }
-  .card-foot { padding:12px 16px; background:var(--s1); display:flex; gap:10px; }
-  .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); font-family:var(--font); font-weight:700; }
-  .btn-map { padding:10px 18px; border-radius:10px; background:var(--green); color:#fff; font-weight:700; text-decoration:none; }
-  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:#1e293b; color:#fff; padding:12px 24px; border-radius:100px; transition:0.3s; z-index:1000; }
-  #toast.show { transform:translateX(-50%) translateY(0); }
+  .cod-tag { display:inline-flex; align-items:center; gap:4px; background:var(--yellow-l); border:1px solid var(--yellow-b); color:var(--yellow); padding:2px 10px; border-radius:100px; font-size:12px; font-weight:700; }
+  .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
+  .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; cursor:pointer; }
+  .btn-map { padding:10px 18px; border-radius:10px; border:2px solid var(--green); background:var(--green-l); color:var(--green); font-size:14px; font-weight:700; text-decoration:none; }
+  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--text); color:#fff; padding:12px 22px; border-radius:100px; font-size:13px; font-weight:600; z-index:999; opacity:0; transition:all .3s; }
+  #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="logo"><em>CFM</em>FLEET FLOW</div>
+  <div class="logo"><em>CFM</em>FLEET FLOW <sup>SENDER</sup></div>
   <span class="courier-badge">🛵 พนักงานส่งของ</span>
 </nav>
 
 <div class="page-head">
+  <div class="ph-greeting">สวัสดี, พนง.ส่งของ👋</div>
   <div class="ph-title">งานจัดส่งของคุณ</div>
-  <div id="dateDisplay" style="opacity:0.8; font-size:14px;"></div>
+  <div class="ph-sub" id="dateDisplay"></div>
 </div>
 
 <div class="stats-row" id="statsRow"></div>
 
 <div class="search-row">
-  <input class="search-input" id="searchInput" placeholder="ค้นหาชื่อ หรือเบอร์โทร..." oninput="onSearchChange()">
+  <input class="search-input" id="searchInput" placeholder="ค้นหาเลขออเดอร์ หรือชื่อผู้รับ..." oninput="onSearchChange()">
 </div>
 
 <div class="main" id="mainGrid"></div>
@@ -93,118 +95,139 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const ordersRef = ref(db, 'orders');
 
-let allOrders = [];
+let orders = [];
 let currentFilter = 'all';
 let searchTerm = '';
 
-const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ไม่สำเร็จ'};
+const SL={pending:'รอดำเนินการ',transit:'กำลังส่ง',delivered:'ส่งสำเร็จ',failed:'ส่งไม่สำเร็จ'};
 const BC={pending:'b-pending',transit:'b-transit',delivered:'b-delivered',failed:'b-failed'};
+
+function now(){
+  const d=new Date();
+  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
+    +' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
 
 onValue(ordersRef, snap => {
   const data = snap.val() || {};
-  // แปลงข้อมูลและเรียงตามเวลาสร้าง (เก่าไปใหม่เพื่อให้เลข No. คงที่)
-  allOrders = Object.entries(data)
-    .map(([key, val]) => ({ ...val, _fbKey: key }))
-    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
   renderAll();
 });
 
-function renderAll() {
-  renderStats();
+function onSearchChange() {
+  searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
   renderCards();
 }
+window.onSearchChange = onSearchChange;
 
-function renderStats() {
+function setFilter(f){
+  currentFilter=f;
+  renderAll();
+}
+window.setFilter=setFilter;
+
+function changeStatus(fbKey, newStatus){
+  const o = orders.find(x => x._fbKey === fbKey);
+  if(!o || newStatus === o.status) return;
+  const msgs={transit:'พนักงานรับพัสดุและออกจัดส่ง',delivered:'ส่งสำเร็จ ผู้รับเซ็นรับแล้ว',failed:'ส่งไม่สำเร็จ — ไม่มีผู้รับ',pending:'รีเซ็ตสถานะ'};
+  const cs={transit:'#0891b2',delivered:'#059669',failed:'#dc2626',pending:'#b45309'};
+  const newTimeline=[...(o.timeline||[]),{text:msgs[newStatus],time:now(),color:cs[newStatus]}];
+  update(ref(db,'orders/'+fbKey),{status:newStatus, timeline:newTimeline});
+  showToast('🔄 อัพเดทสถานะแล้ว');
+}
+window.changeStatus=changeStatus;
+
+function renderAll(){ renderStats(); renderCards(); }
+
+function renderStats(){
   const stats = {
-    all: allOrders.length,
-    pending: allOrders.filter(o => o.status === 'pending').length,
-    transit: allOrders.filter(o => o.status === 'transit').length,
-    delivered: allOrders.filter(o => o.status === 'delivered').length
+    total: orders.length,
+    pending: orders.filter(o=>o.status==='pending').length,
+    transit: orders.filter(o=>o.status==='transit').length,
+    delivered: orders.filter(o=>o.status==='delivered').length
   };
-  
-  const labels = {all:'ทั้งหมด', pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ'};
-  document.getElementById('statsRow').innerHTML = Object.keys(labels).map(k => `
-    <div class="stat-cell ${currentFilter === k ? 'active' : ''}" onclick="window.setFilter('${k}')">
-      <div class="sc-n">${stats[k]}</div>
-      <div style="font-size:12px; color:var(--muted)">${labels[k]}</div>
-    </div>
-  `).join('');
+  const statList = [
+    {n:stats.total,l:'ทั้งหมด',f:'all'},
+    {n:stats.pending,l:'รอส่ง',f:'pending'},
+    {n:stats.transit,l:'กำลังส่ง',f:'transit'},
+    {n:stats.delivered,l:'สำเร็จ',f:'delivered'}
+  ];
+  document.getElementById('statsRow').innerHTML = statList.map(s=>
+    `<div class="stat-cell${currentFilter===s.f?' active':''}" onclick="setFilter('${s.f}')">
+      <div class="sc-n">${s.n}</div>
+      <div class="sc-l">${s.l}</div>
+    </div>`
+  ).join('');
 }
 
-window.setFilter = (f) => { currentFilter = f; renderAll(); };
-
-window.onSearchChange = () => {
-  searchTerm = document.getElementById('searchInput').value.toLowerCase();
-  renderCards();
-};
-
-window.changeStatus = (fbKey, newStatus) => {
-  const o = allOrders.find(x => x._fbKey === fbKey);
-  if(!o) return;
-  const time = new Date().toLocaleString('th-TH');
-  const newTimeline = [...(o.timeline || []), { text: `อัปเดตสถานะเป็น ${SL[newStatus]}`, time: time }];
-  update(ref(db, 'orders/' + fbKey), { status: newStatus, timeline: newTimeline });
-  showToast('บันทึกเรียบร้อย');
-};
-
-function renderCards() {
-  const now = Date.now();
-  let filtered = allOrders;
+function renderCards(){
+  const statusOrder={pending:0,transit:1,failed:2,delivered:3};
+  const sorted = [...orders].sort((a,b) => {
+    const sd=(statusOrder[a.status]??9)-(statusOrder[b.status]??9);
+    return sd !== 0 ? sd : (b.createdAt||0)-(a.createdAt||0);
+  });
   
-  if(currentFilter !== 'all') filtered = filtered.filter(o => o.status === currentFilter);
+  let filtered = currentFilter==='all' ? sorted : sorted.filter(o=>o.status===currentFilter);
   if(searchTerm) {
-    filtered = filtered.filter(o => 
-      (o.name && o.name.toLowerCase().includes(searchTerm)) || 
-      (o.phone && o.phone.includes(searchTerm))
-    );
+    // แก้ไข: ค้นหาจาก orderid ตามฟิลด์ในหน้า Admin
+    filtered = filtered.filter(o => [o.orderid, o.name, o.phone].some(f => f && f.toString().toLowerCase().includes(searchTerm)));
   }
 
-  // เรียงให้รายการใหม่ (หรือที่ต้องส่ง) อยู่บนสุด
-  const displayList = [...filtered].reverse();
+  const nowMs = Date.now();
+  const MS_24H = 24 * 60 * 60 * 1000;
 
-  document.getElementById('mainGrid').innerHTML = displayList.map((o) => {
-    // หาลำดับที่จริงจาก list ทั้งหมด
-    const orderIndex = allOrders.findIndex(x => x._fbKey === o._fbKey) + 1;
-    const isNew = o.createdAt && (now - o.createdAt < 86400000);
+  document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
+    const isNew = o.createdAt && (nowMs - o.createdAt < MS_24H);
+    // แก้ไข: แสดงค่า o.orderid (ที่คีย์มาจากหน้า Admin) ถ้าไม่มีให้ใช้ _fbKey
+    const displayId = o.orderid || o._fbKey;
 
     return `
-      <div class="delivery-card ${o.status}">
-        <div class="card-head">
-          <div>
-            <div class="card-id">#ORD-${String(orderIndex).padStart(3, '0')} ${isNew ? '<span class="badge-new">ใหม่</span>' : ''}</div>
-            <div class="card-name">${o.name || 'ไม่ระบุชื่อ'}</div>
+    <div class="delivery-card ${o.status}">
+      <div class="card-head">
+        <div>
+          <div class="card-id">
+            #${displayId}
+            ${isNew ? '<span class="badge-new">NEW ORDER</span>' : ''}
           </div>
-          <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
-        </div>
-        <div class="card-body">
-          <div class="info-row">📍 ${o.address || '-'}</div>
-          <div class="info-row">📞 <a href="tel:${o.phone}">${o.phone || '-'}</a></div>
-          <div style="margin-top:10px;">
-            <strong>รายการ:</strong> ${Array.isArray(o.items) ? o.items.join(', ') : (o.items || '-')}
+          <div style="font-size:11px;color:#888;margin-top:2px;">
+            ${o.createdAt ? 'เข้าระบบ: ' + new Date(o.createdAt).toLocaleString('th-TH') : ''}
           </div>
-          ${o.cod ? `<div class="cod-tag">💰 เก็บเงินปลายทาง: ${Number(o.cod).toLocaleString()} ฿</div>` : ''}
+          <div class="card-name">${o.name}</div>
         </div>
-        <div class="card-foot">
-          <select class="status-select" onchange="changeStatus('${o._fbKey}', this.value)">
-            <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอส่ง</option>
-            <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
-            <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
-            <option value="failed" ${o.status==='failed'?'selected':''}>❌ ไม่สำเร็จ</option>
-          </select>
-          ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" class="btn-map">แผนที่</a>` : ''}
+        <span class="badge ${BC[o.status]}">${SL[o.status]}</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row"><span class="ico">📍</span><span class="val">${o.address}</span></div>
+        ${o.phone?`<div class="info-row"><span class="ico">📞</span><span class="val"><a href="tel:${o.phone}" style="color:#ea580c;font-weight:600">${o.phone}</a></span></div>`:''}
+        <div class="info-row">
+          <span class="ico">📦</span>
+          <span class="val">
+            <div style="font-weight:700; color:var(--orange); font-size:16px;">
+              ${Array.isArray(o.items) ? o.items.join(', ') : o.items}
+            </div>
+            ${o.cod > 0 ? `<div class="cod-tag">💰 เก็บเงิน COD: ${Number(o.cod).toLocaleString()} ฿</div>` : ''}
+          </span>
         </div>
       </div>
-    `;
-  }).join('') || '<div style="text-align:center; padding:40px; color:#94a3b8;">ไม่พบรายการ</div>';
+      <div class="card-foot">
+        <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
+          <option value="pending" ${o.status==='pending'?'selected':''}>⏳ รอดำเนินการ</option>
+          <option value="transit" ${o.status==='transit'?'selected':''}>🚚 กำลังส่ง</option>
+          <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ ส่งสำเร็จ</option>
+          <option value="failed" ${o.status==='failed'?'selected':''}>❌ ส่งไม่สำเร็จ</option>
+        </select>
+        ${o.mapsLink?`<a class="btn-map" href="${o.mapsLink}" target="_blank">🗺 แผนที่</a>`:''}
+      </div>
+    </div>`;
+  }).join('') || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่พบรายการ</div>';
 }
 
-function showToast(m) {
-  const t = document.getElementById('toast');
-  t.textContent = m; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show';
+  setTimeout(()=>t.className='',2500);
 }
-
-document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long' });
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 </script>
 </body>
 </html>
