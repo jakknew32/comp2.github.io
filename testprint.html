@@ -455,7 +455,6 @@
         <div class="form-section">
             <h1>โปรแกรมออกใบเสร็จรับเงิน</h1>
             
-            <!-- Form for input -->
             <div class="input-form">
                 <h2>ข้อมูลใบเสร็จ</h2>
                 
@@ -514,12 +513,9 @@
             </div>
         </div>
         
-        <!-- Receipt Preview -->
         <div class="receipt-container" id="receiptContent">
-            <!-- Watermark -->
             <img src="https://img2.pic.in.th/unnamed-10ff8f98be50f3155.png" alt="Watermark" class="watermark">
             
-            <!-- Header Section -->
             <div class="receipt-header">
                 <div class="company-info">
                     <img src="https://img2.pic.in.th/unnamed-10ff8f98be50f3155.png" alt="Company Logo" class="company-logo">
@@ -551,7 +547,6 @@
                 </div>
             </div>
             
-            <!-- Customer Section -->
             <div class="customer-section">
                 <div class="customer-info">
                     <div style="font-size: 12px; color: #666; margin-bottom: 5px;">ลูกค้า / Customer</div>
@@ -560,7 +555,6 @@
                 </div>
             </div>
             
-            <!-- Items Table -->
             <table class="items-table">
                 <thead>
                     <tr>
@@ -574,7 +568,6 @@
                 </tbody>
             </table>
             
-            <!-- Summary Section -->
             <div class="summary-section">
                 <div class="summary-fields">
                     <div class="summary-row">
@@ -589,7 +582,6 @@
                 </div>
             </div>
             
-            <!-- Payment Section -->
             <div class="payment-section">
                 <div class="payment-options">
                     <div class="payment-option">
@@ -609,7 +601,6 @@
                 </div>
             </div>
                         
-            <!-- Signatures Section -->
             <div class="signatures-section">
                 <div class="signature-field">
                     <div class="signature-line"></div>
@@ -621,13 +612,11 @@
                 </div>
             </div>
             
-            <!-- Footer Note -->
             <div class="footer-note">
                 *กรุณาตรวจสอบสินค้าก่อนออกจากร้าน เปลี่ยนสินค้าและใบเสร็จได้ภายในวันที่ซื้อเท่านั้น
             </div>
             
-            <!-- Contact Section removed -->
-        </div>
+            </div>
     </div>
 
     <script>
@@ -718,32 +707,30 @@
             
             // Convert satang
             if (satang > 0) {
-                if (satang > 0) {
-                    if (satang === 1) {
-                        text += 'หนึ่งสตางค์';
-                    } else if (satang === 2) {
-                        text += 'สองสตางค์';
-                    } else if (satang <= 9) {
-                        text += numbers[satang] + 'สตางค์';
-                    } else if (satang === 10) {
-                        text += 'สิบสตางค์';
-                    } else if (satang === 20) {
-                        text += 'ยี่สิบสตางค์';
-                    } else if (satang <= 99) {
-                        let ten = Math.floor(satang / 10);
-                        let unit = satang % 10;
-                        if (ten === 1) {
-                            text += 'สิบ';
-                        } else if (ten === 2) {
-                            text += 'ยี่สิบ';
-                        } else {
-                            text += numbers[ten] + 'สิบ';
-                        }
-                        if (unit > 0) {
-                            text += numbers[unit] + 'สตางค์';
-                        } else {
-                            text += 'สตางค์';
-                        }
+                if (satang === 1) {
+                    text += 'หนึ่งสตางค์';
+                } else if (satang === 2) {
+                    text += 'สองสตางค์';
+                } else if (satang <= 9) {
+                    text += numbers[satang] + 'สตางค์';
+                } else if (satang === 10) {
+                    text += 'สิบสตางค์';
+                } else if (satang === 20) {
+                    text += 'ยี่สิบสตางค์';
+                } else if (satang <= 99) {
+                    let ten = Math.floor(satang / 10);
+                    let unit = satang % 10;
+                    if (ten === 1) {
+                        text += 'สิบ';
+                    } else if (ten === 2) {
+                        text += 'ยี่สิบ';
+                    } else {
+                        text += numbers[ten] + 'สิบ';
+                    }
+                    if (unit > 0) {
+                        text += numbers[unit] + 'สตางค์';
+                    } else {
+                        text += 'สตางค์';
                     }
                 }
             } else {
@@ -755,7 +742,8 @@
 
         function generateReceipt() {
             // Get form values
-            const receiptNo = document.getElementById('receiptNo').value || `R${String(receiptCounter).padStart(4, '0')}`;
+            const receiptNoField = document.getElementById('receiptNo');
+            const receiptNo = receiptNoField.value || `R${String(receiptCounter).padStart(4, '0')}`;
             const receiptDate = document.getElementById('receiptDate').value;
             const receiptMonth = document.getElementById('receiptMonth').value;
             const customerName = document.getElementById('customerName').value;
@@ -808,92 +796,54 @@
             document.getElementById('displayGrandTotal').textContent = formatCurrency(grandTotal);
             document.getElementById('displayAmountText').textContent = convertToThaiText(grandTotal);
             
-            // Auto-increment receipt number
-            if (!document.getElementById('receiptNo').value) {
-                receiptCounter++;
-            }
+            // Return receipt data for use in other functions
+            return {
+                receiptNo,
+                date: receiptDate,
+                month: receiptMonth,
+                customerName,
+                customerAddress,
+                paymentMethod,
+                items,
+                total: grandTotal,
+                createdAt: new Date().toISOString()
+            };
         }
 
         function exportToPDF() {
-            // Generate receipt first
-            generateReceipt();
-            
-            // Collect receipt data for saving
-            const receiptData = {
-                receiptNo: document.getElementById('displayReceiptNo').textContent,
-                date: document.getElementById('receiptDate').value,
-                month: document.getElementById('receiptMonth').value,
-                customerName: document.getElementById('customerName').value,
-                customerAddress: document.getElementById('customerAddress').value,
-                paymentMethod: document.getElementById('paymentMethod').value,
-                items: [],
-                total: 0,
-                createdAt: new Date().toISOString()
-            };
-            
-            // Get items data
-            const itemRows = document.querySelectorAll('#itemsContainer .item-row');
-            itemRows.forEach(row => {
-                const description = row.querySelector('.item-description').value;
-                const units = parseFloat(row.querySelector('.item-units').value) || 0;
-                const price = parseFloat(row.querySelector('.item-price').value) || 0;
-                const amount = units * price;
-                if (description && units > 0 && price > 0) {
-                    receiptData.items.push({ description, units, price, amount });
-                    receiptData.total += amount;
-                }
-            });
+            const receiptData = generateReceipt();
             
             // Save receipt in background
             saveReceipt(receiptData).catch(err => console.error('Save error:', err));
             
-            // Create filename
             const filename = `ใบเสร็จ_${receiptData.receiptNo}_${receiptData.customerName.replace(/[^a-zA-Z0-9ก-๙]/g, '_')}.pdf`;
             
-            // Use window.print with PDF destination
             setTimeout(() => {
                 window.print();
             }, 300);
             
-            // Show instruction
             alert('กำลังเปิดหน้าต่างพิมพ์\n\nกรุณาเลือก "บันทึกเป็น PDF" หรือ "Save as PDF" ในตัวเลือกเครื่องพิมพ์\n\nชื่อไฟล์ที่แนะนำ: ' + filename);
         }
 
         function printReceipt() {
-            // Generate receipt first
-            generateReceipt();
+            // ป้องกันการทำงานซ้ำ
+            const btn = document.getElementById('printButton');
+            if (btn.disabled) return;
+            btn.disabled = true;
+
+            const receiptData = generateReceipt();
             
-            // Collect receipt data for saving (in background)
-            const receiptData = {
-                receiptNo: document.getElementById('displayReceiptNo').textContent,
-                date: document.getElementById('receiptDate').value,
-                month: document.getElementById('receiptMonth').value,
-                customerName: document.getElementById('customerName').value,
-                customerAddress: document.getElementById('customerAddress').value,
-                paymentMethod: document.getElementById('paymentMethod').value,
-                items: [],
-                total: 0,
-                createdAt: new Date().toISOString()
-            };
-            
-            const itemRows = document.querySelectorAll('#itemsContainer .item-row');
-            itemRows.forEach(row => {
-                const description = row.querySelector('.item-description').value;
-                const units = parseFloat(row.querySelector('.item-units').value) || 0;
-                const price = parseFloat(row.querySelector('.item-price').value) || 0;
-                const amount = units * price;
-                if (description && units > 0 && price > 0) {
-                    receiptData.items.push({ description, units, price, amount });
-                    receiptData.total += amount;
+            // บันทึกข้อมูล
+            saveReceipt(receiptData).then(() => {
+                // อัปเดต Counter เฉพาะเมื่อเป็น Auto-generate
+                if (!document.getElementById('receiptNo').value) {
+                    receiptCounter++;
                 }
-            });
+            }).catch(err => console.error('Save error:', err));
             
-            // Save in background (don't wait for it)
-            saveReceipt(receiptData).catch(err => console.error('Save error:', err));
-            
-            // Print immediately after short render delay
             setTimeout(() => {
                 window.print();
+                btn.disabled = false;
             }, 300);
         }
         
@@ -981,25 +931,13 @@
             historyWindow.document.close();
         }
 
-        // Initialize with today's date
+        // Initialize
         document.getElementById('receiptDate').valueAsDate = new Date();
-        
-        // Set current month in Thai
         const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-        const currentMonth = months[new Date().getMonth()];
-        document.getElementById('receiptMonth').value = currentMonth;
+        document.getElementById('receiptMonth').value = months[new Date().getMonth()];
         
-        // Load receipts on startup
         loadReceipts();
-        
-        // Add print button event listener as backup
-        document.getElementById('printButton').addEventListener('click', function(e) {
-            e.preventDefault();
-            printReceipt();
-        });
-        
-        // Generate initial receipt
         generateReceipt();
     </script>
 </body>
