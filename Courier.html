@@ -16,8 +16,8 @@
     --text: #1e293b; --muted: #64748b;
     --font: 'Kanit', sans-serif; --mono: 'JetBrains Mono', monospace;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
   
   nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
   .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
@@ -26,7 +26,7 @@
   .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
   .ph-row { display: flex; justify-content: space-between; align-items: center; }
   .ph-title { font-size:24px; font-weight:700; }
-  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
   .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); }
   .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
@@ -51,27 +51,27 @@
   .overdue { background:var(--red-l); border-color:var(--red-b); color:var(--red); }
 
   /* Modal */
-  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; padding:15px; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:15px; }
   .modal.active { display:flex; }
-  .modal-content { background:#fff; width:100%; max-width:450px; border-radius:20px; padding:20px; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
+  .modal-content { background:#fff; width:100%; max-width:450px; border-radius:24px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
   
-  .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+  .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
   .proof-box { 
-    background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 12px; height: 130px;
+    background: #f1f5f9; border: 2.5px dashed #cbd5e1; border-radius: 16px; height: 140px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 11px; color: #64748b; cursor: pointer; position: relative; overflow: hidden;
+    font-size: 11px; color: #64748b; cursor: pointer; position: relative; overflow: hidden; text-align: center;
   }
   .proof-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; }
-  canvas#modalSig { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; height: 130px; touch-action: none; cursor: crosshair; }
+  canvas#modalSig { background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; width: 100%; height: 140px; touch-action: none; cursor: crosshair; }
   
-  .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-  .btn-save { background:var(--green); color:#fff; border:none; padding:15px; border-radius:12px; font-weight:700; cursor:pointer; font-size:16px; }
-  .btn-cancel { background:#f1f5f9; color:#64748b; border:none; padding:15px; border-radius:12px; font-weight:700; cursor:pointer; }
+  .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  .btn-save { background:var(--green); color:#fff; border:none; padding:16px; border-radius:14px; font-weight:700; cursor:pointer; font-size:16px; }
+  .btn-cancel { background:#f1f5f9; color:#64748b; border:none; padding:16px; border-radius:14px; font-weight:700; cursor:pointer; }
 
   .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
-  .status-select { flex:1; padding:10px; border-radius:10px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; }
+  .status-select { flex:1; padding:12px; border-radius:12px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; font-size: 15px; }
   
-  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--text); color:#fff; padding:12px 22px; border-radius:100px; font-size:13px; font-weight:600; z-index:9999; opacity:0; transition:0.3s; }
+  #toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(30,41,59,0.95); color:#fff; padding:14px 28px; border-radius:100px; font-size:14px; font-weight:600; z-index:9999; opacity:0; transition:0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 </style>
 </head>
@@ -85,7 +85,7 @@
 <div class="page-head">
   <div class="ph-row">
     <div class="ph-title">งานจัดส่งของคุณ</div>
-    <button class="btn-refresh" onclick="location.reload()">🔄 รีเฟรช</button>
+    <button class="btn-refresh" onclick="window.location.reload(true)">🔄 รีเฟรช</button>
   </div>
   <div id="dateDisplay" style="font-size: 14px; opacity: 0.8; margin-top: 4px;"></div>
 </div>
@@ -95,27 +95,30 @@
 
 <div id="proofModal" class="modal">
   <div class="modal-content">
-    <h3 style="margin-bottom:10px; font-size:18px;">📸 บันทึกหลักฐานส่งงาน</h3>
+    <h3 style="margin-bottom:5px; font-size:20px;">📦 บันทึกส่งงาน</h3>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:15px;">กรุณาแนบรูปและเซ็นชื่อลูกค้า</p>
     
     <div class="proof-grid">
-      <div class="proof-box" onclick="document.getElementById('cameraInput').click()">
+      <label for="cameraInput" class="proof-box" id="photoArea">
         <img id="photoPreview" style="display:none">
-        <div id="photoLabel">📷 ถ่ายรูป/<br>เลือกจากเครื่อง</div>
-      </div>
+        <div id="photoLabel">📷 แตะเพื่อ<br>ถ่ายรูป/เลือกรูป</div>
+      </label>
+      
       <div style="position:relative">
         <canvas id="modalSig"></canvas>
-        <div style="position:absolute; bottom:5px; width:100%; text-align:center; font-size:9px; color:#94a3b8; pointer-events:none">✍️ ลูกค้าเซ็นชื่อที่นี่</div>
+        <div style="position:absolute; bottom:8px; width:100%; text-align:center; font-size:10px; color:#94a3b8; pointer-events:none">✍️ เซ็นชื่อตรงนี้</div>
       </div>
     </div>
     
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
-      <button class="btn-save" onclick="submitDelivered()">ยืนยันส่งสำเร็จ</button>
+      <button class="btn-save" id="btnSubmit">ยืนยันสำเร็จ</button>
     </div>
   </div>
 </div>
 
-<input type="file" id="cameraInput" accept="image/*" style="display:none">
+<input type="file" id="cameraInput" accept="image/*" style="position:fixed; top:-100px; left:-100px; opacity:0;">
+
 <div id="toast"></div>
 
 <script type="module">
@@ -141,14 +144,16 @@ let currentFilter = 'pending';
 let activeOrderKey = null;
 let currentBase64Photo = null;
 
+// ดึงข้อมูล
 onValue(ordersRef, snap => {
   const data = snap.val() || {};
   orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
   renderAll();
 });
 
-// จัดการรูปภาพ
-document.getElementById('cameraInput').addEventListener('change', function(e) {
+// ระบบเลือกรูป (แก้ไขให้รองรับมือถือทุกรุ่น)
+const camInput = document.getElementById('cameraInput');
+camInput.addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
   
@@ -159,56 +164,63 @@ document.getElementById('cameraInput').addEventListener('change', function(e) {
     preview.src = currentBase64Photo;
     preview.style.display = 'block';
     document.getElementById('photoLabel').style.display = 'none';
+    showToast('📸 บันทึกรูปแล้ว');
   };
   reader.readAsDataURL(file);
 });
 
-// ลายเซ็น
-let sigCanvas, sigCtx, drawing = false;
+// ระบบลายเซ็น
+let sigCanvas = document.getElementById('modalSig');
+let sigCtx = sigCanvas.getContext('2d');
+let drawing = false;
 
 function initSigPad() {
-  sigCanvas = document.getElementById('modalSig');
-  // ปรับขนาด Canvas ให้ตรงกับ CSS
   sigCanvas.width = sigCanvas.offsetWidth;
   sigCanvas.height = sigCanvas.offsetHeight;
-  
-  sigCtx = sigCanvas.getContext('2d');
   sigCtx.strokeStyle = "#1e293b";
   sigCtx.lineWidth = 3;
   sigCtx.lineCap = "round";
+  sigCtx.lineJoin = "round";
   
   const getPos = (e) => {
     const rect = sigCanvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    return { x, y };
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
   const start = (e) => { drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); if(e.cancelable) e.preventDefault(); };
   const move = (e) => { if(!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); if(e.cancelable) e.preventDefault(); };
   const stop = () => drawing = false;
 
-  sigCanvas.onmousedown = sigCanvas.ontouchstart = start;
-  sigCanvas.onmousemove = sigCanvas.ontouchmove = move;
-  window.onmouseup = window.ontouchend = stop;
+  sigCanvas.addEventListener('mousedown', start);
+  sigCanvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', stop);
+  sigCanvas.addEventListener('touchstart', start, {passive: false});
+  sigCanvas.addEventListener('touchmove', move, {passive: false});
+  window.addEventListener('touchend', stop);
 }
 
+// เปิด Modal
 window.openModal = (fbKey) => {
   activeOrderKey = fbKey;
   currentBase64Photo = null;
+  camInput.value = ''; // Reset input
   document.getElementById('photoPreview').style.display = 'none';
   document.getElementById('photoLabel').style.display = 'block';
   document.getElementById('proofModal').classList.add('active');
-  setTimeout(initSigPad, 100); // ให้ Modal โหลดเสร็จก่อนค่อยเริ่ม Canvas
+  setTimeout(initSigPad, 200);
 };
 
+// ปิด Modal
 window.closeModal = () => {
   document.getElementById('proofModal').classList.remove('active');
   renderCards(); 
 };
 
-window.submitDelivered = () => {
-  if(!currentBase64Photo) return alert('กรุณาเลือกรูปภาพหลักฐาน');
+// ยืนยันสำเร็จ
+document.getElementById('btnSubmit').onclick = function() {
+  if(!currentBase64Photo) return alert('กรุณาถ่ายรูปพัสดุเป็นหลักฐาน');
   
   const sigData = sigCanvas.toDataURL();
   const time = new Date().toLocaleString('th-TH');
@@ -218,10 +230,10 @@ window.submitDelivered = () => {
     proofPhoto: currentBase64Photo,
     proofSig: sigData,
     deliveredAt: time
+  }).then(() => {
+    showToast('✅ ส่งงานสำเร็จแล้ว');
+    document.getElementById('proofModal').classList.remove('active');
   });
-  
-  showToast('✅ ส่งงานสำเร็จแล้ว');
-  document.getElementById('proofModal').classList.remove('active');
 };
 
 window.changeStatus = (fbKey, status) => {
@@ -238,12 +250,7 @@ function renderStats(){
     transit: orders.filter(o=>o.status==='transit').length, 
     delivered: orders.filter(o=>o.status==='delivered').length 
   };
-  const list = [
-    {n:s.total, l:'ทั้งหมด', f:'all'}, 
-    {n:s.pending, l:'รอส่ง', f:'pending'}, 
-    {n:s.transit, l:'กำลังส่ง', f:'transit'}, 
-    {n:s.delivered, l:'สำเร็จ', f:'delivered'}
-  ];
+  const list = [{n:s.total, l:'ทั้งหมด', f:'all'}, {n:s.pending, l:'รอส่ง', f:'pending'}, {n:s.transit, l:'กำลังส่ง', f:'transit'}, {n:s.delivered, l:'สำเร็จ', f:'delivered'}];
   document.getElementById('statsRow').innerHTML = list.map(i => `
     <div class="stat-cell ${currentFilter===i.f?'active':''}" onclick="window.setFilter('${i.f}')">
       <div class="sc-n">${i.n}</div>
@@ -275,7 +282,7 @@ function renderCards(){
       </div>
       <div class="card-body">
         <div class="info-row">📍 ${o.address || '-'}</div>
-        <div class="info-row">📞 <a href="tel:${o.phone}">${o.phone || '-'}</a></div>
+        <div class="info-row">📞 <a href="tel:${o.phone}" style="color:var(--orange); font-weight:700;">${o.phone || '-'}</a></div>
         <div class="product-box">
           ${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : o.items}
         </div>
@@ -283,8 +290,8 @@ function renderCards(){
         
         ${o.status === 'delivered' ? `
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
-            <img src="${o.proofPhoto}" style="width:100%; height:80px; object-fit:cover; border-radius:8px; border:1px solid var(--border)">
-            <img src="${o.proofSig}" style="width:100%; height:80px; object-fit:contain; border-radius:8px; border:1px solid var(--border); background:#fff;">
+            <img src="${o.proofPhoto}" style="width:100%; height:100px; object-fit:cover; border-radius:12px; border:1px solid #ddd">
+            <img src="${o.proofSig}" style="width:100%; height:100px; object-fit:contain; border-radius:12px; border:1px solid #ddd; background:#fff;">
           </div>
         ` : ''}
       </div>
@@ -296,7 +303,7 @@ function renderCards(){
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
           <option value="failed" ${o.status==='failed'?'selected':''}>❌ ไม่สำเร็จ</option>
         </select>
-        ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" style="padding:10px 18px; border-radius:10px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none;">แผนที่</a>` : ''}
+        ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" style="padding:12px 20px; border-radius:12px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none;">แผนที่</a>` : ''}
       </div>
     </div>`;
   }).join('') || '<div style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการ</div>';
