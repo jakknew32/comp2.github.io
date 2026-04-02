@@ -45,29 +45,27 @@
   .card-body { padding:0 16px 12px; }
   .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:14px; }
   .product-box { margin-top:10px; background:rgba(0,0,0,0.02); padding:10px; border-radius:8px; }
-  
-  /* แก้ไข: ขยายตัวอักษรรายการสินค้าในหน้าแรกขึ้น 3px (จาก 16px เป็น 19px) */
   .product-item { font-size:19px; font-weight:700; color:var(--orange); margin-bottom:4px; display:block; }
   
   .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--cyan-l); border:1px solid var(--cyan-b); color:var(--cyan); padding:6px 14px; border-radius:100px; font-size:14px; font-weight:700; margin-top:12px; }
 
+  /* ส่วนหลักฐานการส่ง */
   .view-proof-btn { display: block; width: 100%; text-align: center; padding: 10px; margin-top: 15px; background: #fff; border: 1px solid var(--green); color: var(--green); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
   .proof-display { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; animation: slideDown 0.3s ease-out; }
   .proof-display.active { display: grid; }
-  @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+  .proof-thumb { width:100%; height:120px; object-fit:cover; border-radius:12px; border:1px solid #ddd; cursor: zoom-in; }
+  
+  /* Full-screen Preview Modal */
+  .preview-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; padding:20px; }
+  .preview-modal.active { display:flex; }
+  .preview-modal img { max-width:100%; max-height:90vh; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.5); }
 
-  /* Modal */
+  /* Modal บันทึกงาน */
   .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:10px; }
   .modal.active { display:flex; }
-  .modal-content { background:#fff; width:100%; max-width:500px; border-radius:24px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,0.5); max-height: 95vh; overflow-y: auto; }
-  
-  /* แก้ไข: ขยายตัวอักษรรายการสินค้าใน Modal ขึ้น 3px (จาก 15px เป็น 18px) */
+  .modal-content { background:#fff; width:100%; max-width:500px; border-radius:24px; padding:24px; max-height: 95vh; overflow-y: auto; }
   .modal-product-list { background: #fff7ed; border: 1px solid #ffedd5; padding: 12px; border-radius: 12px; margin-bottom: 20px; }
   .modal-product-item { font-size: 18px; font-weight: 700; color: #c2410c; border-bottom: 1px solid #fed7aa; padding: 6px 0; }
-  .modal-product-item:last-child { border-bottom: none; }
-
-  .photo-upload-area { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 16px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; color: #64748b; cursor: pointer; position: relative; overflow: hidden; margin-bottom: 20px; }
-  .photo-upload-area img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; }
   canvas#modalSig { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 16px; width: 100%; height: 220px; touch-action: none; }
   
   .btn-save { background:var(--green); color:#fff; border:none; padding:16px; border-radius:14px; font-weight:700; cursor:pointer; font-size:17px; width:100%; margin-top:10px; }
@@ -98,15 +96,20 @@
 <div class="stats-row" id="statsRow"></div>
 <div class="main" id="mainGrid"></div>
 
+<div id="imagePreviewModal" class="preview-modal" onclick="this.classList.remove('active')">
+  <img id="fullImage" src="">
+  <div style="position:absolute; top:20px; color:#fff; font-size:14px;">แตะที่ใดก็ได้เพื่อปิด</div>
+</div>
+
 <div id="proofModal" class="modal">
   <div class="modal-content">
     <h3 style="margin-bottom:15px; font-size:20px;">📦 บันทึกหลักฐานส่งงาน</h3>
     <p style="font-size:13px; font-weight:700; margin-bottom:8px;">📦 รายการสินค้าที่ส่ง:</p>
     <div id="modalProductList" class="modal-product-list"></div>
     
-    <label for="cameraInput" class="photo-upload-area">
-      <img id="photoPreview" style="display:none">
-      <div id="photoLabel">📷 ถ่ายรูป / เลือกรูปภาพ</div>
+    <label for="cameraInput" style="display:block; background:#f1f5f9; border:2.5px dashed #cbd5e1; border-radius:16px; height:120px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; position:relative; margin-bottom:20px;">
+      <img id="photoPreview" style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:5;">
+      <div id="photoLabel" style="text-align:center; font-size:13px; color:#64748b;">📷 ถ่ายรูป / เลือกรูปภาพ</div>
     </label>
     
     <canvas id="modalSig"></canvas>
@@ -148,6 +151,14 @@ onValue(ordersRef, snap => {
   orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
   renderAll();
 });
+
+// ฟังก์ชันขยายรูป
+window.zoomImage = (src) => {
+  const modal = document.getElementById('imagePreviewModal');
+  const img = document.getElementById('fullImage');
+  img.src = src;
+  modal.classList.add('active');
+};
 
 window.toggleProof = (id) => {
   const el = document.getElementById('proof-' + id);
@@ -194,8 +205,6 @@ function initSigPad() {
 window.openModal = (fbKey) => {
   activeOrderKey = fbKey;
   const o = orders.find(x => x._fbKey === fbKey);
-  
-  // แสดงรายการสินค้าใน Modal แบบเป็นข้อๆ
   let itemsHtml = '';
   if (Array.isArray(o.items)) {
     itemsHtml = o.items.map((it, i) => `<div class="modal-product-item">${i+1}. ${it}</div>`).join('');
@@ -204,7 +213,6 @@ window.openModal = (fbKey) => {
     itemsHtml = itemArray.map((it, i) => `<div class="modal-product-item">${i+1}. ${it.trim()}</div>`).join('');
   }
   document.getElementById('modalProductList').innerHTML = itemsHtml || 'ไม่มีรายการ';
-
   currentBase64Photo = null;
   document.getElementById('photoPreview').style.display = 'none';
   document.getElementById('photoLabel').style.display = 'block';
@@ -258,8 +266,8 @@ function renderCards(){
         ${o.status === 'delivered' ? `
           <button class="view-proof-btn" onclick="toggleProof('${o._fbKey}')">🔍 คลิกเพื่อดูหลักฐานการส่ง</button>
           <div class="proof-display" id="proof-${o._fbKey}">
-            <img src="${o.proofPhoto}" style="width:100%; height:120px; object-fit:cover; border-radius:12px; border:1px solid #ddd">
-            <img src="${o.proofSig}" style="width:100%; height:120px; object-fit:contain; border-radius:12px; border:1px solid #ddd; background:#fff;">
+            <img src="${o.proofPhoto}" class="proof-thumb" onclick="zoomImage('${o.proofPhoto}')">
+            <img src="${o.proofSig}" class="proof-thumb" style="object-fit:contain; background:#fff;" onclick="zoomImage('${o.proofSig}')">
           </div>
         ` : ''}
       </div>
