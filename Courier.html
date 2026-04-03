@@ -39,8 +39,12 @@
   .delivery-card.delivered { border-left:4px solid var(--green); background:#f0fdf4; }
   
   .card-head { padding:14px 16px 10px; display:flex; justify-content:space-between; }
-  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); }
+  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); display: flex; align-items: center; gap: 8px; }
   .card-name { font-size:18px; font-weight:700; margin-top:8px; }
+
+  /* CSS สำหรับป้าย New Order */
+  .badge-new { background: var(--red); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; animation: blink 1.5s infinite; }
+  @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.4;} 100% {opacity: 1;} }
   
   .card-body { padding:0 16px 12px; }
   .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:14px; }
@@ -248,13 +252,25 @@ function renderCards(){
   let filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
   document.getElementById('mainGrid').innerHTML = filtered.reverse().map(o=> {
     const displayId = o.orderid || o._fbKey.substring(0,6);
+    const orderDate = new Date(o.createdAt);
     const dueDate = new Date(o.createdAt); dueDate.setDate(dueDate.getDate()+3);
     const isOverdue = now > dueDate && o.status !== 'delivered';
+
+    // ตรวจสอบว่าเป็นออเดอร์ใหม่ (ไม่เกิน 24 ชม.)
+    const diffTime = Math.abs(now - orderDate);
+    const diffHours = diffTime / (1000 * 60 * 60);
+    const isNew = diffHours <= 24;
 
     return `
     <div class="delivery-card ${o.status}">
       <div class="card-head">
-        <div><div class="card-id">#${displayId}</div><div class="card-name">${o.name || 'ไม่ระบุ'}</div></div>
+        <div>
+          <div class="card-id">
+            #${displayId}
+            ${isNew ? '<span class="badge-new">NEW ORDER</span>' : ''}
+          </div>
+          <div class="card-name">${o.name || 'ไม่ระบุ'}</div>
+        </div>
         <span class="badge" style="background:var(--${o.status==='delivered'?'green':'yellow'}-l); color:var(--${o.status==='delivered'?'green':'yellow'})">${o.status==='delivered'?'ส่งสำเร็จ':'รอดำเนินการ'}</span>
       </div>
       <div class="card-body">
