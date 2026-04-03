@@ -42,29 +42,26 @@
   .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); display: flex; align-items: center; gap: 8px; }
   .card-name { font-size:18px; font-weight:700; margin-top:8px; }
 
-  /* CSS สำหรับป้าย New Order */
   .badge-new { background: var(--red); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; animation: blink 1.5s infinite; }
   @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.4;} 100% {opacity: 1;} }
   
   .card-body { padding:0 16px 12px; }
   .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:14px; }
-  .product-box { margin-top:10px; background:rgba(0,0,0,0.02); padding:10px; border-radius:8px; }
+  .product-label { font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 12px; display: block; }
+  .product-box { margin-top:6px; background:rgba(0,0,0,0.02); padding:10px; border-radius:8px; }
   .product-item { font-size:19px; font-weight:700; color:var(--orange); margin-bottom:4px; display:block; }
   
   .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--cyan-l); border:1px solid var(--cyan-b); color:var(--cyan); padding:6px 14px; border-radius:100px; font-size:14px; font-weight:700; margin-top:12px; }
 
-  /* ส่วนหลักฐานการส่ง */
   .view-proof-btn { display: block; width: 100%; text-align: center; padding: 10px; margin-top: 15px; background: #fff; border: 1px solid var(--green); color: var(--green); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
   .proof-display { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; animation: slideDown 0.3s ease-out; }
   .proof-display.active { display: grid; }
   .proof-thumb { width:100%; height:120px; object-fit:cover; border-radius:12px; border:1px solid #ddd; cursor: zoom-in; }
   
-  /* Full-screen Preview Modal */
   .preview-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; padding:20px; }
   .preview-modal.active { display:flex; }
   .preview-modal img { max-width:100%; max-height:90vh; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.5); }
 
-  /* Modal บันทึกงาน */
   .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:10px; }
   .modal.active { display:flex; }
   .modal-content { background:#fff; width:100%; max-width:500px; border-radius:24px; padding:24px; max-height: 95vh; overflow-y: auto; }
@@ -156,7 +153,6 @@ onValue(ordersRef, snap => {
   renderAll();
 });
 
-// ฟังก์ชันขยายรูป
 window.zoomImage = (src) => {
   const modal = document.getElementById('imagePreviewModal');
   const img = document.getElementById('fullImage');
@@ -256,7 +252,6 @@ function renderCards(){
     const dueDate = new Date(o.createdAt); dueDate.setDate(dueDate.getDate()+3);
     const isOverdue = now > dueDate && o.status !== 'delivered';
 
-    // ตรวจสอบว่าเป็นออเดอร์ใหม่ (ไม่เกิน 24 ชม.)
     const diffTime = Math.abs(now - orderDate);
     const diffHours = diffTime / (1000 * 60 * 60);
     const isNew = diffHours <= 24;
@@ -276,7 +271,10 @@ function renderCards(){
       <div class="card-body">
         <div class="info-row">📍 ${o.address || '-'}</div>
         <div class="info-row">📞 <a href="tel:${o.phone}" style="color:var(--orange); font-weight:700;">${o.phone || '-'}</a></div>
+        
+        <span class="product-label">📦 รายการจัดส่ง</span>
         <div class="product-box">${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : o.items}</div>
+        
         <div class="due-tag ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ เลยกำหนด' : '📅 กำหนดส่ง: '+dueDate.toLocaleDateString('th-TH')}</div>
         
         ${o.status === 'delivered' ? `
