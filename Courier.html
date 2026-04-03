@@ -39,8 +39,9 @@
   .delivery-card.delivered { border-left:4px solid var(--green); background:#f0fdf4; }
   
   .card-head { padding:14px 16px 10px; display:flex; justify-content:space-between; }
-  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); display: flex; align-items: center; gap: 8px; }
-  .card-name { font-size:18px; font-weight:700; margin-top:8px; }
+  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--muted); display: flex; align-items: center; gap: 8px; line-height: 1; }
+  .card-date { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 400; }
+  .card-name { font-size:18px; font-weight:700; margin-top:6px; }
 
   .badge-new { background: var(--red); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; animation: blink 1.5s infinite; }
   @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.4;} 100% {opacity: 1;} }
@@ -249,6 +250,12 @@ function renderCards(){
   document.getElementById('mainGrid').innerHTML = filtered.reverse().map(o=> {
     const displayId = o.orderid || o._fbKey.substring(0,6);
     const orderDate = new Date(o.createdAt);
+    
+    // จัดรูปแบบวันที่เพิ่มรายการ
+    const formattedDate = orderDate.toLocaleDateString('th-TH', { 
+        day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' 
+    }) + " น.";
+
     const dueDate = new Date(o.createdAt); dueDate.setDate(dueDate.getDate()+3);
     const isOverdue = now > dueDate && o.status !== 'delivered';
 
@@ -264,6 +271,7 @@ function renderCards(){
             #${displayId}
             ${isNew ? '<span class="badge-new">NEW ORDER</span>' : ''}
           </div>
+          <div class="card-date">🕒 เพิ่มเมื่อ: ${formattedDate}</div>
           <div class="card-name">${o.name || 'ไม่ระบุ'}</div>
         </div>
         <span class="badge" style="background:var(--${o.status==='delivered'?'green':'yellow'}-l); color:var(--${o.status==='delivered'?'green':'yellow'})">${o.status==='delivered'?'ส่งสำเร็จ':'รอดำเนินการ'}</span>
