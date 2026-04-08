@@ -34,6 +34,10 @@
   .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
   .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
   
+  .search-container { padding: 16px 16px 0; max-width: 800px; margin: 0 auto; }
+  .search-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); font-family: var(--font); font-size: 15px; outline: none; transition: border-color 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
+  .search-input:focus { border-color: var(--orange); }
+
   .main { padding:16px; max-width:800px; margin:0 auto; }
   .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
   .delivery-card.pending { border-left:4px solid var(--yellow); }
@@ -44,7 +48,6 @@
   .card-date { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 400; }
   .card-name { font-size:18px; font-weight:700; margin-top:6px; color: #0f172a; }
 
-  /* ดีไซน์ป้ายสถานะใหม่ */
   .status-badge {
     padding: 6px 12px;
     border-radius: 8px;
@@ -60,7 +63,6 @@
   .status-delivered { background: var(--green-l); color: var(--green); border: 1px solid #a7f3d0; }
   .status-failed { background: var(--red-l); color: var(--red); border: 1px solid #fecaca; }
 
-  /* ดีไซน์ป้าย New Order ใหม่ */
   .badge-new { 
     background: linear-gradient(45deg, #ef4444, #dc2626); 
     color: #fff; 
@@ -81,25 +83,6 @@
   
   .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--cyan-l); border:1px solid var(--cyan-b); color:var(--cyan); padding:6px 14px; border-radius:100px; font-size:14px; font-weight:700; margin-top:12px; }
 
-  .view-proof-btn { display: block; width: 100%; text-align: center; padding: 10px; margin-top: 15px; background: #fff; border: 1px solid var(--green); color: var(--green); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
-  .proof-display { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; animation: slideDown 0.3s ease-out; }
-  .proof-display.active { display: grid; }
-  .proof-thumb { width:100%; height:120px; object-fit:cover; border-radius:12px; border:1px solid #ddd; cursor: zoom-in; }
-  
-  .preview-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; padding:20px; }
-  .preview-modal.active { display:flex; }
-  .preview-modal img { max-width:100%; max-height:90vh; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.5); }
-
-  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:10px; }
-  .modal.active { display:flex; }
-  .modal-content { background:#fff; width:100%; max-width:500px; border-radius:24px; padding:24px; max-height: 95vh; overflow-y: auto; }
-  .modal-product-list { background: #fff7ed; border: 1px solid #ffedd5; padding: 12px; border-radius: 12px; margin-bottom: 20px; }
-  .modal-product-item { font-size: 18px; font-weight: 700; color: #c2410c; border-bottom: 1px solid #fed7aa; padding: 6px 0; }
-  canvas#modalSig { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 16px; width: 100%; height: 220px; touch-action: none; }
-  
-  .btn-save { background:var(--green); color:#fff; border:none; padding:16px; border-radius:14px; font-weight:700; cursor:pointer; font-size:17px; width:100%; margin-top:10px; }
-  .btn-cancel { background:#f1f5f9; color:#64748b; border:none; padding:16px; border-radius:14px; font-weight:700; cursor:pointer; width:100%; margin-top:10px; }
-
   .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
   .status-select { flex:1; padding:12px; border-radius:12px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; font-size: 15px; color: var(--text); }
   
@@ -111,7 +94,7 @@
 
 <nav>
   <div class="logo"><em>CFM</em>FLEET FLOW</div>
-  <span class="courier-badge" style="font-weight: 700; color: var(--text);">🛵 หริชัย (บุ๊ค)</span>
+  <span class="courier-badge" style="font-weight: 700; color: var(--text);">🛵 พนักงานจัดส่ง</span>
 </nav>
 
 <div class="page-head">
@@ -123,33 +106,13 @@
 </div>
 
 <div class="stats-row" id="statsRow"></div>
+
+<div class="search-container">
+  <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหารายการ (ชื่อ, เบอร์, ออเดอร์, สินค้า)...">
+</div>
+
 <div class="main" id="mainGrid"></div>
 
-<div id="imagePreviewModal" class="preview-modal" onclick="this.classList.remove('active')">
-  <img id="fullImage" src="">
-  <div style="position:absolute; top:20px; color:#fff; font-size:14px;">แตะที่ใดก็ได้เพื่อปิด</div>
-</div>
-
-<div id="proofModal" class="modal">
-  <div class="modal-content">
-    <h3 style="margin-bottom:15px; font-size:20px;">📦 บันทึกหลักฐานส่งงาน</h3>
-    <p style="font-size:13px; font-weight:700; margin-bottom:8px;">📦 รายการสินค้าที่ส่ง:</p>
-    <div id="modalProductList" class="modal-product-list"></div>
-    
-    <label for="cameraInput" style="display:block; background:#f1f5f9; border:2.5px dashed #cbd5e1; border-radius:16px; height:120px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; position:relative; margin-bottom:20px;">
-      <img id="photoPreview" style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:5;">
-      <div id="photoLabel" style="text-align:center; font-size:13px; color:#64748b;">📷 ถ่ายรูป / เลือกรูปภาพ</div>
-    </label>
-    
-    <canvas id="modalSig"></canvas>
-    <div style="text-align:center; font-size:11px; color:var(--muted); margin-top:5px;">✍️ เซ็นชื่อลูกค้าในช่องด้านบน</div>
-    
-    <button class="btn-save" id="btnSubmit">ยืนยันส่งสำเร็จ</button>
-    <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
-  </div>
-</div>
-
-<input type="file" id="cameraInput" accept="image/*" style="display:none">
 <div id="toast"></div>
 
 <script type="module">
@@ -172,8 +135,6 @@ const ordersRef = ref(db, 'orders');
 
 let orders = [];
 let currentFilter = 'pending'; 
-let activeOrderKey = null;
-let currentBase64Photo = null;
 
 onValue(ordersRef, snap => {
   const data = snap.val() || {};
@@ -181,99 +142,42 @@ onValue(ordersRef, snap => {
   renderAll();
 });
 
-window.zoomImage = (src) => {
-  const modal = document.getElementById('imagePreviewModal');
-  const img = document.getElementById('fullImage');
-  img.src = src;
-  modal.classList.add('active');
-};
-
-window.toggleProof = (id) => {
-  const el = document.getElementById('proof-' + id);
-  el.classList.toggle('active');
-  const btn = el.previousElementSibling;
-  btn.textContent = el.classList.contains('active') ? '🔼 ซ่อนหลักฐานการส่ง' : '🔍 คลิกเพื่อดูหลักฐานการส่ง';
-};
-
-const camInput = document.getElementById('cameraInput');
-camInput.onchange = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    currentBase64Photo = ev.target.result;
-    document.getElementById('photoPreview').src = currentBase64Photo;
-    document.getElementById('photoPreview').style.display = 'block';
-    document.getElementById('photoLabel').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-};
-
-let sigCanvas = document.getElementById('modalSig');
-let sigCtx = sigCanvas.getContext('2d');
-let drawing = false;
-
-function initSigPad() {
-  sigCanvas.width = sigCanvas.offsetWidth; sigCanvas.height = sigCanvas.offsetHeight;
-  sigCtx.strokeStyle = "#1e293b"; sigCtx.lineWidth = 3; sigCtx.lineCap = "round";
-  const getPos = (e) => {
-    const rect = sigCanvas.getBoundingClientRect();
-    const cx = e.touches ? e.touches[0].clientX : e.clientX;
-    const cy = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: cx - rect.left, y: cy - rect.top };
-  };
-  const start = (e) => { drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); if(e.cancelable) e.preventDefault(); };
-  const move = (e) => { if(!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); if(e.cancelable) e.preventDefault(); };
-  const stop = () => drawing = false;
-  sigCanvas.ontouchstart = sigCanvas.onmousedown = start;
-  sigCanvas.ontouchmove = sigCanvas.onmousemove = move;
-  window.ontouchend = window.onmouseup = stop;
-}
-
-window.openModal = (fbKey) => {
-  activeOrderKey = fbKey;
-  const o = orders.find(x => x._fbKey === fbKey);
-  let itemsHtml = '';
-  if (Array.isArray(o.items)) {
-    itemsHtml = o.items.map((it, i) => `<div class="modal-product-item">${i+1}. ${it}</div>`).join('');
-  } else if (o.items) {
-    const itemArray = o.items.split(/[,|\n]/).filter(x => x.trim() !== "");
-    itemsHtml = itemArray.map((it, i) => `<div class="modal-product-item">${i+1}. ${it.trim()}</div>`).join('');
-  }
-  document.getElementById('modalProductList').innerHTML = itemsHtml || 'ไม่มีรายการ';
-  currentBase64Photo = null;
-  document.getElementById('photoPreview').style.display = 'none';
-  document.getElementById('photoLabel').style.display = 'block';
-  document.getElementById('proofModal').classList.add('active');
-  setTimeout(initSigPad, 200);
-};
-
-window.closeModal = () => { document.getElementById('proofModal').classList.remove('active'); renderCards(); };
-
-document.getElementById('btnSubmit').onclick = () => {
-  if(!currentBase64Photo) return alert('กรุณาแนบรูปภาพ');
-  const sigData = sigCanvas.toDataURL();
-  update(ref(db, 'orders/'+activeOrderKey), {
-    status: 'delivered', proofPhoto: currentBase64Photo, proofSig: sigData, deliveredAt: new Date().toLocaleString('th-TH')
-  }).then(() => { showToast('✅ ส่งสำเร็จเรียบร้อย'); closeModal(); });
-};
-
+// ฟังก์ชันอัปเดตสถานะ (ปรับให้ส่งสถานะตรงๆ ไม่ต้องเปิด Modal)
 window.changeStatus = (fbKey, s) => {
-  if(s === 'delivered') return window.openModal(fbKey);
-  update(ref(db, 'orders/'+fbKey), { status: s });
-  showToast('🔄 อัปเดตสถานะแล้ว');
+  let updateData = { status: s };
+  if (s === 'delivered') {
+    updateData.deliveredAt = new Date().toLocaleString('th-TH');
+  }
+  update(ref(db, 'orders/'+fbKey), updateData).then(() => {
+    showToast('🔄 อัปเดตสถานะเรียบร้อยแล้ว');
+  });
 };
+
+// Event Listener สำหรับช่องค้นหา
+document.getElementById('searchInput').addEventListener('input', () => {
+  renderCards();
+});
 
 function renderAll(){ renderStats(); renderCards(); }
+
 function renderStats(){
   const s = { total: orders.length, pending: orders.filter(o=>o.status==='pending').length, transit: orders.filter(o=>o.status==='transit').length, delivered: orders.filter(o=>o.status==='delivered').length };
   document.getElementById('statsRow').innerHTML = [{n:s.total, l:'ทั้งหมด', f:'all'}, {n:s.pending, l:'รอส่ง', f:'pending'}, {n:s.transit, l:'กำลังส่ง', f:'transit'}, {n:s.delivered, l:'สำเร็จ', f:'delivered'}].map(i => `<div class="stat-cell ${currentFilter===i.f?'active':''}" onclick="window.setFilter('${i.f}')"><div class="sc-n">${i.n}</div><div style="font-size:12px;color:var(--muted)">${i.l}</div></div>`).join('');
 }
+
 window.setFilter = (f) => { currentFilter=f; renderAll(); };
 
 function renderCards(){
   const now = new Date();
+  const searchStr = document.getElementById('searchInput').value.toLowerCase();
+  
   let filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
+  
+  // กรองตามการค้นหาจากทุกตัวอักษร
+  if(searchStr) {
+    filtered = filtered.filter(o => JSON.stringify(o).toLowerCase().includes(searchStr));
+  }
+
   document.getElementById('mainGrid').innerHTML = filtered.reverse().map(o=> {
     const displayId = o.orderid || o._fbKey.substring(0,6);
     const orderDate = new Date(o.createdAt);
@@ -289,7 +193,6 @@ function renderCards(){
     const diffHours = diffTime / (1000 * 60 * 60);
     const isNew = diffHours <= 24;
 
-    // เลือกข้อความและ Class ของป้ายสถานะ
     let statusText = 'รอส่ง';
     let statusClass = 'status-pending';
     if(o.status === 'transit') { statusText = 'กำลังส่ง'; statusClass = 'status-transit'; }
@@ -317,14 +220,6 @@ function renderCards(){
         <div class="product-box">${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : o.items}</div>
         
         <div class="due-tag ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ เลยกำหนด' : '📅 กำหนดส่ง: '+dueDate.toLocaleDateString('th-TH')}</div>
-        
-        ${o.status === 'delivered' ? `
-          <button class="view-proof-btn" onclick="toggleProof('${o._fbKey}')">🔍 คลิกเพื่อดูหลักฐานการส่ง</button>
-          <div class="proof-display" id="proof-${o._fbKey}">
-            <img src="${o.proofPhoto}" class="proof-thumb" onclick="zoomImage('${o.proofPhoto}')">
-            <img src="${o.proofSig}" class="proof-thumb" style="object-fit:contain; background:#fff;" onclick="zoomImage('${o.proofSig}')">
-          </div>
-        ` : ''}
       </div>
       <div class="card-foot">
         <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
@@ -336,7 +231,7 @@ function renderCards(){
         ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" style="padding:12px 20px; border-radius:12px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none;">แผนที่</a>` : ''}
       </div>
     </div>`;
-  }).join('') || '<div style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการ</div>';
+  }).join('') || '<div style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการที่ค้นหา</div>';
 }
 
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show'; setTimeout(()=>t.className='',2500); }
