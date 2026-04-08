@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CFM-FleetFlow — พนังงานส่งของ</title>
+<title>CFM-FleetFlow — พนังงานส่งสินค้า (บุ๊ค)</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -21,10 +21,7 @@
   body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
   
   nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
-  
-  /* ปรับแต่งโลโก้ให้จัดเรียงสวยงาม */
-  .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:1px; color:var(--text); display: flex; align-items: center; gap: 8px; }
-  .logo img { height: 30px; width: auto; object-fit: contain; }
+  .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
   .logo em { color:var(--orange); font-style:normal; }
   
   .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
@@ -32,15 +29,16 @@
   .ph-title { font-size:24px; font-weight:700; }
   .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
+  /* ปรับแถบสถานะให้ค้าง (Sticky) เมื่อเลื่อนจอ */
   .stats-row { 
     display:grid; 
     grid-template-columns:repeat(4,1fr); 
     background:#fff; 
     border-bottom:1px solid var(--border); 
     position: sticky; 
-    top: 56px; 
-    z-index: 90; 
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+    top: 56px; /* ให้ต่อจาก nav ที่สูง 56px พอดี */
+    z-index: 90; /* ให้อยู่เหนือการ์ด */
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); /* เพิ่มเงาตอนเลื่อนให้ดูมีมิติ */
   }
   .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
   .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
@@ -105,11 +103,8 @@
 <body>
 
 <nav>
-  <div class="logo">
-    <img src="http://www.cmfreshmilk.com/one-page/img/logo.png" alt="CFM Logo">
-    <span><em>CFM</em>FLEET FLOW</span>
-  </div>
-  <span class="courier-badge" style="font-weight: 700; color: var(--text);">🛵 พนักงานส่งของ</span>
+  <div class="logo"><em>CFM</em>FLEET FLOW</div>
+  <span class="courier-badge" style="font-weight: 700; color: var(--text);">🛵 พนักงานส่งสินค้า (บุ๊ค)</span>
 </nav>
 
 <div class="page-head">
