@@ -1,88 +1,231 @@
-<style>
-    /* ปรับแต่งส่วนรายการสินค้าให้เหมือนในรูปตัวอย่าง */
-    .product-list {
-        background: #f8fafc;
-        padding: 15px;
-        border-radius: 16px;
-        margin-top: 15px;
-    }
-    .product-item {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        background: white;
-        padding: 12px;
-        border-radius: 12px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        border: 1px solid #edf2f7;
-    }
-    .product-img {
-        width: 70px; /* ปรับขนาดตามรูปตัวอย่าง */
-        height: 70px;
-        border-radius: 10px;
-        object-fit: cover;
-        background: #f1f5f9;
-        flex-shrink: 0;
-    }
-    .product-info {
-        flex: 1;
-        font-size: 15px;
-        font-weight: 600;
-        color: #1e293b;
-        line-height: 1.4;
-    }
-</style>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CFM TRACKING — ติดตามสถานะพัสดุ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f1f5f9; --card: #ffffff; --border: #e2e8f0;
+            --orange: #f85903; --green: #059669; --muted: #64748b;
+            --text: #1e293b; --font: 'Kanit', sans-serif;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; padding: 15px; }
+
+        .container { max-width: 480px; margin: 0 auto; }
+        
+        /* Header */
+        .header { text-align: center; margin-bottom: 25px; padding-top: 10px; }
+        .header h1 { font-size: 32px; color: var(--orange); font-weight: 800; }
+        .header p { color: var(--muted); font-size: 14px; }
+
+        /* Search Box */
+        .search-box { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .input-label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--muted); }
+        .search-input-wrapper { display: flex; gap: 8px; }
+        .search-input { flex: 1; padding: 14px 18px; border-radius: 15px; border: 2px solid #f1f5f9; font-family: var(--font); font-size: 16px; outline: none; transition: 0.3s; background: #f8fafc; }
+        .search-input:focus { border-color: var(--orange); background: white; }
+        .btn-search { background: var(--orange); color: white; border: none; padding: 0 22px; border-radius: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+
+        /* Messenger & Result Area */
+        #resultArea { display: none; }
+        .messenger-box { background: white; border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
+        .messenger-icon { font-size: 30px; background: #fff7ed; padding: 10px; border-radius: 50%; }
+        .messenger-details b { display: block; font-size: 13px; color: var(--muted); }
+        .messenger-details a { color: var(--text); font-weight: 700; text-decoration: none; font-size: 18px; }
+
+        /* Tracking Card */
+        .tracking-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid var(--border); margin-bottom: 20px; }
+        .order-info { margin-bottom: 20px; }
+        .order-id { font-size: 14px; font-weight: 700; color: var(--orange); margin-bottom: 4px; }
+        .customer-name { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
+        .address-text { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+        /* Timeline Styles */
+        .timeline { margin-top: 25px; position: relative; padding-left: 35px; }
+        .timeline::before { content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 3px; background: #f1f5f9; }
+        .step { position: relative; margin-bottom: 30px; }
+        .step::before { content: ''; position: absolute; left: -35px; top: 5px; width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; border: 3px solid white; box-shadow: 0 0 0 2px #f1f5f9; z-index: 1; }
+        .step.active::before { background: var(--orange); box-shadow: 0 0 0 4px #fed7aa; }
+        .step.completed::before { background: var(--green); box-shadow: 0 0 0 4px #d1fae5; }
+        .step-title { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+        .step-date { font-size: 12px; color: var(--muted); }
+
+        /* Product Display (เหมือนรูปตัวอย่างเป๊ะๆ) */
+        .product-section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+        .product-item { display: flex; align-items: center; gap: 15px; background: #f8fafc; padding: 12px; border-radius: 18px; margin-bottom: 10px; border: 1px solid #f1f5f9; }
+        .product-img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; background: white; flex-shrink: 0; }
+        .product-info { flex: 1; font-size: 15px; font-weight: 600; color: #334155; line-height: 1.3; }
+
+        /* Status Helper */
+        #errorMsg { display: none; text-align: center; color: #ef4444; background: #fef2f2; padding: 15px; border-radius: 15px; margin-top: 10px; font-weight: 600; }
+        #loader { display: none; text-align: center; margin-top: 10px; color: var(--orange); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>CFM TRACKING</h1>
+        <p>ตรวจสอบสถานะการจัดส่งพัสดุของคุณ</p>
+    </div>
+
+    <div class="search-box">
+        <label class="input-label">หมายเลขคำสั่งซื้อ</label>
+        <div class="search-input-wrapper">
+            <input type="text" id="orderQuery" class="search-input" placeholder="ระบุเลขที่นี่..." autocomplete="off">
+            <button class="btn-search" onclick="trackOrder()">ค้นหา</button>
+        </div>
+    </div>
+
+    <div id="loader">⏳ กำลังโหลดข้อมูล...</div>
+    <div id="errorMsg">❌ ไม่พบหมายเลขออเดอร์นี้</div>
+
+    <div id="resultArea">
+        <div class="messenger-box">
+            <div class="messenger-icon">🛵</div>
+            <div class="messenger-details">
+                <b>พนักงานจัดส่งพัสดุ</b>
+                <a href="tel:0941150250">คุณบุ๊ค 094-115-0250</a>
+            </div>
+        </div>
+
+        <div class="tracking-card">
+            <div class="order-info">
+                <div class="order-id" id="displayId">#------</div>
+                <div class="customer-name" id="displayName">คุณลูกค้า</div>
+                <div class="address-text" id="displayAddress">ที่อยู่จัดส่ง...</div>
+            </div>
+
+            <div class="timeline" id="timelineList"></div>
+
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;">
+            
+            <div class="product-section-title">รายการสินค้า</div>
+            <div id="displayItems"></div>
+        </div>
+    </div>
+</div>
 
 <script type="module">
-    // ... (Firebase Config เหมือนเดิม) ...
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
+        authDomain: "fleet-a49df.firebaseapp.com",
+        projectId: "fleet-a49df",
+        storageBucket: "fleet-a49df.firebasestorage.app",
+        messagingSenderId: "324785731593",
+        appId: "1:324785731593:web:b24e7977a2cccac01b60d8",
+        databaseURL: "https://fleet-a49df-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // กด Enter เพื่อค้นหา
+    document.getElementById('orderQuery').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') trackOrder();
+    });
+
+    window.trackOrder = () => {
+        const query = document.getElementById('orderQuery').value.trim().replace('#', '');
+        if (!query) return;
+
+        const resultArea = document.getElementById('resultArea');
+        const errorMsg = document.getElementById('errorMsg');
+        const loader = document.getElementById('loader');
+
+        loader.style.display = 'block';
+        errorMsg.style.display = 'none';
+        resultArea.style.display = 'none';
+
+        onValue(ref(db, 'orders'), (snap) => {
+            loader.style.display = 'none';
+            const data = snap.val();
+            let foundOrder = null;
+
+            if (data) {
+                Object.entries(data).forEach(([key, val]) => {
+                    const orderIdStr = String(val.orderid || '');
+                    if (orderIdStr === query || key.substring(0, 6) === query) {
+                        foundOrder = val;
+                    }
+                });
+            }
+
+            if (foundOrder) {
+                showData(foundOrder);
+                resultArea.style.display = 'block';
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        }, { onlyOnce: true });
+    };
 
     function showData(o) {
-        document.getElementById('displayId').textContent = '#' + (o.orderid || '------');
+        document.getElementById('displayId').textContent = 'Order #' + (o.orderid || '------');
         document.getElementById('displayName').textContent = 'คุณ ' + (o.name || 'ลูกค้า');
         document.getElementById('displayAddress').textContent = '📍 ' + (o.address || '-');
         
-        // ฟังก์ชันจับคู่รูปภาพ (ปรับปรุงใหม่ให้แม่นยำขึ้น)
+        // ฟังก์ชันเลือกรูปสินค้า
         const getProductImg = (itemName) => {
             const name = String(itemName);
-            
-            // 1. ตรวจสอบ รสช็อกโกแลต 10 กล่อง (รูปเฉพาะ)
-            if (name.includes('ช็อกโกแลต') && name.includes('10')) {
+            // กรณี ช็อกโกแลต 10 กล่อง
+            if (name.includes('ช็อก') && name.includes('10')) {
                 return 'https://down-th.img.susercontent.com/file/th-11134207-81zth-ml31p18567eo6d.webp';
             }
-            // 2. ตรวจสอบ รสช็อกโกแลต อื่นๆ
-            if (name.includes('ช็อกโกแลต') || name.includes('ช็อก')) {
-                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
-            }
-            // 3. ตรวจสอบ รสจืด
-            if (name.includes('จืด')) {
-                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
-            }
-            // 4. ตรวจสอบ รสน้ำผึ้ง
-            if (name.includes('น้ำผึ้ง')) {
-                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
-            }
-            
-            // รูป Default (รสจืด)
+            // กรณีอื่นๆ (จืด, น้ำผึ้ง, ช็อก 20) ใช้รูปหลัก
             return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
         };
 
+        // แสดงรายการสินค้า
         const itemsArray = Array.isArray(o.items) ? o.items : [o.items];
-        const itemsHtml = itemsArray.map(it => {
-            if(!it) return ''; // กัน Error กรณีข้อมูลว่าง
-            return `
-                <div class="product-item">
-                    <img src="${getProductImg(it)}" 
-                         class="product-img" 
-                         onerror="this.src='https://via.placeholder.com/70?text=Product'"
-                         referrerpolicy="no-referrer">
-                    <div class="product-info">${it}</div>
+        document.getElementById('displayItems').innerHTML = itemsArray.map(it => `
+            <div class="product-item">
+                <img src="${getProductImg(it)}" class="product-img" referrerpolicy="no-referrer">
+                <div class="product-info">${it}</div>
+            </div>
+        `).join('');
+
+        // Timeline Logic
+        const steps = [
+            { key: 'pending', title: 'รับคำสั่งซื้อเรียบร้อย', date: o.createdAt },
+            { key: 'transit', title: 'พนักงานกำลังนำส่งพัสดุ', date: o.transitAt || '' },
+            { key: 'delivered', title: 'จัดส่งสำเร็จ', date: o.deliveredAt || '' }
+        ];
+
+        let html = '';
+        steps.forEach((step) => {
+            let statusClass = '';
+            if (o.status === 'delivered') {
+                statusClass = 'completed active';
+            } else if (o.status === 'transit') {
+                if (step.key === 'pending') statusClass = 'completed';
+                if (step.key === 'transit') statusClass = 'active';
+            } else {
+                if (step.key === 'pending') statusClass = 'active';
+            }
+
+            let dateShow = '';
+            if (step.date) {
+                const d = new Date(step.date);
+                dateShow = isNaN(d) ? step.date : d.toLocaleString('th-TH', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' });
+            }
+
+            html += `
+                <div class="step ${statusClass}">
+                    <div class="step-title">${step.title}</div>
+                    <div class="step-date">${dateShow ? dateShow + ' น.' : ''}</div>
                 </div>
             `;
-        }).join('');
-        
-        document.getElementById('displayItems').innerHTML = itemsHtml;
-
-        // ... (ส่วน Timeline คงเดิม) ...
+        });
+        document.getElementById('timelineList').innerHTML = html;
     }
 </script>
+
+</body>
+</html>
