@@ -175,23 +175,14 @@
         const getImg = (itemName) => {
             const name = String(itemName);
             
-            // 1. ตรวจสอบ รสช็อกโกแลต 10 กล่อง (รูปเฉพาะ)
-            if (name.includes('ช็อกโกแลต') && name.includes('10กล่อง')) {
-                return 'https://github.com/jakknew32/comp.github.io/blob/main/MULK%20(BKK_CNX)-540x540.png?raw=true';
+            if (name.includes('ช็อกโกแลต')) {
+                return 'https://github.com/jakknew32/comp.github.io/blob/main/S__38543433.jpg?raw=true';
             }
-            // 2. ตรวจสอบ รสช็อกโกแลต อื่นๆ (เช่น 20 กล่อง)
-            if (name.includes('ช็อกโกแลต') || name.includes('20กล่อง')) {
-                return 'https://github.com/jakknew32/comp.github.io/blob/main/MULK%20(BKK_CNX)%2020-540x540.png?raw=true';
+
+            if (name.includes('จืด')) {
+                return 'https://github.com/jakknew32/comp.github.io/blob/main/S__25329682_0.jpg?raw=true';
             }
-            // 3. ตรวจสอบ รสจืด 10 กล่อง
-            if (name.includes('จืด') && name.includes('10กล่อง')) {
-                return 'https://github.com/jakknew32/comp.github.io/blob/main/MULK%20(BKK_CNX)%2010-540x540.png?raw=true';
-            }
-            // 4. ตรวจสอบ รสจืด 20 กล่อง
-            if (name.includes('จืด') && name.includes('20กล่อง')) {
-                return 'https://github.com/jakknew32/comp.github.io/blob/main/MULK%20HP%20(BKK_CNX)%2020@2x_0-1080x1080.png?raw=true';
-            }
-            // 5. ตรวจสอบ รสน้ำผึ้ง
+
             if (name.includes('น้ำผึ้ง')) {
                 return 'https://github.com/jakknew32/comp.github.io/blob/main/MULK%20HP%20(BKK_CNX)%20copy@2x_0-1080x1080.png?raw=true';
             }
