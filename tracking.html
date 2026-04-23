@@ -3,105 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CFM TRACKING</title>
+    <title>CFM TRACKING — ระบบติดตามพัสดุ</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --orange: #FF5A00;
-            --orange-light: #FFF5F0;
-            --gray-bg: #F7F9FC;
-            --text-main: #2D3748;
-            --text-muted: #718096;
+            --orange: #F85903;
+            --orange-bg: #FFF5F0;
+            --gray-light: #F8FAF7;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
         }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Kanit', sans-serif; background: var(--gray-bg); color: var(--text-main); padding: 15px; }
+        body { font-family: 'Kanit', sans-serif; background: #F1F5F9; color: var(--text-dark); padding: 15px; line-height: 1.5; }
 
-        .container { max-width: 450px; margin: 0 auto; }
+        .container { max-width: 480px; margin: 0 auto; }
         
-        /* Header & Search */
-        .header-brand { text-align: center; margin: 20px 0; }
-        .header-brand h1 { color: var(--orange); font-size: 30px; font-weight: 800; letter-spacing: -1px; }
-        
-        .search-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .search-label { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; display: block; }
-        .search-group { display: flex; gap: 10px; }
-        .search-input { flex: 1; border: 2px solid #EDF2F7; background: #F8FAFC; padding: 12px 15px; border-radius: 12px; font-family: inherit; font-size: 16px; outline: none; }
+        .header { text-align: center; margin: 25px 0; }
+        .header h1 { color: var(--orange); font-size: 32px; font-weight: 800; }
+        .header p { color: var(--text-muted); font-size: 14px; }
+
+        .search-card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .search-label { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block; }
+        .search-input-group { display: flex; gap: 10px; }
+        .search-input { flex: 1; padding: 14px 18px; border-radius: 15px; border: 2px solid #F1F5F9; font-family: inherit; font-size: 16px; outline: none; background: #F8FAFC; transition: 0.3s; }
         .search-input:focus { border-color: var(--orange); background: white; }
-        .btn-orange { background: var(--orange); border: none; width: 50px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-search { background: var(--orange); color: white; border: none; padding: 0 20px; border-radius: 15px; cursor: pointer; font-weight: 700; transition: 0.2s; }
 
-        /* Messenger Section */
-        .messenger-card { background: white; border-radius: 18px; padding: 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border: 1px solid #E2E8F0; }
-        .avatar-circle { width: 50px; height: 50px; background: var(--orange-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .msg-info b { font-size: 12px; color: var(--text-muted); display: block; }
-        .msg-info a { font-size: 17px; font-weight: 700; color: var(--text-main); text-decoration: none; }
+        #resultArea { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Order Main Info */
-        .main-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .cust-tag { color: var(--text-muted); font-size: 14px; font-weight: 600; }
-        .cust-name { font-size: 24px; font-weight: 700; margin: 2px 0 10px 0; }
-        
+        .messenger-box { background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .m-icon { font-size: 28px; background: var(--orange-bg); padding: 10px; border-radius: 50%; }
+        .m-info b { font-size: 12px; color: var(--text-muted); display: block; }
+        .m-info a { font-size: 18px; font-weight: 700; color: var(--text-dark); text-decoration: none; }
+
+        .status-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #E2E8F0; }
+        .order-meta { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #F1F5F9; }
+        .order-id { font-size: 14px; color: var(--orange); font-weight: 700; }
+        .customer-name { font-size: 22px; font-weight: 700; }
+        .address { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
         /* Timeline */
-        .timeline-box { margin: 25px 0; padding-left: 25px; position: relative; }
-        .timeline-box::before { content: ''; position: absolute; left: 5px; top: 5px; bottom: 5px; width: 2px; background: #E2E8F0; }
-        .t-step { position: relative; margin-bottom: 25px; }
-        .t-step::after { content: ''; position: absolute; left: -25px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #CBD5E1; border: 3px solid white; box-shadow: 0 0 0 2px #E2E8F0; z-index: 2; }
-        .t-step.done::after { background: #00C853; box-shadow: 0 0 0 2px #C8E6C9; }
-        .t-step.active::after { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-light); }
-        
-        .t-title { font-weight: 700; font-size: 16px; color: var(--text-main); }
-        .t-date { font-size: 12px; color: var(--text-muted); }
+        .timeline { margin: 25px 0; padding-left: 30px; position: relative; }
+        .timeline::before { content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; background: #E2E8F0; }
+        .step { position: relative; margin-bottom: 25px; }
+        .step::after { content: ''; position: absolute; left: -30px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #CBD5E1; border: 3px solid white; box-shadow: 0 0 0 2px #F1F5F9; z-index: 2; }
+        .step.done::after { background: #10B981; box-shadow: 0 0 0 2px #D1FAE5; }
+        .step.active::after { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-bg); }
+        .step-title { font-weight: 700; font-size: 16px; }
+        .step-date { font-size: 12px; color: var(--text-muted); }
 
         /* Product List */
-        .prod-header { font-weight: 700; font-size: 16px; margin: 20px 0 12px 0; padding-top: 15px; border-top: 1px solid #F1F5F9; }
-        .prod-item { display: flex; align-items: center; gap: 15px; background: #F8FAFC; border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #EDF2F7; }
-        .prod-img { width: 75px; height: 75px; border-radius: 10px; object-fit: cover; background: white; flex-shrink: 0; }
-        .prod-name { font-size: 14px; font-weight: 600; color: #4A5568; line-height: 1.4; }
+        .prod-section { margin-top: 25px; }
+        .prod-title { font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+        .prod-item { display: flex; align-items: center; gap: 15px; background: #F8FAFC; padding: 12px; border-radius: 18px; margin-bottom: 10px; border: 1px solid #EDF2F7; }
+        .prod-img { width: 75px; height: 75px; border-radius: 12px; object-fit: cover; background: white; flex-shrink: 0; }
+        .prod-name { font-size: 14px; font-weight: 600; color: #334155; }
 
-        /* Status & Loading */
-        #resultArea { display: none; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        #loader { display: none; text-align: center; padding: 20px; color: var(--orange); font-weight: 700; }
-        #errorMsg { display: none; text-align: center; padding: 15px; color: #E53E3E; background: #FFF5F5; border-radius: 12px; margin-top: 10px; }
+        #loader { display: none; text-align: center; color: var(--orange); font-weight: 700; padding: 20px; }
+        #errorMsg { display: none; text-align: center; color: #EF4444; background: #FEF2F2; padding: 15px; border-radius: 15px; margin-top: 10px; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-brand">
+    <div class="header">
         <h1>CFM TRACKING</h1>
+        <p>ตรวจสอบสถานะการจัดส่งพัสดุของคุณ</p>
     </div>
 
     <div class="search-card">
-        <span class="search-label">กรอกหมายเลขสั่งซื้อ</span>
-        <div class="search-group">
-            <input type="text" id="orderQuery" class="search-input" placeholder="ตัวอย่าง 123456" autocomplete="off">
-            <button class="btn-orange" onclick="trackOrder()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </button>
+        <label class="search-label">ระบุหมายเลขคำสั่งซื้อ</label>
+        <div class="search-input-group">
+            <input type="text" id="orderQuery" class="search-input" placeholder="เช่น 123456" autocomplete="off">
+            <button class="btn-search" onclick="trackOrder()">ค้นหา</button>
         </div>
     </div>
 
-    <div id="loader">กำลังค้นหาพัสดุ...</div>
-    <div id="errorMsg">⚠️ ไม่พบข้อมูลหมายเลขนี้ กรุณาลองใหม่</div>
+    <div id="loader">⏳ กำลังตรวจสอบข้อมูล...</div>
+    <div id="errorMsg">❌ ไม่พบหมายเลขพัสดุนี้ กรุณาตรวจสอบอีกครั้ง</div>
 
     <div id="resultArea">
-        <div class="messenger-card">
-            <div class="avatar-circle">🛵</div>
-            <div class="msg-info">
+        <div class="messenger-box">
+            <div class="m-icon">🛵</div>
+            <div class="m-info">
                 <b>พนักงานจัดส่ง</b>
                 <a href="tel:0941150250">คุณบุ๊ค 094-115-0250</a>
             </div>
         </div>
 
-        <div class="main-card">
-            <div class="cust-tag" id="displayOrderId">#------</div>
-            <div class="cust-name" id="displayName">คุณลูกค้า</div>
-            <div class="cust-tag" id="displayAddress" style="font-weight: 400;">📍 ที่อยู่จัดส่ง...</div>
+        <div class="status-card">
+            <div class="order-meta">
+                <div class="order-id" id="displayId">#------</div>
+                <div class="customer-name" id="displayName">คุณลูกค้า</div>
+                <div class="address" id="displayAddress">ที่อยู่จัดส่ง...</div>
+            </div>
 
-            <div class="timeline-box" id="timelineList"></div>
+            <div class="timeline" id="timelineList"></div>
 
-            <div class="prod-header">รายการสินค้า</div>
-            <div id="displayItems"></div>
+            <div class="prod-section">
+                <div class="prod-title">รายการสินค้า</div>
+                <div id="displayItems"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -152,27 +155,44 @@
     };
 
     function renderData(o) {
-        document.getElementById('displayOrderId').innerText = '#' + (o.orderid || '------');
+        document.getElementById('displayId').innerText = 'ORDER #' + (o.orderid || '------');
         document.getElementById('displayName').innerText = 'คุณ' + (o.name || 'ลูกค้า');
         document.getElementById('displayAddress').innerText = '📍 ' + (o.address || '-');
 
-        // Logic รูปสินค้า
-        const getImg = (name) => {
-            const n = String(name);
-            if(n.includes('ช็อก') && n.includes('10')) return 'https://down-th.img.susercontent.com/file/th-11134207-81zth-ml31p18567eo6d.webp';
+        // ฟังก์ชันเลือกรูปตามเงื่อนไขที่คุณต้องการ (ปรับปรุงใหม่)
+        const getImg = (itemName) => {
+            const name = String(itemName);
+            
+            // 1. ตรวจสอบ รสช็อกโกแลต 10 กล่อง (รูปเฉพาะ)
+            if (name.includes('ช็อกโกแลต') && name.includes('10')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134207-81zth-ml31p18567eo6d.webp';
+            }
+            // 2. ตรวจสอบ รสช็อกโกแลต อื่นๆ
+            if (name.includes('ช็อกโกแลต') || name.includes('ช็อก')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+            }
+            // 3. ตรวจสอบ รสจืด
+            if (name.includes('จืด')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+            }
+            // 4. ตรวจสอบ รสน้ำผึ้ง
+            if (name.includes('น้ำผึ้ง')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+            }
+            // รูป Default (รสจืด)
             return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
         };
 
         const items = Array.isArray(o.items) ? o.items : [o.items];
         document.getElementById('displayItems').innerHTML = items.map(it => `
             <div class="prod-item">
-                <img src="${getImg(it)}" class="prod-img" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/80?text=BOX'">
+                <img src="${getImg(it)}" class="prod-img" referrerpolicy="no-referrer">
                 <div class="prod-name">${it}</div>
             </div>
         `).join('');
 
-        // Timeline
-        const status = o.status; // pending, transit, delivered
+        // Timeline Setup
+        const status = o.status;
         const steps = [
             { id: 'pending', t: 'รับคำสั่งซื้อเรียบร้อย', d: o.createdAt },
             { id: 'transit', t: 'พนักงานกำลังนำส่งพัสดุ', d: o.transitAt },
@@ -189,15 +209,21 @@
                 if(s.id === 'pending') cls = 'active';
             }
 
-            let dateStr = '';
+            let dateShow = '';
             if(s.d) {
                 const dt = new Date(s.d);
-                dateStr = isNaN(dt) ? s.d : dt.toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) + ' น.';
+                dateShow = isNaN(dt) ? s.d : dt.toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) + ' น.';
             }
 
-            return `<div class="t-step ${cls}"><div class="t-title">${s.t}</div><div class="t-date">${dateStr}</div></div>`;
+            return `
+                <div class="step ${cls}">
+                    <div class="step-title">${s.t}</div>
+                    <div class="step-date">${dateShow}</div>
+                </div>
+            `;
         }).join('');
     }
 </script>
+
 </body>
 </html>
