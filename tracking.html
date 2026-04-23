@@ -1,103 +1,88 @@
 <style>
-    /* ส่วน CSS ที่เพิ่มใหม่สำหรับรูปภาพสินค้า */
+    /* ปรับแต่งส่วนรายการสินค้าให้เหมือนในรูปตัวอย่าง */
+    .product-list {
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 16px;
+        margin-top: 15px;
+    }
     .product-item {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 15px;
         background: white;
-        padding: 10px;
+        padding: 12px;
         border-radius: 12px;
-        margin-bottom: 8px;
-        border: 1px solid #f1f5f9;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
     }
     .product-img {
-        width: 60px;
-        height: 60px;
-        border-radius: 8px;
+        width: 70px; /* ปรับขนาดตามรูปตัวอย่าง */
+        height: 70px;
+        border-radius: 10px;
         object-fit: cover;
-        background: #eee;
+        background: #f1f5f9;
+        flex-shrink: 0;
     }
     .product-info {
         flex: 1;
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
         line-height: 1.4;
     }
 </style>
 
 <script type="module">
-    // ... (ส่วนการตั้งค่า Firebase เหมือนเดิม) ...
+    // ... (Firebase Config เหมือนเดิม) ...
 
     function showData(o) {
         document.getElementById('displayId').textContent = '#' + (o.orderid || '------');
         document.getElementById('displayName').textContent = 'คุณ ' + (o.name || 'ลูกค้า');
         document.getElementById('displayAddress').textContent = '📍 ' + (o.address || '-');
         
-        // ฟังก์ชันจับคู่รูปภาพตามชื่อสินค้า
+        // ฟังก์ชันจับคู่รูปภาพ (ปรับปรุงใหม่ให้แม่นยำขึ้น)
         const getProductImg = (itemName) => {
-            const name = itemName.toLowerCase();
-            if (name.includes('น้ำผึ้ง')) {
-                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
-            } else if (name.includes('ช็อกโกแลต') || name.includes('chocolate')) {
-                if (name.includes('10')) {
-                    return 'https://down-th.img.susercontent.com/file/th-11134207-81zth-ml31p18567eo6d.webp';
-                }
-                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
-            } else if (name.includes('จืด')) {
+            const name = String(itemName);
+            
+            // 1. ตรวจสอบ รสช็อกโกแลต 10 กล่อง (รูปเฉพาะ)
+            if (name.includes('ช็อกโกแลต') && name.includes('10')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134207-81zth-ml31p18567eo6d.webp';
+            }
+            // 2. ตรวจสอบ รสช็อกโกแลต อื่นๆ
+            if (name.includes('ช็อกโกแลต') || name.includes('ช็อก')) {
                 return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
             }
-            // รูป Default กรณีไม่พบเงื่อนไข
+            // 3. ตรวจสอบ รสจืด
+            if (name.includes('จืด')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+            }
+            // 4. ตรวจสอบ รสน้ำผึ้ง
+            if (name.includes('น้ำผึ้ง')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+            }
+            
+            // รูป Default (รสจืด)
             return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
         };
 
-        // สร้าง HTML สำหรับรายการสินค้า
         const itemsArray = Array.isArray(o.items) ? o.items : [o.items];
-        const itemsHtml = itemsArray.map(it => `
-            <div class="product-item">
-                <img src="${getProductImg(it)}" class="product-img" alt="product">
-                <div class="product-info">${it}</div>
-            </div>
-        `).join('');
+        const itemsHtml = itemsArray.map(it => {
+            if(!it) return ''; // กัน Error กรณีข้อมูลว่าง
+            return `
+                <div class="product-item">
+                    <img src="${getProductImg(it)}" 
+                         class="product-img" 
+                         onerror="this.src='https://via.placeholder.com/70?text=Product'"
+                         referrerpolicy="no-referrer">
+                    <div class="product-info">${it}</div>
+                </div>
+            `;
+        }).join('');
         
         document.getElementById('displayItems').innerHTML = itemsHtml;
 
-        // --- ส่วน Timeline เหมือนเดิม ---
-        const steps = [
-            { key: 'pending', title: 'รับคำสั่งซื้อเรียบร้อย', date: o.createdAt },
-            { key: 'transit', title: 'พนักงานกำลังนำส่งพัสดุ', date: o.transitAt || '' },
-            { key: 'delivered', title: 'จัดส่งสำเร็จ', date: o.deliveredAt || '' }
-        ];
-
-        let currentStatus = o.status;
-        let timelineHtml = '';
-
-        steps.forEach((step) => {
-            let statusClass = '';
-            if (currentStatus === 'delivered') {
-                statusClass = 'completed active';
-            } else if (currentStatus === 'transit') {
-                if (step.key === 'pending') statusClass = 'completed';
-                if (step.key === 'transit') statusClass = 'active';
-            } else {
-                if (step.key === 'pending') statusClass = 'active';
-            }
-
-            let dateShow = '';
-            if (step.date) {
-                const d = new Date(step.date);
-                dateShow = isNaN(d) ? step.date : d.toLocaleString('th-TH', { 
-                    year: 'numeric', month: 'short', day: 'numeric', 
-                    hour: '2-digit', minute: '2-digit' 
-                }) + ' น.';
-            }
-
-            timelineHtml += `
-                <div class="step ${statusClass}">
-                    <div class="step-title">${step.title}</div>
-                    <div class="step-date">${dateShow}</div>
-                </div>
-            `;
-        });
-        document.getElementById('timelineList').innerHTML = timelineHtml;
+        // ... (ส่วน Timeline คงเดิม) ...
     }
 </script>
