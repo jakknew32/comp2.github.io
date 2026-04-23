@@ -3,74 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CFM-FleetFlow — บุ๊ค (Full Version)</title>
+<title>CFM-FleetFlow — พนังงานส่งสินค้า (บุ๊ค)</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
-    --orange: #f85903; --orange-l: #fff3ee;
-    --green: #059669; --green-l: #d1fae5;
-    --yellow: #d97706; --yellow-l: #fef3c7;
-    --red: #dc2626; --red-l: #fef2f2;
+    --bg: #f0f4f8; --card: #ffffff; --border: #dde3ec; --s1: #f8fafc;
+    --orange: #f85903; --orange-l: #fff3ee; --orange-b: #fed7aa;
+    --cyan: #0891b2; --cyan-l: #ecfeff; --cyan-b: #a5f3fc;
+    --green: #059669; --green-l: #d1fae5; --green-b: #10b981;
+    --yellow: #d97706; --yellow-l: #fef3c7; --yellow-b: #f59e0b;
+    --red: #dc2626; --red-l: #fef2f2; --red-b: #fecaca;
     --blue: #2563eb; --blue-l: #dbeafe;
     --text: #1e293b; --muted: #64748b;
     --font: 'Kanit', sans-serif; --mono: 'JetBrains Mono', monospace;
   }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
   
-  nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:1000; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
-  .logo { font-family:var(--mono); font-weight:700; font-size:16px; color:var(--text); }
+  nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
   .logo em { color:var(--orange); font-style:normal; }
   
-  .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:20px; color:#fff; }
+  .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
   .ph-row { display: flex; justify-content: space-between; align-items: center; }
-  .ph-title { font-size:22px; font-weight:700; }
-  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .ph-title { font-size:24px; font-weight:700; }
+  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
-  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); position: sticky; top: 56px; z-index: 990; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-  .stat-cell { padding:12px 4px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
+  .stats-row { 
+    display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); 
+    position: sticky; top: 56px; z-index: 90; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+  .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
   .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
-  .sc-n { font-family:var(--mono); font-size:22px; font-weight:800; color:var(--orange); }
+  .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
   
-  .search-container { padding: 16px; max-width: 800px; margin: 0 auto; position: relative; z-index: 800; }
+  .search-container { padding: 16px 16px 0; max-width: 800px; margin: 0 auto; position: relative; }
   .search-wrapper { position: relative; display: flex; align-items: center; }
-  .search-input { width: 100%; padding: 14px 45px 14px 16px; border-radius: 12px; border: 2px solid var(--border); font-family: var(--font); font-size: 16px; outline: none; background: #fff; }
-  .btn-clear { position: absolute; right: 12px; background: #cbd5e1; color: #fff; border: none; width: 24px; height: 24px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
+  .search-input { width: 100%; padding: 12px 40px 12px 16px; border-radius: 12px; border: 1px solid var(--border); font-family: var(--font); font-size: 15px; outline: none; }
+  .btn-clear { position: absolute; right: 10px; background: #cbd5e1; color: white; border: none; width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
   .btn-clear.show { display: flex; }
 
-  .main { padding:0 16px 16px; max-width:800px; margin:0 auto; display: flex; flex-direction: column; }
-  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:16px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.04); position: relative; }
-  
-  .delivery-card.delivered { border-left:6px solid var(--green); background: #f0fdf4; }
-  .delivery-card.pending { border-left:6px solid var(--yellow); }
-  .delivery-card.transit { border-left:6px solid var(--blue); }
-  .delivery-card.failed { border-left:6px solid var(--red); }
+  .main { padding:16px; max-width:800px; margin:0 auto; display: flex; flex-direction: column; }
+  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .delivery-card.pending { border-left:4px solid var(--yellow); }
+  .delivery-card.transit { border-left:4px solid var(--blue); }
+  .delivery-card.delivered { border-left:4px solid var(--green); background:#f0fdf4; }
   
   .card-head { padding:16px; display:flex; justify-content:space-between; align-items: flex-start; }
-  .card-name { font-size:19px; font-weight:700; margin-top:4px; color: #0f172a; }
-  
-  /* ป้ายออเดอร์ใหม่ */
-  .badge-new { background: #ef4444; color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 800; margin-left: 8px; animation: flash 1.5s infinite; }
-  @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--text); display: flex; align-items: center; gap: 8px; line-height: 1; }
+  .card-date { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 400; }
+  .card-name { font-size:18px; font-weight:700; margin-top:6px; color: #0f172a; }
 
-  .delivered-time { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; background: #dcfce7; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+  .delivered-time { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; background: #dcfce7; padding: 2px 8px; border-radius: 4px; display: inline-block; }
 
-  .card-body { padding:0 16px 16px; }
-  .info-row { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:15px; }
-  .product-box { margin-top:10px; background:#f8fafc; padding:12px; border-radius:10px; border: 1px dashed #cbd5e1; }
-  .product-item { font-size:16px; font-weight:600; display:block; color: var(--orange); }
-
-  .card-foot { padding:14px 16px; background:#fff; display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
-  
-  .status-select { 
-    flex:1; padding:12px; border-radius:10px; border:2px solid var(--orange); 
-    font-family:var(--font); font-weight:700; font-size: 16px; 
-    background-color: #fff; color: var(--text); position: relative; z-index: 10;
+  .badge-new { 
+    background: linear-gradient(45deg, #ef4444, #dc2626); 
+    color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 20px; 
+    font-weight: 800; animation: pulse-red 2s infinite; 
   }
-  .btn-map { padding:12px 16px; border-radius:10px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none; }
+  @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); } }
   
-  #toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(0,0,0,0.9); color:#fff; padding:12px 24px; border-radius:50px; z-index:9999; transition:0.3s; opacity:0; }
+  .card-body { padding:0 16px 12px; }
+  .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:14px; }
+  .product-box { margin-top:6px; background:rgba(0,0,0,0.02); padding:12px; border-radius:12px; border: 1px dashed #cbd5e1; }
+  .product-item { font-size:19px; font-weight:700; color:var(--orange); margin-bottom:4px; display:block; }
+  
+  .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
+  .status-select { 
+    flex:1; padding:12px; border-radius:12px; border:2px solid var(--border); 
+    background:#fff; font-family:var(--font); font-weight:700; font-size: 16px; color: var(--text);
+  }
+  
+  #toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(30,41,59,0.95); color:#fff; padding:14px 28px; border-radius:100px; font-size:14px; font-weight:600; z-index:9999; opacity:0; transition:0.4s; }
   #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 </style>
 </head>
@@ -78,22 +82,22 @@
 
 <nav>
   <div class="logo"><em>CFM</em>FLEET FLOW</div>
-  <span style="font-weight: 700;">🛵 บุ๊ค</span>
+  <span style="font-weight: 700; color: var(--text);">🛵 บุ๊ค</span>
 </nav>
 
 <div class="page-head">
   <div class="ph-row">
-    <div class="ph-title">รายการงาน</div>
-    <button class="btn-refresh" onclick="location.reload()">🔄 รีเฟรช</button>
+    <div class="ph-title">งานจัดส่งของคุณ</div>
+    <button class="btn-refresh" onclick="window.location.reload(true)">🔄 รีเฟรช</button>
   </div>
-  <div id="dateDisplay" style="margin-top:5px; font-size:14px; opacity:0.9;"></div>
+  <div id="dateDisplay" style="font-size: 14px; opacity: 0.8; margin-top: 4px;"></div>
 </div>
 
 <div class="stats-row" id="statsRow"></div>
 
 <div class="search-container">
   <div class="search-wrapper">
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาทุกอย่าง...">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหา (ชื่อ, เบอร์, สินค้า)...">
     <button id="btnClear" class="btn-clear" onclick="clearSearch()">✕</button>
   </div>
 </div>
@@ -125,32 +129,28 @@ let currentFilter = 'pending';
 
 onValue(ordersRef, snap => {
   const data = snap.val() || {};
-  orders = Object.entries(data).map(([fbKey, o]) => ({ 
-    ...o, 
-    _fbKey: fbKey 
-  }));
+  orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
   renderAll();
 });
 
-window.changeStatus = (fbKey, newStatus) => {
-  const statusLabels = { pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ', failed:'ไม่สำเร็จ' };
-  if(confirm(`ยืนยันเปลี่ยนเป็น [${statusLabels[newStatus]}] ?`)) {
-    let updateData = { status: newStatus };
-    if (newStatus === 'delivered') {
+window.changeStatus = (fbKey, s) => {
+  if(confirm('ยืนยันเปลี่ยนสถานะ?')) {
+    let updateData = { status: s };
+    if (s === 'delivered') {
       updateData.deliveredAt = new Date().toLocaleString('th-TH');
-      updateData.deliveredTimestamp = Date.now(); // เก็บไว้ใช้เรียงลำดับ
+      updateData.deliveredTS = Date.now();
     } else {
       updateData.deliveredAt = null;
-      updateData.deliveredTimestamp = null;
+      updateData.deliveredTS = null;
     }
-    update(ref(db, 'orders/'+fbKey), updateData).then(() => showToast('✅ บันทึกแล้ว'));
+    update(ref(db, 'orders/'+fbKey), updateData).then(() => showToast('🔄 อัปเดตเรียบร้อย'));
   } else {
     renderCards();
   }
 };
 
-window.setFilter = (f) => { currentFilter = f; renderAll(); };
-window.clearSearch = () => { document.getElementById('searchInput').value = ''; renderCards(); };
+window.setFilter = (f) => { currentFilter=f; renderAll(); };
+window.clearSearch = () => { document.getElementById('searchInput').value = ''; document.getElementById('btnClear').classList.remove('show'); renderCards(); };
 
 document.getElementById('searchInput').addEventListener('input', (e) => {
   document.getElementById('btnClear').classList.toggle('show', e.target.value !== '');
@@ -160,68 +160,46 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 function renderAll(){ renderStats(); renderCards(); }
 
 function renderStats(){
-  const s = { 
-    total: orders.length, 
-    pending: orders.filter(o=>o.status==='pending').length, 
-    transit: orders.filter(o=>o.status==='transit').length, 
-    delivered: orders.filter(o=>o.status==='delivered').length 
-  };
-  const ui = [{n:s.total, l:'ทั้งหมด', f:'all'}, {n:s.pending, l:'รอส่ง', f:'pending'}, {n:s.transit, l:'กำลังส่ง', f:'transit'}, {n:s.delivered, l:'สำเร็จ', f:'delivered'}];
-  document.getElementById('statsRow').innerHTML = ui.map(i => `
-    <div class="stat-cell ${currentFilter===i.f?'active':''}" onclick="window.setFilter('${i.f}')">
-      <div class="sc-n">${i.n}</div>
-      <div style="font-size:11px; font-weight:700; color:var(--muted)">${i.l}</div>
-    </div>`).join('');
+  const s = { total: orders.length, pending: orders.filter(o=>o.status==='pending').length, transit: orders.filter(o=>o.status==='transit').length, delivered: orders.filter(o=>o.status==='delivered').length };
+  document.getElementById('statsRow').innerHTML = [{n:s.total, l:'ทั้งหมด', f:'all'}, {n:s.pending, l:'รอส่ง', f:'pending'}, {n:s.transit, l:'กำลังส่ง', f:'transit'}, {n:s.delivered, l:'สำเร็จ', f:'delivered'}].map(i => `<div class="stat-cell ${currentFilter===i.f?'active':''}" onclick="window.setFilter('${i.f}')"><div class="sc-n">${i.n}</div><div style="font-size:12px;color:var(--muted)">${i.l}</div></div>`).join('');
 }
 
 function renderCards(){
   const now = Date.now();
   const searchStr = document.getElementById('searchInput').value.toLowerCase();
-  let filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
+  let filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
   
   if(searchStr) {
     filtered = filtered.filter(o => JSON.stringify(o).toLowerCase().includes(searchStr));
   }
 
-  // --- LOGIC การเรียงลำดับ (แก้ไขใหม่) ---
+  // เรียงสำเร็จล่าสุดไว้บน
   filtered.sort((a, b) => {
-    // 1. ถ้าส่งสำเร็จ ให้เรียงตามเวลาที่สำเร็จ (ล่าสุดขึ้นก่อน)
-    if (a.status === 'delivered' && b.status === 'delivered') {
-      return (b.deliveredTimestamp || 0) - (a.deliveredTimestamp || 0);
-    }
-    // 2. ให้รายการที่สำเร็จอยู่บนสุดเสมอ (ตามที่คุณสั่งไว้ก่อนหน้า)
+    if (a.status === 'delivered' && b.status === 'delivered') return (b.deliveredTS || 0) - (a.deliveredTS || 0);
     if (a.status === 'delivered') return -1;
     if (b.status === 'delivered') return 1;
-    
-    // 3. รายการที่เหลือ (รอส่ง) ให้เอาอันที่ "ใหม่กว่า" (เพิ่งสร้าง) ขึ้นก่อน
-    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return timeB - timeA;
+    return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
-  const html = filtered.map(o => {
-    const createdAt = o.createdAt ? new Date(o.createdAt).getTime() : 0;
-    const isNew = (now - createdAt) < (24 * 60 * 60 * 1000); // ใหม่ถ้าไม่เกิน 24 ชม.
-    const isSuccess = o.status === 'delivered';
-
+  document.getElementById('mainGrid').innerHTML = filtered.map(o=> {
+    const isNew = (now - new Date(o.createdAt).getTime()) < (24 * 3600 * 1000);
     return `
     <div class="delivery-card ${o.status}">
       <div class="card-head">
         <div>
-          <div style="font-family:var(--mono); font-weight:700; font-size:14px; color:var(--muted);">
-            #${o.orderid || o._fbKey.substring(0,5)}
-            ${isNew && !isSuccess ? '<span class="badge-new">NEW</span>' : ''}
+          <div class="card-id">
+            #${o.orderid || o._fbKey.substring(0,6)}
+            ${isNew && o.status !== 'delivered' ? '<span class="badge-new">NEW</span>' : ''}
           </div>
-          <div class="card-name">${o.name || 'ไม่ระบุชื่อ'}</div>
-          ${isSuccess && o.deliveredAt ? `<div class="delivered-time">✅ สำเร็จเมื่อ: ${o.deliveredAt}</div>` : ''}
+          <div class="card-date">🕒 เพิ่มเมื่อ: ${new Date(o.createdAt).toLocaleString('th-TH')}</div>
+          <div class="card-name">${o.name || 'ไม่ระบุ'}</div>
+          ${o.status === 'delivered' ? `<div class="delivered-time">✅ สำเร็จเมื่อ: ${o.deliveredAt}</div>` : ''}
         </div>
       </div>
       <div class="card-body">
         <div class="info-row">📍 ${o.address || '-'}</div>
-        <div class="info-row">📞 <a href="tel:${o.phone}" style="color:var(--orange); font-weight:800; text-decoration:none;">${o.phone || '-'}</a></div>
-        <div class="product-box">
-          ${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : `<span class="product-item">1. ${o.items||'-'}</span>`}
-        </div>
+        <div class="info-row">📞 <a href="tel:${o.phone}" style="color:var(--orange); font-weight:700;">${o.phone || '-'}</a></div>
+        <div class="product-box">${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : `<span class="product-item">${o.items}</span>`}</div>
       </div>
       <div class="card-foot">
         <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
@@ -230,19 +208,14 @@ function renderCards(){
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
           <option value="failed" ${o.status==='failed'?'selected':''}>❌ ไม่สำเร็จ</option>
         </select>
-        ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" class="btn-map">📍 แผนที่</a>` : ''}
+        ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" style="padding:12px 20px; border-radius:12px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none;">แผนที่</a>` : ''}
       </div>
     </div>`;
-  }).join('');
-
-  document.getElementById('mainGrid').innerHTML = html || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่พบรายการ</div>';
+  }).join('') || '<div style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการ</div>';
 }
 
-function showToast(msg){ 
-  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); 
-  setTimeout(()=>t.classList.remove('show'), 2000); 
-}
-document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long', day:'numeric', month:'long'});
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show'; setTimeout(()=>t.className='',2500); }
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long'});
 </script>
 </body>
 </html>
