@@ -34,9 +34,13 @@
   .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
   .sc-n { font-family:var(--mono); font-size:22px; font-weight:800; color:var(--orange); }
   
-  .search-container { padding: 16px; max-width: 800px; margin: 0 auto; }
-  .search-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid var(--border); font-family: var(--font); font-size: 16px; outline: none; }
-  .search-input:focus { border-color: var(--orange); }
+  /* ช่องค้นหาแบบมีปุ่มลบ */
+  .search-container { padding: 16px; max-width: 800px; margin: 0 auto; position: relative; }
+  .search-wrapper { position: relative; display: flex; align-items: center; }
+  .search-input { width: 100%; padding: 12px 45px 12px 16px; border-radius: 12px; border: 2px solid var(--border); font-family: var(--font); font-size: 16px; outline: none; transition: 0.2s; }
+  .search-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-l); }
+  .btn-clear { position: absolute; right: 12px; background: #e2e8f0; color: #64748b; border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 14px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; }
+  .btn-clear.show { display: flex; }
 
   .main { padding:0 16px 16px; max-width:800px; margin:0 auto; }
   .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:16px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.04); }
@@ -50,7 +54,6 @@
   .card-name { font-size:18px; font-weight:700; margin-top:6px; color: #0f172a; }
 
   .delivered-time { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; background: var(--green-l); display: inline-block; padding: 2px 8px; border-radius: 4px; }
-
   .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
   .status-pending { background: var(--yellow-l); color: var(--yellow); }
   .status-transit { background: var(--blue-l); color: var(--blue); }
@@ -90,7 +93,10 @@
 <div class="stats-row" id="statsRow"></div>
 
 <div class="search-container">
-  <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อ, เบอร์ หรือเลขออเดอร์...">
+  <div class="search-wrapper">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาทุกอย่าง (ชื่อ, เบอร์, ออเดอร์, สินค้า)...">
+    <button id="btnClear" class="btn-clear" onclick="clearSearch()">✕</button>
+  </div>
 </div>
 
 <div class="main" id="mainGrid"></div>
@@ -140,7 +146,21 @@ window.changeStatus = (fbKey, newStatus) => {
 };
 
 window.setFilter = (f) => { currentFilter = f; renderAll(); };
-document.getElementById('searchInput').addEventListener('input', renderCards);
+
+// ฟังก์ชันล้างข้อความค้นหา
+window.clearSearch = () => {
+  const input = document.getElementById('searchInput');
+  input.value = '';
+  document.getElementById('btnClear').classList.remove('show');
+  renderCards();
+  input.focus();
+};
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const btn = document.getElementById('btnClear');
+  e.target.value ? btn.classList.add('show') : btn.classList.remove('show');
+  renderCards();
+});
 
 function renderAll(){ renderStats(); renderCards(); }
 
@@ -151,12 +171,7 @@ function renderStats(){
     transit: orders.filter(o=>o.status==='transit').length, 
     delivered: orders.filter(o=>o.status==='delivered').length 
   };
-  const ui = [
-    {n:s.total, l:'ทั้งหมด', f:'all'},
-    {n:s.pending, l:'รอส่ง', f:'pending'},
-    {n:s.transit, l:'กำลังส่ง', f:'transit'},
-    {n:s.delivered, l:'สำเร็จ', f:'delivered'}
-  ];
+  const ui = [{n:s.total, l:'ทั้งหมด', f:'all'}, {n:s.pending, l:'รอส่ง', f:'pending'}, {n:s.transit, l:'กำลังส่ง', f:'transit'}, {n:s.delivered, l:'สำเร็จ', f:'delivered'}];
   document.getElementById('statsRow').innerHTML = ui.map(i => `
     <div class="stat-cell ${currentFilter===i.f?'active':''}" onclick="window.setFilter('${i.f}')">
       <div class="sc-n">${i.n}</div>
@@ -170,23 +185,19 @@ function renderCards(){
   let filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
   
   if(searchStr) {
-    filtered = filtered.filter(o => 
-      (o.name||'').toLowerCase().includes(searchStr) || 
-      (o.phone||'').includes(searchStr) || 
-      (o.orderid||'').toLowerCase().includes(searchStr)
-    );
+    filtered = filtered.filter(o => {
+      // ค้นหาทุกฟิลด์รวมถึงรายการสินค้าใน Array
+      const itemText = Array.isArray(o.items) ? o.items.join(' ') : (o.items || '');
+      const allContent = `${o.name} ${o.phone} ${o.orderid} ${o.address} ${itemText} ${o.deliveredAt || ''}`.toLowerCase();
+      return allContent.includes(searchStr);
+    });
   }
 
   const html = filtered.reverse().map(o => {
     const orderDate = new Date(o.createdAt || Date.now());
     const dueDate = new Date(orderDate); dueDate.setDate(dueDate.getDate()+3);
     const isOverdue = now > dueDate && o.status !== 'delivered';
-    const statusMap = {
-      pending: { t: 'รอส่ง', c: 'status-pending' },
-      transit: { t: 'กำลังส่ง', c: 'status-transit' },
-      delivered: { t: 'สำเร็จ', c: 'status-delivered' },
-      failed: { t: 'ไม่สำเร็จ', c: 'status-failed' }
-    };
+    const statusMap = { pending: {t:'รอส่ง',c:'status-pending'}, transit: {t:'กำลังส่ง',c:'status-transit'}, delivered: {t:'สำเร็จ',c:'status-delivered'}, failed: {t:'ไม่สำเร็จ',c:'status-failed'} };
     const st = statusMap[o.status] || statusMap.pending;
 
     return `
@@ -220,7 +231,7 @@ function renderCards(){
     </div>`;
   }).join('');
 
-  document.getElementById('mainGrid').innerHTML = html || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่มีรายการ</div>';
+  document.getElementById('mainGrid').innerHTML = html || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่มีรายการที่ค้นหา</div>';
 }
 
 function showToast(msg){ 

@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CFM-FleetFlow — พนังงานส่งสินค้า (บุ๊ค)</title>
+<title>CFM-FleetFlow — พนักงานส่งสินค้า (บุ๊ค)</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f0f4f8; --card: #ffffff; --border: #dde3ec; --s1: #f8fafc;
+    --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; --s1: #f1f5f9;
     --orange: #f85903; --orange-l: #fff3ee; --orange-b: #fed7aa;
     --cyan: #0891b2; --cyan-l: #ecfeff; --cyan-b: #a5f3fc;
     --green: #059669; --green-l: #d1fae5; --green-b: #10b981;
@@ -18,85 +18,60 @@
     --font: 'Kanit', sans-serif; --mono: 'JetBrains Mono', monospace;
   }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
   
   nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
-  .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
+  .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:1px; color:var(--text); }
   .logo em { color:var(--orange); font-style:normal; }
   
-  .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
+  .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:20px; color:#fff; }
   .ph-row { display: flex; justify-content: space-between; align-items: center; }
-  .ph-title { font-size:24px; font-weight:700; }
-  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .ph-title { font-size:22px; font-weight:700; }
+  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
 
-  /* ปรับแถบสถานะให้ค้าง (Sticky) เมื่อเลื่อนจอ */
-  .stats-row { 
-    display:grid; 
-    grid-template-columns:repeat(4,1fr); 
-    background:#fff; 
-    border-bottom:1px solid var(--border); 
-    position: sticky; 
-    top: 56px; /* ให้ต่อจาก nav ที่สูง 56px พอดี */
-    z-index: 90; /* ให้อยู่เหนือการ์ด */
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); /* เพิ่มเงาตอนเลื่อนให้ดูมีมิติ */
-  }
-  .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); position: sticky; top: 56px; z-index: 90; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+  .stat-cell { padding:12px 4px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
   .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
-  .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
+  .sc-n { font-family:var(--mono); font-size:22px; font-weight:800; color:var(--orange); }
   
-  .search-container { padding: 16px 16px 0; max-width: 800px; margin: 0 auto; }
-  .search-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); font-family: var(--font); font-size: 15px; outline: none; transition: border-color 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
-  .search-input:focus { border-color: var(--orange); }
+  /* ช่องค้นหาแบบมีปุ่มลบ */
+  .search-container { padding: 16px; max-width: 800px; margin: 0 auto; position: relative; }
+  .search-wrapper { position: relative; display: flex; align-items: center; }
+  .search-input { width: 100%; padding: 12px 45px 12px 16px; border-radius: 12px; border: 2px solid var(--border); font-family: var(--font); font-size: 16px; outline: none; transition: 0.2s; }
+  .search-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-l); }
+  .btn-clear { position: absolute; right: 12px; background: #e2e8f0; color: #64748b; border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 14px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; }
+  .btn-clear.show { display: flex; }
 
-  .main { padding:16px; max-width:800px; margin:0 auto; }
-  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
-  .delivery-card.pending { border-left:4px solid var(--yellow); }
-  .delivery-card.delivered { border-left:4px solid var(--green); background:#f0fdf4; }
+  .main { padding:0 16px 16px; max-width:800px; margin:0 auto; }
+  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:16px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.04); }
+  .delivery-card.pending { border-left:6px solid var(--yellow); }
+  .delivery-card.transit { border-left:6px solid var(--blue); }
+  .delivery-card.delivered { border-left:6px solid var(--green); background: #fcfdfd; }
   
   .card-head { padding:16px; display:flex; justify-content:space-between; align-items: flex-start; }
-  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--text); display: flex; align-items: center; gap: 8px; line-height: 1; }
-  .card-date { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 400; }
+  .card-id { font-family:var(--mono); font-size:17px; font-weight:700; color:var(--text); display: flex; align-items: center; gap: 6px; }
+  .card-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .card-name { font-size:18px; font-weight:700; margin-top:6px; color: #0f172a; }
 
-  .status-badge {
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    display: inline-block;
-  }
-  .status-pending { background: var(--yellow-l); color: var(--yellow); border: 1px solid #fde68a; }
-  .status-transit { background: var(--blue-l); color: var(--blue); border: 1px solid #bfdbfe; }
-  .status-delivered { background: var(--green-l); color: var(--green); border: 1px solid #a7f3d0; }
-  .status-failed { background: var(--red-l); color: var(--red); border: 1px solid #fecaca; }
+  .delivered-time { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; background: var(--green-l); display: inline-block; padding: 2px 8px; border-radius: 4px; }
+  .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .status-pending { background: var(--yellow-l); color: var(--yellow); }
+  .status-transit { background: var(--blue-l); color: var(--blue); }
+  .status-delivered { background: var(--green-l); color: var(--green); }
 
-  .badge-new { 
-    background: linear-gradient(45deg, #ef4444, #dc2626); 
-    color: #fff; 
-    font-size: 10px; 
-    padding: 3px 8px; 
-    border-radius: 20px; 
-    font-weight: 800; 
-    box-shadow: 0 2px 5px rgba(220, 38, 38, 0.3);
-    animation: pulse-red 2s infinite; 
-  }
-  @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); } }
+  .card-body { padding:0 16px 16px; }
+  .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #f8fafc; font-size:14px; align-items: center; }
+  .product-box { margin-top:8px; background:var(--s1); padding:10px; border-radius:10px; border: 1px dashed #cbd5e1; }
+  .product-item { font-size:15px; font-weight:600; color:var(--text); display:block; }
   
-  .card-body { padding:0 16px 12px; }
-  .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:14px; }
-  .product-label { font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 12px; display: block; }
-  .product-box { margin-top:6px; background:rgba(0,0,0,0.02); padding:12px; border-radius:12px; border: 1px dashed #cbd5e1; }
-  .product-item { font-size:19px; font-weight:700; color:var(--orange); margin-bottom:4px; display:block; }
-  
-  .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--cyan-l); border:1px solid var(--cyan-b); color:var(--cyan); padding:6px 14px; border-radius:100px; font-size:14px; font-weight:700; margin-top:12px; }
+  .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--s1); padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; margin-top:10px; }
+  .due-tag.overdue { background: var(--red-l); color: var(--red); }
 
-  .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
-  .status-select { flex:1; padding:12px; border-radius:12px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; font-size: 15px; color: var(--text); }
+  .card-foot { padding:12px 16px; background:#fff; display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
+  .status-select { flex:1; padding:10px; border-radius:8px; border:2px solid var(--border); font-family:var(--font); font-weight:700; font-size: 14px; }
+  .btn-map { padding:10px 16px; border-radius:8px; background:var(--green); color:#fff; font-size:13px; font-weight:700; text-decoration:none; }
   
-  #toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(30,41,59,0.95); color:#fff; padding:14px 28px; border-radius:100px; font-size:14px; font-weight:600; z-index:9999; opacity:0; transition:0.4s; }
+  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:10px; z-index:1000; transition:0.3s; opacity:0; font-size:13px; }
   #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 </style>
 </head>
@@ -104,21 +79,24 @@
 
 <nav>
   <div class="logo"><em>CFM</em>FLEET FLOW</div>
-  <span class="courier-badge" style="font-weight: 700; color: var(--text);">🛵 พนักงานส่งสินค้า (บุ๊ค)</span>
+  <span style="font-weight: 700; font-size: 13px;">🛵 พนักงาน: บุ๊ค</span>
 </nav>
 
 <div class="page-head">
   <div class="ph-row">
-    <div class="ph-title">งานจัดส่งของคุณ</div>
-    <button class="btn-refresh" onclick="window.location.reload(true)">🔄 รีเฟรช</button>
+    <div class="ph-title">รายการส่งสินค้า</div>
+    <button class="btn-refresh" onclick="location.reload()">🔄 รีเฟรช</button>
   </div>
-  <div id="dateDisplay" style="font-size: 14px; opacity: 0.8; margin-top: 4px;"></div>
+  <div id="dateDisplay" style="font-size: 13px; opacity: 0.8; margin-top: 4px;"></div>
 </div>
 
 <div class="stats-row" id="statsRow"></div>
 
 <div class="search-container">
-  <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหารายการ (ชื่อ, เบอร์, ออเดอร์, สินค้า)...">
+  <div class="search-wrapper">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาทุกอย่าง (ชื่อ, เบอร์, ออเดอร์, สินค้า)...">
+    <button id="btnClear" class="btn-clear" onclick="clearSearch()">✕</button>
+  </div>
 </div>
 
 <div class="main" id="mainGrid"></div>
@@ -152,84 +130,94 @@ onValue(ordersRef, snap => {
   renderAll();
 });
 
-// ฟังก์ชันอัปเดตสถานะ (ปรับให้ส่งสถานะตรงๆ ไม่ต้องเปิด Modal)
-window.changeStatus = (fbKey, s) => {
-  let updateData = { status: s };
-  if (s === 'delivered') {
-    updateData.deliveredAt = new Date().toLocaleString('th-TH');
+window.changeStatus = (fbKey, newStatus) => {
+  const statusLabels = { pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ', failed:'ไม่สำเร็จ' };
+  if(confirm(`ยืนยันการเปลี่ยนเป็น [${statusLabels[newStatus]}] ?`)) {
+    let updateData = { status: newStatus };
+    if (newStatus === 'delivered') {
+      updateData.deliveredAt = new Date().toLocaleString('th-TH', {
+        day:'2-digit', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit'
+      }) + " น.";
+    }
+    update(ref(db, 'orders/'+fbKey), updateData).then(() => showToast('✅ อัปเดตแล้ว'));
+  } else {
+    renderCards();
   }
-  update(ref(db, 'orders/'+fbKey), updateData).then(() => {
-    showToast('🔄 อัปเดตสถานะเรียบร้อยแล้ว');
-  });
 };
 
-// Event Listener สำหรับช่องค้นหา
-document.getElementById('searchInput').addEventListener('input', () => {
+window.setFilter = (f) => { currentFilter = f; renderAll(); };
+
+// ฟังก์ชันล้างข้อความค้นหา
+window.clearSearch = () => {
+  const input = document.getElementById('searchInput');
+  input.value = '';
+  document.getElementById('btnClear').classList.remove('show');
+  renderCards();
+  input.focus();
+};
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const btn = document.getElementById('btnClear');
+  e.target.value ? btn.classList.add('show') : btn.classList.remove('show');
   renderCards();
 });
 
 function renderAll(){ renderStats(); renderCards(); }
 
 function renderStats(){
-  const s = { total: orders.length, pending: orders.filter(o=>o.status==='pending').length, transit: orders.filter(o=>o.status==='transit').length, delivered: orders.filter(o=>o.status==='delivered').length };
-  document.getElementById('statsRow').innerHTML = [{n:s.total, l:'ทั้งหมด', f:'all'}, {n:s.pending, l:'รอส่ง', f:'pending'}, {n:s.transit, l:'กำลังส่ง', f:'transit'}, {n:s.delivered, l:'สำเร็จ', f:'delivered'}].map(i => `<div class="stat-cell ${currentFilter===i.f?'active':''}" onclick="window.setFilter('${i.f}')"><div class="sc-n">${i.n}</div><div style="font-size:12px;color:var(--muted)">${i.l}</div></div>`).join('');
+  const s = { 
+    total: orders.length, 
+    pending: orders.filter(o=>o.status==='pending').length, 
+    transit: orders.filter(o=>o.status==='transit').length, 
+    delivered: orders.filter(o=>o.status==='delivered').length 
+  };
+  const ui = [{n:s.total, l:'ทั้งหมด', f:'all'}, {n:s.pending, l:'รอส่ง', f:'pending'}, {n:s.transit, l:'กำลังส่ง', f:'transit'}, {n:s.delivered, l:'สำเร็จ', f:'delivered'}];
+  document.getElementById('statsRow').innerHTML = ui.map(i => `
+    <div class="stat-cell ${currentFilter===i.f?'active':''}" onclick="window.setFilter('${i.f}')">
+      <div class="sc-n">${i.n}</div>
+      <div style="font-size:10px; font-weight:600; color:var(--muted)">${i.l}</div>
+    </div>`).join('');
 }
-
-window.setFilter = (f) => { currentFilter=f; renderAll(); };
 
 function renderCards(){
   const now = new Date();
   const searchStr = document.getElementById('searchInput').value.toLowerCase();
-  
   let filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
   
-  // กรองตามการค้นหาจากทุกตัวอักษร
   if(searchStr) {
-    filtered = filtered.filter(o => JSON.stringify(o).toLowerCase().includes(searchStr));
+    filtered = filtered.filter(o => {
+      // ค้นหาทุกฟิลด์รวมถึงรายการสินค้าใน Array
+      const itemText = Array.isArray(o.items) ? o.items.join(' ') : (o.items || '');
+      const allContent = `${o.name} ${o.phone} ${o.orderid} ${o.address} ${itemText} ${o.deliveredAt || ''}`.toLowerCase();
+      return allContent.includes(searchStr);
+    });
   }
 
-  document.getElementById('mainGrid').innerHTML = filtered.reverse().map(o=> {
-    const displayId = o.orderid || o._fbKey.substring(0,6);
-    const orderDate = new Date(o.createdAt);
-    
-    const formattedDate = orderDate.toLocaleDateString('th-TH', { 
-        day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' 
-    }) + " น.";
-
-    const dueDate = new Date(o.createdAt); dueDate.setDate(dueDate.getDate()+3);
+  const html = filtered.reverse().map(o => {
+    const orderDate = new Date(o.createdAt || Date.now());
+    const dueDate = new Date(orderDate); dueDate.setDate(dueDate.getDate()+3);
     const isOverdue = now > dueDate && o.status !== 'delivered';
-
-    const diffTime = Math.abs(now - orderDate);
-    const diffHours = diffTime / (1000 * 60 * 60);
-    const isNew = diffHours <= 24;
-
-    let statusText = 'รอส่ง';
-    let statusClass = 'status-pending';
-    if(o.status === 'transit') { statusText = 'กำลังส่ง'; statusClass = 'status-transit'; }
-    if(o.status === 'delivered') { statusText = 'สำเร็จ'; statusClass = 'status-delivered'; }
-    if(o.status === 'failed') { statusText = 'ไม่สำเร็จ'; statusClass = 'status-failed'; }
+    const statusMap = { pending: {t:'รอส่ง',c:'status-pending'}, transit: {t:'กำลังส่ง',c:'status-transit'}, delivered: {t:'สำเร็จ',c:'status-delivered'}, failed: {t:'ไม่สำเร็จ',c:'status-failed'} };
+    const st = statusMap[o.status] || statusMap.pending;
 
     return `
     <div class="delivery-card ${o.status}">
       <div class="card-head">
         <div>
-          <div class="card-id">
-            #${displayId}
-            ${isNew ? '<span class="badge-new">NEW</span>' : ''}
-          </div>
-          <div class="card-date">🕒 เพิ่มเมื่อ: ${formattedDate}</div>
+          <div class="card-id">#${o.orderid || o._fbKey.substring(0,6)}</div>
+          <div class="card-date">🕒 รับงาน: ${orderDate.toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} น.</div>
           <div class="card-name">${o.name || 'ไม่ระบุ'}</div>
+          ${o.status === 'delivered' && o.deliveredAt ? `<div class="delivered-time">✅ สำเร็จเมื่อ: ${o.deliveredAt}</div>` : ''}
         </div>
-        <div class="status-badge ${statusClass}">${statusText}</div>
+        <div class="status-badge ${st.c}">${st.t}</div>
       </div>
       <div class="card-body">
         <div class="info-row">📍 ${o.address || '-'}</div>
-        <div class="info-row">📞 <a href="tel:${o.phone}" style="color:var(--orange); font-weight:700;">${o.phone || '-'}</a></div>
-        
-        <span class="product-label">📦 รายการจัดส่ง</span>
-        <div class="product-box">${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : o.items}</div>
-        
-        <div class="due-tag ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ เลยกำหนด' : '📅 กำหนดส่ง: '+dueDate.toLocaleDateString('th-TH')}</div>
+        <div class="info-row">📞 <a href="tel:${o.phone}" style="color:var(--orange); font-weight:800; text-decoration:none;">${o.phone || '-'}</a></div>
+        <div class="product-box">
+          ${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : `<span class="product-item">${o.items||'-'}</span>`}
+        </div>
+        ${o.status !== 'delivered' ? `<div class="due-tag ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ เลยกำหนด!' : '📅 กำหนดส่ง: ' + dueDate.toLocaleDateString('th-TH')}</div>` : ''}
       </div>
       <div class="card-foot">
         <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
@@ -238,14 +226,19 @@ function renderCards(){
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
           <option value="failed" ${o.status==='failed'?'selected':''}>❌ ไม่สำเร็จ</option>
         </select>
-        ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" style="padding:12px 20px; border-radius:12px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none;">แผนที่</a>` : ''}
+        ${o.mapsLink ? `<a href="${o.mapsLink}" target="_blank" class="btn-map">แผนที่</a>` : ''}
       </div>
     </div>`;
-  }).join('') || '<div style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการที่ค้นหา</div>';
+  }).join('');
+
+  document.getElementById('mainGrid').innerHTML = html || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่มีรายการที่ค้นหา</div>';
 }
 
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show'; setTimeout(()=>t.className='',2500); }
-document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long'});
+function showToast(msg){ 
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); 
+  setTimeout(()=>t.classList.remove('show'), 2000); 
+}
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long', day:'numeric', month:'long'});
 </script>
 </body>
 </html>
