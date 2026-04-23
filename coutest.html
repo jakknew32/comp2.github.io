@@ -1,55 +1,193 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CFM-FleetFlow — พนักงานส่งสินค้า (บุ๊ค)</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  /* เพิ่มสไตล์สำหรับเวลาที่สำเร็จ */
-  .delivered-time {
-    font-size: 12px;
-    color: var(--green);
-    font-weight: 600;
-    margin-top: 4px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  :root {
+    --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; --s1: #f1f5f9;
+    --orange: #f85903; --orange-l: #fff3ee; --orange-b: #fed7aa;
+    --cyan: #0891b2; --cyan-l: #ecfeff; --cyan-b: #a5f3fc;
+    --green: #059669; --green-l: #d1fae5; --green-b: #10b981;
+    --yellow: #d97706; --yellow-l: #fef3c7; --yellow-b: #f59e0b;
+    --red: #dc2626; --red-l: #fef2f2; --red-b: #fecaca;
+    --blue: #2563eb; --blue-l: #dbeafe;
+    --text: #1e293b; --muted: #64748b;
+    --font: 'Kanit', sans-serif; --mono: 'JetBrains Mono', monospace;
   }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
+  
+  nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:1px; color:var(--text); }
+  .logo em { color:var(--orange); font-style:normal; }
+  
+  .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:20px; color:#fff; }
+  .ph-row { display: flex; justify-content: space-between; align-items: center; }
+  .ph-title { font-size:22px; font-weight:700; }
+  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); position: sticky; top: 56px; z-index: 90; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+  .stat-cell { padding:12px 4px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
+  .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
+  .sc-n { font-family:var(--mono); font-size:22px; font-weight:800; color:var(--orange); }
+  
+  .search-container { padding: 16px; max-width: 800px; margin: 0 auto; }
+  .search-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid var(--border); font-family: var(--font); font-size: 16px; outline: none; }
+  .search-input:focus { border-color: var(--orange); }
+
+  .main { padding:0 16px 16px; max-width:800px; margin:0 auto; }
+  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:16px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.04); }
+  .delivery-card.pending { border-left:6px solid var(--yellow); }
+  .delivery-card.transit { border-left:6px solid var(--blue); }
+  .delivery-card.delivered { border-left:6px solid var(--green); background: #fcfdfd; }
+  
+  .card-head { padding:16px; display:flex; justify-content:space-between; align-items: flex-start; }
+  .card-id { font-family:var(--mono); font-size:17px; font-weight:700; color:var(--text); display: flex; align-items: center; gap: 6px; }
+  .card-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .card-name { font-size:18px; font-weight:700; margin-top:6px; color: #0f172a; }
+
+  .delivered-time { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; background: var(--green-l); display: inline-block; padding: 2px 8px; border-radius: 4px; }
+
+  .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .status-pending { background: var(--yellow-l); color: var(--yellow); }
+  .status-transit { background: var(--blue-l); color: var(--blue); }
+  .status-delivered { background: var(--green-l); color: var(--green); }
+
+  .card-body { padding:0 16px 16px; }
+  .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #f8fafc; font-size:14px; align-items: center; }
+  .product-box { margin-top:8px; background:var(--s1); padding:10px; border-radius:10px; border: 1px dashed #cbd5e1; }
+  .product-item { font-size:15px; font-weight:600; color:var(--text); display:block; }
+  
+  .due-tag { display:inline-flex; align-items:center; gap:6px; background:var(--s1); padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; margin-top:10px; }
+  .due-tag.overdue { background: var(--red-l); color: var(--red); }
+
+  .card-foot { padding:12px 16px; background:#fff; display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
+  .status-select { flex:1; padding:10px; border-radius:8px; border:2px solid var(--border); font-family:var(--font); font-weight:700; font-size: 14px; }
+  .btn-map { padding:10px 16px; border-radius:8px; background:var(--green); color:#fff; font-size:13px; font-weight:700; text-decoration:none; }
+  
+  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:10px; z-index:1000; transition:0.3s; opacity:0; font-size:13px; }
+  #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 </style>
 </head>
 <body>
 
-<script type="module">
-// ... (Firebase Config ส่วนเดิม) ...
+<nav>
+  <div class="logo"><em>CFM</em>FLEET FLOW</div>
+  <span style="font-weight: 700; font-size: 13px;">🛵 พนักงาน: บุ๊ค</span>
+</nav>
 
-// แก้ไขฟังก์ชัน changeStatus ให้บันทึกเวลาเมื่อสำเร็จ
+<div class="page-head">
+  <div class="ph-row">
+    <div class="ph-title">รายการส่งสินค้า</div>
+    <button class="btn-refresh" onclick="location.reload()">🔄 รีเฟรช</button>
+  </div>
+  <div id="dateDisplay" style="font-size: 13px; opacity: 0.8; margin-top: 4px;"></div>
+</div>
+
+<div class="stats-row" id="statsRow"></div>
+
+<div class="search-container">
+  <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อ, เบอร์ หรือเลขออเดอร์...">
+</div>
+
+<div class="main" id="mainGrid"></div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
+  authDomain: "fleet-a49df.firebaseapp.com",
+  projectId: "fleet-a49df",
+  storageBucket: "fleet-a49df.firebasestorage.app",
+  messagingSenderId: "324785731593",
+  appId: "1:324785731593:web:b24e7977a2cccac01b60d8",
+  databaseURL: "https://fleet-a49df-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const ordersRef = ref(db, 'orders');
+
+let orders = [];
+let currentFilter = 'pending'; 
+
+onValue(ordersRef, snap => {
+  const data = snap.val() || {};
+  orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
+  renderAll();
+});
+
 window.changeStatus = (fbKey, newStatus) => {
   const statusLabels = { pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ', failed:'ไม่สำเร็จ' };
-  if(confirm(`ยืนยันการเปลี่ยนสถานะเป็น [${statusLabels[newStatus]}] ?`)) {
+  if(confirm(`ยืนยันการเปลี่ยนเป็น [${statusLabels[newStatus]}] ?`)) {
     let updateData = { status: newStatus };
-    
     if (newStatus === 'delivered') {
-      // บันทึกเวลาปัจจุบันเมื่อกดสำเร็จ
-      const now = new Date();
-      updateData.deliveredAt = now.toLocaleString('th-TH', {
-        day: '2-digit', month: 'short', year: '2-digit',
-        hour: '2-digit', minute: '2-digit'
+      updateData.deliveredAt = new Date().toLocaleString('th-TH', {
+        day:'2-digit', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit'
       }) + " น.";
-    } else {
-      // หากเปลี่ยนจากสำเร็จกลับไปเป็นอย่างอื่น ให้ลบเวลาสำเร็จออก (Optional)
-      updateData.deliveredAt = null;
     }
-    
-    update(ref(db, 'orders/'+fbKey), updateData)
-      .then(() => showToast('✅ อัปเดตสถานะแล้ว'))
-      .catch(err => alert('Error: ' + err));
+    update(ref(db, 'orders/'+fbKey), updateData).then(() => showToast('✅ อัปเดตแล้ว'));
   } else {
     renderCards();
   }
 };
 
+window.setFilter = (f) => { currentFilter = f; renderAll(); };
+document.getElementById('searchInput').addEventListener('input', renderCards);
+
+function renderAll(){ renderStats(); renderCards(); }
+
+function renderStats(){
+  const s = { 
+    total: orders.length, 
+    pending: orders.filter(o=>o.status==='pending').length, 
+    transit: orders.filter(o=>o.status==='transit').length, 
+    delivered: orders.filter(o=>o.status==='delivered').length 
+  };
+  const ui = [
+    {n:s.total, l:'ทั้งหมด', f:'all'},
+    {n:s.pending, l:'รอส่ง', f:'pending'},
+    {n:s.transit, l:'กำลังส่ง', f:'transit'},
+    {n:s.delivered, l:'สำเร็จ', f:'delivered'}
+  ];
+  document.getElementById('statsRow').innerHTML = ui.map(i => `
+    <div class="stat-cell ${currentFilter===i.f?'active':''}" onclick="window.setFilter('${i.f}')">
+      <div class="sc-n">${i.n}</div>
+      <div style="font-size:10px; font-weight:600; color:var(--muted)">${i.l}</div>
+    </div>`).join('');
+}
+
 function renderCards(){
-  // ... (Logic การกรองข้อมูลส่วนเดิม) ...
+  const now = new Date();
+  const searchStr = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
+  
+  if(searchStr) {
+    filtered = filtered.filter(o => 
+      (o.name||'').toLowerCase().includes(searchStr) || 
+      (o.phone||'').includes(searchStr) || 
+      (o.orderid||'').toLowerCase().includes(searchStr)
+    );
+  }
 
   const html = filtered.reverse().map(o => {
-    // ... (การคำนวณวันเวลาส่วนเดิม) ...
+    const orderDate = new Date(o.createdAt || Date.now());
+    const dueDate = new Date(orderDate); dueDate.setDate(dueDate.getDate()+3);
+    const isOverdue = now > dueDate && o.status !== 'delivered';
+    const statusMap = {
+      pending: { t: 'รอส่ง', c: 'status-pending' },
+      transit: { t: 'กำลังส่ง', c: 'status-transit' },
+      delivered: { t: 'สำเร็จ', c: 'status-delivered' },
+      failed: { t: 'ไม่สำเร็จ', c: 'status-failed' }
+    };
+    const st = statusMap[o.status] || statusMap.pending;
 
     return `
     <div class="delivery-card ${o.status}">
@@ -57,26 +195,18 @@ function renderCards(){
         <div>
           <div class="card-id">#${o.orderid || o._fbKey.substring(0,6)}</div>
           <div class="card-date">🕒 รับงาน: ${orderDate.toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} น.</div>
-          <div class="card-name">${o.name || 'ไม่ระบุชื่อ'}</div>
-          
-          ${o.status === 'delivered' && o.deliveredAt ? 
-            `<div class="delivered-time">✅ สำเร็จเมื่อ: ${o.deliveredAt}</div>` : ''}
+          <div class="card-name">${o.name || 'ไม่ระบุ'}</div>
+          ${o.status === 'delivered' && o.deliveredAt ? `<div class="delivered-time">✅ สำเร็จเมื่อ: ${o.deliveredAt}</div>` : ''}
         </div>
         <div class="status-badge ${st.c}">${st.t}</div>
       </div>
       <div class="card-body">
         <div class="info-row">📍 ${o.address || '-'}</div>
-        <div class="info-row">📞 <a href="tel:${o.phone}" style="color:var(--orange); font-weight:800;">${o.phone || '-'}</a></div>
-        
+        <div class="info-row">📞 <a href="tel:${o.phone}" style="color:var(--orange); font-weight:800; text-decoration:none;">${o.phone || '-'}</a></div>
         <div class="product-box">
           ${Array.isArray(o.items) ? o.items.map((it,i)=>`<span class="product-item">${i+1}. ${it}</span>`).join('') : `<span class="product-item">${o.items||'-'}</span>`}
         </div>
-        
-        ${o.status !== 'delivered' ? `
-          <div class="due-tag ${isOverdue ? 'overdue' : ''}">
-            ${isOverdue ? '⚠️ เลยกำหนดส่ง!' : '📅 กำหนด: ' + dueDate.toLocaleDateString('th-TH')}
-          </div>
-        ` : ''}
+        ${o.status !== 'delivered' ? `<div class="due-tag ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ เลยกำหนด!' : '📅 กำหนดส่ง: ' + dueDate.toLocaleDateString('th-TH')}</div>` : ''}
       </div>
       <div class="card-foot">
         <select class="status-select" onchange="changeStatus('${o._fbKey}',this.value)">
@@ -90,9 +220,14 @@ function renderCards(){
     </div>`;
   }).join('');
 
-  document.getElementById('mainGrid').innerHTML = html || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่พบรายการ</div>';
+  document.getElementById('mainGrid').innerHTML = html || '<div style="text-align:center;padding:50px;color:var(--muted)">ไม่มีรายการ</div>';
 }
-// ... (ส่วนที่เหลือคงเดิม) ...
+
+function showToast(msg){ 
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); 
+  setTimeout(()=>t.classList.remove('show'), 2000); 
+}
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',{weekday:'long', day:'numeric', month:'long'});
 </script>
 </body>
 </html>
