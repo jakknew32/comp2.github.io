@@ -48,9 +48,21 @@
         .timeline::before { content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; background: #E2E8F0; }
         .step { position: relative; margin-bottom: 25px; }
         .step::after { content: ''; position: absolute; left: -30px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #CBD5E1; border: 3px solid white; box-shadow: 0 0 0 2px #F1F5F9; z-index: 2; }
+        
+        /* สถานะสำเร็จ (เขียว) */
         .step.done::after { background: #10B981; box-shadow: 0 0 0 2px #D1FAE5; }
-        .step.active::after { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-bg); }
+        
+        /* สถานะปัจจุบัน (ส้ม + กระพริบ) */
+        .step.active::after { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-bg); animation: pulse-orange 1.5s infinite; }
+        
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 0 0px rgba(248, 89, 3, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(248, 89, 3, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(248, 89, 3, 0); }
+        }
+
         .step-title { font-weight: 700; font-size: 16px; }
+        .step.active .step-title { color: var(--orange); }
         .step-date { font-size: 12px; color: var(--text-muted); }
 
         /* Product List */
@@ -159,7 +171,7 @@
         document.getElementById('displayName').innerText = 'คุณ' + (o.name || 'ลูกค้า');
         document.getElementById('displayAddress').innerText = '📍 ' + (o.address || '-');
 
-        // ฟังก์ชันเลือกรูปตามเงื่อนไขที่คุณต้องการ (ปรับปรุงใหม่)
+        // ฟังก์ชันเลือกรูปตามเงื่อนไข (ปรับปรุงใหม่ตามลำดับความสำคัญ)
         const getImg = (itemName) => {
             const name = String(itemName);
             
@@ -167,22 +179,24 @@
             if (name.includes('ช็อกโกแลต') && name.includes('10')) {
                 return 'https://down-th.img.susercontent.com/file/th-11134207-81zth-ml31p18567eo6d.webp';
             }
-            // 2. ตรวจสอบ รสช็อกโกแลต อื่นๆ
-            if (name.includes('ช็อกโกแลต') || name.includes('20')) {
+            // 2. ตรวจสอบ รสช็อกโกแลต อื่นๆ (เช่น 20 กล่อง)
+            if (name.includes('ช็อกโกแลต') || name.includes('รสช็อก')) {
                 return 'https://down-th.img.susercontent.com/file/th-11134207-81ztf-mln7bx1yo3yb57.webp';
             }
-            // 3. ตรวจสอบ รสจืด
-            if (name.includes('จืด') || name.includes('10')) {
+            // 3. ตรวจสอบ รสจืด 10 กล่อง
+            if (name.includes('จืด') && name.includes('10')) {
                 return 'https://down-th.img.susercontent.com/file/th-11134207-81ztf-mln0fkxhwjk38a.webp';
             }
-            // 4. ตรวจสอบ รสน้ำผึ้ง
-            if (name.includes('น้ำผึ้ง') || name.includes('10')) {
-                return 'https://down-th.img.susercontent.com/file/th-11134207-81ztl-mln170l5rls39e.webp';
-            }
-            if (name.includes('จืด') || name.includes('20')) {
+            // 4. ตรวจสอบ รสจืด 20 กล่อง
+            if (name.includes('จืด') && name.includes('20')) {
                 return 'https://down-th.img.susercontent.com/file/th-11134207-81ztp-mmllpt5kpi4h1e.webp';
             }
-            // รูป Default (รสจืด)
+            // 5. ตรวจสอบ รสน้ำผึ้ง
+            if (name.includes('น้ำผึ้ง')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134207-81ztl-mln170l5rls39e.webp';
+            }
+            
+            // รูป Default กรณีไม่เข้าเงื่อนไข
             return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
         };
 
@@ -195,7 +209,7 @@
         `).join('');
 
         // Timeline Setup
-        const status = o.status;
+        const status = o.status; // pending, transit, delivered
         const steps = [
             { id: 'pending', t: 'รับคำสั่งซื้อเรียบร้อย', d: o.createdAt },
             { id: 'transit', t: 'พนักงานกำลังนำส่งพัสดุ', d: o.transitAt },
@@ -204,11 +218,17 @@
 
         document.getElementById('timelineList').innerHTML = steps.map(s => {
             let cls = '';
-            if(status === 'delivered') cls = 'done';
+            // ถ้าถึงจุดสิ้นสุดแล้ว (delivered) ทุกจุดที่ผ่านคือ done
+            if(status === 'delivered') {
+                cls = 'done';
+            } 
+            // ถ้ากำลังส่ง (transit) จุดแรกคือ done จุดที่สองคือ active
             else if(status === 'transit') {
                 if(s.id === 'pending') cls = 'done';
                 if(s.id === 'transit') cls = 'active';
-            } else {
+            } 
+            // ถ้าเพิ่งรับคำสั่ง (pending) จุดแรกคือ active
+            else {
                 if(s.id === 'pending') cls = 'active';
             }
 
