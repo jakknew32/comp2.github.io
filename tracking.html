@@ -1,188 +1,75 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CFM-FleetFlow — ติดตามสถานะพัสดุ</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
-            --orange: #f85903; --green: #059669; --muted: #64748b;
-            --text: #1e293b; --font: 'Kanit', sans-serif;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; padding: 20px; }
-
-        .container { max-width: 500px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
-        .header h1 { font-size: 28px; color: var(--orange); font-weight: 800; letter-spacing: 1px; }
-        .header p { color: var(--muted); font-size: 14px; }
-
-        .search-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; }
-        .input-label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--muted); }
-        .search-input-wrapper { display: flex; gap: 10px; }
-        .search-input { flex: 1; padding: 12px 16px; border-radius: 12px; border: 2px solid var(--border); font-family: var(--font); font-size: 16px; outline: none; transition: 0.2s; width: 100%; }
-        .search-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(248, 89, 3, 0.1); }
-        .btn-search { background: var(--orange); color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-search:hover { opacity: 0.9; }
-
-        #resultArea { display: none; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .tracking-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid var(--border); }
-        .order-info { border-bottom: 1px dashed var(--border); margin-bottom: 20px; padding-bottom: 15px; }
-        .order-id { font-size: 18px; font-weight: 800; color: var(--orange); }
-        .customer-name { font-size: 20px; font-weight: 700; margin: 5px 0; }
-
-        .messenger-box { background: #fff7ed; border: 1px solid #fed7aa; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
-        .messenger-icon { font-size: 24px; }
-        .messenger-details b { display: block; font-size: 14px; color: #9a3412; }
-        .messenger-details a { color: var(--orange); font-weight: 700; text-decoration: none; font-size: 18px; }
-
-        .timeline { margin-top: 20px; position: relative; padding-left: 30px; }
-        .timeline::before { content: ''; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 2px; background: var(--border); }
-        .step { position: relative; margin-bottom: 25px; }
-        .step::before { content: ''; position: absolute; left: -30px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--border); border: 2px solid white; box-shadow: 0 0 0 3px var(--border); z-index: 1; }
-        .step.active::before { background: var(--orange); box-shadow: 0 0 0 3px #fed7aa; }
-        .step.completed::before { background: var(--green); box-shadow: 0 0 0 3px #d1fae5; }
-        
-        .step-title { font-weight: 700; font-size: 16px; }
-        .step-date { font-size: 12px; color: var(--muted); }
-
-        .product-list { background: #f8fafc; padding: 15px; border-radius: 12px; margin-top: 15px; }
-        .product-item { display: block; font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
-
-        #errorMsg { display: none; text-align: center; color: #ef4444; background: #fef2f2; padding: 15px; border-radius: 12px; margin-top: 20px; font-weight: 600; border: 1px solid #fee2e2; }
-        
-        /* Loading Spinner */
-        #loader { display: none; text-align: center; margin-top: 20px; color: var(--orange); font-weight: 500; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="header">
-        <h1>CFM TRACKING</h1>
-        <p>ตรวจสอบสถานะการจัดส่งพัสดุของคุณ</p>
-    </div>
-
-    <div class="search-box">
-        <label class="input-label" for="orderQuery">ระบุหมายเลขคำสั่งซื้อ</label>
-        <div class="search-input-wrapper">
-            <input type="text" id="orderQuery" class="search-input" placeholder="ตัวอย่าง: 123456" autocomplete="off">
-            <button class="btn-search" onclick="trackOrder()">ค้นหา</button>
-        </div>
-    </div>
-
-    <div id="loader">กำลังค้นหาข้อมูล...</div>
-    <div id="errorMsg">❌ ไม่พบข้อมูลออเดอร์นี้ กรุณาตรวจสอบอีกครั้ง</div>
-
-    <div id="resultArea">
-        <div class="messenger-box">
-            <div class="messenger-icon">🛵</div>
-            <div class="messenger-details">
-                <b>พนักงานจัดส่ง: คุณบุ๊ค</b>
-                <a href="tel:0941150250">📞 094-115-0250</a>
-            </div>
-        </div>
-
-        <div class="tracking-card">
-            <div class="order-info">
-                <div class="order-id" id="displayId">#------</div>
-                <div class="customer-name" id="displayName">คุณลูกค้า</div>
-                <div style="font-size: 14px; color: var(--muted);" id="displayAddress">📍 -</div>
-            </div>
-
-            <div class="timeline" id="timelineList"></div>
-
-            <div class="product-list">
-                <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 600;">รายการสินค้า</div>
-                <div id="displayItems"></div>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    /* ส่วน CSS ที่เพิ่มใหม่สำหรับรูปภาพสินค้า */
+    .product-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: white;
+        padding: 10px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        border: 1px solid #f1f5f9;
+    }
+    .product-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #eee;
+    }
+    .product-info {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+</style>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
-        authDomain: "fleet-a49df.firebaseapp.com",
-        projectId: "fleet-a49df",
-        storageBucket: "fleet-a49df.firebasestorage.app",
-        messagingSenderId: "324785731593",
-        appId: "1:324785731593:web:b24e7977a2cccac01b60d8",
-        databaseURL: "https://fleet-a49df-default-rtdb.asia-southeast1.firebasedatabase.app"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // รองรับการกด Enter ในช่อง Input
-    document.getElementById('orderQuery').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') trackOrder();
-    });
-
-    window.trackOrder = () => {
-        const query = document.getElementById('orderQuery').value.trim().replace('#', '');
-        const resultArea = document.getElementById('resultArea');
-        const errorMsg = document.getElementById('errorMsg');
-        const loader = document.getElementById('loader');
-
-        if(!query) return;
-
-        // UI Reset
-        errorMsg.style.display = 'none';
-        resultArea.style.display = 'none';
-        loader.style.display = 'block';
-
-        onValue(ref(db, 'orders'), (snap) => {
-            loader.style.display = 'none';
-            const data = snap.val();
-            let foundOrder = null;
-
-            if (data) {
-                // ค้นหาแบบ Case-insensitive และรองรับการตัด 6 หลักแรก
-                Object.entries(data).forEach(([key, val]) => {
-                    const orderIdStr = String(val.orderid || '');
-                    if (orderIdStr === query || key.substring(0, 6) === query) {
-                        foundOrder = val;
-                    }
-                });
-            }
-
-            if (foundOrder) {
-                showData(foundOrder);
-                resultArea.style.display = 'block';
-            } else {
-                errorMsg.style.display = 'block';
-            }
-        }, { onlyOnce: true });
-    };
+    // ... (ส่วนการตั้งค่า Firebase เหมือนเดิม) ...
 
     function showData(o) {
         document.getElementById('displayId').textContent = '#' + (o.orderid || '------');
         document.getElementById('displayName').textContent = 'คุณ ' + (o.name || 'ลูกค้า');
         document.getElementById('displayAddress').textContent = '📍 ' + (o.address || '-');
         
-        // จัดการรายการสินค้า
-        const itemsHtml = Array.isArray(o.items) 
-            ? o.items.map(it => `<span class="product-item">📦 ${it}</span>`).join('')
-            : `<span class="product-item">📦 ${o.items || 'ไม่ระบุรายการ'}</span>`;
+        // ฟังก์ชันจับคู่รูปภาพตามชื่อสินค้า
+        const getProductImg = (itemName) => {
+            const name = itemName.toLowerCase();
+            if (name.includes('น้ำผึ้ง')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+            } else if (name.includes('ช็อกโกแลต') || name.includes('chocolate')) {
+                if (name.includes('10')) {
+                    return 'https://down-th.img.susercontent.com/file/th-11134207-81zth-ml31p18567eo6d.webp';
+                }
+                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+            } else if (name.includes('จืด')) {
+                return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+            }
+            // รูป Default กรณีไม่พบเงื่อนไข
+            return 'https://down-th.img.susercontent.com/file/th-11134258-7r98z-lza9f5c8o71l63';
+        };
+
+        // สร้าง HTML สำหรับรายการสินค้า
+        const itemsArray = Array.isArray(o.items) ? o.items : [o.items];
+        const itemsHtml = itemsArray.map(it => `
+            <div class="product-item">
+                <img src="${getProductImg(it)}" class="product-img" alt="product">
+                <div class="product-info">${it}</div>
+            </div>
+        `).join('');
+        
         document.getElementById('displayItems').innerHTML = itemsHtml;
 
-        // ลอจิก Timeline
+        // --- ส่วน Timeline เหมือนเดิม ---
         const steps = [
             { key: 'pending', title: 'รับคำสั่งซื้อเรียบร้อย', date: o.createdAt },
             { key: 'transit', title: 'พนักงานกำลังนำส่งพัสดุ', date: o.transitAt || '' },
             { key: 'delivered', title: 'จัดส่งสำเร็จ', date: o.deliveredAt || '' }
         ];
 
-        let currentStatus = o.status; // pending, transit, delivered
-        let html = '';
+        let currentStatus = o.status;
+        let timelineHtml = '';
 
         steps.forEach((step) => {
             let statusClass = '';
@@ -195,7 +82,6 @@
                 if (step.key === 'pending') statusClass = 'active';
             }
 
-            // จัดรูปแบบวันที่
             let dateShow = '';
             if (step.date) {
                 const d = new Date(step.date);
@@ -205,17 +91,13 @@
                 }) + ' น.';
             }
 
-            html += `
+            timelineHtml += `
                 <div class="step ${statusClass}">
                     <div class="step-title">${step.title}</div>
                     <div class="step-date">${dateShow}</div>
                 </div>
             `;
         });
-
-        document.getElementById('timelineList').innerHTML = html;
+        document.getElementById('timelineList').innerHTML = timelineHtml;
     }
 </script>
-
-</body>
-</html>
