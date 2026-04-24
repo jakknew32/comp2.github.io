@@ -152,9 +152,18 @@
             let found = null;
 
             if(data) {
+                // ค้นหาแบบยืดหยุ่น: ตรงกับ key, orderid, หรือเลขบางส่วน (เช่น เลขท้าย)
                 Object.entries(data).forEach(([key, val]) => {
-                    // เปรียบเทียบทั้ง key และ orderid แบบ string
-                    if (String(key) === q || String(val.orderid) === q) found = val;
+                    const orderid = val.orderid !== undefined ? String(val.orderid) : '';
+                    // เทียบตรง, เทียบเลขบางส่วน, เทียบ key
+                    if (
+                        String(key) === q ||
+                        orderid === q ||
+                        orderid.endsWith(q) ||
+                        (orderid.length > 0 && q.length > 0 && orderid.replace(/^0+/, '') === q.replace(/^0+/, ''))
+                    ) {
+                        found = val;
+                    }
                 });
             }
 
