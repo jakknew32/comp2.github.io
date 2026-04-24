@@ -140,6 +140,7 @@
 
     window.trackOrder = () => {
         const q = document.getElementById('orderQuery').value.trim().replace('#','');
+        console.log('🔍 ค้นหา:', q);
         if(!q) return;
 
         document.getElementById('loader').style.display = 'block';
@@ -149,12 +150,14 @@
         onValue(ref(db, 'orders'), (snap) => {
             document.getElementById('loader').style.display = 'none';
             const data = snap.val();
+            console.log('📊 ข้อมูล Firebase:', data);
             let found = null;
 
             if(data) {
                 // ค้นหาแบบยืดหยุ่น: ตรงกับ key, orderid, หรือเลขบางส่วน (เช่น เลขท้าย)
                 Object.entries(data).forEach(([key, val]) => {
                     const orderid = val.orderid !== undefined ? String(val.orderid) : '';
+                    console.log(`🔎 เช็ค key: ${key}, orderid: ${orderid}, q: ${q}`);
                     // เทียบตรง, เทียบเลขบางส่วน, เทียบ key
                     if (
                         String(key) === q ||
@@ -162,6 +165,7 @@
                         orderid.endsWith(q) ||
                         (orderid.length > 0 && q.length > 0 && orderid.replace(/^0+/, '') === q.replace(/^0+/, ''))
                     ) {
+                        console.log('✅ พบ:', val);
                         found = val;
                     }
                 });
@@ -171,6 +175,7 @@
                 renderData(found);
                 document.getElementById('resultArea').style.display = 'block';
             } else {
+                console.log('❌ ไม่พบ');
                 document.getElementById('errorMsg').style.display = 'block';
             }
         }, { onlyOnce: true });
