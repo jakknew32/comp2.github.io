@@ -186,23 +186,26 @@
         document.getElementById('displayName').innerText = 'คุณ' + (o.name || 'ลูกค้า');
         document.getElementById('displayAddress').innerText = '📍 ' + (o.address || '-');
 
-        // ฟังก์ชันเลือกรูปตามเงื่อนไข (ปรับปรุงใหม่ตามลำดับความสำคัญ)
+        // ฟังก์ชันเลือกรูปตามเงื่อนไข (รองรับหลายคำ)
         const getImg = (itemName) => {
-            const name = String(itemName);
+            const name = String(itemName).toLowerCase();
             
-            if (name.includes('ช็อกโกแลต')) {
+            // ช็อกโกแลต - รองรับหลายรูป
+            if (name.includes('ช็อกโกแลต') || name.includes('chocolate') || name.includes('ช็อค')) {
                 return 'https://github.com/jakknew32/comp.github.io/blob/main/S__38543433.jpg?raw=true';
             }
 
-            if (name.includes('จืด')) {
+            // จืด - รองรับหลายรูป
+            if (name.includes('จืด') || name.includes('plain') || name.includes('แพลน')) {
                 return 'https://github.com/jakknew32/comp.github.io/blob/main/S__25329682_0.jpg?raw=true';
             }
 
-            if (name.includes('น้ำผึ้ง')) {
+            // น้ำผึ้ง - รองรับหลายรูป
+            if (name.includes('น้ำผึ้ง') || name.includes('honey') || name.includes('ฮันนี่')) {
                 return 'https://github.com/jakknew32/comp.github.io/blob/main/MULK%20HP%20(BKK_CNX)%20copy@2x_0-1080x1080.png?raw=true';
             }
             
-            // รูป Default กรณีไม่เข้าเงื่อนไข   b
+            // รูป Default กรณีไม่เข้าเงื่อนไข
             return 'https://c8.alamy.com/comp/EAXHA7/an-failed-red-ink-stamp-on-a-white-background-EAXHA7.jpg';
         };
 
