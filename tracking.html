@@ -109,6 +109,9 @@
                 <div class="order-id" id="displayId">#------</div>
                 <div class="customer-name" id="displayName">คุณลูกค้า</div>
                 <div class="address" id="displayAddress">ที่อยู่จัดส่ง...</div>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #F1F5F9; font-size: 14px; color: var(--text-muted);">
+                    <span id="displayDeliveryDate" style="display: none;">📅 จัดส่งสำเร็จ: <strong id="deliveryDateValue" style="color: #10B981;">-</strong></span>
+                </div>
             </div>
 
             <div class="timeline" id="timelineList"></div>
@@ -185,13 +188,23 @@
         document.getElementById('displayId').innerText = 'ORDER #' + (o.orderid || '------');
         document.getElementById('displayName').innerText = 'คุณ' + (o.name || 'ลูกค้า');
         document.getElementById('displayAddress').innerText = '📍 ' + (o.address || '-');
+        
+        // แสดงวันที่จัดส่งสำเร็จ
+        if(o.deliveredAt) {
+            const dt = new Date(o.deliveredAt);
+            const dateStr = isNaN(dt) ? o.deliveredAt : dt.toLocaleString('th-TH',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            document.getElementById('deliveryDateValue').innerText = dateStr;
+            document.getElementById('displayDeliveryDate').style.display = 'block';
+        } else {
+            document.getElementById('displayDeliveryDate').style.display = 'none';
+        }
 
         // ฟังก์ชันเลือกรูปตามเงื่อนไข (รองรับหลายคำ)
         const getImg = (itemName) => {
             const name = String(itemName).toLowerCase();
             
             // ช็อกโกแลต - รองรับหลายรูป
-            if (name.includes('ช็อกโกแลต') || name.includes('chocolate') || name.includes('ช็อค')|| name.includes('choc')) {
+            if (name.includes('ช็อกโกแลต') || name.includes('chocolate') || name.includes('ช็อค')|| name.includes('Choc')) {
                 return 'https://github.com/jakknew32/comp.github.io/blob/main/S__38543433.jpg?raw=true';
             }
 
