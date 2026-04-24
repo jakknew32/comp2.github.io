@@ -153,7 +153,8 @@
 
             if(data) {
                 Object.entries(data).forEach(([key, val]) => {
-                    if(String(val.orderid) === q || key.startsWith(q)) found = val;
+                    // เปรียบเทียบทั้ง key และ orderid แบบ string
+                    if (String(key) === q || String(val.orderid) === q) found = val;
                 });
             }
 
