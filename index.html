@@ -672,11 +672,9 @@
 
         function handlePrint() {
             if (!row1Photo && row2Photos.length === 0) {
-                showToast('ยังไม่มีรูปภาพ กรุณาอัปโหลดรูปก่อนปริ้น', 'warning');
                 return;
             }
             window.print();
-            showToast('ส่งงานพิมพ์แล้ว! หากยังไม่ได้บันทึก กรุณากด 📦 สร้างฉลาก เพื่อบันทึกข้อมูล', 'info', 5000);
         }
 
         async function createShippingLabel() {
@@ -690,55 +688,7 @@
             showShippingLabelModal(address);
         }
 
-        // =============================================
-        // Toast Notification
-        // =============================================
-        function showToast(message, type = 'success', duration = 4000) {
-            const existing = document.getElementById('cfm-toast');
-            if (existing) existing.remove();
 
-            const colors = {
-                success: { bg: '#10b981', icon: '✅' },
-                info:    { bg: '#667eea', icon: 'ℹ️' },
-                warning: { bg: '#f59e0b', icon: '⚠️' },
-                error:   { bg: '#ef4444', icon: '❌' }
-            };
-            const c = colors[type] || colors.success;
-
-            const toast = document.createElement('div');
-            toast.id = 'cfm-toast';
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                transform: translateX(120%);
-                background: ${c.bg};
-                color: white;
-                padding: 14px 20px;
-                border-radius: 10px;
-                font-family: 'Kanit', sans-serif;
-                font-size: 15px;
-                font-weight: 600;
-                box-shadow: 0 6px 24px rgba(0,0,0,0.25);
-                z-index: 99999;
-                max-width: 320px;
-                transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.35s ease;
-                opacity: 0;
-            `;
-            toast.innerHTML = `${c.icon} ${message}`;
-            document.body.appendChild(toast);
-
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                toast.style.transform = 'translateX(0)';
-                toast.style.opacity = '1';
-            }));
-
-            setTimeout(() => {
-                toast.style.transform = 'translateX(120%)';
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 350);
-            }, duration);
-        }
 
         // =============================================
         // Save to Firebase Receiver Database
