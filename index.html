@@ -22,6 +22,17 @@
                         height: 152.4mm !important;
                         padding: 6mm 6mm 3mm 6mm !important;
                         page-break-after: always;
+                        font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif !important;
+                    }
+                    #labelPreview img, .label img {
+                        max-width: 100% !important;
+                        height: auto !important;
+                        print-color-adjust: exact !important;
+                        -webkit-print-color-adjust: exact !important;
+                    }
+                    #labelPreview div, .label div {
+                        print-color-adjust: exact !important;
+                        -webkit-print-color-adjust: exact !important;
                     }
                 }
         * {
@@ -834,10 +845,10 @@
                     </div>
                     
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <div id="labelPreview" style="width: 101.6mm; height: 152.4mm; border: 3mm solid #333; background: white; padding: 6mm 6mm 3mm 6mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box; position: relative; overflow: hidden;">
-                            <img src="https://img2.pic.in.th/13223.png" alt="watermark" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(30deg); width: 80mm; opacity: 0.12; pointer-events: none; z-index: 0;" onerror="this.style.display='none'">
+                        <div id="labelPreview" style="width: 101.6mm; height: 152.4mm; border: 3mm solid #333; background: white; padding: 6mm 6mm 3mm 6mm; margin: 0 auto; display: inline-flex; flex-direction: column; font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif; box-sizing: border-box; position: relative; overflow: hidden; line-height: 1.4; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                            <img src="https://img2.pic.in.th/13223.png" alt="watermark" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(30deg); width: 80mm; opacity: 0.12; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact;" onerror="this.style.display='none'">
                             <div style="position: relative; z-index: 1; text-align: center; border-bottom: 2px solid #333; padding: 3mm 0 2mm 0; margin-bottom: 3mm;">
-                                <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;"><img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 5px;">Chiangmai Freshmilk</h2>
+                                <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;"><img src="https://mms.img.susercontent.com/th-11134216-7ras8-m6i01ncx41rrab" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 5px; -webkit-print-color-adjust: exact; print-color-adjust: exact;" onerror="this.style.display='none'">Chiangmai Freshmilk</h2>
                             </div>
                             
                             <div style="position: relative; z-index: 1; margin-bottom: 3mm; padding-bottom: 3mm; border-bottom: 1px dashed #999;">
@@ -846,12 +857,12 @@
                             
                             <div style="position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; margin-bottom: 3mm;">
                                 <div style="font-weight: bold; font-size: 16px; margin-bottom: 2mm; color: #000; background: #f0f0f0; padding: 2mm; border-radius: 3px;">ผู้รับ (TO):</div>
-                                <div id="modalReceiverDisplay" style="font-size: 14px; line-height: 1.6; color: #000; white-space: pre-line; flex: 1;">${displayReceiver}</div>
+                                <div id="modalReceiverDisplay" style="font-size: 14px; line-height: 1.6; color: #000; white-space: pre-line; flex: 1; word-wrap: break-word; word-break: break-word;">${displayReceiver}</div>
                             </div>
                             
                             <div style="position: relative; z-index: 1; margin-top: auto; padding-top: 2mm; border-top: 2px solid #333; text-align: center;">
                                 <div style="margin-bottom: 2mm;">
-                                    <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" alt="Warning" style="width: 95mm; height: auto; max-width: 100%;" onerror="this.style.display='none'">
+                                    <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" alt="Warning" style="width: 95mm; height: auto; max-width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact;" onerror="this.style.display='none'">
                                 </div>
                                 <div style="font-size: 12px; color: #666;">${timestamp}</div>
                             </div>
@@ -896,18 +907,25 @@
             const labelPreview = document.getElementById('labelPreview');
             if (!labelPreview) return;
             
-            const printWindow = window.open('', '', 'width=800,height=600');
-            printWindow.document.write(`
+            const printWindow = window.open('', '', 'width=812,height=600');
+            if (!printWindow) {
+                alert('⚠️ โปรดปิดการบล็อก pop-up ของเบราว์เซอร์เพื่อพิมพ์ฉลาก');
+                return;
+            }
+            
+            const htmlContent = `
                 <!DOCTYPE html>
-                <html>
+                <html lang="th">
                 <head>
                     <meta charset="UTF-8">
                     <title>ฉลากจัดส่ง - Chiangmai Freshmilk</title>
                     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+                    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
                     <style>
                         @page {
                             size: 101.6mm 152.4mm;
                             margin: 0;
+                            padding: 0;
                         }
                         * {
                             margin: 0;
@@ -920,6 +938,12 @@
                             width: 101.6mm;
                             height: 152.4mm;
                             font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif;
+                            background: white;
+                        }
+                        body {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
                         }
                         #labelPreview, #labelPreview * {
                             font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif !important;
@@ -935,26 +959,107 @@
                             box-sizing: border-box !important;
                             overflow: hidden !important;
                             margin: 0 !important;
+                            flex-shrink: 0;
+                        }
+                        img {
+                            max-width: 100%;
+                            height: auto;
                         }
                     </style>
                 </head>
                 <body>
                     ${labelPreview.outerHTML}
                     <script>
-                        window.onload = function() {
-                            setTimeout(function() {
-                                window.print();
-                            }, 500);
+                        let fontsLoaded = false;
+                        let imagesLoaded = false;
+                        let readyToPrint = false;
+                        
+                        // Wait for fonts to load
+                        if (document.fonts && document.fonts.ready) {
+                            document.fonts.ready.then(() => {
+                                fontsLoaded = true;
+                                checkReadyToPrint();
+                            });
+                        } else {
+                            fontsLoaded = true;
                         }
+                        
+                        // Wait for images to load
+                        function checkImagesLoaded() {
+                            const images = document.querySelectorAll('img');
+                            let loadedCount = 0;
+                            let totalImages = images.length;
+                            
+                            if (totalImages === 0) {
+                                imagesLoaded = true;
+                                checkReadyToPrint();
+                                return;
+                            }
+                            
+                            images.forEach(img => {
+                                if (img.complete) {
+                                    loadedCount++;
+                                    if (loadedCount === totalImages) {
+                                        imagesLoaded = true;
+                                        checkReadyToPrint();
+                                    }
+                                } else {
+                                    img.addEventListener('load', () => {
+                                        loadedCount++;
+                                        if (loadedCount === totalImages) {
+                                            imagesLoaded = true;
+                                            checkReadyToPrint();
+                                        }
+                                    });
+                                    img.addEventListener('error', () => {
+                                        loadedCount++;
+                                        if (loadedCount === totalImages) {
+                                            imagesLoaded = true;
+                                            checkReadyToPrint();
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        
+                        function checkReadyToPrint() {
+                            if (fontsLoaded && imagesLoaded && !readyToPrint) {
+                                readyToPrint = true;
+                                setTimeout(() => {
+                                    window.print();
+                                }, 200);
+                            }
+                        }
+                        
                         window.onafterprint = function() {
-                            window.close();
+                            setTimeout(() => {
+                                window.close();
+                            }, 100);
                         }
+                        
+                        // Start checking images
+                        window.addEventListener('load', checkImagesLoaded);
+                        
+                        // Fallback: print anyway after 2 seconds
+                        setTimeout(() => {
+                            if (!readyToPrint) {
+                                readyToPrint = true;
+                                window.print();
+                            }
+                        }, 2000);
                     <\/script>
                 </body>
                 </html>
-            `);
-            printWindow.document.close();
-            showToast('🖨️ พิมพ์ฉลากจัดส่งเรียบร้อยแล้ว!', 'success');
+            `;
+            
+            try {
+                printWindow.document.write(htmlContent);
+                printWindow.document.close();
+                showToast('🖨️ ตั้งค่าฉลากจัดส่ง...', 'info');
+            } catch (error) {
+                console.error('Print error:', error);
+                showToast('❌ เกิดข้อผิดพลาดในการพิมพ์', 'error');
+            }
         }
 
         // Initialize with empty page
