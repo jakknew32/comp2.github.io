@@ -11,17 +11,36 @@
                         background: white !important;
                         margin: 0 !important;
                         padding: 0 !important;
+                        width: 100% !important;
+                    }
+                    * {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    #printContainer {
+                        display: block !important;
+                        width: 101.6mm !important;
+                        height: 152.4mm !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
+                    }
+                    #shippingLabelModal {
+                        display: none !important;
+                    }
+                    .container {
+                        display: none !important;
                     }
                     #labelPreview, .label {
                         display: block !important;
-                        margin: 0 auto !important;
+                        margin: 0 !important;
                         box-shadow: none !important;
                         border: 3mm solid #333 !important;
                         background: white !important;
                         width: 101.6mm !important;
                         height: 152.4mm !important;
                         padding: 6mm 6mm 3mm 6mm !important;
-                        page-break-after: always;
+                        page-break-after: always !important;
                         font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif !important;
                     }
                     #labelPreview img, .label img {
@@ -907,159 +926,34 @@
             const labelPreview = document.getElementById('labelPreview');
             if (!labelPreview) return;
             
-            const printWindow = window.open('', '', 'width=812,height=600');
-            if (!printWindow) {
-                alert('⚠️ โปรดปิดการบล็อก pop-up ของเบราว์เซอร์เพื่อพิมพ์ฉลาก');
-                return;
-            }
+            // Clone the label element for printing
+            const printContainer = document.createElement('div');
+            printContainer.id = 'printContainer';
+            printContainer.style.display = 'none';
             
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html lang="th">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>ฉลากจัดส่ง - Chiangmai Freshmilk</title>
-                    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
-                    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-                    <style>
-                        @page {
-                            size: 101.6mm 152.4mm;
-                            margin: 0;
-                            padding: 0;
-                        }
-                        * {
-                            margin: 0;
-                            padding: 0;
-                            box-sizing: border-box;
-                        }
-                        html, body {
-                            margin: 0;
-                            padding: 0;
-                            width: 101.6mm;
-                            height: 152.4mm;
-                            font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif;
-                            background: white;
-                        }
-                        body {
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        }
-                        #labelPreview, #labelPreview * {
-                            font-family: 'Kanit', 'Sarabun', 'Tahoma', sans-serif !important;
-                        }
-                        #labelPreview {
-                            width: 101.6mm !important;
-                            height: 152.4mm !important;
-                            border: 3mm solid #333 !important;
-                            background: white !important;
-                            padding: 6mm 6mm 3mm 6mm !important;
-                            display: flex !important;
-                            flex-direction: column !important;
-                            box-sizing: border-box !important;
-                            overflow: hidden !important;
-                            margin: 0 !important;
-                            flex-shrink: 0;
-                        }
-                        img {
-                            max-width: 100%;
-                            height: auto;
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${labelPreview.outerHTML}
-                    <script>
-                        let fontsLoaded = false;
-                        let imagesLoaded = false;
-                        let readyToPrint = false;
-                        
-                        // Wait for fonts to load
-                        if (document.fonts && document.fonts.ready) {
-                            document.fonts.ready.then(() => {
-                                fontsLoaded = true;
-                                checkReadyToPrint();
-                            });
-                        } else {
-                            fontsLoaded = true;
-                        }
-                        
-                        // Wait for images to load
-                        function checkImagesLoaded() {
-                            const images = document.querySelectorAll('img');
-                            let loadedCount = 0;
-                            let totalImages = images.length;
-                            
-                            if (totalImages === 0) {
-                                imagesLoaded = true;
-                                checkReadyToPrint();
-                                return;
-                            }
-                            
-                            images.forEach(img => {
-                                if (img.complete) {
-                                    loadedCount++;
-                                    if (loadedCount === totalImages) {
-                                        imagesLoaded = true;
-                                        checkReadyToPrint();
-                                    }
-                                } else {
-                                    img.addEventListener('load', () => {
-                                        loadedCount++;
-                                        if (loadedCount === totalImages) {
-                                            imagesLoaded = true;
-                                            checkReadyToPrint();
-                                        }
-                                    });
-                                    img.addEventListener('error', () => {
-                                        loadedCount++;
-                                        if (loadedCount === totalImages) {
-                                            imagesLoaded = true;
-                                            checkReadyToPrint();
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                        
-                        function checkReadyToPrint() {
-                            if (fontsLoaded && imagesLoaded && !readyToPrint) {
-                                readyToPrint = true;
-                                setTimeout(() => {
-                                    window.print();
-                                }, 200);
-                            }
-                        }
-                        
-                        window.onafterprint = function() {
-                            setTimeout(() => {
-                                window.close();
-                            }, 100);
-                        }
-                        
-                        // Start checking images
-                        window.addEventListener('load', checkImagesLoaded);
-                        
-                        // Fallback: print anyway after 2 seconds
-                        setTimeout(() => {
-                            if (!readyToPrint) {
-                                readyToPrint = true;
-                                window.print();
-                            }
-                        }, 2000);
-                    <\/script>
-                </body>
-                </html>
-            `;
+            const labelClone = labelPreview.cloneNode(true);
+            labelClone.style.width = '101.6mm';
+            labelClone.style.height = '152.4mm';
+            labelClone.style.border = '3mm solid #333';
+            labelClone.style.padding = '6mm 6mm 3mm 6mm';
+            labelClone.style.display = 'block';
+            labelClone.style.margin = '0';
+            labelClone.style.boxSizing = 'border-box';
+            labelClone.style.backgroundColor = 'white';
             
-            try {
-                printWindow.document.write(htmlContent);
-                printWindow.document.close();
-                showToast('🖨️ ตั้งค่าฉลากจัดส่ง...', 'info');
-            } catch (error) {
-                console.error('Print error:', error);
-                showToast('❌ เกิดข้อผิดพลาดในการพิมพ์', 'error');
-            }
+            printContainer.appendChild(labelClone);
+            document.body.appendChild(printContainer);
+            
+            // Wait a bit for content to render, then print
+            setTimeout(() => {
+                window.print();
+                // Clean up after print dialog closes
+                setTimeout(() => {
+                    printContainer.remove();
+                }, 500);
+            }, 300);
+            
+            showToast('🖨️ เตรียมพิมพ์ฉลาก...', 'info');
         }
 
         // Initialize with empty page
