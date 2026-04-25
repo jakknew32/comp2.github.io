@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CFM TRACKING — ระบบติดตามพัสดุ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #F85903;
+            --orange-bg: #FFF5F0;
+            --gray-light: #F8FAF7;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Kanit', sans-serif; background: #F1F5F9; color: var(--text-dark); padding: 15px; line-height: 1.5; }
+
+        .container { max-width: 480px; margin: 0 auto; }
+        
+        .header { text-align: center; margin: 25px 0; }
+        .header h1 { color: var(--orange); font-size: 32px; font-weight: 800; }
+        .header p { color: var(--text-muted); font-size: 14px; }
+
+        .search-card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .search-label { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block; }
+        .search-input-group { display: flex; gap: 10px; }
+        .search-input { flex: 1; padding: 14px 18px; border-radius: 15px; border: 2px solid #F1F5F9; font-family: inherit; font-size: 16px; outline: none; background: #F8FAFC; transition: 0.3s; }
+        .search-input:focus { border-color: var(--orange); background: white; }
+        .btn-search { background: var(--orange); color: white; border: none; padding: 0 20px; border-radius: 15px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+
+        #resultArea { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .messenger-box { background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .m-icon { font-size: 28px; background: var(--orange-bg); padding: 10px; border-radius: 50%; }
+        .m-info b { font-size: 12px; color: var(--text-muted); display: block; }
+        .m-info a { font-size: 18px; font-weight: 700; color: var(--text-dark); text-decoration: none; }
+
+        .status-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #E2E8F0; }
+        .order-meta { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #F1F5F9; }
+        .order-id { font-size: 14px; color: var(--orange); font-weight: 700; }
+        .customer-name { font-size: 22px; font-weight: 700; }
+        .address { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+        /* Timeline */
+        .timeline { margin: 25px 0; padding-left: 30px; position: relative; }
+        .timeline::before { content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; background: #E2E8F0; }
+        .step { position: relative; margin-bottom: 25px; }
+        .step::after { content: ''; position: absolute; left: -30px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #CBD5E1; border: 3px solid white; box-shadow: 0 0 0 2px #F1F5F9; z-index: 2; }
+        
+        .step.done::after { background: #10B981; box-shadow: 0 0 0 2px #D1FAE5; }
+        .step.active::after { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-bg); animation: pulse-orange 1.5s infinite; }
+        
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 0 0px rgba(248, 89, 3, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(248, 89, 3, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(248, 89, 3, 0); }
+        }
+
+        .step-title { font-weight: 700; font-size: 16px; }
+        .step.active .step-title { color: var(--orange); }
+        .step-date { font-size: 12px; color: var(--text-muted); }
+
+        /* Product List */
+        .prod-section { margin-top: 25px; }
+        .prod-title { font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+        .prod-item { display: flex; align-items: center; gap: 15px; background: #F8FAFC; padding: 12px; border-radius: 18px; margin-bottom: 10px; border: 1px solid #EDF2F7; }
+        .prod-img { width: 75px; height: 75px; border-radius: 12px; object-fit: cover; background: white; flex-shrink: 0; }
+        .prod-name { font-size: 14px; font-weight: 600; color: #334155; }
+
+        #loader { display: none; text-align: center; color: var(--orange); font-weight: 700; padding: 20px; }
+        #errorMsg { display: none; text-align: center; color: #EF4444; background: #FEF2F2; padding: 15px; border-radius: 15px; margin-top: 10px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>CFM TRACKING</h1>
+        <p>ตรวจสอบสถานะการจัดส่งพัสดุของคุณ</p>
+    </div>
+
+    <div class="search-card">
+        <label class="search-label">ระบุหมายเลขคำสั่งซื้อ</label>
+        <div class="search-input-group">
+            <input type="text" id="orderQuery" class="search-input" placeholder="ระบุเลขออเดอร์ของ Shopee" autocomplete="off">
+            <button class="btn-search" onclick="trackOrder()">ค้นหา</button>
+        </div>
+    </div>
+
+    <div id="loader">⏳ กำลังตรวจสอบข้อมูล...</div>
+    <div id="errorMsg">❌ ไม่พบหมายเลขพัสดุนี้ กรุณาตรวจสอบอีกครั้ง</div>
+
+    <div id="resultArea">
+        <div class="messenger-box">
+            <div class="m-icon">🛵</div>
+            <div class="m-info">
+                <b>พนักงานจัดส่ง</b>
+                <a href="tel:0941150250">คุณบุ๊ค 094-115-0250</a>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <div class="order-meta">
+                <div class="order-id" id="displayId">#------</div>
+                <div class="customer-name" id="displayName">คุณลูกค้า</div>
+                <div class="address" id="displayAddress">ที่อยู่จัดส่ง...</div>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #F1F5F9; font-size: 14px; color: var(--text-muted);">
+                    <span id="displayDeliveryDate" style="display: none;">📅 จัดส่งสำเร็จ: <strong id="deliveryDateValue" style="color: #10B981;">-</strong></span>
+                </div>
+            </div>
+
+            <div class="timeline" id="timelineList"></div>
+
+            <div class="prod-section">
+                <div class="prod-title">รายการสินค้า</div>
+                <div id="displayItems"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
+        authDomain: "fleet-a49df.firebaseapp.com",
+        projectId: "fleet-a49df",
+        storageBucket: "fleet-a49df.firebasestorage.app",
+        messagingSenderId: "324785731593",
+        appId: "1:324785731593:web:b24e7977a2cccac01b60d8",
+        databaseURL: "https://fleet-a49df-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ---- ฟังก์ชัน sanitize ป้องกัน XSS ----
+    function sanitize(str) {
+        const div = document.createElement('div');
+        div.textContent = String(str || '');
+        return div.innerHTML;
+    }
+
+    // ---- Enter key ----
+    document.getElementById('orderQuery').addEventListener('keydown', e => {
+        if (e.key === 'Enter') trackOrder();
+    });
+
+    window.trackOrder = async () => {
+        const q = document.getElementById('orderQuery').value.trim().replace('#', '');
+        if (!q) return;
+
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('resultArea').style.display = 'none';
+        document.getElementById('errorMsg').style.display = 'none';
+
+        try {
+            // ---- Query เฉพาะ orderid ที่ตรงกัน แทนดึงทั้งหมด ----
+            const ordersRef = ref(db, 'orders');
+            const qRef = query(ordersRef, orderByChild('orderid'), equalTo(Number(q) || q));
+            const snap = await get(qRef);
+
+            document.getElementById('loader').style.display = 'none';
+
+            let found = null;
+
+            if (snap.exists()) {
+                // ได้ผลลัพธ์จาก query โดยตรง
+                snap.forEach(child => { found = child.val(); });
+            }
+
+            // ---- Fallback: ค้นหาแบบยืดหยุ่น (เลขท้าย) ถ้า query ไม่เจอ ----
+            if (!found) {
+                const allSnap = await get(ordersRef);
+                if (allSnap.exists()) {
+                    allSnap.forEach(child => {
+                        const val = child.val();
+                        const orderid = String(val.orderid || '');
+                        if (
+                            String(child.key) === q ||
+                            orderid === q ||
+                            orderid.endsWith(q) ||
+                            (orderid.length > 0 && q.length > 0 &&
+                                orderid.replace(/^0+/, '') === q.replace(/^0+/, ''))
+                        ) {
+                            found = val;
+                        }
+                    });
+                }
+            }
+
+            if (found) {
+                renderData(found);
+                document.getElementById('resultArea').style.display = 'block';
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+
+        } catch (err) {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('errorMsg').style.display = 'block';
+            console.error('Firebase error:', err);
+        }
+    };
+
+    function renderData(o) {
+        document.getElementById('displayId').innerText = 'ORDER #' + (o.orderid || '------');
+        document.getElementById('displayName').innerText = 'คุณ' + (o.name || 'ลูกค้า');
+        document.getElementById('displayAddress').innerText = '📍 ' + (o.address || '-');
+        
+        // แสดงวันที่จัดส่งสำเร็จ
+        if (o.deliveredAt) {
+            const dt = new Date(o.deliveredAt);
+            const dateStr = isNaN(dt) ? o.deliveredAt : dt.toLocaleString('th-TH', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('deliveryDateValue').innerText = dateStr;
+            document.getElementById('displayDeliveryDate').style.display = 'block';
+        } else {
+            document.getElementById('displayDeliveryDate').style.display = 'none';
+        }
+
+        // ---- เลือกรูปตาม item name ----
+        const getImg = (itemName) => {
+            const name = String(itemName).toLowerCase();
+            if (name.includes('ช็อกโกแลต') || name.includes('chocolate') || name.includes('ช็อค') || name.includes('choc')) {
+                return 'https://github.com/jakknew32/comp.github.io/blob/main/S__38543433.jpg?raw=true';
+            }
+            if (name.includes('จืด') || name.includes('plain') || name.includes('แพลน')) {
+                return 'https://github.com/jakknew32/comp.github.io/blob/main/S__25329682_0.jpg?raw=true';
+            }
+            if (name.includes('น้ำผึ้ง') || name.includes('honey') || name.includes('ฮันนี่')) {
+                return 'https://github.com/jakknew32/comp.github.io/blob/main/MULK%20HP%20(BKK_CNX)%20copy@2x_0-1080x1080.png?raw=true';
+            }
+            return 'https://c8.alamy.com/comp/EAXHA7/an-failed-red-ink-stamp-on-a-white-background-EAXHA7.jpg';
+        };
+
+        // ---- Build product list ด้วย DOM (ป้องกัน XSS) ----
+        const items = Array.isArray(o.items) ? o.items : [o.items];
+        const container = document.getElementById('displayItems');
+        container.innerHTML = '';
+
+        items.forEach(it => {
+            const row = document.createElement('div');
+            row.className = 'prod-item';
+
+            const img = document.createElement('img');
+            img.src = getImg(it);
+            img.className = 'prod-img';
+            img.loading = 'lazy';                  // lazy load
+            img.referrerPolicy = 'no-referrer';
+            img.alt = String(it);
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'prod-name';
+            nameDiv.textContent = it;              // textContent ป้องกัน XSS
+
+            row.appendChild(img);
+            row.appendChild(nameDiv);
+            container.appendChild(row);
+        });
+
+        // ---- Timeline ----
+        const status = o.status;
+        const steps = [
+            { id: 'pending',   t: 'รับคำสั่งซื้อเรียบร้อย',     d: o.createdAt },
+            { id: 'transit',   t: 'พนักงานกำลังนำส่งพัสดุ',     d: o.transitAt },
+            { id: 'delivered', t: 'จัดส่งสำเร็จ',               d: o.deliveredAt }
+        ];
+
+        const tl = document.getElementById('timelineList');
+        tl.innerHTML = '';
+
+        steps.forEach(s => {
+            let cls = '';
+            if (status === 'delivered') {
+                cls = 'done';
+            } else if (status === 'transit') {
+                if (s.id === 'pending') cls = 'done';
+                if (s.id === 'transit') cls = 'active';
+            } else {
+                if (s.id === 'pending') cls = 'active';
+            }
+
+            let dateShow = '';
+            if (s.d) {
+                const dt = new Date(s.d);
+                dateShow = isNaN(dt) ? s.d : dt.toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' น.';
+            }
+
+            const step = document.createElement('div');
+            step.className = `step ${cls}`;
+
+            const title = document.createElement('div');
+            title.className = 'step-title';
+            title.textContent = s.t;
+
+            const date = document.createElement('div');
+            date.className = 'step-date';
+            date.textContent = dateShow;
+
+            step.appendChild(title);
+            step.appendChild(date);
+            tl.appendChild(step);
+        });
+    }
+</script>
+
+</body>
+</html>
