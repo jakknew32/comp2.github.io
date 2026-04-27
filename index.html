@@ -227,6 +227,27 @@
             flex: none;
         }
         .history-card .hc-use-btn:hover { background: #5a6fd6; }
+        .history-card .hc-del-btn {
+            background: none; color: #ef4444;
+            border: 1.5px solid #fca5a5; border-radius: 7px;
+            padding: 6px 10px; font-size: 12px;
+            font-weight: 600; cursor: pointer;
+            flex-shrink: 0; align-self: center;
+            font-family: inherit;
+            transition: all .15s;
+            min-width: 0; flex: none;
+            margin-left: 4px;
+        }
+        .history-card .hc-del-btn:hover { background: #ef4444; color: white; border-color: #ef4444; }
+        .btn-clear-all {
+            background: none; color: #ef4444;
+            border: 2px solid #fca5a5; border-radius: 8px;
+            padding: 7px 14px; font-size: 13px;
+            font-weight: 600; cursor: pointer;
+            font-family: inherit; white-space: nowrap;
+            transition: all .15s; min-width: 0; flex: none;
+        }
+        .btn-clear-all:hover { background: #ef4444; color: white; border-color: #ef4444; }
         .history-empty {
             text-align: center;
             padding: 40px 20px;
@@ -289,6 +310,8 @@
             const s = await get(ref(db, 'history'));
             return s.exists() ? Object.values(s.val()).reverse() : [];
         };
+        window._fbDeleteReceiver = async (id) => { await remove(ref(db, `receivers/${id}`)); };
+        window._fbClearAllReceivers = async () => { await remove(ref(db, 'receivers')); };
     </script>
 </head>
 <body>
@@ -339,6 +362,7 @@
         <div class="history-toolbar">
             <input type="text" class="history-search" id="historySearch" placeholder="🔍 ค้นหาชื่อ หรือที่อยู่..." oninput="filterHistory()">
             <span class="history-count" id="historyCount"></span>
+            <button class="btn-clear-all" onclick="clearAllHistory()">🗑️ ล้างทั้งหมด</button>
         </div>
         <div class="history-list" id="historyList">
             <div class="history-loading">กำลังโหลดข้อมูล</div>
@@ -520,6 +544,7 @@
         items.forEach(r => {
             const card = document.createElement('div');
             card.className = 'history-card';
+            card.id = `hcard-${r.id}`;
             const addrPreview = (r.address || '').replace(/\n/g, ' ');
             card.innerHTML = `
                 <div class="hc-icon">👤</div>
@@ -530,6 +555,7 @@
                     <div class="hc-time">🕐 ${formatThaiDate(r.createdAt)}</div>
                 </div>
                 <button class="hc-use-btn" onclick="useHistoryItem(${JSON.stringify(r.address || '').replace(/"/g,'&quot;')})">ใช้ที่อยู่นี้</button>
+                <button class="hc-del-btn" onclick="deleteHistoryItem('${escHtml(r.id)}')">✕</button>
             `;
             el.appendChild(card);
         });
@@ -569,6 +595,35 @@
 
     function escHtml(str) {
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function deleteHistoryItem(id) {
+        const card = document.getElementById(`hcard-${id}`);
+        if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
+        try {
+            await window._fbDeleteReceiver(id);
+            _historyCache = _historyCache.filter(r => r.id !== id);
+            const q = document.getElementById('historySearch').value.toLowerCase().trim();
+            const filtered = q ? _historyCache.filter(r =>
+                (r.name||'').toLowerCase().includes(q)||(r.address||'').toLowerCase().includes(q)||(r.phone||'').includes(q)
+            ) : _historyCache;
+            renderHistoryList(filtered);
+        } catch(e) {
+            if (card) { card.style.opacity = ''; card.style.pointerEvents = ''; }
+            alert('เกิดข้อผิดพลาด ไม่สามารถลบได้');
+        }
+    }
+
+    async function clearAllHistory() {
+        if (!confirm(`ต้องการล้างประวัติทั้งหมด ${_historyCache.length} รายการ?\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`)) return;
+        document.getElementById('historyList').innerHTML = '<div class="history-loading">กำลังลบข้อมูล</div>';
+        try {
+            await window._fbClearAllReceivers();
+            _historyCache = [];
+            renderHistoryList([]);
+        } catch(e) {
+            document.getElementById('historyList').innerHTML = `<div class="history-empty"><div class="he-icon">⚠️</div>เกิดข้อผิดพลาด กรุณาลองใหม่</div>`;
+        }
     }
     // ===========================
 
