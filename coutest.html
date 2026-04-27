@@ -178,15 +178,15 @@ window.addEventListener('online',  () => document.getElementById('offlineBanner'
 window.addEventListener('offline', () => document.getElementById('offlineBanner').classList.add('show'));
 if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
 
-// ── Escape HTML เพื่อป้องกัน XSS ──
+// ── Escape HTML เพื่อป้องกัน XSS (สำหรับ text content เท่านั้น) ──
 function esc(str) {
   if (str == null) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/"/g, '&quot;');
+  // ไม่ escape ' เพราะใช้ใน attribute ที่ครอบด้วย " แล้ว
 }
 
 // ── Validate URL (ป้องกัน javascript: XSS) ──
@@ -265,8 +265,24 @@ window.closeModal = () => {
   if (_modalResolve) { _modalResolve(false); _modalResolve = null; }
 };
 
+document.getElementById('mainGrid').addEventListener('change', async (e) => {
+  const sel = e.target.closest('.status-select');
+  if (!sel) return;
+  const fbKey = sel.dataset.fbkey;
+  if (!fbKey) return;
+  await changeStatus(fbKey, sel.value, sel);
+});
+
+document.getElementById('mainGrid').addEventListener('click', (e) => {
+  if (e.target.closest('.load-more-btn')) { loadMore(); return; }
+  const btn = e.target.closest('[data-copy-phone]');
+  if (btn) { copyPhone(btn.dataset.copyPhone); return; }
+  const hist = e.target.closest('[data-toggle-hist]');
+  if (hist) { toggleHistory(hist.dataset.toggleHist); }
+});
+
 // ── Change status (พร้อม race condition fix + error handling) ──
-window.changeStatus = async (fbKey, newStatus, selectEl) => {
+async function changeStatus(fbKey, newStatus, selectEl) {
   const stLabel = { pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ', failed:'ไม่สำเร็จ' };
   const confirmed = await showModal('ยืนยันการเปลี่ยนสถานะ', `เปลี่ยนเป็น "${stLabel[newStatus] || newStatus}" ใช่ไหม?`);
   if (!confirmed) { renderCards(); return; }
@@ -304,20 +320,29 @@ window.changeStatus = async (fbKey, newStatus, selectEl) => {
 };
 
 // ── Copy phone ──
-window.copyPhone = (phone) => {
+function copyPhone(phone) {
   navigator.clipboard?.writeText(phone).then(() => showToast('📋 คัดลอกเบอร์แล้ว'));
 };
 
 // ── Toggle history ──
-window.toggleHistory = (fbKey) => {
+function toggleHistory(fbKey) {
   const el = document.getElementById('hist-' + fbKey);
   if (el) el.classList.toggle('open');
 };
 
 // ── Filter & Search ──
-window.setFilter = (f) => { currentFilter = f; visibleCount = PAGE_SIZE; renderAll(); };
+function setFilter(f) { currentFilter = f; visibleCount = PAGE_SIZE; renderAll(); }
+function loadMore() { visibleCount += PAGE_SIZE; renderCards(); }
 window.clearSearch = () => { document.getElementById('searchInput').value = ''; renderCards(); };
-window.loadMore = () => { visibleCount += PAGE_SIZE; renderCards(); };
+
+// event delegation สำหรับ stats และ load-more
+document.getElementById('statsRow').addEventListener('click', (e) => {
+  const cell = e.target.closest('[data-filter]');
+  if (cell) setFilter(cell.dataset.filter);
+});
+document.getElementById('mainGrid').addEventListener('click', (e) => {
+  if (e.target.closest('.load-more-btn')) loadMore();
+});
 
 document.getElementById('searchInput').addEventListener('input', (e) => {
   document.getElementById('btnClear').classList.toggle('show', e.target.value !== '');
@@ -340,7 +365,7 @@ function renderStats() {
     { n: s.transit,   l: 'กำลังส่ง',  f: 'transit' },
     { n: s.delivered, l: 'สำเร็จ',    f: 'delivered' }
   ].map(i => `
-    <div class="stat-cell ${currentFilter === i.f ? 'active' : ''}" onclick="window.setFilter('${i.f}')">
+    <div class="stat-cell ${currentFilter === i.f ? 'active' : ''}" data-filter="${i.f}">
       <div class="sc-n">${i.n}</div>
       <div style="font-size:12px;color:var(--muted)">${i.l}</div>
     </div>`).join('');
@@ -397,7 +422,7 @@ function renderCards() {
       : `<span class="product-item">${esc(o.items)}</span>`;
 
     const historyHtml = history.length > 0 ? `
-      <span class="history-toggle" onclick="window.toggleHistory('${esc(o._fbKey)}')">🕐 ประวัติ (${history.length})</span>
+      <span class="history-toggle" data-toggle-hist="${esc(o._fbKey)}">🕐 ประวัติ (${history.length})</span>
       <div class="history-log" id="hist-${esc(o._fbKey)}">
         ${history.map(h => `
           <div class="history-item">
@@ -425,13 +450,13 @@ function renderCards() {
         <div class="info-row">
           📞
           <a class="phone-link" href="tel:${esc(o.phone)}">${esc(o.phone || '-')}</a>
-          ${o.phone ? `<span class="copy-hint" onclick="window.copyPhone('${esc(o.phone)}')" style="cursor:pointer">📋</span>` : ''}
+          ${o.phone ? `<span class="copy-hint" data-copy-phone="${esc(o.phone)}" style="cursor:pointer">📋</span>` : ''}
         </div>
         <div class="product-box">${itemsHtml}</div>
         ${historyHtml}
       </div>
       <div class="card-foot">
-        <select class="status-select" onchange="changeStatus('${esc(o._fbKey)}', this.value, this)">
+        <select class="status-select" data-fbkey="${esc(o._fbKey)}">
           <option value="pending"   ${o.status==='pending'  ?'selected':''}>⏳ รอส่ง</option>
           <option value="transit"   ${o.status==='transit'  ?'selected':''}>🚚 กำลังส่ง</option>
           <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
@@ -445,7 +470,7 @@ function renderCards() {
   // Load more button
   if (total > visibleCount) {
     document.getElementById('mainGrid').insertAdjacentHTML('beforeend',
-      `<button class="load-more-btn" onclick="window.loadMore()">โหลดเพิ่ม (${total - visibleCount} รายการ)</button>`
+      `<button class="load-more-btn">โหลดเพิ่ม (${total - visibleCount} รายการ)</button>`
     );
   }
 
