@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        /* --- โครงสร้างเดิมทั้งหมด --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -48,6 +47,7 @@
         .btn-blue { background: #667eea; color: white; }
         .btn-amber { background: #f59e0b; color: white; }
         .btn-purple { background: #8b5cf6; color: white; }
+        .btn-teal { background: #0d9488; color: white; }
 
         .print-area { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .a4-page { width: 210mm; height: 297mm; margin: 0 auto 20mm; background: white; padding: 4mm; box-shadow: 0 0 10px rgba(0,0,0,.1); box-sizing: border-box; display: flex; flex-direction: column; gap: 1mm; }
@@ -77,7 +77,6 @@
                 padding: 8mm !important; 
             }
 
-            /* === แก้ปัญหา Print A4 ไม่ตรง preview === */
             body.print-a4 {
                 background: white !important;
                 padding: 0 !important;
@@ -126,6 +125,7 @@
         .modal-overlay.open { display: flex; }
         .modal-box { background: white; border-radius: 15px; padding: 26px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
         .modal-box.narrow { max-width: 560px; }
+        .modal-box.wide { max-width: 700px; }
         .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .modal-hdr h2 { margin: 0; color: #333; font-size: 18px; }
         .btn-close { background: #ef4444; color: white; border: none; padding: 6px 13px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; min-width: 0; flex: none; }
@@ -151,18 +151,109 @@
         .label-foot-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 1mm; }
         .label-ts { font-size: 10px; color: #666; text-align: left; }
 
-        /* --- อื่นๆ คงเดิม --- */
         #labelPrintContainer { display: none; position: fixed; top: -9999px; left: -9999px; }
         .recv-list { display: flex; flex-direction: column; gap: 7px; max-height: 370px; overflow-y: auto; }
         .recv-card { border: 2px solid #e0e0e0; border-radius: 9px; padding: 11px 13px; cursor: pointer; transition: all .15s; }
         .recv-card:hover { border-color: #667eea; background: #f5f3ff; }
         #toast { position: fixed; bottom: 28px; right: 28px; padding: 13px 20px; border-radius: 9px; color: white; font-weight: 600; font-size: 14px; z-index: 99999; display: none; box-shadow: 0 4px 18px rgba(0,0,0,.3); }
 
-        /* ช่องกรอกผู้รับ — ขยาย */
-        #pageText { min-height: 200px; font-size: 15px; line-height: 1.7; }
+        #pageText { min-height: 80px; font-size: 15px; line-height: 1.7; }
+
+        /* ===== History Modal Styles ===== */
+        .history-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .history-search {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            min-width: 180px;
+        }
+        .history-search:focus { outline: none; border-color: #667eea; }
+        .history-count {
+            font-size: 13px;
+            color: #888;
+            white-space: nowrap;
+        }
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .history-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all .15s;
+            cursor: pointer;
+            position: relative;
+        }
+        .history-card:hover { border-color: #667eea; background: #f5f3ff; }
+        .history-card .hc-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .history-card .hc-body { flex: 1; min-width: 0; }
+        .history-card .hc-name { font-weight: 700; font-size: 15px; color: #1f2937; margin-bottom: 2px; }
+        .history-card .hc-phone { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+        .history-card .hc-addr { font-size: 13px; color: #374151; line-height: 1.45; white-space: pre-line; max-height: 48px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .history-card .hc-time { font-size: 11px; color: #9ca3af; margin-top: 5px; }
+        .history-card .hc-use-btn {
+            background: #667eea; color: white;
+            border: none; border-radius: 7px;
+            padding: 6px 12px; font-size: 12px;
+            font-weight: 600; cursor: pointer;
+            flex-shrink: 0; align-self: center;
+            font-family: inherit;
+            transition: background .15s;
+            min-width: 0;
+            flex: none;
+        }
+        .history-card .hc-use-btn:hover { background: #5a6fd6; }
+        .history-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+            font-size: 15px;
+        }
+        .history-empty .he-icon { font-size: 48px; margin-bottom: 10px; }
+        .history-loading {
+            text-align: center;
+            padding: 30px;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        .history-loading::after {
+            content: '';
+            display: inline-block;
+            width: 18px; height: 18px;
+            border: 2px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 
-    <!-- @page แยกตาม mode -->
     <style id="pageStyleLabel" media="print">
         body.print-label { }
         @page { size: 105mm 148mm; margin: 0; }
@@ -204,6 +295,7 @@
 
 <div id="labelPrintContainer"><div id="labelPrintContent"></div></div>
 
+<!-- Label Modal -->
 <div id="labelModal" class="modal-overlay">
     <div class="modal-box narrow">
         <div class="modal-hdr"><h2>📦 สร้างฉลาก A6</h2><button class="btn-close" onclick="closeModal('labelModal')">✕ ปิด</button></div>
@@ -229,10 +321,28 @@
     </div>
 </div>
 
+<!-- Picker Modal -->
 <div id="pickerModal" class="modal-overlay">
     <div class="modal-box wide">
         <div class="modal-hdr"><h2>📋 เลือกผู้รับ</h2><button class="btn-close" onclick="closeModal('pickerModal')">✕</button></div>
         <div class="recv-list" id="pickerList"></div>
+    </div>
+</div>
+
+<!-- ===== History Modal ===== -->
+<div id="historyModal" class="modal-overlay">
+    <div class="modal-box wide">
+        <div class="modal-hdr">
+            <h2>🕐 ประวัติการพิมพ์</h2>
+            <button class="btn-close" onclick="closeModal('historyModal')">✕ ปิด</button>
+        </div>
+        <div class="history-toolbar">
+            <input type="text" class="history-search" id="historySearch" placeholder="🔍 ค้นหาชื่อ หรือที่อยู่..." oninput="filterHistory()">
+            <span class="history-count" id="historyCount"></span>
+        </div>
+        <div class="history-list" id="historyList">
+            <div class="history-loading">กำลังโหลดข้อมูล</div>
+        </div>
     </div>
 </div>
 
@@ -256,10 +366,11 @@
 
         <div class="section-title">📬 ข้อมูลผู้รับ</div>
         <div style="margin-bottom:14px;">
-            <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+            <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:6px;">
+                <button onclick="openHistory()" class="btn-teal" style="flex:none;width:auto;padding:6px 14px;font-size:12px;min-width:0;">🕐 ประวัติการพิมพ์</button>
                 <button onclick="openPicker()" class="btn-blue" style="flex:none;width:auto;padding:6px 14px;font-size:12px;min-width:0;">👤 เลือกจาก DB</button>
             </div>
-            <textarea id="pageText" rows="4" style="width:100%;display:block;"></textarea>
+            <textarea id="pageText" rows="3" style="width:100%;display:block;"></textarea>
         </div>
 
         <div class="button-group">
@@ -273,6 +384,7 @@
 
 <script>
     let row1Photo = null, row2Photos = [], photosPerRow = 3;
+    let _historyCache = [];
     const SENDER = 'บริษัท เชียงใหม่เฟรชมิลค์ จำกัด 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687';
 
     (function(){
@@ -378,6 +490,88 @@
             l.appendChild(d);
         });
     }
+
+    // ===== History Functions =====
+    function formatThaiDate(isoStr) {
+        if (!isoStr) return '';
+        try {
+            const d = new Date(isoStr);
+            const day = d.getDate();
+            const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            const month = months[d.getMonth()];
+            const year = d.getFullYear() + 543;
+            const hh = String(d.getHours()).padStart(2,'0');
+            const mm = String(d.getMinutes()).padStart(2,'0');
+            return `${day} ${month} ${year} เวลา ${hh}:${mm} น.`;
+        } catch(e) { return isoStr; }
+    }
+
+    function renderHistoryList(items) {
+        const el = document.getElementById('historyList');
+        const countEl = document.getElementById('historyCount');
+        countEl.textContent = `ทั้งหมด ${items.length} รายการ`;
+
+        if (items.length === 0) {
+            el.innerHTML = `<div class="history-empty"><div class="he-icon">📭</div>ไม่พบข้อมูลประวัติการพิมพ์</div>`;
+            return;
+        }
+
+        el.innerHTML = '';
+        items.forEach(r => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            const addrPreview = (r.address || '').replace(/\n/g, ' ');
+            card.innerHTML = `
+                <div class="hc-icon">👤</div>
+                <div class="hc-body">
+                    <div class="hc-name">${escHtml(r.name || 'ไม่ระบุชื่อ')}</div>
+                    <div class="hc-phone">📞 ${escHtml(r.phone || '-')}</div>
+                    <div class="hc-addr">${escHtml(addrPreview)}</div>
+                    <div class="hc-time">🕐 ${formatThaiDate(r.createdAt)}</div>
+                </div>
+                <button class="hc-use-btn" onclick="useHistoryItem(${JSON.stringify(r.address || '').replace(/"/g,'&quot;')})">ใช้ที่อยู่นี้</button>
+            `;
+            el.appendChild(card);
+        });
+    }
+
+    function filterHistory() {
+        const q = document.getElementById('historySearch').value.toLowerCase().trim();
+        if (!q) { renderHistoryList(_historyCache); return; }
+        const filtered = _historyCache.filter(r =>
+            (r.name || '').toLowerCase().includes(q) ||
+            (r.address || '').toLowerCase().includes(q) ||
+            (r.phone || '').includes(q)
+        );
+        renderHistoryList(filtered);
+    }
+
+    function useHistoryItem(address) {
+        document.getElementById('pageText').value = address;
+        renderPhotos();
+        closeModal('historyModal');
+    }
+
+    async function openHistory() {
+        document.getElementById('historyModal').classList.add('open');
+        document.getElementById('historySearch').value = '';
+        document.getElementById('historyCount').textContent = '';
+        document.getElementById('historyList').innerHTML = '<div class="history-loading">กำลังโหลดข้อมูล</div>';
+
+        try {
+            const list = await window._fbGetReceivers();
+            _historyCache = list;
+            renderHistoryList(list);
+        } catch(e) {
+            document.getElementById('historyList').innerHTML = `<div class="history-empty"><div class="he-icon">⚠️</div>เกิดข้อผิดพลาด กรุณาลองใหม่</div>`;
+        }
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    // ===========================
+
     function handlePrint(){
         document.getElementById('pageStyleLabel').media = 'not all';
         document.getElementById('pageStyleA4').media = 'print';
