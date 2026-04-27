@@ -379,6 +379,10 @@
             <div style="flex:1;">
                 <label class="upload-label" for="photoInput">📁 เพิ่มรูปแถวล่าง</label>
                 <input type="file" id="photoInput" accept="image/*" multiple>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                    <input type="text" id="imgUrlInput" placeholder="🔗 วางลิ้งค์รูปภาพ แล้วกด Enter หรือ ➕" style="flex:1;padding:7px 10px;border:2px dashed #ccc;border-radius:8px;font-size:13px;font-family:inherit;color:#444;outline:none;" onkeydown="if(event.key==='Enter')addImgFromUrl()">
+                    <button onclick="addImgFromUrl()" style="flex:none;min-width:0;width:auto;padding:7px 13px;font-size:16px;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer;">➕</button>
+                </div>
                 <div id="thumbnailStrip"></div>
             </div>
         </div>
@@ -440,6 +444,16 @@
             w.innerHTML=`<img src="${src}"><button class="thumb-del" onclick="row2Photos.splice(${i},1);renderPhotos();renderThumbs();">✕</button>`;
             s.appendChild(w);
         });
+    }
+
+    function addImgFromUrl(){
+        const inp = document.getElementById('imgUrlInput');
+        const url = inp.value.trim();
+        if (!url) return;
+        const img = new Image();
+        img.onload = () => { row2Photos.push(url); renderPhotos(); renderThumbs(); inp.value=''; inp.style.borderColor='#ccc'; };
+        img.onerror = () => { inp.style.borderColor='#ef4444'; setTimeout(()=>inp.style.borderColor='#ccc',1500); };
+        img.src = url;
     }
 
     function renderPhotos(){
