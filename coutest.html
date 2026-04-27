@@ -19,92 +19,82 @@
   }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
   body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
-  
+
   nav { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:1000; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
   .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
   .logo em { color:var(--orange); font-style:normal; }
-  
+
   .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
-  .ph-row { display: flex; justify-content: space-between; align-items: center; }
+  .ph-row { display:flex; justify-content:space-between; align-items:center; }
   .ph-title { font-size:24px; font-weight:700; }
-  .btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-refresh { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:#fff; padding:8px 16px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
 
-  .stats-row { 
-    display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); 
-    position: sticky; top: 56px; z-index: 990; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-  }
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); position:sticky; top:56px; z-index:990; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
   .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
-  .stat-cell.active { background:var(--orange-l); border-bottom: 3px solid var(--orange); }
+  .stat-cell.active { background:var(--orange-l); border-bottom:3px solid var(--orange); }
   .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
-  
-  .search-container { padding: 16px 16px 0; max-width: 800px; margin: 0 auto; position: relative; }
-  .search-wrapper { position: relative; display: flex; align-items: center; }
-  .search-input { width: 100%; padding: 14px 45px 14px 16px; border-radius: 12px; border: 1px solid var(--border); font-family: var(--font); font-size: 16px; outline: none; background: #fff; }
-  .btn-clear { position: absolute; right: 12px; background: #cbd5e1; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; z-index: 10; cursor: pointer; }
-  .btn-clear.show { display: flex; }
 
-  .main { padding:16px; max-width:800px; margin:0 auto; display: flex; flex-direction: column; }
-  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); position: relative; }
-  .delivery-card.pending { border-left:6px solid var(--yellow); }
-  .delivery-card.transit { border-left:6px solid var(--blue); }
-  .delivery-card.delivered { border-left:6px solid var(--green); background:#f0fdf4; }
-  
-  .card-head { padding:16px; display:flex; justify-content:space-between; align-items: flex-start; }
-  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--text); display: flex; align-items: center; gap: 8px; line-height: 1; }
-  .card-date { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 400; }
-  .card-name { font-size:18px; font-weight:700; margin-top:6px; color: #0f172a; }
+  .search-container { padding:16px 16px 0; max-width:800px; margin:0 auto; }
+  .search-wrapper { position:relative; display:flex; align-items:center; }
+  .search-input { width:100%; padding:14px 45px 14px 16px; border-radius:12px; border:1px solid var(--border); font-family:var(--font); font-size:16px; outline:none; background:#fff; }
+  .btn-clear { position:absolute; right:12px; background:#cbd5e1; color:white; border:none; width:24px; height:24px; border-radius:50%; display:none; align-items:center; justify-content:center; font-size:14px; font-weight:bold; cursor:pointer; }
+  .btn-clear.show { display:flex; }
 
-  .status-badge { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
-  .st-pending { background: var(--yellow-l); color: var(--yellow); border: 1px solid #fde68a; }
-  .st-transit { background: var(--blue-l); color: var(--blue); border: 1px solid #bfdbfe; }
-  .st-delivered { background: var(--green-l); color: var(--green); border: 1px solid #a7f3d0; }
-  .st-failed { background: var(--red-l); color: var(--red); border: 1px solid #fecaca; }
+  .main { padding:16px; max-width:800px; margin:0 auto; display:flex; flex-direction:column; }
+  .delivery-card { background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .delivery-card.pending  { border-left:6px solid var(--yellow); }
+  .delivery-card.transit  { border-left:6px solid var(--blue); }
+  .delivery-card.delivered{ border-left:6px solid var(--green); background:#f0fdf4; }
+  .delivery-card.failed   { border-left:6px solid var(--red); }
 
-  .delivered-time { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; background: #dcfce7; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+  .card-head { padding:16px; display:flex; justify-content:space-between; align-items:flex-start; }
+  .card-id { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; line-height:1; }
+  .card-date { font-size:11px; color:var(--muted); margin-top:4px; }
+  .card-name { font-size:18px; font-weight:700; margin-top:6px; color:#0f172a; }
 
-  .badge-new { background: linear-gradient(45deg, #ef4444, #dc2626); color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 800; animation: pulse-red 2s infinite; }
-  @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); } }
-  
+  .status-badge { padding:6px 12px; border-radius:8px; font-size:13px; font-weight:700; white-space:nowrap; }
+  .st-pending   { background:var(--yellow-l); color:var(--yellow); border:1px solid #fde68a; }
+  .st-transit   { background:var(--blue-l);   color:var(--blue);   border:1px solid #bfdbfe; }
+  .st-delivered { background:var(--green-l);  color:var(--green);  border:1px solid #a7f3d0; }
+  .st-failed    { background:var(--red-l);    color:var(--red);    border:1px solid #fecaca; }
+
+  .delivered-time { font-size:12px; color:var(--green); font-weight:700; margin-top:4px; background:#dcfce7; padding:2px 8px; border-radius:4px; display:inline-block; }
+  .badge-new { background:linear-gradient(45deg,#ef4444,#dc2626); color:#fff; font-size:10px; padding:3px 8px; border-radius:20px; font-weight:800; animation:pulse-red 2s infinite; }
+  @keyframes pulse-red { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05);opacity:.8} }
+
   .card-body { padding:0 16px 12px; }
-  .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:15px; }
-  .product-box { margin-top:6px; background:rgba(0,0,0,0.02); padding:12px; border-radius:12px; border: 1px dashed #cbd5e1; }
+  .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:15px; align-items:center; }
+  .product-box { margin-top:6px; background:rgba(0,0,0,0.02); padding:12px; border-radius:12px; border:1px dashed #cbd5e1; }
   .product-item { font-size:19px; font-weight:700; color:var(--orange); margin-bottom:4px; display:block; }
-  
+  .phone-link { color:var(--orange); font-weight:700; text-decoration:none; }
+  .copy-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:0 4px; line-height:1; }
+
+  .history-toggle { font-size:12px; color:var(--muted); cursor:pointer; padding:4px 8px; border-radius:6px; background:var(--s1); border:1px solid var(--border); margin-top:8px; display:inline-block; }
+  .history-log { margin-top:8px; display:none; }
+  .history-log.open { display:block; }
+  .history-item { font-size:12px; color:var(--muted); padding:4px 0; border-bottom:1px dashed #e2e8f0; display:flex; gap:8px; }
+  .history-item:last-child { border-bottom:none; }
+  .history-dot { width:8px; height:8px; border-radius:50%; background:var(--orange); margin-top:4px; flex-shrink:0; }
+
   .card-foot { padding:12px 16px; background:var(--s1); display:flex; align-items:center; gap:10px; border-top:1px solid var(--border); }
-  .status-select { flex:1; padding:14px; border-radius:12px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; font-size: 16px; color: var(--text); z-index: 10; }
-  .status-select:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status-select { flex:1; padding:14px; border-radius:12px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-weight:700; font-size:16px; color:var(--text); }
+  .status-select:disabled { opacity:.5; cursor:not-allowed; }
 
-  /* History log */
-  .history-toggle { font-size: 12px; color: var(--muted); cursor: pointer; padding: 4px 8px; border-radius: 6px; background: var(--s1); border: 1px solid var(--border); margin-top: 8px; display: inline-block; }
-  .history-log { margin-top: 8px; display: none; }
-  .history-log.open { display: block; }
-  .history-item { font-size: 12px; color: var(--muted); padding: 4px 0; border-bottom: 1px dashed #e2e8f0; display: flex; gap: 8px; }
-  .history-item:last-child { border-bottom: none; }
-  .history-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); margin-top: 4px; flex-shrink: 0; }
+  .load-more-btn { display:block; width:100%; padding:16px; border-radius:12px; border:2px dashed var(--border); background:transparent; font-family:var(--font); font-size:15px; font-weight:600; color:var(--muted); cursor:pointer; margin-bottom:20px; }
 
-  /* Phone copy */
-  .phone-link { color:var(--orange); font-weight:700; text-decoration: none; cursor: pointer; }
-  .copy-hint { font-size: 11px; color: var(--muted); margin-left: 6px; }
+  .offline-banner { background:var(--red); color:#fff; text-align:center; padding:8px; font-size:13px; font-weight:600; display:none; }
+  .offline-banner.show { display:block; }
 
-  /* Custom modal (แทน confirm) */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay.show { display: flex; }
-  .modal-box { background: #fff; border-radius: 20px; padding: 28px 24px; max-width: 340px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-  .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-  .modal-body { font-size: 15px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
-  .modal-actions { display: flex; gap: 10px; }
-  .btn-cancel { flex: 1; padding: 14px; border-radius: 12px; border: 2px solid var(--border); background: #fff; font-family: var(--font); font-size: 16px; font-weight: 700; cursor: pointer; color: var(--muted); }
-  .btn-confirm { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--orange); color: #fff; font-family: var(--font); font-size: 16px; font-weight: 700; cursor: pointer; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9998; display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.show { display:flex; }
+  .modal-box { background:#fff; border-radius:20px; padding:28px 24px; max-width:340px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .modal-title { font-size:20px; font-weight:700; margin-bottom:8px; }
+  .modal-body  { font-size:15px; color:var(--muted); margin-bottom:24px; line-height:1.6; }
+  .modal-actions { display:flex; gap:10px; }
+  .btn-cancel  { flex:1; padding:14px; border-radius:12px; border:2px solid var(--border); background:#fff; font-family:var(--font); font-size:16px; font-weight:700; cursor:pointer; color:var(--muted); }
+  .btn-confirm { flex:1; padding:14px; border-radius:12px; border:none; background:var(--orange); color:#fff; font-family:var(--font); font-size:16px; font-weight:700; cursor:pointer; }
 
-  /* Load more */
-  .load-more-btn { display: block; width: 100%; padding: 16px; border-radius: 12px; border: 2px dashed var(--border); background: transparent; font-family: var(--font); font-size: 15px; font-weight: 600; color: var(--muted); cursor: pointer; margin-bottom: 20px; }
-  .load-more-btn:hover { background: var(--s1); }
-
-  /* Offline banner */
-  .offline-banner { background: var(--red); color: #fff; text-align: center; padding: 8px; font-size: 13px; font-weight: 600; display: none; }
-  .offline-banner.show { display: block; }
-
-  #toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(30,41,59,0.95); color:#fff; padding:14px 28px; border-radius:100px; font-size:14px; font-weight:600; z-index:9999; opacity:0; transition:0.4s; white-space: nowrap; }
+  #toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(30,41,59,0.95); color:#fff; padding:14px 28px; border-radius:100px; font-size:14px; font-weight:600; z-index:9999; opacity:0; transition:.4s; white-space:nowrap; }
   #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 </style>
 </head>
@@ -114,15 +104,15 @@
 
 <nav>
   <div class="logo"><em>CFM</em>FLEET FLOW</div>
-  <span style="font-weight: 700;">🛵 บุ๊ค (Messenger)</span>
+  <span style="font-weight:700">🛵 บุ๊ค (Messenger)</span>
 </nav>
 
 <div class="page-head">
   <div class="ph-row">
     <div class="ph-title">งานจัดส่งของคุณ</div>
-    <button class="btn-refresh" onclick="window.location.reload(true)">🔄 รีเฟรช</button>
+    <button class="btn-refresh" id="btnRefresh">🔄 รีเฟรช</button>
   </div>
-  <div id="dateDisplay" style="font-size: 14px; opacity: 0.8; margin-top: 4px;"></div>
+  <div id="dateDisplay" style="font-size:14px;opacity:.8;margin-top:4px"></div>
 </div>
 
 <div class="stats-row" id="statsRow"></div>
@@ -130,19 +120,18 @@
 <div class="search-container">
   <div class="search-wrapper">
     <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหา (ชื่อ, เบอร์, สินค้า)...">
-    <button id="btnClear" class="btn-clear" onclick="clearSearch()">✕</button>
+    <button id="btnClear" class="btn-clear">✕</button>
   </div>
 </div>
 
 <div class="main" id="mainGrid"></div>
 
-<!-- Custom Modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box">
-    <div class="modal-title" id="modalTitle">ยืนยันการเปลี่ยนสถานะ</div>
-    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body"  id="modalBody"></div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-cancel"  id="modalCancel">ยกเลิก</button>
       <button class="btn-confirm" id="modalConfirm">ยืนยัน</button>
     </div>
   </div>
@@ -152,7 +141,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
@@ -166,206 +155,128 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
-const ordersRef = ref(db, 'orders');
 
 let orders = [];
 let currentFilter = 'pending';
 const PAGE_SIZE = 20;
 let visibleCount = PAGE_SIZE;
+let firstLoad = true;
 
-// ── Offline detection ──
-window.addEventListener('online',  () => document.getElementById('offlineBanner').classList.remove('show'));
-window.addEventListener('offline', () => document.getElementById('offlineBanner').classList.add('show'));
-if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
-
-// ── Escape HTML เพื่อป้องกัน XSS (สำหรับ text content เท่านั้น) ──
-function esc(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-  // ไม่ escape ' เพราะใช้ใน attribute ที่ครอบด้วย " แล้ว
+// ─── Helpers ───────────────────────────────────
+function esc(s) {
+  return s == null ? '' : String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// ── Validate URL (ป้องกัน javascript: XSS) ──
 function safeUrl(url) {
   if (!url) return null;
-  try {
-    const u = new URL(url);
-    return (u.protocol === 'https:' || u.protocol === 'http:') ? url : null;
-  } catch { return null; }
+  try { const u = new URL(url); return (u.protocol==='https:'||u.protocol==='http:') ? url : null; }
+  catch { return null; }
+}
+function fmt(v) {
+  if (!v) return '-';
+  const d = new Date(v);
+  return isNaN(d) ? String(v) : d.toLocaleString('th-TH', { timeZone:'Asia/Bangkok' });
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show';
+  setTimeout(() => t.className = '', 2500);
 }
 
-// ── Format เวลาจาก ISO timestamp (ป้องกัน timezone ผิด) ──
-function formatThaiDate(isoOrMs) {
-  if (!isoOrMs) return '-';
-  const d = new Date(isoOrMs);
-  if (isNaN(d)) return String(isoOrMs);
-  return d.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
-}
+// ─── Modal ─────────────────────────────────────
+function showConfirm(title, body) {
+  return new Promise(resolve => {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').textContent  = body;
+    document.getElementById('modalOverlay').classList.add('show');
 
-// ── Firebase onValue ──
-onValue(ordersRef, snap => {
-  const data = snap.val() || {};
-  const prev = orders.map(o => o._fbKey + o.status).join('');
-  orders = Object.entries(data).map(([fbKey, o]) => ({ ...o, _fbKey: fbKey }));
-  const next = orders.map(o => o._fbKey + o.status).join('');
-
-  // เสียงแจ้งเตือน order ใหม่
-  const prevKeys = new Set(prev.split('').filter(Boolean));
-  const newOrders = orders.filter(o => {
-    const age = Date.now() - new Date(o.createdAt).getTime();
-    return age < 60000 && !prevKeys.has(o._fbKey);
+    function cleanup(val) {
+      document.getElementById('modalOverlay').classList.remove('show');
+      document.getElementById('modalConfirm').removeEventListener('click', onYes);
+      document.getElementById('modalCancel').removeEventListener('click',  onNo);
+      resolve(val);
+    }
+    function onYes() { cleanup(true);  }
+    function onNo()  { cleanup(false); }
+    document.getElementById('modalConfirm').addEventListener('click', onYes);
+    document.getElementById('modalCancel').addEventListener('click',  onNo);
   });
-  if (newOrders.length > 0 && prev !== '') playNotif();
-
-  renderAll();
-  updateTabTitle();
-});
-
-// ── Tab title badge ──
-function updateTabTitle() {
-  const pending = orders.filter(o => o.status === 'pending').length;
-  document.title = pending > 0 ? `(${pending}) CFM-FleetFlow` : 'CFM-FleetFlow';
 }
 
-// ── เสียงแจ้งเตือน (Web Audio API — ไม่ต้องใช้ไฟล์) ──
+// ─── Audio ─────────────────────────────────────
 function playNotif() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     [440, 660].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.3);
-      osc.start(ctx.currentTime + i * 0.15);
-      osc.stop(ctx.currentTime + i * 0.15 + 0.3);
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value = freq; osc.type = 'sine';
+      g.gain.setValueAtTime(0.3, ctx.currentTime + i*0.15);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.15 + 0.3);
+      osc.start(ctx.currentTime + i*0.15);
+      osc.stop(ctx.currentTime  + i*0.15 + 0.3);
     });
   } catch(e) {}
 }
 
-// ── Custom modal ──
-let _modalResolve = null;
-function showModal(title, body) {
-  return new Promise(resolve => {
-    _modalResolve = resolve;
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalBody').textContent = body;
-    document.getElementById('modalConfirm').onclick = () => { closeModal(); resolve(true); };
-    document.getElementById('modalOverlay').classList.add('show');
-  });
-}
-window.closeModal = () => {
-  document.getElementById('modalOverlay').classList.remove('show');
-  if (_modalResolve) { _modalResolve(false); _modalResolve = null; }
-};
-
-document.getElementById('mainGrid').addEventListener('change', async (e) => {
-  const sel = e.target.closest('.status-select');
-  if (!sel) return;
-  const fbKey = sel.dataset.fbkey;
-  if (!fbKey) return;
-  await changeStatus(fbKey, sel.value, sel);
+// ─── Firebase ──────────────────────────────────
+onValue(ref(db, 'orders'), snap => {
+  const data = snap.val() || {};
+  const prevKeys = new Set(orders.map(o => o._fbKey));
+  orders = Object.entries(data).map(([k, v]) => ({ ...v, _fbKey: k }));
+  if (!firstLoad) {
+    const hasNew = orders.some(o => !prevKeys.has(o._fbKey) && (Date.now() - new Date(o.createdAt)) < 60000);
+    if (hasNew) playNotif();
+  }
+  firstLoad = false;
+  renderAll();
+  const p = orders.filter(o => o.status === 'pending').length;
+  document.title = p > 0 ? `(${p}) CFM-FleetFlow` : 'CFM-FleetFlow';
 });
 
-document.getElementById('mainGrid').addEventListener('click', (e) => {
-  if (e.target.closest('.load-more-btn')) { loadMore(); return; }
-  const btn = e.target.closest('[data-copy-phone]');
-  if (btn) { copyPhone(btn.dataset.copyPhone); return; }
-  const hist = e.target.closest('[data-toggle-hist]');
-  if (hist) { toggleHistory(hist.dataset.toggleHist); }
-});
+// ─── Change status ─────────────────────────────
+async function changeStatus(fbKey, newStatus, sel) {
+  const labels = { pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ', failed:'ไม่สำเร็จ' };
+  const ok = await showConfirm('ยืนยันการเปลี่ยนสถานะ', `เปลี่ยนเป็น "${labels[newStatus]||newStatus}" ใช่ไหม?`);
+  if (!ok) { renderCards(); return; }
 
-// ── Change status (พร้อม race condition fix + error handling) ──
-async function changeStatus(fbKey, newStatus, selectEl) {
-  const stLabel = { pending:'รอส่ง', transit:'กำลังส่ง', delivered:'สำเร็จ', failed:'ไม่สำเร็จ' };
-  const confirmed = await showModal('ยืนยันการเปลี่ยนสถานะ', `เปลี่ยนเป็น "${stLabel[newStatus] || newStatus}" ใช่ไหม?`);
-  if (!confirmed) { renderCards(); return; }
-
-  // Disable select ระหว่าง update (ป้องกัน race condition)
-  if (selectEl) selectEl.disabled = true;
-
+  sel.disabled = true;
   const now = new Date();
-  const isoNow = now.toISOString();
-  const displayNow = formatThaiDate(isoNow);
+  const payload = { status: newStatus };
 
-  let updateData = { status: newStatus };
   if (newStatus === 'delivered') {
-    updateData.deliveredAt = displayNow;
-    updateData.deliveredTS = now.getTime();
+    payload.deliveredAt = fmt(now.toISOString());
+    payload.deliveredTS = now.getTime();
   } else {
-    updateData.deliveredAt = null;
-    updateData.deliveredTS = null;
+    payload.deliveredAt = null;
+    payload.deliveredTS = null;
   }
 
-  // บันทึก history log
   const order = orders.find(o => o._fbKey === fbKey);
-  const prevStatus = order?.status || 'unknown';
-  const history = order?.statusHistory || [];
-  history.push({ from: prevStatus, to: newStatus, at: isoNow, display: displayNow });
-  updateData.statusHistory = history;
+  const hist  = Array.isArray(order?.statusHistory) ? [...order.statusHistory] : [];
+  hist.push({ from: order?.status||'?', to: newStatus, at: now.toISOString(), display: fmt(now.toISOString()) });
+  payload.statusHistory = hist;
 
-  update(ref(db, 'orders/' + fbKey), updateData)
-    .then(() => showToast('✅ บันทึกแล้ว'))
-    .catch(err => {
-      showToast('❌ บันทึกไม่สำเร็จ — ' + (navigator.onLine ? 'ลองใหม่' : 'ไม่มีเน็ต'));
-      renderCards(); // reset select กลับค่าเดิม
-    })
-    .finally(() => { if (selectEl) selectEl.disabled = false; });
-};
+  update(ref(db, 'orders/' + fbKey), payload)
+    .then(() => toast('✅ บันทึกแล้ว'))
+    .catch(() => { toast('❌ บันทึกไม่สำเร็จ'); renderCards(); })
+    .finally(() => { sel.disabled = false; });
+}
 
-// ── Copy phone ──
-function copyPhone(phone) {
-  navigator.clipboard?.writeText(phone).then(() => showToast('📋 คัดลอกเบอร์แล้ว'));
-};
-
-// ── Toggle history ──
-function toggleHistory(fbKey) {
-  const el = document.getElementById('hist-' + fbKey);
-  if (el) el.classList.toggle('open');
-};
-
-// ── Filter & Search ──
-function setFilter(f) { currentFilter = f; visibleCount = PAGE_SIZE; renderAll(); }
-function loadMore() { visibleCount += PAGE_SIZE; renderCards(); }
-window.clearSearch = () => { document.getElementById('searchInput').value = ''; renderCards(); };
-
-// event delegation สำหรับ stats และ load-more
-document.getElementById('statsRow').addEventListener('click', (e) => {
-  const cell = e.target.closest('[data-filter]');
-  if (cell) setFilter(cell.dataset.filter);
-});
-document.getElementById('mainGrid').addEventListener('click', (e) => {
-  if (e.target.closest('.load-more-btn')) loadMore();
-});
-
-document.getElementById('searchInput').addEventListener('input', (e) => {
-  document.getElementById('btnClear').classList.toggle('show', e.target.value !== '');
-  visibleCount = PAGE_SIZE;
-  renderCards();
-});
-
+// ─── Render ────────────────────────────────────
 function renderAll() { renderStats(); renderCards(); }
 
 function renderStats() {
-  const s = {
-    total: orders.length,
-    pending: orders.filter(o => o.status === 'pending').length,
-    transit: orders.filter(o => o.status === 'transit').length,
-    delivered: orders.filter(o => o.status === 'delivered').length
-  };
+  const cnt = { all:orders.length, pending:0, transit:0, delivered:0 };
+  orders.forEach(o => { if (cnt[o.status]!==undefined) cnt[o.status]++; });
   document.getElementById('statsRow').innerHTML = [
-    { n: s.total,     l: 'ทั้งหมด',   f: 'all' },
-    { n: s.pending,   l: 'รอส่ง',     f: 'pending' },
-    { n: s.transit,   l: 'กำลังส่ง',  f: 'transit' },
-    { n: s.delivered, l: 'สำเร็จ',    f: 'delivered' }
-  ].map(i => `
-    <div class="stat-cell ${currentFilter === i.f ? 'active' : ''}" data-filter="${i.f}">
+    {f:'all',       l:'ทั้งหมด',  n:cnt.all},
+    {f:'pending',   l:'รอส่ง',    n:cnt.pending},
+    {f:'transit',   l:'กำลังส่ง', n:cnt.transit},
+    {f:'delivered', l:'สำเร็จ',   n:cnt.delivered}
+  ].map(i=>`
+    <div class="stat-cell${currentFilter===i.f?' active':''}" data-filter="${i.f}">
       <div class="sc-n">${i.n}</div>
       <div style="font-size:12px;color:var(--muted)">${i.l}</div>
     </div>`).join('');
@@ -373,122 +284,125 @@ function renderStats() {
 
 function renderCards() {
   const now = Date.now();
-  const searchStr = document.getElementById('searchInput').value.toLowerCase().trim();
-
-  let filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
-
-  // Search เฉพาะ field ที่จำเป็น (ไม่ใช้ JSON.stringify ทั้งหมด)
-  if (searchStr) {
-    filtered = filtered.filter(o => {
-      const name    = (o.name    || '').toLowerCase();
-      const phone   = (o.phone   || '').toLowerCase();
-      const address = (o.address || '').toLowerCase();
-      const items   = Array.isArray(o.items) ? o.items.join(' ').toLowerCase() : (o.items || '').toLowerCase();
-      const orderid = (o.orderid || '').toLowerCase();
-      return name.includes(searchStr) || phone.includes(searchStr) ||
-             address.includes(searchStr) || items.includes(searchStr) ||
-             orderid.includes(searchStr);
-    });
-  }
-
-  // ลำดับ: pending/transit ขึ้นก่อน, delivered จมลงล่าง
-  filtered.sort((a, b) => {
-    const priority = { pending: 0, transit: 1, failed: 2, delivered: 3 };
-    const pa = priority[a.status] ?? 9;
-    const pb = priority[b.status] ?? 9;
-    if (pa !== pb) return pa - pb;
-    if (a.status === 'delivered') return (b.deliveredTS || 0) - (a.deliveredTS || 0);
-    return new Date(b.createdAt) - new Date(a.createdAt);
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  let list = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
+  if (q) list = list.filter(o=>
+    (o.name||'').toLowerCase().includes(q)||
+    (o.phone||'').toLowerCase().includes(q)||
+    (o.address||'').toLowerCase().includes(q)||
+    (o.orderid||'').toLowerCase().includes(q)||
+    (Array.isArray(o.items)?o.items.join(' '):(o.items||'')).toLowerCase().includes(q)
+  );
+  list.sort((a,b)=>{
+    const p={pending:0,transit:1,failed:2,delivered:3};
+    const d=(p[a.status]??9)-(p[b.status]??9);
+    if(d) return d;
+    if(a.status==='delivered') return (b.deliveredTS||0)-(a.deliveredTS||0);
+    return new Date(b.createdAt)-new Date(a.createdAt);
   });
-
-  const total = filtered.length;
-  const paged = filtered.slice(0, visibleCount);
-
-  const stMap = {
-    pending:   { t: 'รอส่ง',      c: 'st-pending' },
-    transit:   { t: 'กำลังส่ง',   c: 'st-transit' },
-    delivered: { t: 'สำเร็จ',     c: 'st-delivered' },
-    failed:    { t: 'ไม่สำเร็จ',  c: 'st-failed' }
+  const total=list.length, page=list.slice(0,visibleCount);
+  const stMap={
+    pending:{t:'รอส่ง',c:'st-pending'}, transit:{t:'กำลังส่ง',c:'st-transit'},
+    delivered:{t:'สำเร็จ',c:'st-delivered'}, failed:{t:'ไม่สำเร็จ',c:'st-failed'}
   };
+  const grid = document.getElementById('mainGrid');
+  if (!page.length) { grid.innerHTML='<div style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการ</div>'; return; }
 
-  document.getElementById('mainGrid').innerHTML = paged.map(o => {
-    const isNew = (now - new Date(o.createdAt).getTime()) < (24 * 3600 * 1000);
-    const st = stMap[o.status] || stMap.pending;
-    const safeMaps = safeUrl(o.mapsLink);
-    const history = o.statusHistory || [];
-
-    const itemsHtml = Array.isArray(o.items)
-      ? o.items.map((it, i) => `<span class="product-item">${i+1}. ${esc(it)}</span>`).join('')
-      : `<span class="product-item">${esc(o.items)}</span>`;
-
-    const historyHtml = history.length > 0 ? `
-      <span class="history-toggle" data-toggle-hist="${esc(o._fbKey)}">🕐 ประวัติ (${history.length})</span>
+  grid.innerHTML = page.map(o=>{
+    const isNew=(now-new Date(o.createdAt))<86400000;
+    const st=stMap[o.status]||stMap.pending;
+    const sm=safeUrl(o.mapsLink);
+    const hist=o.statusHistory||[];
+    const items=Array.isArray(o.items)
+      ?o.items.map((it,i)=>`<span class="product-item">${i+1}. ${esc(it)}</span>`).join('')
+      :`<span class="product-item">${esc(o.items)}</span>`;
+    const histHtml=hist.length?`
+      <span class="history-toggle" data-hist="${esc(o._fbKey)}">🕐 ประวัติ (${hist.length})</span>
       <div class="history-log" id="hist-${esc(o._fbKey)}">
-        ${history.map(h => `
-          <div class="history-item">
-            <div class="history-dot"></div>
-            <span><b>${esc(h.from)}</b> → <b>${esc(h.to)}</b> &nbsp;|&nbsp; ${esc(h.display)}</span>
-          </div>`).join('')}
-      </div>` : '';
-
+        ${hist.map(h=>`<div class="history-item"><div class="history-dot"></div><span><b>${esc(h.from)}</b> → <b>${esc(h.to)}</b> | ${esc(h.display)}</span></div>`).join('')}
+      </div>`:'';
     return `
     <div class="delivery-card ${esc(o.status)}">
       <div class="card-head">
         <div>
-          <div class="card-id">
-            #${esc(o.orderid || o._fbKey.substring(0,6))}
-            ${isNew && o.status !== 'delivered' ? '<span class="badge-new">NEW</span>' : ''}
-          </div>
-          <div class="card-date">🕒 เพิ่มเมื่อ: ${formatThaiDate(o.createdAt)}</div>
-          <div class="card-name">${esc(o.name || 'ไม่ระบุ')}</div>
-          ${o.status === 'delivered' ? `<div class="delivered-time">✅ สำเร็จเมื่อ: ${esc(o.deliveredAt)}</div>` : ''}
+          <div class="card-id">#${esc(o.orderid||o._fbKey.substring(0,6))} ${isNew&&o.status!=='delivered'?'<span class="badge-new">NEW</span>':''}</div>
+          <div class="card-date">🕒 เพิ่มเมื่อ: ${fmt(o.createdAt)}</div>
+          <div class="card-name">${esc(o.name||'ไม่ระบุ')}</div>
+          ${o.status==='delivered'?`<div class="delivered-time">✅ สำเร็จเมื่อ: ${esc(o.deliveredAt)}</div>`:''}
         </div>
         <div class="status-badge ${st.c}">${st.t}</div>
       </div>
       <div class="card-body">
-        <div class="info-row">📍 ${esc(o.address || '-')}</div>
-        <div class="info-row">
-          📞
-          <a class="phone-link" href="tel:${esc(o.phone)}">${esc(o.phone || '-')}</a>
-          ${o.phone ? `<span class="copy-hint" data-copy-phone="${esc(o.phone)}" style="cursor:pointer">📋</span>` : ''}
-        </div>
-        <div class="product-box">${itemsHtml}</div>
-        ${historyHtml}
+        <div class="info-row">📍 ${esc(o.address||'-')}</div>
+        <div class="info-row">📞 <a class="phone-link" href="tel:${esc(o.phone)}">${esc(o.phone||'-')}</a>${o.phone?`<button class="copy-btn" data-copy="${esc(o.phone)}" title="คัดลอกเบอร์">📋</button>`:''}</div>
+        <div class="product-box">${items}</div>
+        ${histHtml}
       </div>
       <div class="card-foot">
-        <select class="status-select" data-fbkey="${esc(o._fbKey)}">
-          <option value="pending"   ${o.status==='pending'  ?'selected':''}>⏳ รอส่ง</option>
-          <option value="transit"   ${o.status==='transit'  ?'selected':''}>🚚 กำลังส่ง</option>
-          <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ สำเร็จ</option>
-          <option value="failed"    ${o.status==='failed'   ?'selected':''}>❌ ไม่สำเร็จ</option>
+        <select class="status-select" data-key="${esc(o._fbKey)}">
+          <option value="pending"   ${o.status==='pending'   ?'selected':''}>⏳ รอส่ง</option>
+          <option value="transit"   ${o.status==='transit'   ?'selected':''}>🚚 กำลังส่ง</option>
+          <option value="delivered" ${o.status==='delivered' ?'selected':''}>✅ สำเร็จ</option>
+          <option value="failed"    ${o.status==='failed'    ?'selected':''}>❌ ไม่สำเร็จ</option>
         </select>
-        ${safeMaps ? `<a href="${esc(safeMaps)}" target="_blank" rel="noopener noreferrer" style="padding:12px 20px; border-radius:12px; background:var(--green); color:#fff; font-size:14px; font-weight:700; text-decoration:none; white-space:nowrap;">แผนที่</a>` : ''}
+        ${sm?`<a href="${esc(sm)}" target="_blank" rel="noopener noreferrer" style="padding:12px 20px;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap">แผนที่</a>`:''}
       </div>
     </div>`;
   }).join('');
 
-  // Load more button
-  if (total > visibleCount) {
-    document.getElementById('mainGrid').insertAdjacentHTML('beforeend',
-      `<button class="load-more-btn">โหลดเพิ่ม (${total - visibleCount} รายการ)</button>`
-    );
-  }
-
-  if (paged.length === 0) {
-    document.getElementById('mainGrid').innerHTML = '<div style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการ</div>';
+  if (total>visibleCount) {
+    grid.insertAdjacentHTML('beforeend',
+      `<button class="load-more-btn" id="btnLoadMore">โหลดเพิ่ม (${total-visibleCount} รายการ)</button>`);
   }
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show';
-  setTimeout(() => t.className = '', 2500);
-}
+// ─── Events ────────────────────────────────────
 
-document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH', {
-  weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Bangkok'
+// Stats
+document.getElementById('statsRow').addEventListener('click', e => {
+  const c = e.target.closest('[data-filter]');
+  if (!c) return;
+  currentFilter = c.dataset.filter;
+  visibleCount  = PAGE_SIZE;
+  renderAll();
 });
+
+// Cards
+document.getElementById('mainGrid').addEventListener('change', async e => {
+  const sel = e.target.closest('.status-select');
+  if (!sel) return;
+  const key = sel.dataset.key;
+  if (key) await changeStatus(key, sel.value, sel);
+});
+
+document.getElementById('mainGrid').addEventListener('click', e => {
+  if (e.target.closest('#btnLoadMore'))      { visibleCount += PAGE_SIZE; renderCards(); return; }
+  const cp = e.target.closest('[data-copy]');
+  if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(()=>toast('📋 คัดลอกเบอร์แล้ว')); return; }
+  const ht = e.target.closest('[data-hist]');
+  if (ht) { document.getElementById('hist-'+ht.dataset.hist)?.classList.toggle('open'); }
+});
+
+// Search
+document.getElementById('searchInput').addEventListener('input', e => {
+  document.getElementById('btnClear').classList.toggle('show', !!e.target.value);
+  visibleCount = PAGE_SIZE; renderCards();
+});
+document.getElementById('btnClear').addEventListener('click', () => {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('btnClear').classList.remove('show');
+  visibleCount = PAGE_SIZE; renderCards();
+});
+
+// Refresh & Offline
+document.getElementById('btnRefresh').addEventListener('click', () => location.reload(true));
+window.addEventListener('online',  () => document.getElementById('offlineBanner').classList.remove('show'));
+window.addEventListener('offline', () => document.getElementById('offlineBanner').classList.add('show'));
+if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
+
+// Date
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',
+  { weekday:'long', day:'numeric', month:'long', timeZone:'Asia/Bangkok' });
 </script>
 </body>
 </html>
