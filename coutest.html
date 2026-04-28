@@ -7,16 +7,95 @@
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f0f4f8; --card: #ffffff; --border: #dde3ec; --s1: #f8fafc;
-    --orange: #f85903; --orange-l: #fff3ee; --orange-b: #fed7aa;
-    --cyan: #0891b2; --cyan-l: #ecfeff; --cyan-b: #a5f3fc;
-    --green: #059669; --green-l: #d1fae5; --green-b: #10b981;
-    --yellow: #d97706; --yellow-l: #fef3c7; --yellow-b: #f59e0b;
-    --red: #dc2626; --red-l: #fef2f2; --red-b: #fecaca;
-    --blue: #2563eb; --blue-l: #dbeafe;
-    --text: #1e293b; --muted: #64748b;
-    --font: 'Kanit', sans-serif; --mono: 'JetBrains Mono', monospace;
+    --bg:#f0f4f8; --card:#ffffff; --border:#dde3ec; --s1:#f8fafc;
+    --orange:#f85903; --orange-l:#fff3ee; --orange-b:#fed7aa;
+    --cyan:#0891b2; --cyan-l:#ecfeff; --cyan-b:#a5f3fc;
+    --green:#059669; --green-l:#d1fae5; --green-b:#10b981;
+    --yellow:#d97706; --yellow-l:#fef3c7; --yellow-b:#f59e0b;
+    --red:#dc2626; --red-l:#fef2f2; --red-b:#fecaca;
+    --blue:#2563eb; --blue-l:#dbeafe;
+    --text:#1e293b; --muted:#64748b;
+    --head-from:#ea580c; --head-to:#c2410c;
+    --font:'Kanit',sans-serif; --mono:'JetBrains Mono',monospace;
   }
+  /* DARK */
+  [data-theme="dark"] {
+    --bg:#0f1117; --card:#1a1d27; --border:#2a2d3a; --s1:#151820;
+    --text:#f1f5f9; --muted:#64748b;
+    --orange-l:#2a1a0e; --blue-l:#0f1e3d; --green-l:#052e1c; --yellow-l:#2a1f05; --red-l:#2a0a0a;
+    --head-from:#1e2235; --head-to:#0f1117;
+  }
+  [data-theme="dark"] nav { background:#1a1d27; }
+  [data-theme="dark"] .stats-row { background:#1a1d27; }
+  [data-theme="dark"] .search-input { background:#1a1d27; color:#f1f5f9; }
+  [data-theme="dark"] .status-select { background:#1a1d27; color:#f1f5f9; }
+  [data-theme="dark"] .modal-box { background:#1a1d27; }
+  [data-theme="dark"] .btn-cancel { background:#2a2d3a; color:#94a3b8; border-color:#2a2d3a; }
+  [data-theme="dark"] .delivery-card.delivered { background:#0a1f14; }
+  [data-theme="dark"] .product-box { background:rgba(255,255,255,0.04); }
+  /* FOREST */
+  [data-theme="forest"] {
+    --bg:#f0f7f0; --card:#ffffff; --border:#c3dac3; --s1:#f4faf4;
+    --orange:#2d6a2d; --orange-l:#e8f5e8; --orange-b:#a8d5a8;
+    --head-from:#2d6a2d; --head-to:#1a4a1a;
+    --text:#1a2e1a; --muted:#5a7a5a;
+  }
+  [data-theme="forest"] .logo em,.theme-forest-accent { color:#2d6a2d; }
+  [data-theme="forest"] .sc-n { color:#2d6a2d; }
+  [data-theme="forest"] .stat-cell.active { background:#e8f5e8; border-bottom-color:#2d6a2d; }
+  [data-theme="forest"] .product-item { color:#2d6a2d; }
+  [data-theme="forest"] .phone-link { color:#2d6a2d; }
+  [data-theme="forest"] .btn-confirm { background:#2d6a2d; }
+  [data-theme="forest"] .history-dot { background:#2d6a2d; }
+  /* OCEAN */
+  [data-theme="ocean"] {
+    --bg:#eef4fb; --card:#ffffff; --border:#bdd4ec; --s1:#f2f7fd;
+    --orange:#1565c0; --orange-l:#e3f0ff; --orange-b:#90caf9;
+    --head-from:#1565c0; --head-to:#0d47a1;
+    --text:#0d2137; --muted:#5577aa;
+  }
+  [data-theme="ocean"] .logo em { color:#1565c0; }
+  [data-theme="ocean"] .sc-n { color:#1565c0; }
+  [data-theme="ocean"] .stat-cell.active { background:#e3f0ff; border-bottom-color:#1565c0; }
+  [data-theme="ocean"] .product-item { color:#1565c0; }
+  [data-theme="ocean"] .phone-link { color:#1565c0; }
+  [data-theme="ocean"] .btn-confirm { background:#1565c0; }
+  [data-theme="ocean"] .history-dot { background:#1565c0; }
+  /* ROSE */
+  [data-theme="rose"] {
+    --bg:#fff0f3; --card:#ffffff; --border:#fcc; --s1:#fff5f7;
+    --orange:#c0185a; --orange-l:#ffe0ea; --orange-b:#f9a8c9;
+    --head-from:#c0185a; --head-to:#8b0038;
+    --text:#2d0a18; --muted:#a05578;
+  }
+  [data-theme="rose"] .logo em { color:#c0185a; }
+  [data-theme="rose"] .sc-n { color:#c0185a; }
+  [data-theme="rose"] .stat-cell.active { background:#ffe0ea; border-bottom-color:#c0185a; }
+  [data-theme="rose"] .product-item { color:#c0185a; }
+  [data-theme="rose"] .phone-link { color:#c0185a; }
+  [data-theme="rose"] .btn-confirm { background:#c0185a; }
+  [data-theme="rose"] .history-dot { background:#c0185a; }
+  /* THEME PANEL */
+  .theme-btn { background:none; border:none; font-size:20px; cursor:pointer; padding:4px 6px; line-height:1; border-radius:8px; }
+  .theme-btn:hover { background:var(--orange-l); }
+  .theme-panel {
+    position:fixed; top:60px; right:12px; z-index:2000;
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:14px 16px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.18);
+    display:none; min-width:190px;
+  }
+  .theme-panel.open { display:block; }
+  .theme-panel-title { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
+  .theme-option {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:10px; cursor:pointer;
+    font-size:14px; font-weight:600; color:var(--text);
+    border:2px solid transparent; margin-bottom:3px; transition:.12s;
+  }
+  .theme-option:last-child { margin-bottom:0; }
+  .theme-option.active { border-color:var(--orange); background:var(--orange-l); }
+  .theme-swatch { width:18px; height:18px; border-radius:5px; flex-shrink:0; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
   body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
 
@@ -24,7 +103,7 @@
   .logo { font-family:var(--mono); font-weight:700; font-size:16px; letter-spacing:2px; color:var(--text); }
   .logo em { color:var(--orange); font-style:normal; }
 
-  .page-head { background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding:24px 20px 20px; color:#fff; }
+  .page-head { background:linear-gradient(135deg, var(--head-from) 0%, var(--head-to) 100%); padding:24px 20px 20px; color:#fff; }
   .ph-row { display:flex; justify-content:space-between; align-items:center; }
   .ph-title { font-size:24px; font-weight:700; }
   .btn-refresh { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:#fff; padding:8px 16px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
@@ -104,8 +183,30 @@
 
 <nav>
   <div class="logo"><em>CFM</em>FLEET FLOW</div>
-  <a href="cfm-fleetflow-dashboard.html" style="font-size:13px;font-weight:700;color:var(--purple,#7c3aed);text-decoration:none;padding:8px 12px;border:1.5px solid var(--purple,#7c3aed);border-radius:8px">📊 Dashboard</a>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span style="font-weight:700">🛵 บุ๊ค</span>
+    <button class="theme-btn" id="themeBtnToggle" title="เปลี่ยน Theme">🎨</button>
+  </div>
 </nav>
+
+<div class="theme-panel" id="themePanel">
+  <div class="theme-panel-title">เลือก Theme</div>
+  <div class="theme-option active" data-theme="default">
+    <span class="theme-swatch" style="background:linear-gradient(135deg,#f85903,#ea580c)"></span> ส้มไฟ (Default)
+  </div>
+  <div class="theme-option" data-theme="dark">
+    <span class="theme-swatch" style="background:linear-gradient(135deg,#1a1d27,#0f1117)"></span> Dark Mode
+  </div>
+  <div class="theme-option" data-theme="forest">
+    <span class="theme-swatch" style="background:linear-gradient(135deg,#2d6a2d,#1a4a1a)"></span> ป่าเขียว
+  </div>
+  <div class="theme-option" data-theme="ocean">
+    <span class="theme-swatch" style="background:linear-gradient(135deg,#1565c0,#0d47a1)"></span> มหาสมุทร
+  </div>
+  <div class="theme-option" data-theme="rose">
+    <span class="theme-swatch" style="background:linear-gradient(135deg,#c0185a,#8b0038)"></span> กุหลาบแดง
+  </div>
+</div>
 
 <div class="page-head">
   <div class="ph-row">
@@ -409,6 +510,34 @@ document.getElementById('btnRefresh').addEventListener('click', () => location.r
 window.addEventListener('online',  () => document.getElementById('offlineBanner').classList.remove('show'));
 window.addEventListener('offline', () => document.getElementById('offlineBanner').classList.add('show'));
 if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
+
+// ─── Theme Switcher ─────────────────────────────
+const THEMES = ['default','dark','forest','ocean','rose'];
+const savedTheme = localStorage.getItem('cfm-theme') || 'default';
+applyTheme(savedTheme);
+
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t === 'default' ? '' : t;
+  document.querySelectorAll('.theme-option').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === t);
+  });
+  localStorage.setItem('cfm-theme', t);
+}
+
+document.getElementById('themeBtnToggle').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('themePanel').classList.toggle('open');
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('#themePanel') && !e.target.closest('#themeBtnToggle'))
+    document.getElementById('themePanel').classList.remove('open');
+});
+document.getElementById('themePanel').addEventListener('click', e => {
+  const opt = e.target.closest('.theme-option');
+  if (!opt) return;
+  applyTheme(opt.dataset.theme);
+  document.getElementById('themePanel').classList.remove('open');
+});
 
 // Date
 document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',
