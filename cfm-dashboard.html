@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CFM-FleetFlow — Dashboard ลูกค้าซ้ำ</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f0f4f8; --card:#fff; --border:#dde3ec; --s1:#f8fafc;
+    --orange:#f85903; --orange-l:#fff3ee;
+    --green:#059669; --green-l:#d1fae5;
+    --purple:#7c3aed; --purple-l:#ede9fe;
+    --blue:#2563eb; --blue-l:#dbeafe;
+    --yellow:#d97706; --yellow-l:#fef3c7;
+    --red:#dc2626; --red-l:#fef2f2;
+    --text:#1e293b; --muted:#64748b;
+    --font:'Kanit',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+  nav{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .logo{font-family:var(--mono);font-weight:700;font-size:16px;letter-spacing:2px}
+  .logo em{color:var(--orange);font-style:normal}
+  .nav-link{font-size:13px;font-weight:700;color:var(--orange);text-decoration:none;padding:8px 14px;border:1.5px solid var(--orange);border-radius:8px}
+
+  .page-head{background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:24px 20px 20px;color:#fff}
+  .ph-title{font-size:24px;font-weight:700}
+  .ph-sub{font-size:13px;opacity:.8;margin-top:4px}
+
+  /* Summary cards */
+  .summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px;max-width:800px;margin:0 auto}
+  .sum-card{background:#fff;border-radius:16px;padding:18px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .sum-icon{font-size:28px;margin-bottom:8px}
+  .sum-n{font-family:var(--mono);font-size:36px;font-weight:800}
+  .sum-l{font-size:13px;color:var(--muted);margin-top:2px}
+  .sum-card.purple .sum-n{color:var(--purple)}
+  .sum-card.orange .sum-n{color:var(--orange)}
+  .sum-card.green  .sum-n{color:var(--green)}
+  .sum-card.blue   .sum-n{color:var(--blue)}
+
+  /* Section */
+  .section{max-width:800px;margin:0 auto;padding:0 16px 16px}
+  .sec-title{font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+  /* Top customers */
+  .cust-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,.04);display:flex;gap:14px;align-items:flex-start}
+  .cust-rank{font-family:var(--mono);font-size:24px;font-weight:800;color:#cbd5e1;min-width:36px;text-align:center;line-height:1.2}
+  .cust-rank.gold{color:#f59e0b}
+  .cust-rank.silver{color:#94a3b8}
+  .cust-rank.bronze{color:#b45309}
+  .cust-info{flex:1;min-width:0}
+  .cust-name{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cust-phone{font-size:13px;color:var(--muted);margin-top:2px}
+  .cust-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .tag{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700}
+  .tag-orders{background:var(--purple-l);color:var(--purple)}
+  .tag-done{background:var(--green-l);color:var(--green)}
+  .tag-vip{background:linear-gradient(45deg,#f59e0b,#d97706);color:#fff}
+  .tag-manual{background:#fce7f3;color:#be185d}
+  .cust-bar-wrap{margin-top:10px}
+  .cust-bar-bg{height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+  .cust-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--purple),#4f46e5);transition:width .5s}
+  .cust-items{font-size:12px;color:var(--muted);margin-top:6px}
+
+  /* Toggle VIP manual */
+  .vip-toggle{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+  .toggle-switch input{opacity:0;width:0;height:0}
+  .toggle-slider{position:absolute;inset:0;background:#cbd5e1;border-radius:24px;cursor:pointer;transition:.3s}
+  .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+  .toggle-switch input:checked+.toggle-slider{background:var(--purple)}
+  .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+  .toggle-label{font-size:13px;font-weight:600;color:var(--muted)}
+
+  /* Items breakdown */
+  .item-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--s1);font-size:14px}
+  .item-row:last-child{border-bottom:none}
+  .item-name{font-weight:600;flex:1}
+  .item-count{font-family:var(--mono);font-weight:700;color:var(--orange);font-size:16px}
+
+  /* Timeline chart */
+  .chart-wrap{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px}
+  .chart-bars{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:12px}
+  .chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .chart-bar{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--purple),#4f46e5);min-height:4px;transition:height .5s}
+  .chart-bar.repeat{background:linear-gradient(180deg,var(--orange),#ea580c)}
+  .chart-xlbl{font-size:10px;color:var(--muted);text-align:center;line-height:1.2}
+  .chart-val{font-size:10px;font-weight:700;color:var(--purple)}
+  .chart-legend{display:flex;gap:16px;margin-top:10px;font-size:12px}
+  .leg-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+
+  /* Empty */
+  .empty{text-align:center;padding:48px 20px;color:var(--muted)}
+  .empty-icon{font-size:48px;margin-bottom:12px}
+
+  #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:rgba(30,41,59,.95);color:#fff;padding:14px 28px;border-radius:100px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:.4s;white-space:nowrap}
+  #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><em>CFM</em>FLEET FLOW</div>
+  <a class="nav-link" href="cfm-fleetflow-book.html">🛵 งานส่ง</a>
+</nav>
+
+<div class="page-head">
+  <div class="ph-title">📊 Dashboard ลูกค้าซ้ำ</div>
+  <div class="ph-sub" id="lastUpdate">กำลังโหลดข้อมูล...</div>
+</div>
+
+<div class="summary-grid" id="summaryGrid">
+  <div class="sum-card purple"><div class="sum-icon">🔄</div><div class="sum-n" id="sRepeat">-</div><div class="sum-l">ลูกค้าซื้อซ้ำ (ระบบ)</div></div>
+  <div class="sum-card orange"><div class="sum-icon">⭐</div><div class="sum-n" id="sVip">-</div><div class="sum-l">ลูกค้า VIP (กดเอง)</div></div>
+  <div class="sum-card green" ><div class="sum-icon">📦</div><div class="sum-n" id="sOrders">-</div><div class="sum-l">ออเดอร์ทั้งหมด</div></div>
+  <div class="sum-card blue"  ><div class="sum-icon">✅</div><div class="sum-n" id="sDone">-</div><div class="sum-l">ส่งสำเร็จ</div></div>
+</div>
+
+<!-- Weekly chart -->
+<div class="section">
+  <div class="sec-title">📈 ออเดอร์รายสัปดาห์ (7 วันล่าสุด)</div>
+  <div class="chart-wrap">
+    <div class="chart-bars" id="chartBars"></div>
+    <div class="chart-legend">
+      <span><span class="leg-dot" style="background:var(--purple)"></span>ออเดอร์ทั้งหมด</span>
+      <span><span class="leg-dot" style="background:var(--orange)"></span>ลูกค้าซ้ำ</span>
+    </div>
+  </div>
+</div>
+
+<!-- Top repeat customers -->
+<div class="section">
+  <div class="sec-title">🏆 ลูกค้าที่สั่งซ้ำบ่อยที่สุด</div>
+  <div id="topList"></div>
+</div>
+
+<!-- Top items -->
+<div class="section">
+  <div class="sec-title">🛍️ สินค้าขายดี</div>
+  <div class="chart-wrap" id="topItems"></div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyC1VycVMP5o6Zwi10ZTunTPsxfvAFI3PNQ",
+  authDomain:"fleet-a49df.firebaseapp.com",
+  projectId:"fleet-a49df",
+  storageBucket:"fleet-a49df.firebasestorage.app",
+  messagingSenderId:"324785731593",
+  appId:"1:324785731593:web:b24e7977a2cccac01b60d8",
+  databaseURL:"https://fleet-a49df-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+function esc(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.className='show'; setTimeout(()=>t.className='',2500) }
+
+onValue(ref(db,'orders'), snap => {
+  const data = snap.val() || {};
+  const orders = Object.entries(data).map(([k,v])=>({...v, _fbKey:k}));
+  render(orders, snap);
+});
+
+function render(orders, snap) {
+  // ── 1. Group by phone ──
+  const byPhone = {};
+  for (const o of orders) {
+    const phone = (o.phone||'').replace(/\s/g,'');
+    if (!phone) continue;
+    if (!byPhone[phone]) byPhone[phone] = { name:o.name||'ไม่ระบุ', phone, orders:[], isVip: !!o.isVip };
+    byPhone[phone].orders.push(o);
+    if (o.isVip) byPhone[phone].isVip = true; // ถ้า order ใดก็ตามถูก mark VIP
+  }
+
+  const customers = Object.values(byPhone)
+    .map(c => ({
+      ...c,
+      totalOrders: c.orders.length,
+      doneOrders:  c.orders.filter(o=>o.status==='delivered').length,
+      lastOrder:   Math.max(...c.orders.map(o=>new Date(o.createdAt||0).getTime())),
+      items:       c.orders.flatMap(o=>Array.isArray(o.items)?o.items:[o.items||'']).filter(Boolean),
+      // representative fbKey (ใช้ order ล่าสุด สำหรับบันทึก isVip)
+      repKey: c.orders.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))[0]._fbKey
+    }))
+    .sort((a,b) => b.totalOrders - a.totalOrders);
+
+  const repeatCustomers = customers.filter(c => c.totalOrders > 1);
+  const vipCustomers    = customers.filter(c => c.isVip);
+
+  // ── Summary ──
+  document.getElementById('sRepeat').textContent = repeatCustomers.length;
+  document.getElementById('sVip').textContent    = vipCustomers.length;
+  document.getElementById('sOrders').textContent = orders.length;
+  document.getElementById('sDone').textContent   = orders.filter(o=>o.status==='delivered').length;
+  document.getElementById('lastUpdate').textContent = 'อัปเดตล่าสุด: ' + new Date().toLocaleTimeString('th-TH',{timeZone:'Asia/Bangkok'});
+
+  // ── Weekly chart (7 วัน) ──
+  const days = [];
+  for (let i=6;i>=0;i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const label = d.toLocaleDateString('th-TH',{weekday:'short',timeZone:'Asia/Bangkok'});
+    const dayOrders = orders.filter(o => (o.createdAt||'').startsWith(key));
+    const dayRepeat = dayOrders.filter(o => {
+      const phone=(o.phone||'').replace(/\s/g,'');
+      return phone && byPhone[phone] && byPhone[phone].orders.length > 1;
+    });
+    days.push({ label, total:dayOrders.length, repeat:dayRepeat.length });
+  }
+  const maxVal = Math.max(...days.map(d=>d.total), 1);
+  document.getElementById('chartBars').innerHTML = days.map(d => `
+    <div class="chart-col">
+      <div class="chart-val">${d.total||''}</div>
+      <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;height:90px;justify-content:flex-end">
+        <div class="chart-bar repeat" style="height:${Math.round(d.repeat/maxVal*80)}px;width:40%"></div>
+        <div class="chart-bar" style="height:${Math.round(d.total/maxVal*80)}px;width:70%"></div>
+      </div>
+      <div class="chart-xlbl">${d.label}</div>
+    </div>`).join('');
+
+  // ── Top customers ──
+  const top = customers.slice(0,20);
+  const maxOrders = top[0]?.totalOrders || 1;
+  document.getElementById('topList').innerHTML = top.length ? top.map((c,i) => {
+    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const rankIcon  = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    const topItems  = [...new Map(c.items.map(x=>[x,x])).values()].slice(0,3).join(', ');
+    const pct = Math.round(c.totalOrders/maxOrders*100);
+    return `
+    <div class="cust-card">
+      <div class="cust-rank ${rankClass}">${rankIcon}</div>
+      <div class="cust-info">
+        <div class="cust-name">${esc(c.name)}</div>
+        <div class="cust-phone">📞 ${esc(c.phone)}</div>
+        <div class="cust-tags">
+          <span class="tag tag-orders">🛍️ ${c.totalOrders} ออเดอร์</span>
+          <span class="tag tag-done">✅ ส่งแล้ว ${c.doneOrders}</span>
+          ${c.totalOrders>1?'<span class="tag tag-orders">🔄 ซื้อซ้ำ</span>':''}
+          ${c.isVip?'<span class="tag tag-vip">⭐ VIP</span>':''}
+        </div>
+        ${topItems?`<div class="cust-items">สินค้า: ${esc(topItems)}</div>`:''}
+        <div class="cust-bar-wrap">
+          <div class="cust-bar-bg"><div class="cust-bar" style="width:${pct}%"></div></div>
+        </div>
+        <div class="vip-toggle">
+          <label class="toggle-switch">
+            <input type="checkbox" class="vip-chk" data-phone="${esc(c.phone)}" ${c.isVip?'checked':''}>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">ลูกค้า VIP</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty"><div class="empty-icon">🙁</div><div>ยังไม่มีข้อมูลลูกค้า</div></div>';
+
+  // ── VIP toggle events ──
+  document.querySelectorAll('.vip-chk').forEach(chk => {
+    chk.addEventListener('change', async () => {
+      const phone = chk.dataset.phone;
+      const isVip = chk.checked;
+      // อัปเดตทุก order ที่มีเบอร์นี้
+      const targets = Object.entries(snap.val()||{}).filter(([,o])=>(o.phone||'').replace(/\s/g,'')=== phone.replace(/\s/g,''));
+      const updates = {};
+      for (const [key] of targets) updates[`orders/${key}/isVip`] = isVip;
+      try {
+        await update(ref(db), updates);
+        toast(isVip ? '⭐ เพิ่ม VIP แล้ว' : '❌ ยกเลิก VIP แล้ว');
+      } catch(e) {
+        toast('❌ บันทึกไม่สำเร็จ');
+        chk.checked = !isVip; // revert
+      }
+    });
+  });
+
+  // ── Top items ──
+  const itemCount = {};
+  for (const o of orders) {
+    const its = Array.isArray(o.items)?o.items:[o.items||''];
+    for (const it of its) {
+      if (it) itemCount[it] = (itemCount[it]||0)+1;
+    }
+  }
+  const topItems = Object.entries(itemCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxItem  = topItems[0]?.[1]||1;
+  document.getElementById('topItems').innerHTML = topItems.length
+    ? topItems.map(([name,cnt],i)=>`
+      <div class="item-row">
+        <span class="cust-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}" style="font-size:16px;min-width:28px">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
+        <span class="item-name">${esc(name)}</span>
+        <span class="item-count">${cnt} ครั้ง</span>
+      </div>`).join('')
+    : '<div class="empty"><div class="empty-icon">📦</div><div>ยังไม่มีข้อมูลสินค้า</div></div>';
+}
+</script>
+</body>
+</html>
