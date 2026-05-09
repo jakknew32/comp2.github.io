@@ -15,383 +15,99 @@
   --live: #ef4444; --live-bg: rgba(239,68,68,0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-nav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(13,15,20,0.95); backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 2rem; display: flex; align-items: center; gap: 1rem; height: 60px;
-}
-.nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; display: flex; align-items: center; gap: 6px; }
-.nav-logo span { color: var(--accent); }
-.live-pill {
-  display: none; align-items: center; gap: 5px;
-  font-size: 12px; font-weight: 500; color: var(--live);
-  background: var(--live-bg); padding: 4px 10px; border-radius: 20px;
-}
-.live-pill.show { display: flex; }
-.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live); animation: blink 1s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.nav-time { margin-left: auto; font-size: 12px; color: var(--muted); background: var(--surface); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); }
-
-.hero {
-  background: linear-gradient(135deg, #0d0f14 0%, #0f1525 50%, #0d1520 100%);
-  border-bottom: 1px solid var(--border); padding: 2.5rem 2rem 2rem; position: relative; overflow: hidden;
-}
-.hero::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 65% 50%, rgba(59,130,246,0.09) 0%, transparent 60%);
-  pointer-events: none;
-}
-.hero-inner { max-width: 1100px; margin: 0 auto; position: relative; }
-.hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px,5vw,58px); letter-spacing: 3px; line-height: 1; margin-bottom: 6px; }
-.hero-title span { color: var(--accent); }
-.hero-sub { font-size: 14px; color: var(--muted); margin-bottom: 1.25rem; }
-.stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.stat-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 7px 14px; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-.stat-chip strong { color: var(--text); }
-
-.layout { max-width: 1100px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 220px 1fr; gap: 2rem; }
-@media(max-width:768px) { .layout { grid-template-columns: 1fr; padding: 1rem; } .sidebar { display: none; } nav { padding: 0 1rem; } }
-
-.sidebar { position: sticky; top: 76px; height: fit-content; }
-.sidebar-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); margin-bottom: 8px; padding: 0 4px; }
-.league-btn {
-  display: flex; align-items: center; gap: 8px; width: 100%;
-  padding: 8px 12px; border-radius: 10px; border: none;
-  background: transparent; color: var(--muted);
-  font-family: 'Sarabun', sans-serif; font-size: 13px;
-  cursor: pointer; transition: all 0.15s; text-align: left; margin-bottom: 2px;
-}
-.league-btn:hover { background: var(--surface); color: var(--text); }
-.league-btn.active { background: var(--accent2); color: #fff; }
-.league-btn .flag { font-size: 17px; width: 22px; text-align: center; }
-.league-btn .cnt { margin-left: auto; font-size: 11px; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 1px 7px; }
-
-.top-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
-.pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.pill {
-  font-size: 12px; padding: 5px 14px; border-radius: 20px;
-  border: 1px solid var(--border2); background: transparent;
-  color: var(--muted); cursor: pointer; transition: all 0.15s;
-  font-family: 'Sarabun', sans-serif;
-}
-.pill:hover { background: var(--surface); color: var(--text); }
-.pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.refresh-btn {
-  margin-left: auto; font-size: 12px; padding: 5px 14px; border-radius: 20px;
-  border: 1px solid var(--border2); background: transparent; color: var(--muted);
-  cursor: pointer; transition: all 0.15s; font-family: 'Sarabun', sans-serif;
-  display: flex; align-items: center; gap: 6px;
-}
-.refresh-btn:hover { background: var(--surface); color: var(--text); }
-
-.league-group { margin-bottom: 1.5rem; }
-.league-header {
-  display: flex; align-items: center; gap: 8px; padding: 7px 12px;
-  background: var(--surface); border-radius: 8px; margin-bottom: 8px;
-  border: 1px solid var(--border);
-}
-.league-header .flag { font-size: 15px; }
-.league-header .lname { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.league-header .lcnt { margin-left: auto; font-size: 11px; color: var(--dim); }
-
-.match-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 14px 18px; margin-bottom: 8px;
-  transition: border-color 0.2s, transform 0.1s;
-}
-.match-card:hover { border-color: var(--border2); transform: translateY(-1px); }
-.match-card.live { border-left: 3px solid var(--live); }
-.match-card.finished { opacity: 0.65; }
-
-.match-main { display: grid; grid-template-columns: 1fr 110px 1fr; align-items: center; gap: 10px; }
-.team-col { display: flex; align-items: center; gap: 10px; }
-.team-col.away { flex-direction: row-reverse; }
-.tlogo { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-.tlogo-ph {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-  background: var(--surface2); border: 1px solid var(--border2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; color: var(--dim); font-weight: 600;
-}
-.tname { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; }
-.team-col.away .tname { text-align: right; }
-
-.score-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.score { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 4px; color: var(--text); }
-.score.vs { font-size: 18px; color: var(--dim); letter-spacing: 2px; }
-.live-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--live); background: var(--live-bg); border-radius: 20px; padding: 2px 8px; }
-.time-tag { font-size: 12px; color: var(--muted); }
-.status-tag { font-size: 11px; color: var(--dim); }
-
-.match-foot { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
-.venue { font-size: 11px; color: var(--dim); margin-left: auto; }
-
-.loading { text-align: center; padding: 3rem 0; color: var(--muted); }
-.spinner { width: 30px; height: 30px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.empty { text-align: center; padding: 3rem 0; color: var(--dim); font-size: 14px; }
-.error { text-align: center; padding: 1.5rem; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); border-radius: 12px; color: #fca5a5; font-size: 13px; }
-
-footer { text-align: center; padding: 1.5rem; font-size: 12px; color: var(--dim); border-top: 1px solid var(--border); margin-top: 1rem; }
-footer a { color: var(--accent); text-decoration: none; }
-
-.last-updated { font-size: 11px; color: var(--dim); margin-left: 8px; }
+body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.header { padding: 1.5rem; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--accent); letter-spacing: 1px; }
+.btn-refresh { background: var(--surface); border: 1px solid var(--border2); color: var(--text); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+.btn-refresh:hover { background: var(--surface2); }
+.container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+.match-card { background: var(--surface); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; }
+.team { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.5rem; }
+.team img { width: 60px; height: 60px; object-fit: contain; }
+.score-area { text-align: center; }
+.score { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--accent); }
+.time { font-size: 0.9rem; color: var(--muted); }
+.live-badge { background: var(--live-bg); color: var(--live); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: inline-block; }
+.error { text-align: center; padding: 3rem; color: var(--muted); }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-logo">⚽ FOOT<span>LIVE</span></div>
-  <div class="live-pill" id="live-pill"><span class="live-dot"></span><span id="live-num">0</span> LIVE</div>
-  <div class="nav-time" id="nav-time"></div>
-</nav>
-
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-title">ตารางแข่ง<span>วันนี้</span></div>
-    <div class="hero-sub">Live score + โปรแกรมแข่ง • ดึงผ่าน PHP Proxy • อัปเดตทุก 60 วินาที</div>
-    <div class="stats-row">
-      <div class="stat-chip">⚽ ทั้งหมด <strong id="stat-total">—</strong> แมตช์</div>
-      <div class="stat-chip">🔴 สด <strong id="stat-live">—</strong></div>
-      <div class="stat-chip">✅ จบแล้ว <strong id="stat-done">—</strong></div>
-    </div>
+<div class="header">
+  <div class="logo">FOOTLIVE</div>
+  <div>
+    <small style="color:var(--muted)">อัปเดตล่าสุด: <span id="last-updated">-</span></small>
+    <button class="btn-refresh" onclick="refresh()"><span>🔄</span> รีเฟรช</button>
   </div>
 </div>
 
-<div class="layout">
-  <aside class="sidebar">
-    <div class="sidebar-label">ลีก</div>
-    <div id="league-list"></div>
-  </aside>
-  <main>
-    <div class="top-bar">
-      <div class="pills">
-        <button class="pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
-        <button class="pill" onclick="setFilter('live',this)">🔴 สด</button>
-        <button class="pill" onclick="setFilter('upcoming',this)">กำลังจะแข่ง</button>
-        <button class="pill" onclick="setFilter('finished',this)">จบแล้ว</button>
-      </div>
-      <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">
-        <svg id="ref-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-        รีเฟรช
-        <span class="last-updated" id="last-updated"></span>
-      </button>
-    </div>
-    <div id="container"><div class="loading"><div class="spinner"></div>กำลังโหลด...</div></div>
-  </main>
+<div class="container" id="container">
+  <div class="error">กำลังโหลดข้อมูล...</div>
 </div>
-
-<footer>ข้อมูลจาก <a href="https://www.thesportsdb.com" target="_blank">TheSportsDB</a> ผ่าน PHP Proxy</footer>
 
 <script>
 const PROXY = 'api.php';
-const LEAGUES = [
-  { id:'4328', name:'English Premier League', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', short:'EPL' },
-  { id:'4480', name:'UEFA Champions League',  flag:'🏆',           short:'UCL' },
-  { id:'4335', name:'Spanish La Liga',         flag:'🇪🇸',          short:'La Liga' },
-  { id:'4331', name:'German Bundesliga',       flag:'🇩🇪',          short:'Bundesliga' },
-  { id:'4332', name:'Italian Serie A',         flag:'🇮🇹',          short:'Serie A' },
-  { id:'4334', name:'French Ligue 1',          flag:'🇫🇷',          short:'Ligue 1' },
-  { id:'4390', name:'Thai Premier League',     flag:'🇹🇭',          short:'ไทยลีก' },
-  { id:'4346', name:'Japanese J1 League',      flag:'🇯🇵',          short:'J1 League' },
-  { id:'4356', name:'Australian A-League',     flag:'🇦🇺',          short:'A-League' },
-];
+let allEvents = [];
 
-let allEvents = [], currentFilter = 'all', selectedLeague = 'all', logoCache = {};
-
-function clock() {
-  const now = new Date();
-  document.getElementById('nav-time').textContent =
-    now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-}
-setInterval(clock, 1000); clock();
-
-function fmtTime(dateStr, timeStr) {
-  if (!dateStr || !timeStr) return '';
-  try {
-    const dt = new Date(dateStr + 'T' + timeStr);
-    return dt.toLocaleString('th-TH', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-  } catch { return timeStr; }
-}
-
-function isLive(e) {
-  if (e._live) return true;
-  const s = e.strStatus || '';
-  return s === 'In Progress' || /^\d+[′']?$/.test(s) || ['HT','ET','PEN','BT'].includes(s);
-}
-function isDone(e) {
-  const s = e.strStatus || '';
-  return ['Match Finished','FT','AET','AP','ABD'].includes(s);
-}
-function statusLabel(e) {
-  const s = e.strStatus || '';
-  if (!s || s === 'NS') return 'ยังไม่เริ่ม';
-  if (['Match Finished','FT'].includes(s)) return 'จบแล้ว';
-  if (s === 'HT') return 'พักครึ่ง';
-  if (s === 'AET') return 'ต่อเวลา';
-  if (s === 'AP') return 'ดวลจุดโทษ';
-  return s;
-}
-function leagueInfo(name) {
-  return LEAGUES.find(l => l.name === name) || { flag:'🏆', short: name };
-}
-
-async function getTeamLogo(teamId) {
-  if (!teamId) return null;
-  if (logoCache[teamId] !== undefined) return logoCache[teamId];
-  try {
-    const r = await fetch(`${PROXY}?action=team&teamId=${teamId}`);
-    const d = await r.json();
-    const logo = d.teams?.[0]?.strTeamBadge || null;
-    logoCache[teamId] = logo; return logo;
-  } catch { logoCache[teamId] = null; return null; }
-}
-
-function buildSidebar(events) {
-  const counts = {};
-  events.forEach(e => { const l = e.strLeague||'อื่นๆ'; counts[l]=(counts[l]||0)+1; });
-  const list = document.getElementById('league-list');
-  list.innerHTML = `
-    <button class="league-btn ${selectedLeague==='all'?'active':''}" onclick="sel('all',this)">
-      <span class="flag">🌍</span> ทั้งหมด <span class="cnt">${events.length}</span>
-    </button>` +
-    LEAGUES.filter(l=>counts[l.name]).map(l=>`
-    <button class="league-btn ${selectedLeague===l.name?'active':''}" onclick="sel('${l.name.replace(/'/g,"\\'")}',this)">
-      <span class="flag">${l.flag}</span> ${l.short} <span class="cnt">${counts[l.name]||0}</span>
-    </button>`).join('');
-}
-
-function filtered() {
-  let ev = selectedLeague==='all' ? allEvents : allEvents.filter(e=>e.strLeague===selectedLeague);
-  if (currentFilter==='live') ev = ev.filter(isLive);
-  else if (currentFilter==='upcoming') ev = ev.filter(e=>!isLive(e)&&!isDone(e));
-  else if (currentFilter==='finished') ev = ev.filter(isDone);
-  return ev;
-}
-
-function render() {
-  const ev = filtered();
-  const liveN = allEvents.filter(isLive).length;
-  const doneN = allEvents.filter(isDone).length;
-  document.getElementById('stat-total').textContent = allEvents.length;
-  document.getElementById('stat-live').textContent = liveN;
-  document.getElementById('stat-done').textContent = doneN;
-  const lp = document.getElementById('live-pill');
-  if (liveN > 0) { lp.classList.add('show'); document.getElementById('live-num').textContent = liveN; }
-  else lp.classList.remove('show');
-
-  const box = document.getElementById('container');
-  if (!ev.length) { box.innerHTML = '<div class="empty">ไม่มีแมตช์ในหมวดนี้</div>'; return; }
-
-  const groups = {};
-  ev.forEach(e => { const l=e.strLeague||'อื่นๆ'; if(!groups[l])groups[l]=[]; groups[l].push(e); });
-
-  box.innerHTML = Object.entries(groups).map(([league,evs])=>{
-    const info = leagueInfo(league);
-    return `<div class="league-group">
-      <div class="league-header">
-        <span class="flag">${info.flag}</span>
-        <span class="lname">${league}</span>
-        <span class="lcnt">${evs.length} แมตช์</span>
-      </div>
-      ${evs.map(e=>{
-        const live=isLive(e), done=isDone(e);
-        const hasScore = e.intHomeScore!=null && e.intHomeScore!=='' && e.intAwayScore!=null && e.intAwayScore!=='';
-        const score = hasScore ? `${e.intHomeScore} - ${e.intAwayScore}` : null;
-        const time = fmtTime(e.dateEvent, e.strTime);
-        const hp = (e.strHomeTeam||'?').substring(0,2).toUpperCase();
-        const ap = (e.strAwayTeam||'?').substring(0,2).toUpperCase();
-        return `<div class="match-card ${live?'live':''} ${done?'finished':''}" id="mc-${e.idEvent}">
-          <div class="match-main">
-            <div class="team-col">
-              <div class="tlogo-ph" id="hl-${e.idEvent}">${hp}</div>
-              <span class="tname">${e.strHomeTeam||'—'}</span>
-            </div>
-            <div class="score-col">
-              ${live ? `<span class="live-tag"><span class="live-dot"></span>${statusLabel(e)}</span>` : ''}
-              ${!live&&time ? `<span class="time-tag">${time}</span>` : ''}
-              <div class="score ${!score?'vs':''}">${score||'VS'}</div>
-              ${!live ? `<span class="status-tag">${statusLabel(e)}</span>` : ''}
-            </div>
-            <div class="team-col away">
-              <div class="tlogo-ph" id="al-${e.idEvent}">${ap}</div>
-              <span class="tname">${e.strAwayTeam||'—'}</span>
-            </div>
-          </div>
-          ${e.strVenue ? `<div class="match-foot"><span class="venue">📍 ${e.strVenue}</span></div>` : ''}
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).join('');
-
-  ev.forEach(async e => {
-    const [hl, al] = await Promise.all([getTeamLogo(e.idHomeTeam), getTeamLogo(e.idAwayTeam)]);
-    const hEl = document.getElementById('hl-'+e.idEvent);
-    const aEl = document.getElementById('al-'+e.idEvent);
-    if (hl && hEl) { const i=document.createElement('img'); i.className='tlogo'; i.src=hl; i.alt=e.strHomeTeam||''; hEl.replaceWith(i); }
-    if (al && aEl) { const i=document.createElement('img'); i.className='tlogo'; i.src=al; i.alt=e.strAwayTeam||''; aEl.replaceWith(i); }
-  });
-}
-
-async function loadAll() {
-  const btn = document.getElementById('refresh-btn');
-  const icon = document.getElementById('ref-icon');
-  btn.disabled = true;
-  icon.style.animation = 'spin 0.7s linear infinite';
+async function refresh() {
+  const container = document.getElementById('container');
+  const btn = document.querySelector('.btn-refresh span');
+  btn.style.display = 'inline-block';
+  btn.style.animation = 'spin 1s linear infinite';
 
   try {
     const today = new Date().toISOString().split('T')[0];
     const [liveRes, todayRes] = await Promise.all([
-      fetch(`${PROXY}?action=live`).then(r=>r.json()).catch(()=>({events:[]})),
-      fetch(`${PROXY}?action=today&date=${today}`).then(r=>r.json()).catch(()=>({events:[]}))
+      fetch(`${PROXY}?action=live`).then(r => r.json()),
+      fetch(`${PROXY}?action=today&date=${today}`).then(r => r.json())
     ]);
 
-    const liveIds = new Set();
-    const live = (liveRes.events || []).map(e => { liveIds.add(e.idEvent); return {...e, _live:true}; });
-    const sched = (todayRes.events || []).filter(e => !liveIds.has(e.idEvent));
+    const liveEvents = (liveRes.events || []).map(e => ({...e, _isLive: true}));
+    const scheduledEvents = (todayRes.events || []).filter(e => 
+      !liveEvents.some(l => l.idEvent === e.idEvent)
+    );
 
-    allEvents = [...live, ...sched];
-    allEvents.sort((a,b) => {
-      if (a._live && !b._live) return -1;
-      if (!a._live && b._live) return 1;
-      return ((a.strTime||'99:99') > (b.strTime||'99:99')) ? 1 : -1;
-    });
+    allEvents = [...liveEvents, ...scheduledEvents];
+    render(allEvents);
 
-    buildSidebar(allEvents);
-    render();
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('th-TH');
+  } catch (err) {
+    container.innerHTML = `<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
+  } finally {
+    btn.style.animation = '';
+  }
+}
 
-    const now = new Date();
-    document.getElementById('last-updated').textContent =
-      now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-
-  } catch(err) {
-    document.getElementById('container').innerHTML =
-      `<div class="error">โหลดไม่ได้: ${err.message}<br><small>ตรวจสอบว่า api.php อยู่ในโฟลเดอร์เดียวกัน</small></div>`;
+function render(events) {
+  const container = document.getElementById('container');
+  if (events.length === 0) {
+    container.innerHTML = '<div class="error">ไม่มีรายการแข่งขันในขณะนี้</div>';
+    return;
   }
 
-  btn.disabled = false;
-  icon.style.animation = '';
+  container.innerHTML = events.map(e => `
+    <div class="match-card">
+      <div class="team">
+        <img src="https://www.thesportsdb.com/images/media/team/badge/small/${e.idHomeTeam}.png" onerror="this.src='https://via.placeholder.com/60?text=TEAM'">
+        <span>${e.strHomeTeam}</span>
+      </div>
+      <div class="score-area">
+        ${e._isLive ? '<span class="live-badge">LIVE</span>' : ''}
+        <div class="score">${e.intHomeScore ?? '-'}:${e.intAwayScore ?? '-'}</div>
+        <div class="time">${e.strTime ? e.strTime.substring(0, 5) : 'N/A'}</div>
+        <div style="font-size:0.7rem; color:var(--dim); margin-top:5px;">${e.strLeague}</div>
+      </div>
+      <div class="team">
+        <img src="https://www.thesportsdb.com/images/media/team/badge/small/${e.idAwayTeam}.png" onerror="this.src='https://via.placeholder.com/60?text=TEAM'">
+        <span>${e.strAwayTeam}</span>
+      </div>
+    </div>
+  `).join('');
 }
 
-function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  render();
-}
-function sel(l, btn) {
-  selectedLeague = l;
-  document.querySelectorAll('.league-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  render();
-}
-
-loadAll();
-setInterval(loadAll, 60000);
+window.addEventListener('DOMContentLoaded', refresh);
 </script>
+
 </body>
 </html>
