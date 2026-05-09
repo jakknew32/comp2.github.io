@@ -1,61 +1,57 @@
 <?php
-header('Content-Type: application/json');
+// อนุญาตให้เรียกข้ามโดเมนได้ (CORS) และกำหนดประเภทเนื้อหาเป็น JSON
 header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json; charset=utf-8');
 
-$API_KEY = '123';
-$BASE = "https://www.thesportsdb.com/api/v1/json/{$API_KEY}";
+// ใช้ API Key ฟรีของ TheSportsDB (ถ้ามีคีย์ส่วนตัวระดับ Patreon สามารถเปลี่ยนตรงนี้ได้)
+$apiKey = '3'; 
 
-$action = $_GET['action'] ?? 'today';
-$league = $_GET['league'] ?? '';
-$date = $_GET['date'] ?? date('Y-m-d');
-$teamId = $_GET['teamId'] ?? '';
+$action = isset($_GET['action']) ? $_GET['action'] : '';
 
+// ฟังก์ชันสำหรับยิง cURL ไปดึงข้อมูล
 function fetchUrl($url) {
-    $ctx = stream_context_create([
-        'http' => [
-            'timeout' => 10,
-            'header' => "User-Agent: Mozilla/5.0\r\n"
-        ]
-    ]);
-    $res = @file_get_contents($url, false, $ctx);
-    return $res ? json_decode($res, true) : null;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    
+    // ถ้าดึงไม่ได้ ให้ส่ง JSON เปล่ากลับไปเพื่อไม่ให้เว็บพัง
+    if (!$response) return json_encode(["events" => null, "teams" => null]);
+    return $response;
 }
 
-$leagues = [
-    ['id' => '4328', 'name' => 'English Premier League'],
-    ['id' => '4480', 'name' => 'UEFA Champions League'],
-    ['id' => '4335', 'name' => 'Spanish La Liga'],
-    ['id' => '4331', 'name' => 'German Bundesliga'],
-    ['id' => '4332', 'name' => 'Italian Serie A'],
-    ['id' => '4334', 'name' => 'French Ligue 1'],
-    ['id' => '4390', 'name' => 'Thai Premier League'],
-    ['id' => '4346', 'name' => 'Japanese J1 League'],
-    ['id' => '4356', 'name' => 'Australian A-League'],
-];
+switch ($action) {
+    case 'live':
+        // ดึงผลบอลสด (API v2 ของ TheSportsDB)
+        $url = "https://www.thesportsdb.com/api/v2/json/{$apiKey}/livescore.php?s=Soccer";
+        echo fetchUrl($url);
+        break;
 
-if ($action === 'live') {
-    $data = fetchUrl("{$BASE}/livescore.php?s=Soccer");
-    echo json_encode($data ?? ['events' => []]);
+    case 'today':
+        // ดึงโปรแกรมการแข่งขันวันนี้
+        $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+        $url = "https://www.thesportsdb.com/api/v1/json/{$apiKey}/eventsday.php?d={$date}&s=Soccer";
+        echo fetchUrl($url);
+        break;
 
-} elseif ($action === 'today') {
-    $all = [];
-    foreach ($leagues as $l) {
-        $data = fetchUrl("{$BASE}/eventsday.php?d={$date}&id={$l['id']}");
-        if (!empty($data['events'])) {
-            foreach ($data['events'] as $e) {
-                $e['strLeague'] = $e['strLeague'] ?? $l['name'];
-                $all[] = $e;
-            }
+    case 'team':
+        // ดึงข้อมูลโลโก้ทีม
+        $teamId = isset($_GET['teamId']) ? $_GET['teamId'] : '';
+        if (!$teamId) {
+            echo json_encode(["teams" => null]);
+            break;
         }
-        usleep(200000); // 200ms delay ป้องกัน rate limit
-    }
-    usort($all, fn($a,$b) => strcmp(($a['strTime']??''), ($b['strTime']??'')));
-    echo json_encode(['events' => $all]);
+        $url = "https://www.thesportsdb.com/api/v1/json/{$apiKey}/lookupteam.php?id={$teamId}";
+        echo fetchUrl($url);
+        break;
 
-} elseif ($action === 'team') {
-    $data = fetchUrl("{$BASE}/lookupteam.php?id={$teamId}");
-    echo json_encode($data ?? ['teams' => []]);
-
-} else {
-    echo json_encode(['error' => 'unknown action']);
+    default:
+        // ถ้า action ไม่ถูกต้อง
+        echo json_encode(["error" => "Invalid action"]);
+        break;
 }
+?>
