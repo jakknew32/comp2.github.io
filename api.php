@@ -1,57 +1,76 @@
 <?php
-// อนุญาตให้เรียกข้ามโดเมนได้ (CORS) และกำหนดประเภทเนื้อหาเป็น JSON
+header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json; charset=utf-8');
 
-// ใช้ API Key ฟรีของ TheSportsDB (ถ้ามีคีย์ส่วนตัวระดับ Patreon สามารถเปลี่ยนตรงนี้ได้)
-$apiKey = '3'; 
+// แนะนำให้สมัครสมาชิกที่ thesportsdb.com เพื่อรับ API Key ส่วนตัว (ราคาไม่แพง)
+// หากใช้ '3' จะเป็น Key สาธารณะสำหรับทดสอบ ซึ่งอาจจะดึงข้อมูลได้ไม่ครบทุกรายการ
+$API_KEY = '3'; 
+$BASE = "https://www.thesportsdb.com/api/v1/json/{$API_KEY}";
 
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+$action = $_GET['action'] ?? 'today';
+$league = $_GET['league'] ?? '';
+$date = $_GET['date'] ?? date('Y-m-d');
+$teamId = $_GET['teamId'] ?? '';
 
-// ฟังก์ชันสำหรับยิง cURL ไปดึงข้อมูล
 function fetchUrl($url) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    $response = curl_exec($ch);
-    curl_close($ch);
-    
-    // ถ้าดึงไม่ได้ ให้ส่ง JSON เปล่ากลับไปเพื่อไม่ให้เว็บพัง
-    if (!$response) return json_encode(["events" => null, "teams" => null]);
-    return $response;
+    $ctx = stream_context_create([
+        'http' => [
+            'timeout' => 15, // เพิ่ม timeout
+            'header' => "User-Agent: FootLiveApp/1.0\r\n"
+        ]
+    ]);
+    $res = @file_get_contents($url, false, $ctx);
+    if ($res === false) return null;
+    return json_decode($res, true);
 }
 
-switch ($action) {
-    case 'live':
-        // ดึงผลบอลสด (API v2 ของ TheSportsDB)
-        $url = "https://www.thesportsdb.com/api/v2/json/{$apiKey}/livescore.php?s=Soccer";
-        echo fetchUrl($url);
-        break;
+$leagues = [
+    ['id' => '4328', 'name' => 'English Premier League'],
+    ['id' => '4480', 'name' => 'UEFA Champions League'],
+    ['id' => '4335', 'name' => 'Spanish La Liga'],
+    ['id' => '4331', 'name' => 'German Bundesliga'],
+    ['id' => '4332', 'name' => 'Italian Serie A'],
+    ['id' => '4334', 'name' => 'French Ligue 1'],
+    ['id' => '4390', 'name' => 'Thai Premier League'],
+    ['id' => '4346', 'name' => 'Japanese J1 League'],
+    ['id' => '4356', 'name' => 'Australian A-League'],
+];
 
-    case 'today':
-        // ดึงโปรแกรมการแข่งขันวันนี้
-        $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
-        $url = "https://www.thesportsdb.com/api/v1/json/{$apiKey}/eventsday.php?d={$date}&s=Soccer";
-        echo fetchUrl($url);
-        break;
+if ($action === 'live') {
+    $data = fetchUrl("{$BASE}/livescore.php?s=Soccer");
+    echo json_encode($data ?? ['events' => []]);
 
-    case 'team':
-        // ดึงข้อมูลโลโก้ทีม
-        $teamId = isset($_GET['teamId']) ? $_GET['teamId'] : '';
-        if (!$teamId) {
-            echo json_encode(["teams" => null]);
-            break;
+} elseif ($action === 'today') {
+    $all = [];
+    // กรณีใช้ Free Key (123 หรือ 3) บางครั้ง API จะไม่ยอมให้ loop ดึงหลายลีกพร้อมกัน
+    // แนะนำให้ดึงทีละลีก หรือใช้ API สำหรับดึงตารางรวมถ้ามีสิทธิ์
+    foreach ($leagues as $l) {
+        $url = "{$BASE}/eventsday.php?d={$date}&id={$l['id']}";
+        $data = fetchUrl($url);
+        
+        if (!empty($data['events'])) {
+            foreach ($data['events'] as $e) {
+                $e['strLeague'] = $e['strLeague'] ?? $l['name'];
+                $all[] = $e;
+            }
         }
-        $url = "https://www.thesportsdb.com/api/v1/json/{$apiKey}/lookupteam.php?id={$teamId}";
-        echo fetchUrl($url);
-        break;
+        // หน่วงเวลาเล็กน้อยเพื่อป้องกันการโดนเตะออกจากเซิร์ฟเวอร์
+        usleep(300000); 
+    }
+    
+    // เรียงตามเวลาแข่ง
+    usort($all, function($a, $b) {
+        $timeA = $a['strTime'] ?? '23:59:00';
+        $timeB = $b['strTime'] ?? '23:59:00';
+        return strcmp($timeA, $timeB);
+    });
+    
+    echo json_encode(['events' => $all]);
 
-    default:
-        // ถ้า action ไม่ถูกต้อง
-        echo json_encode(["error" => "Invalid action"]);
-        break;
+} elseif ($action === 'team') {
+    $data = fetchUrl("{$BASE}/lookupteam.php?id={$teamId}");
+    echo json_encode($data ?? ['teams' => []]);
+
+} else {
+    echo json_encode(['error' => 'unknown action']);
 }
-?>
