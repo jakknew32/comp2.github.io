@@ -59,8 +59,19 @@
   .st-failed    { background:var(--red-l);    color:var(--red);    border:1px solid #fecaca; }
 
   .delivered-time { font-size:12px; color:var(--green); font-weight:700; margin-top:4px; background:#dcfce7; padding:2px 8px; border-radius:4px; display:inline-block; }
+  .delivered-device { font-size:11px; color:var(--muted); margin-top:3px; background:#f1f5f9; padding:2px 8px; border-radius:4px; display:inline-block; }
   .badge-new { background:linear-gradient(45deg,#ef4444,#dc2626); color:#fff; font-size:10px; padding:3px 8px; border-radius:20px; font-weight:800; animation:pulse-red 2s infinite; }
-  @keyframes pulse-red { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05);opacity:.8} }
+  .badge-overdue24 { background:linear-gradient(45deg,#f59e0b,#d97706); color:#fff; font-size:10px; padding:3px 8px; border-radius:20px; font-weight:800; animation:pulse-warn 2s infinite; }
+  .badge-overdue48 { background:linear-gradient(45deg,#ef4444,#b91c1c); color:#fff; font-size:10px; padding:3px 8px; border-radius:20px; font-weight:800; animation:pulse-red 1.2s infinite; }
+  .delivery-card.overdue48 { border-left-color: var(--red) !important; box-shadow: 0 0 0 2px #fecaca, 0 2px 8px rgba(220,38,38,0.15); animation:shake-border 3s infinite; }
+  .delivery-card.overdue24 { border-left-color: var(--yellow) !important; box-shadow: 0 0 0 2px #fde68a, 0 2px 8px rgba(217,119,6,0.12); }
+  .overdue-bar { font-size:12px; font-weight:700; margin-top:4px; padding:3px 8px; border-radius:4px; display:inline-block; }
+  .overdue-bar.h24 { background:#fef3c7; color:#d97706; }
+  .overdue-bar.h48 { background:#fef2f2; color:#dc2626; }
+
+  @keyframes pulse-red  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05);opacity:.8} }
+  @keyframes pulse-warn { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08);opacity:.85} }
+  @keyframes shake-border { 0%,100%{box-shadow:0 0 0 2px #fecaca} 50%{box-shadow:0 0 0 3px #ef4444} }
 
   .card-body { padding:0 16px 12px; }
   .info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--s1); font-size:15px; align-items:center; }
@@ -124,6 +135,10 @@
   </div>
 </div>
 
+<div id="overdueAlert" style="display:none;margin:12px 16px 0;max-width:800px;margin-left:auto;margin-right:auto;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:700;color:#dc2626;">
+  🚨 มีออร์เดอร์ค้างเกิน 48 ชม.! กรุณาตรวจสอบด่วน
+</div>
+
 <div class="main" id="mainGrid"></div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -184,6 +199,39 @@ function toast(msg) {
   setTimeout(() => t.className = '', 2500);
 }
 
+// ─── Device Name ───────────────────────────────
+function getDeviceName() {
+  const ua = navigator.userAgent;
+  let os = 'Unknown';
+  let device = '';
+
+  if (/iPhone/.test(ua)) {
+    os = 'iPhone';
+  } else if (/iPad/.test(ua)) {
+    os = 'iPad';
+  } else if (/Android/.test(ua)) {
+    os = 'Android';
+    const match = ua.match(/;\s*([^;)]+)\s+Build\//);
+    if (match) device = match[1].trim();
+  } else if (/Windows/.test(ua)) {
+    os = 'Windows PC';
+  } else if (/Macintosh|Mac OS X/.test(ua)) {
+    os = 'Mac';
+  } else if (/Linux/.test(ua)) {
+    os = 'Linux';
+  }
+
+  let browser = '';
+  if (/Chrome\//.test(ua) && !/Chromium|Edg|OPR/.test(ua)) browser = 'Chrome';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  else if (/Safari\//.test(ua) && !/Chrome/.test(ua)) browser = 'Safari';
+  else if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/OPR\/|Opera/.test(ua)) browser = 'Opera';
+
+  const parts = [device || os, browser].filter(Boolean);
+  return parts.join(' / ') || 'Unknown Device';
+}
+
 // ─── Modal ─────────────────────────────────────
 function showConfirm(title, body) {
   return new Promise(resolve => {
@@ -221,14 +269,13 @@ function playNotif() {
 }
 
 // ─── Firebase ──────────────────────────────────
-let phoneCount = {}; // phone → order count (สำหรับตรวจซื้อซ้ำ)
+let phoneCount = {};
 
 onValue(ref(db, 'orders'), snap => {
   const data = snap.val() || {};
   const prevKeys = new Set(orders.map(o => o._fbKey));
   orders = Object.entries(data).map(([k, v]) => ({ ...v, _fbKey: k }));
 
-  // คำนวณจำนวน order ต่อเบอร์
   phoneCount = {};
   for (const o of orders) {
     const ph = (o.phone||'').replace(/\s/g,'');
@@ -258,9 +305,11 @@ async function changeStatus(fbKey, newStatus, sel) {
   if (newStatus === 'delivered') {
     payload.deliveredAt = fmt(now.toISOString());
     payload.deliveredTS = now.getTime();
+    payload.deliveredByDevice = getDeviceName(); // ← บันทึกชื่ออุปกรณ์
   } else {
     payload.deliveredAt = null;
     payload.deliveredTS = null;
+    payload.deliveredByDevice = null;
   }
 
   const order = orders.find(o => o._fbKey === fbKey);
@@ -294,6 +343,13 @@ function renderStats() {
 
 function renderCards() {
   const now = Date.now();
+  const H24 = 24 * 60 * 60 * 1000;
+  const H48 = 48 * 60 * 60 * 1000;
+
+  // ─── Overdue alert banner ───────────────────
+  const has48 = orders.some(o => (o.status==='pending'||o.status==='transit') && (now - new Date(o.createdAt)) >= H48);
+  document.getElementById('overdueAlert').style.display = has48 ? 'block' : 'none';
+
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   let list = currentFilter==='all' ? orders : orders.filter(o=>o.status===currentFilter);
   if (q) list = list.filter(o=>
@@ -319,7 +375,22 @@ function renderCards() {
   if (!page.length) { grid.innerHTML='<div style="text-align:center;padding:50px;color:#94a3b8">ไม่มีรายการ</div>'; return; }
 
   grid.innerHTML = page.map(o=>{
-    const isNew=(now-new Date(o.createdAt))<86400000;
+    const age = now - new Date(o.createdAt);
+    const isActive = o.status==='pending' || o.status==='transit';
+    const is48 = isActive && age >= H48;
+    const is24 = isActive && age >= H24 && !is48;
+    const isNew = age < H24 && !isActive;
+    const overdueClass = is48 ? ' overdue48' : is24 ? ' overdue24' : '';
+    const overdueBar = is48
+      ? `<div class="overdue-bar h48">🔴 ค้างมา ${Math.floor(age/3600000)} ชม. — เกิน 48 ชม.!</div>`
+      : is24
+      ? `<div class="overdue-bar h24">🟡 ค้างมา ${Math.floor(age/3600000)} ชม. — เกิน 24 ชม.</div>`
+      : '';
+    const overdueBadge = is48
+      ? '<span class="badge-overdue48">🔴 ค้าง 48ชม+</span>'
+      : is24
+      ? '<span class="badge-overdue24">⚠️ ค้าง 24ชม+</span>'
+      : '';
     const st=stMap[o.status]||stMap.pending;
     const sm=safeUrl(o.mapsLink);
     const hist=o.statusHistory||[];
@@ -332,13 +403,15 @@ function renderCards() {
         ${hist.map(h=>`<div class="history-item"><div class="history-dot"></div><span><b>${esc(h.from)}</b> → <b>${esc(h.to)}</b> | ${esc(h.display)}</span></div>`).join('')}
       </div>`:'';
     return `
-    <div class="delivery-card ${esc(o.status)}">
+    <div class="delivery-card ${esc(o.status)}${overdueClass}">
       <div class="card-head">
         <div>
-          <div class="card-id">#${esc(o.orderid||o._fbKey.substring(0,6))} ${isNew&&o.status!=='delivered'?'<span class="badge-new">NEW</span>':''} ${(phoneCount[(o.phone||'').replace(/\s/g,'')]||0)>1?'<span style="font-size:10px;background:#ede9fe;color:#7c3aed;padding:3px 8px;border-radius:20px;font-weight:800">🔄 ซื้อซ้ำ</span>':''}</div>
+          <div class="card-id">#${esc(o.orderid||o._fbKey.substring(0,6))} ${isNew?'<span class="badge-new">NEW</span>':''} ${overdueBadge} ${(phoneCount[(o.phone||'').replace(/\s/g,'')]||0)>1?'<span style="font-size:10px;background:#ede9fe;color:#7c3aed;padding:3px 8px;border-radius:20px;font-weight:800">🔄 ซื้อซ้ำ</span>':''}</div>
           <div class="card-date">🕒 เพิ่มเมื่อ: ${fmt(o.createdAt)}</div>
+          ${overdueBar}
           <div class="card-name">${esc(o.name||'ไม่ระบุ')}${o.isVip?' <span style="font-size:12px;background:linear-gradient(45deg,#f59e0b,#d97706);color:#fff;padding:2px 8px;border-radius:20px;font-weight:800;vertical-align:middle">⭐ VIP</span>':''}</div>
           ${o.status==='delivered'?`<div class="delivered-time">✅ สำเร็จเมื่อ: ${esc(o.deliveredAt)}</div>`:''}
+          ${o.status==='delivered'&&o.deliveredByDevice?`<div class="delivered-device">📱 อุปกรณ์: ${esc(o.deliveredByDevice)}</div>`:''}
         </div>
         <div class="status-badge ${st.c}">${st.t}</div>
       </div>
@@ -368,7 +441,6 @@ function renderCards() {
 
 // ─── Events ────────────────────────────────────
 
-// Stats
 document.getElementById('statsRow').addEventListener('click', e => {
   const c = e.target.closest('[data-filter]');
   if (!c) return;
@@ -377,7 +449,6 @@ document.getElementById('statsRow').addEventListener('click', e => {
   renderAll();
 });
 
-// Cards
 document.getElementById('mainGrid').addEventListener('change', async e => {
   const sel = e.target.closest('.status-select');
   if (!sel) return;
@@ -393,7 +464,6 @@ document.getElementById('mainGrid').addEventListener('click', e => {
   if (ht) { document.getElementById('hist-'+ht.dataset.hist)?.classList.toggle('open'); }
 });
 
-// Search
 document.getElementById('searchInput').addEventListener('input', e => {
   document.getElementById('btnClear').classList.toggle('show', !!e.target.value);
   visibleCount = PAGE_SIZE; renderCards();
@@ -404,13 +474,11 @@ document.getElementById('btnClear').addEventListener('click', () => {
   visibleCount = PAGE_SIZE; renderCards();
 });
 
-// Refresh & Offline
 document.getElementById('btnRefresh').addEventListener('click', () => location.reload(true));
 window.addEventListener('online',  () => document.getElementById('offlineBanner').classList.remove('show'));
 window.addEventListener('offline', () => document.getElementById('offlineBanner').classList.add('show'));
 if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
 
-// Date
 document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('th-TH',
   { weekday:'long', day:'numeric', month:'long', timeZone:'Asia/Bangkok' });
 </script>
