@@ -29,10 +29,14 @@
   .ph-title { font-size:24px; font-weight:700; }
   .btn-refresh { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:#fff; padding:8px 16px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
 
-  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); position:sticky; top:56px; z-index:990; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
-  .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
+  /* 5 columns now */
+  .stats-row { display:grid; grid-template-columns:repeat(5,1fr); background:#fff; border-bottom:1px solid var(--border); position:sticky; top:56px; z-index:990; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); overflow-x:auto; }
+  .stat-cell { padding:14px 8px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; min-width:60px; }
+  .stat-cell:last-child { border-right:none; }
   .stat-cell.active { background:var(--orange-l); border-bottom:3px solid var(--orange); }
-  .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
+  .stat-cell.active-red { background:var(--red-l); border-bottom:3px solid var(--red); }
+  .sc-n { font-family:var(--mono); font-size:28px; font-weight:800; color:var(--orange); }
+  .sc-n.red { color:var(--red); }
 
   .search-container { padding:16px 16px 0; max-width:800px; margin:0 auto; }
   .search-wrapper { position:relative; display:flex; align-items:center; }
@@ -68,7 +72,7 @@
   .overdue-bar { font-size:12px; font-weight:700; margin-top:4px; padding:3px 8px; border-radius:4px; display:inline-block; }
   .overdue-bar.h24 { background:#fef3c7; color:#d97706; }
   .overdue-bar.h48 { background:#fef2f2; color:#dc2626; }
-  .waypoint-btn { display:block; width:100%; margin:0 16px 12px; padding:12px; border-radius:12px; background:linear-gradient(135deg,#0891b2,#0e7490); color:#fff; font-family:var(--font); font-size:14px; font-weight:700; border:none; cursor:pointer; text-align:center; text-decoration:none; }
+
   @keyframes pulse-red  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05);opacity:.8} }
   @keyframes pulse-warn { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08);opacity:.85} }
   @keyframes shake-border { 0%,100%{box-shadow:0 0 0 2px #fecaca} 50%{box-shadow:0 0 0 3px #ef4444} }
@@ -138,9 +142,7 @@
 <div id="overdueAlert" style="display:none;margin:12px 16px 0;max-width:800px;margin-left:auto;margin-right:auto;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:700;color:#dc2626;">
   🚨 มีออร์เดอร์ค้างเกิน 48 ชม.! กรุณาตรวจสอบด่วน
 </div>
-<div id="waypointBar" style="display:none;padding:12px 16px 0;max-width:800px;margin:0 auto;">
-  <a id="waypointLink" href="#" target="_blank" rel="noopener noreferrer" class="waypoint-btn">🗺️ เปิด Google Maps ทุก waypoint (pending/transit)</a>
-</div>
+
 <div class="main" id="mainGrid"></div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -307,7 +309,7 @@ async function changeStatus(fbKey, newStatus, sel) {
   if (newStatus === 'delivered') {
     payload.deliveredAt = fmt(now.toISOString());
     payload.deliveredTS = now.getTime();
-    payload.deliveredByDevice = getDeviceName(); // ← บันทึกชื่ออุปกรณ์
+    payload.deliveredByDevice = getDeviceName();
   } else {
     payload.deliveredAt = null;
     payload.deliveredTS = null;
@@ -329,43 +331,33 @@ async function changeStatus(fbKey, newStatus, sel) {
 function renderAll() { renderStats(); renderCards(); }
 
 function renderStats() {
-  const cnt = { all:orders.length, pending:0, transit:0, delivered:0 };
+  const cnt = { all:orders.length, pending:0, transit:0, delivered:0, failed:0 };
   orders.forEach(o => { if (cnt[o.status]!==undefined) cnt[o.status]++; });
-  document.getElementById('statsRow').innerHTML = [
-    {f:'all',       l:'ทั้งหมด',  n:cnt.all},
-    {f:'pending',   l:'รอส่ง',    n:cnt.pending},
-    {f:'transit',   l:'กำลังส่ง', n:cnt.transit},
-    {f:'delivered', l:'สำเร็จ',   n:cnt.delivered}
-  ].map(i=>`
-    <div class="stat-cell${currentFilter===i.f?' active':''}" data-filter="${i.f}">
-      <div class="sc-n">${i.n}</div>
-      <div style="font-size:12px;color:var(--muted)">${i.l}</div>
-    </div>`).join('');
+
+  const tabs = [
+    {f:'all',       l:'ทั้งหมด',   n:cnt.all,       red:false},
+    {f:'pending',   l:'รอส่ง',     n:cnt.pending,   red:false},
+    {f:'transit',   l:'กำลังส่ง',  n:cnt.transit,   red:false},
+    {f:'delivered', l:'สำเร็จ',    n:cnt.delivered, red:false},
+    {f:'failed',    l:'ไม่สำเร็จ', n:cnt.failed,    red:true}
+  ];
+
+  document.getElementById('statsRow').innerHTML = tabs.map(i => {
+    const isActive = currentFilter === i.f;
+    const activeClass = isActive ? (i.red ? ' active-red' : ' active') : '';
+    const numClass = i.red ? ' red' : '';
+    return `
+    <div class="stat-cell${activeClass}" data-filter="${i.f}">
+      <div class="sc-n${numClass}">${i.n}</div>
+      <div style="font-size:11px;color:var(--muted)">${i.l}</div>
+    </div>`;
+  }).join('');
 }
 
 function renderCards() {
   const now = Date.now();
   const H24 = 24 * 60 * 60 * 1000;
   const H48 = 48 * 60 * 60 * 1000;
-
-  // ─── Waypoint ──────────────────────────────
-  const waypointOrders = orders.filter(o => (o.status==='pending'||o.status==='transit') && o.address);
-  const waypointBar  = document.getElementById('waypointBar');
-  const waypointLink = document.getElementById('waypointLink');
-  if (waypointOrders.length > 0) {
-    const addrs = waypointOrders.map(o => encodeURIComponent(o.address));
-    const origin      = addrs[0];
-    const destination = addrs[addrs.length - 1];
-    const waypoints   = addrs.slice(1, -1).join('|');
-    let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
-    if (waypoints) url += `&waypoints=${waypoints}`;
-    url += '&travelmode=driving';
-    waypointLink.href = url;
-    waypointLink.textContent = `🗺️ เปิด Google Maps (${waypointOrders.length} จุด — pending/transit)`;
-    waypointBar.style.display = 'block';
-  } else {
-    waypointBar.style.display = 'none';
-  }
 
   // ─── Overdue alert banner ───────────────────
   const has48 = orders.some(o => (o.status==='pending'||o.status==='transit') && (now - new Date(o.createdAt)) >= H48);
