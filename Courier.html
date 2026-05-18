@@ -29,10 +29,14 @@
   .ph-title { font-size:24px; font-weight:700; }
   .btn-refresh { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:#fff; padding:8px 16px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
 
-  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-bottom:1px solid var(--border); position:sticky; top:56px; z-index:990; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
-  .stat-cell { padding:18px 12px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; }
+  /* 5 columns now */
+  .stats-row { display:grid; grid-template-columns:repeat(5,1fr); background:#fff; border-bottom:1px solid var(--border); position:sticky; top:56px; z-index:990; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); overflow-x:auto; }
+  .stat-cell { padding:14px 8px 10px; text-align:center; border-right:1px solid var(--border); cursor:pointer; min-width:60px; }
+  .stat-cell:last-child { border-right:none; }
   .stat-cell.active { background:var(--orange-l); border-bottom:3px solid var(--orange); }
-  .sc-n { font-family:var(--mono); font-size:32px; font-weight:800; color:var(--orange); }
+  .stat-cell.active-red { background:var(--red-l); border-bottom:3px solid var(--red); }
+  .sc-n { font-family:var(--mono); font-size:28px; font-weight:800; color:var(--orange); }
+  .sc-n.red { color:var(--red); }
 
   .search-container { padding:16px 16px 0; max-width:800px; margin:0 auto; }
   .search-wrapper { position:relative; display:flex; align-items:center; }
@@ -305,7 +309,7 @@ async function changeStatus(fbKey, newStatus, sel) {
   if (newStatus === 'delivered') {
     payload.deliveredAt = fmt(now.toISOString());
     payload.deliveredTS = now.getTime();
-    payload.deliveredByDevice = getDeviceName(); // ← บันทึกชื่ออุปกรณ์
+    payload.deliveredByDevice = getDeviceName();
   } else {
     payload.deliveredAt = null;
     payload.deliveredTS = null;
@@ -327,18 +331,27 @@ async function changeStatus(fbKey, newStatus, sel) {
 function renderAll() { renderStats(); renderCards(); }
 
 function renderStats() {
-  const cnt = { all:orders.length, pending:0, transit:0, delivered:0 };
+  const cnt = { all:orders.length, pending:0, transit:0, delivered:0, failed:0 };
   orders.forEach(o => { if (cnt[o.status]!==undefined) cnt[o.status]++; });
-  document.getElementById('statsRow').innerHTML = [
-    {f:'all',       l:'ทั้งหมด',  n:cnt.all},
-    {f:'pending',   l:'รอส่ง',    n:cnt.pending},
-    {f:'transit',   l:'กำลังส่ง', n:cnt.transit},
-    {f:'delivered', l:'สำเร็จ',   n:cnt.delivered}
-  ].map(i=>`
-    <div class="stat-cell${currentFilter===i.f?' active':''}" data-filter="${i.f}">
-      <div class="sc-n">${i.n}</div>
-      <div style="font-size:12px;color:var(--muted)">${i.l}</div>
-    </div>`).join('');
+
+  const tabs = [
+    {f:'all',       l:'ทั้งหมด',   n:cnt.all,       red:false},
+    {f:'pending',   l:'รอส่ง',     n:cnt.pending,   red:false},
+    {f:'transit',   l:'กำลังส่ง',  n:cnt.transit,   red:false},
+    {f:'delivered', l:'สำเร็จ',    n:cnt.delivered, red:false},
+    {f:'failed',    l:'ไม่สำเร็จ', n:cnt.failed,    red:true}
+  ];
+
+  document.getElementById('statsRow').innerHTML = tabs.map(i => {
+    const isActive = currentFilter === i.f;
+    const activeClass = isActive ? (i.red ? ' active-red' : ' active') : '';
+    const numClass = i.red ? ' red' : '';
+    return `
+    <div class="stat-cell${activeClass}" data-filter="${i.f}">
+      <div class="sc-n${numClass}">${i.n}</div>
+      <div style="font-size:11px;color:var(--muted)">${i.l}</div>
+    </div>`;
+  }).join('');
 }
 
 function renderCards() {
