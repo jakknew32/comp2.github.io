@@ -148,9 +148,8 @@
         .label-sender { text-align: center; font-size: 13px; line-height: 1.4; color: #333; padding: 5px 5mm; }
         .label-line-dashed { border-top: 1.5px dashed #999; margin: 0 0 10px 0; } 
         
-        /* แก้ไขแถบผู้รับเป็นพื้นดำ ตัวอักษรขาว กว้างเต็ม 100% */
-        .label-recv-box { background: #000; text-align: center; padding: 8px; margin-bottom: 10px; border-radius: 0; width: 100%; } 
-        .label-recv-title { font-weight: 800; font-size: 16px; color: #fff; }
+        .label-recv-box { background: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; text-align: center; padding: 8px; margin-bottom: 10px; border-radius: 0; width: 100%; } 
+        .label-recv-title { font-weight: 800; font-size: 16px; color: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         
         .label-recv-text { text-align: center; font-size: 18px; line-height: 1.6; font-weight: 600; color: #000; white-space: pre-line; word-wrap: break-word; flex: 1; padding: 0 5mm; }
         
@@ -197,6 +196,9 @@
     <style id="pageStyleLabel" media="print">
         body.print-label { }
         @page { size: 100mm 150mm; margin: 0; }
+        /* Force black background on label recv box when printing */
+        .label-recv-box { background: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        .label-recv-title { color: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     </style>
     <style id="pageStyleA4" media="print">
         body.print-a4 { }
@@ -236,6 +238,7 @@
 <body>
 
 <div id="labelPrintContainer"><div id="labelPrintContent"></div></div>
+<div id="toast"></div>
 
 <div id="labelModal" class="modal-overlay">
     <div class="modal-box narrow">
@@ -250,7 +253,7 @@
                 <div class="lz label-line-solid"></div>
                 <div class="lz label-sender" id="pSender"></div>
                 <div class="lz label-line-dashed"></div>
-                <div class="lz label-recv-box"><span class="label-recv-title">ผู้รับ (TO):</span></div>
+                <div class="lz label-recv-box" style="background:#000 !important;text-align:center;padding:8px;margin-bottom:10px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><span class="label-recv-title" style="font-weight:800;font-size:16px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span></div>
                 <div class="lz label-recv-text" id="pReceiver"></div>
                 <div class="lz label-footer">
                     <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true">
@@ -310,6 +313,21 @@
             <div class="form-group" style="max-width:150px;"><label>รูปต่อแถว</label><input type="number" id="photosPerRow" value="3" min="1"></div>
             <div class="form-group"><label>เลขที่เอกสาร</label><input type="text" id="documentNumber" readonly></div>
         </div>
+        <div class="form-row">
+            <div class="form-group" style="max-width:160px;">
+                <label>🛒 แพลตฟอร์ม</label>
+                <select id="platform">
+                    <option value="">-- เลือกแพลตฟอร์ม --</option>
+                    <option value="Shopee">🟠 Shopee</option>
+                    <option value="TikTok">⬛ TikTok Shop</option>
+                    <option value="Lazada">🔵 Lazada</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📋 เลขออเดอร์</label>
+                <input type="text" id="orderNumber" placeholder="กรอกเลขออเดอร์">
+            </div>
+        </div>
 
         <div class="section-title">📬 ข้อมูลผู้รับ</div>
         <div style="margin-bottom:14px;">
@@ -323,6 +341,7 @@
         <div class="button-group">
             <button class="btn-green" onclick="handlePrint()">🖨️ Print A4</button>
             <button class="btn-amber" onclick="openLabelModal()">📦 สร้างฉลาก 100x150</button>
+            <button class="btn-teal" onclick="saveToSheets()">📊 บันทึก Google Sheets</button>
             <button class="btn-red" onclick="location.reload()">🗑️ Clear</button>
         </div>
     </div>
@@ -339,17 +358,38 @@
         document.getElementById('documentNumber').value=`CFM${d}${m}${y}${Math.floor(Math.random()*100).toString().padStart(3,'0')}`;
     })();
 
-    document.getElementById('photoInput').addEventListener('change',e=>{
-        [...e.target.files].forEach(f=>{ row2Photos.push(URL.createObjectURL(f)); });
+    function fileToBase64(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); }); }
+
+    document.getElementById('photoInput').addEventListener('change', async e=>{
+        for(const f of [...e.target.files]){ row2Photos.push(await fileToBase64(f)); }
         renderPhotos(); renderThumbs();
     });
 
     document.getElementById('photosPerRow').addEventListener('change',function(){photosPerRow=+this.value;renderPhotos();});
     document.getElementById('pageText').addEventListener('input',renderPhotos);
 
-    function clickRow1(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=e=>{if(e.target.files[0])loadRow1(e.target.files[0]);};i.click();}
-    function loadRow1(file){ row1Photo = URL.createObjectURL(file); renderPhotos(); renderRow1Thumb(); }
+    function clickRow1(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async e=>{if(e.target.files[0])loadRow1(e.target.files[0]);};i.click();}
+    async function loadRow1(file){ row1Photo = await fileToBase64(file); renderPhotos(); renderRow1Thumb(); }
     function delRow1(e){ e.stopPropagation(); row1Photo=null; renderPhotos(); renderRow1Thumb(); }
+
+    // รองรับ Paste จากคลิปบอร์ดทั่วทั้งหน้า
+    document.addEventListener('paste', async e => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                row1Photo = await fileToBase64(file);
+                renderPhotos();
+                renderRow1Thumb();
+                // flash เพื่อแจ้งว่า paste สำเร็จ
+                const thumb = document.getElementById('row1Thumb');
+                thumb.style.border = '2px solid #10b981';
+                setTimeout(() => thumb.style.border = '2px dashed #ccc', 800);
+                break;
+            }
+        }
+    });
     function renderRow1Thumb(){
         const w=document.getElementById('row1Thumb'),ph=document.getElementById('r1ph'),del=document.getElementById('row1Del');
         w.querySelectorAll('img').forEach(i=>i.remove());
@@ -419,12 +459,18 @@
         const pc=document.getElementById('labelPrintContent');
         const previewNode=document.getElementById('labelPreview');
 
-        // ดึง Layout ทั้งหมดจากพรีวิวไปพิมพ์เลย จะได้หน้าตาเหมือนกันเป๊ะ 100%
         pc.innerHTML = previewNode.outerHTML;
         
         if(pc.firstElementChild) {
-            pc.firstElementChild.removeAttribute('id'); // ลบ ID ป้องกันการทับซ้อน
-            pc.firstElementChild.style.border = 'none'; // ลบขอบตอนพิมพ์จริง
+            pc.firstElementChild.removeAttribute('id');
+            pc.firstElementChild.style.border = 'none';
+            // Force black box inline on the cloned node
+            const recvBox = pc.firstElementChild.querySelector('.label-recv-box');
+            if(recvBox) {
+                recvBox.style.cssText = 'background:#000 !important;text-align:center;padding:8px;margin-bottom:10px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;';
+                const title = recvBox.querySelector('.label-recv-title');
+                if(title) title.style.cssText = 'font-weight:800;font-size:16px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;';
+            }
         }
 
         document.getElementById('pageStyleA4').media = 'not all';
@@ -573,6 +619,90 @@
             document.getElementById('pageStyleA4').media = 'print';
         }, 500);
     }
+
+    // ===== Google Sheets Integration =====
+    const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw9in2f5Ios1I7kQ69wVmLepCZMTo0DFn9MvxF200UJwTb7M_g02L8Vtp6C9hYdmeNE9g/exec';
+
+    function showToast(msg, color='#10b981', duration=3000){
+        const t=document.getElementById('toast');
+        t.textContent=msg; t.style.background=color; t.style.display='block';
+        clearTimeout(t._tid);
+        t._tid=setTimeout(()=>t.style.display='none', duration);
+    }
+
+    async function captureA4Preview() {
+        // ย่อรูปลงให้เล็ก เพื่อให้ payload ไม่เกิน Apps Script limit (~50KB base64)
+        const W = 200, H = 283; // A4 ratio, ขนาดเล็ก
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+
+        const loadImg = src => new Promise(res => {
+            const img = new Image();
+            img.onload = () => res(img);
+            img.onerror = () => res(null);
+            img.src = src;
+        });
+
+        const row1H = Math.round(H * 0.60);
+        if (row1Photo) {
+            const img = await loadImg(row1Photo);
+            if (img) {
+                const scale = Math.min(W / img.naturalWidth, row1H / img.naturalHeight);
+                const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
+                ctx.drawImage(img, (W - dw) / 2, (row1H - dh) / 2, dw, dh);
+            }
+        }
+
+        const row2Y = row1H + 1;
+        const row2H = H - row2Y - 1;
+        const count = Math.min(row2Photos.length, photosPerRow);
+        if (count > 0) {
+            const cellW = Math.floor(W / count);
+            for (let i = 0; i < count; i++) {
+                const img = await loadImg(row2Photos[i]);
+                if (!img) continue;
+                const scale = Math.min(cellW / img.naturalWidth, row2H / img.naturalHeight);
+                const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
+                ctx.drawImage(img, i * cellW + (cellW - dw) / 2, row2Y + (row2H - dh) / 2, dw, dh);
+            }
+        }
+
+        // ส่งกลับเฉพาะ base64 ส่วน data (ตัด prefix ออก)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        return dataUrl.split(',')[1]; // เฉพาะ base64 string ไม่มี prefix
+    }
+
+    async function saveToSheets(){
+        const platform = document.getElementById('platform').value;
+        const orderNumber = document.getElementById('orderNumber').value.trim();
+        const recipient = document.getElementById('pageText').value.trim();
+
+        if (!platform) { showToast('⚠️ กรุณาเลือกแพลตฟอร์ม', '#f59e0b'); return; }
+        if (!orderNumber) { showToast('⚠️ กรุณากรอกเลขออเดอร์', '#f59e0b'); return; }
+
+        const now = new Date();
+        const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+        showToast('⏳ กำลังสร้างรูปพรีวิว...', '#667eea', 15000);
+        const imageBase64 = await captureA4Preview();
+
+        showToast('⏳ กำลังบันทึก...', '#667eea', 15000);
+        try {
+            await fetch(SHEETS_WEBHOOK_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: dateStr, platform, orderNumber, recipient, imageBase64: imageBase64 || '' })
+            });
+            showToast('✅ บันทึกลง Google Sheets แล้ว!', '#10b981');
+        } catch(err) {
+            showToast('❌ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', '#ef4444', 4000);
+        }
+    }
+    // =====================================
+
     function closeModal(id){document.getElementById(id).classList.remove('open');}
 </script>
 </body>
