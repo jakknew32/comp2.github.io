@@ -6,7 +6,6 @@
     <title>ใบจ่ายชดเชยสินค้า - Chiangmai Freshmilk</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -359,17 +358,38 @@
         document.getElementById('documentNumber').value=`CFM${d}${m}${y}${Math.floor(Math.random()*100).toString().padStart(3,'0')}`;
     })();
 
-    document.getElementById('photoInput').addEventListener('change',e=>{
-        [...e.target.files].forEach(f=>{ row2Photos.push(URL.createObjectURL(f)); });
+    function fileToBase64(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); }); }
+
+    document.getElementById('photoInput').addEventListener('change', async e=>{
+        for(const f of [...e.target.files]){ row2Photos.push(await fileToBase64(f)); }
         renderPhotos(); renderThumbs();
     });
 
     document.getElementById('photosPerRow').addEventListener('change',function(){photosPerRow=+this.value;renderPhotos();});
     document.getElementById('pageText').addEventListener('input',renderPhotos);
 
-    function clickRow1(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=e=>{if(e.target.files[0])loadRow1(e.target.files[0]);};i.click();}
-    function loadRow1(file){ row1Photo = URL.createObjectURL(file); renderPhotos(); renderRow1Thumb(); }
+    function clickRow1(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async e=>{if(e.target.files[0])loadRow1(e.target.files[0]);};i.click();}
+    async function loadRow1(file){ row1Photo = await fileToBase64(file); renderPhotos(); renderRow1Thumb(); }
     function delRow1(e){ e.stopPropagation(); row1Photo=null; renderPhotos(); renderRow1Thumb(); }
+
+    // รองรับ Paste จากคลิปบอร์ดทั่วทั้งหน้า
+    document.addEventListener('paste', async e => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                row1Photo = await fileToBase64(file);
+                renderPhotos();
+                renderRow1Thumb();
+                // flash เพื่อแจ้งว่า paste สำเร็จ
+                const thumb = document.getElementById('row1Thumb');
+                thumb.style.border = '2px solid #10b981';
+                setTimeout(() => thumb.style.border = '2px dashed #ccc', 800);
+                break;
+            }
+        }
+    });
     function renderRow1Thumb(){
         const w=document.getElementById('row1Thumb'),ph=document.getElementById('r1ph'),del=document.getElementById('row1Del');
         w.querySelectorAll('img').forEach(i=>i.remove());
@@ -611,28 +631,53 @@
     }
 
     async function captureA4Preview() {
-        const pages = document.querySelectorAll('.a4-page');
-        if (!pages.length) return null;
-        try {
-            // Capture only first page, scale down to thumbnail
-            const canvas = await html2canvas(pages[0], {
-                scale: 0.25,          // ย่อให้เล็กลง ~25%
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#ffffff',
-                logging: false
-            });
-            return canvas.toDataURL('image/jpeg', 0.7); // base64 jpeg
-        } catch(e) {
-            console.warn('html2canvas error:', e);
-            return null;
+        // ย่อรูปลงให้เล็ก เพื่อให้ payload ไม่เกิน Apps Script limit (~50KB base64)
+        const W = 200, H = 283; // A4 ratio, ขนาดเล็ก
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+
+        const loadImg = src => new Promise(res => {
+            const img = new Image();
+            img.onload = () => res(img);
+            img.onerror = () => res(null);
+            img.src = src;
+        });
+
+        const row1H = Math.round(H * 0.60);
+        if (row1Photo) {
+            const img = await loadImg(row1Photo);
+            if (img) {
+                const scale = Math.min(W / img.naturalWidth, row1H / img.naturalHeight);
+                const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
+                ctx.drawImage(img, (W - dw) / 2, (row1H - dh) / 2, dw, dh);
+            }
         }
+
+        const row2Y = row1H + 1;
+        const row2H = H - row2Y - 1;
+        const count = Math.min(row2Photos.length, photosPerRow);
+        if (count > 0) {
+            const cellW = Math.floor(W / count);
+            for (let i = 0; i < count; i++) {
+                const img = await loadImg(row2Photos[i]);
+                if (!img) continue;
+                const scale = Math.min(cellW / img.naturalWidth, row2H / img.naturalHeight);
+                const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
+                ctx.drawImage(img, i * cellW + (cellW - dw) / 2, row2Y + (row2H - dh) / 2, dw, dh);
+            }
+        }
+
+        // ส่งกลับเฉพาะ base64 ส่วน data (ตัด prefix ออก)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        return dataUrl.split(',')[1]; // เฉพาะ base64 string ไม่มี prefix
     }
 
     async function saveToSheets(){
         const platform = document.getElementById('platform').value;
         const orderNumber = document.getElementById('orderNumber').value.trim();
-        const docNumber = document.getElementById('documentNumber').value;
         const recipient = document.getElementById('pageText').value.trim();
 
         if (!platform) { showToast('⚠️ กรุณาเลือกแพลตฟอร์ม', '#f59e0b'); return; }
@@ -642,18 +687,14 @@
         const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
         showToast('⏳ กำลังสร้างรูปพรีวิว...', '#667eea', 15000);
-
-        // Capture A4 preview as base64 image
         const imageBase64 = await captureA4Preview();
 
-        const payload = { date: dateStr, platform, orderNumber, recipient, imageBase64: imageBase64 || '' };
-
-        showToast('⏳ กำลังบันทึก...', '#667eea', 10000);
+        showToast('⏳ กำลังบันทึก...', '#667eea', 15000);
         try {
             await fetch(SHEETS_WEBHOOK_URL, {
                 method: 'POST', mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ date: dateStr, platform, orderNumber, recipient, imageBase64: imageBase64 || '' })
             });
             showToast('✅ บันทึกลง Google Sheets แล้ว!', '#10b981');
         } catch(err) {
