@@ -6,6 +6,7 @@
     <title>ใบจ่ายชดเชยสินค้า - Chiangmai Freshmilk</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -148,9 +149,8 @@
         .label-sender { text-align: center; font-size: 13px; line-height: 1.4; color: #333; padding: 5px 5mm; }
         .label-line-dashed { border-top: 1.5px dashed #999; margin: 0 0 10px 0; } 
         
-        /* แก้ไขแถบผู้รับเป็นพื้นดำ ตัวอักษรขาว กว้างเต็ม 100% */
-        .label-recv-box { background: #000; text-align: center; padding: 8px; margin-bottom: 10px; border-radius: 0; width: 100%; } 
-        .label-recv-title { font-weight: 800; font-size: 16px; color: #fff; }
+        .label-recv-box { background: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; text-align: center; padding: 8px; margin-bottom: 10px; border-radius: 0; width: 100%; } 
+        .label-recv-title { font-weight: 800; font-size: 16px; color: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         
         .label-recv-text { text-align: center; font-size: 18px; line-height: 1.6; font-weight: 600; color: #000; white-space: pre-line; word-wrap: break-word; flex: 1; padding: 0 5mm; }
         
@@ -197,6 +197,9 @@
     <style id="pageStyleLabel" media="print">
         body.print-label { }
         @page { size: 100mm 150mm; margin: 0; }
+        /* Force black background on label recv box when printing */
+        .label-recv-box { background: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        .label-recv-title { color: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     </style>
     <style id="pageStyleA4" media="print">
         body.print-a4 { }
@@ -251,7 +254,7 @@
                 <div class="lz label-line-solid"></div>
                 <div class="lz label-sender" id="pSender"></div>
                 <div class="lz label-line-dashed"></div>
-                <div class="lz label-recv-box"><span class="label-recv-title">ผู้รับ (TO):</span></div>
+                <div class="lz label-recv-box" style="background:#000 !important;text-align:center;padding:8px;margin-bottom:10px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><span class="label-recv-title" style="font-weight:800;font-size:16px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span></div>
                 <div class="lz label-recv-text" id="pReceiver"></div>
                 <div class="lz label-footer">
                     <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true">
@@ -436,12 +439,18 @@
         const pc=document.getElementById('labelPrintContent');
         const previewNode=document.getElementById('labelPreview');
 
-        // ดึง Layout ทั้งหมดจากพรีวิวไปพิมพ์เลย จะได้หน้าตาเหมือนกันเป๊ะ 100%
         pc.innerHTML = previewNode.outerHTML;
         
         if(pc.firstElementChild) {
-            pc.firstElementChild.removeAttribute('id'); // ลบ ID ป้องกันการทับซ้อน
-            pc.firstElementChild.style.border = 'none'; // ลบขอบตอนพิมพ์จริง
+            pc.firstElementChild.removeAttribute('id');
+            pc.firstElementChild.style.border = 'none';
+            // Force black box inline on the cloned node
+            const recvBox = pc.firstElementChild.querySelector('.label-recv-box');
+            if(recvBox) {
+                recvBox.style.cssText = 'background:#000 !important;text-align:center;padding:8px;margin-bottom:10px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;';
+                const title = recvBox.querySelector('.label-recv-title');
+                if(title) title.style.cssText = 'font-weight:800;font-size:16px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;';
+            }
         }
 
         document.getElementById('pageStyleA4').media = 'not all';
@@ -590,15 +599,34 @@
             document.getElementById('pageStyleA4').media = 'print';
         }, 500);
     }
+
     // ===== Google Sheets Integration =====
-    // วิธีใช้: สร้าง Google Apps Script Web App แล้วใส่ URL ที่นี่
-    const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw9in2f5Ios1I7kQ69wVmLepCZMTo0DFn9MvxF200UJwTb7M_g02L8Vtp6C9hYdmeNE9g/exec'; // ← ใส่ URL จาก Google Apps Script ตรงนี้
+    const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw9in2f5Ios1I7kQ69wVmLepCZMTo0DFn9MvxF200UJwTb7M_g02L8Vtp6C9hYdmeNE9g/exec';
 
     function showToast(msg, color='#10b981', duration=3000){
         const t=document.getElementById('toast');
         t.textContent=msg; t.style.background=color; t.style.display='block';
         clearTimeout(t._tid);
         t._tid=setTimeout(()=>t.style.display='none', duration);
+    }
+
+    async function captureA4Preview() {
+        const pages = document.querySelectorAll('.a4-page');
+        if (!pages.length) return null;
+        try {
+            // Capture only first page, scale down to thumbnail
+            const canvas = await html2canvas(pages[0], {
+                scale: 0.25,          // ย่อให้เล็กลง ~25%
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+            return canvas.toDataURL('image/jpeg', 0.7); // base64 jpeg
+        } catch(e) {
+            console.warn('html2canvas error:', e);
+            return null;
+        }
     }
 
     async function saveToSheets(){
@@ -610,15 +638,15 @@
         if (!platform) { showToast('⚠️ กรุณาเลือกแพลตฟอร์ม', '#f59e0b'); return; }
         if (!orderNumber) { showToast('⚠️ กรุณากรอกเลขออเดอร์', '#f59e0b'); return; }
 
-        if (!SHEETS_WEBHOOK_URL) {
-            showToast('⚙️ ยังไม่ได้ตั้งค่า SHEETS_WEBHOOK_URL', '#8b5cf6', 4000);
-            alert(`📋 ขั้นตอนการตั้งค่า Google Sheets:\n\n1. เปิด Google Sheets ที่ต้องการ\n2. ไปที่ Extensions → Apps Script\n3. วางโค้ดด้านล่าง แล้ว Deploy → Web App\n4. คัดลอก URL มาใส่ใน SHEETS_WEBHOOK_URL\n\n--- โค้ด Apps Script ---\nfunction doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var sheet = SpreadsheetApp.getActiveSheet();\n  sheet.appendRow([\n    data.date, data.docNumber, data.platform,\n    data.orderNumber, data.recipient\n  ]);\n  return ContentService.createTextOutput('OK');\n}`);
-            return;
-        }
-
         const now = new Date();
         const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-        const payload = { date: dateStr, docNumber, platform, orderNumber, recipient };
+
+        showToast('⏳ กำลังสร้างรูปพรีวิว...', '#667eea', 15000);
+
+        // Capture A4 preview as base64 image
+        const imageBase64 = await captureA4Preview();
+
+        const payload = { date: dateStr, platform, orderNumber, recipient, imageBase64: imageBase64 || '' };
 
         showToast('⏳ กำลังบันทึก...', '#667eea', 10000);
         try {
