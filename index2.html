@@ -1,113 +1,640 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚽ FootLive — ตารางแข่งฟุตบอล</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #0d0f14; --bg2: #13161d; --bg3: #1a1e28;
-  --surface: #1e2230; --surface2: #252a38;
-  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
-  --text: #f0f2f8; --muted: #8892aa; --dim: #4a5268;
-  --accent: #3b82f6; --accent2: #1d4ed8;
-  --live: #ef4444; --live-bg: rgba(239,68,68,0.12);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-.header { padding: 1.5rem; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-.logo { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--accent); letter-spacing: 1px; }
-.btn-refresh { background: var(--surface); border: 1px solid var(--border2); color: var(--text); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-.btn-refresh:hover { background: var(--surface2); }
-.container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-.match-card { background: var(--surface); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; }
-.team { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.5rem; }
-.team img { width: 60px; height: 60px; object-fit: contain; }
-.score-area { text-align: center; }
-.score { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--accent); }
-.time { font-size: 0.9rem; color: var(--muted); }
-.live-badge { background: var(--live-bg); color: var(--live); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; display: inline-block; }
-.error { text-align: center; padding: 3rem; color: var(--muted); }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ใบจ่ายชดเชยสินค้า - Chiangmai Freshmilk</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 30px; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .controls { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 30px; }
+        .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #999; margin: 20px 0 10px; padding-bottom: 5px; border-bottom: 2px solid #f0f0f0; }
+        .section-title:first-child { margin-top: 0; }
+        .upload-label { display: inline-block; background: linear-gradient(135deg,#667eea,#764ba2); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: transform 0.2s; }
+        .upload-label:hover { transform: translateY(-2px); }
+        #photoInput { display: none; }
+
+        #row1Thumb { position: relative; width: 180px; height: 110px; border-radius: 8px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #f9fafb; font-size: 13px; color: #9ca3af; text-align: center; flex-shrink: 0; overflow: hidden; }
+        #row1Thumb img { width: 100%; height: 100%; object-fit: cover; }
+        #row1Del { display: none; position: absolute; top: 2px; right: 2px; background: rgba(239,68,68,.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 18px; text-align: center; cursor: pointer; padding: 0; min-width: 0; flex: none; }
+
+        #thumbnailStrip { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+        .thumb-wrap { position: relative; width: 68px; height: 68px; border-radius: 7px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.15); cursor: grab; border: 2px solid transparent; transition: border-color .2s; }
+        .thumb-wrap:hover { border-color: #667eea; }
+        .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb-del { position: absolute; top: 2px; right: 2px; background: rgba(239,68,68,.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 18px; text-align: center; cursor: pointer; padding: 0; min-width: 0; flex: none; }
+
+        .form-row { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-end; }
+        .form-group { flex: 1; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #444; font-size: 13px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 9px 11px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color .2s; }
+        .form-group textarea { resize: vertical; min-height: 76px; }
+        .url-row { display: flex; gap: 10px; margin-bottom: 14px; }
+        .url-row input { flex: 1; padding: 9px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+
+        .button-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+        button { flex: 1; min-width: 130px; padding: 11px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit; }
+        .btn-green { background: #10b981; color: white; }
+        .btn-red { background: #ef4444; color: white; }
+        .btn-blue { background: #667eea; color: white; }
+        .btn-amber { background: #f59e0b; color: white; }
+        .btn-purple { background: #8b5cf6; color: white; }
+        .btn-teal { background: #0d9488; color: white; }
+
+        .print-area { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .a4-page { width: 210mm; height: 297mm; margin: 0 auto 20mm; background: white; padding: 4mm; box-shadow: 0 0 10px rgba(0,0,0,.1); box-sizing: border-box; display: flex; flex-direction: column; gap: 1mm; }
+        .photo-row { display: flex; gap: 1mm; justify-content: center; }
+        .photo-row:first-child { flex: 0 0 142mm; }
+        .photo-row:nth-child(2) { flex: 1 1 auto; min-height: 0; }
+        .photo-container.full-width { width: 100%; height: 100%; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f9fafb; cursor: pointer; }
+        .photo-container { flex: 1; height: 100%; min-height: 0; border: none; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f9fafb; }
+        .photo-container img { width: 100%; height: 100%; object-fit: cover; }
+        .page-text { flex-shrink: 0; padding: 2mm; text-align: center; font-size: 12px; color: #333; border-top: 1px solid #e0e0e0; }
+
+        @media print {
+            body.print-label { background: white !important; padding: 0 !important; margin: 0 !important; }
+            body.print-label h1, body.print-label .controls, body.print-label .print-area, body.print-label .modal-overlay { display: none !important; }
+            
+            #labelPrintContainer { 
+                display: block !important; 
+                position: absolute !important; 
+                top: 0 !important; left: 0 !important; 
+                width: 100mm !important; height: 150mm !important;
+            }
+
+            body.print-label .shipping-label { 
+                width: 100mm !important; 
+                height: 150mm !important; 
+                border: none !important; 
+                padding: 6mm 0 0 0 !important; 
+                margin: 0 !important;
+            }
+
+            body.print-a4 {
+                background: white !important;
+                padding: 0 !important;
+            }
+            body.print-a4 h1,
+            body.print-a4 .controls {
+                display: none !important;
+            }
+            body.print-a4 .container {
+                max-width: 100% !important;
+            }
+            body.print-a4 .print-area {
+                box-shadow: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                background: white !important;
+            }
+            body.print-a4 .a4-page {
+                box-shadow: none !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                min-height: unset !important;
+                margin: 0 !important;
+                padding: 4mm !important;
+                page-break-after: always;
+                break-after: page;
+            }
+            body.print-a4 #labelPrintContainer {
+                display: none !important;
+            }
+            body.print-a4 .modal-overlay {
+                display: none !important;
+            }
+        }
+
+        @media print {
+            body.print-a4 + * { display: none; }
+        }
+
+        @media print and (not (body.print-label)) {
+            @page { size: A4; margin: 0; }
+        }
+
+        /* Modal & Label Preview */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.8); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 20px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; border-radius: 15px; padding: 26px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+        .modal-box.narrow { max-width: 560px; }
+        .modal-box.wide { max-width: 700px; }
+        .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .modal-hdr h2 { margin: 0; color: #333; font-size: 18px; }
+        .btn-close { background: #ef4444; color: white; border: none; padding: 6px 13px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; min-width: 0; flex: none; }
+
+        .label-preview-wrap { text-align: center; margin-bottom: 18px; }
+        .shipping-label { 
+            width: 100mm; height: 150mm; 
+            border: 1px solid #ccc; background: white; 
+            padding: 6mm 0 0 0; 
+            display: flex; 
+            flex-direction: column; font-family: 'Kanit','Sarabun','Tahoma',sans-serif; 
+            box-sizing: border-box; position: relative; overflow: hidden; margin: 0 auto;
+        }
+        .label-wm { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(30deg); width: 80mm; opacity: .12; pointer-events: none; z-index: 0; }
+        .lz { position: relative; z-index: 1; }
+        .label-hdr { text-align: center; padding: 0 5mm 8px 5mm; } 
+        .label-hdr h2 { font-size: 26px; font-weight: 800; margin: 0; color: #000; letter-spacing: -0.5px; }
+        .label-line-solid { border-top: 1.5px solid #333; margin: 0; } 
+        .label-sender { text-align: center; font-size: 13px; line-height: 1.4; color: #333; padding: 5px 5mm; }
+        .label-line-dashed { border-top: 1.5px dashed #999; margin: 0 0 10px 0; } 
+        
+        /* แก้ไขแถบผู้รับเป็นพื้นดำ ตัวอักษรขาว กว้างเต็ม 100% */
+        .label-recv-box { background: #000; text-align: center; padding: 8px; margin-bottom: 10px; border-radius: 0; width: 100%; } 
+        .label-recv-title { font-weight: 800; font-size: 16px; color: #fff; }
+        
+        .label-recv-text { text-align: center; font-size: 18px; line-height: 1.6; font-weight: 600; color: #000; white-space: pre-line; word-wrap: break-word; flex: 1; padding: 0 5mm; }
+        
+        .label-footer { margin-top: auto; border-top: 1.5px solid #333; text-align: center; display: flex; flex-direction: column; }
+        .label-footer img { width: 100%; height: auto; display: block; } 
+        
+        .label-ts { font-size: 11px; color: #666; text-align: left; padding: 5px 5mm; background: white; }
+
+        #labelPrintContainer { display: none; position: fixed; top: -9999px; left: -9999px; }
+        .recv-list { display: flex; flex-direction: column; gap: 7px; max-height: 370px; overflow-y: auto; }
+        .recv-card { border: 2px solid #e0e0e0; border-radius: 9px; padding: 11px 13px; cursor: pointer; transition: all .15s; }
+        .recv-card:hover { border-color: #667eea; background: #f5f3ff; }
+        #toast { position: fixed; bottom: 28px; right: 28px; padding: 13px 20px; border-radius: 9px; color: white; font-weight: 600; font-size: 14px; z-index: 99999; display: none; box-shadow: 0 4px 18px rgba(0,0,0,.3); }
+
+        #pageText { min-height: 80px; font-size: 15px; line-height: 1.7; }
+
+        /* ===== History Modal Styles ===== */
+        .history-toolbar { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+        .history-search { flex: 1; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; min-width: 180px; }
+        .history-search:focus { outline: none; border-color: #667eea; }
+        .history-count { font-size: 13px; color: #888; white-space: nowrap; }
+        .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; padding-right: 2px; }
+        .history-card { border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px; transition: all .15s; cursor: pointer; position: relative; }
+        .history-card:hover { border-color: #667eea; background: #f5f3ff; }
+        .history-card .hc-icon { width: 38px; height: 38px; background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .history-card .hc-body { flex: 1; min-width: 0; }
+        .history-card .hc-name { font-weight: 700; font-size: 15px; color: #1f2937; margin-bottom: 2px; }
+        .history-card .hc-phone { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+        .history-card .hc-addr { font-size: 13px; color: #374151; line-height: 1.45; white-space: pre-line; max-height: 48px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .history-card .hc-time { font-size: 11px; color: #9ca3af; margin-top: 5px; }
+        .history-card .hc-use-btn { background: #667eea; color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; align-self: center; font-family: inherit; transition: background .15s; min-width: 0; flex: none; }
+        .history-card .hc-use-btn:hover { background: #5a6fd6; }
+        .history-card .hc-del-btn { background: none; color: #ef4444; border: 1.5px solid #fca5a5; border-radius: 7px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; align-self: center; font-family: inherit; transition: all .15s; min-width: 0; flex: none; margin-left: 4px; }
+        .history-card .hc-del-btn:hover { background: #ef4444; color: white; border-color: #ef4444; }
+        .btn-clear-all { background: none; color: #ef4444; border: 2px solid #fca5a5; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .15s; min-width: 0; flex: none; }
+        .btn-clear-all:hover { background: #ef4444; color: white; border-color: #ef4444; }
+        .history-empty { text-align: center; padding: 40px 20px; color: #9ca3af; font-size: 15px; }
+        .history-empty .he-icon { font-size: 48px; margin-bottom: 10px; }
+        .history-loading { text-align: center; padding: 30px; color: #9ca3af; font-size: 14px; }
+        .history-loading::after { content: ''; display: inline-block; width: 18px; height: 18px; border: 2px solid #e0e0e0; border-top-color: #667eea; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-left: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <style id="pageStyleLabel" media="print">
+        body.print-label { }
+        @page { size: 100mm 150mm; margin: 0; }
+    </style>
+    <style id="pageStyleA4" media="print">
+        body.print-a4 { }
+        @page { size: A4 portrait; margin: 0; }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        const cfg = { apiKey:"AIzaSyDZolsNGRpa_ZTPco_lbaBfliXNBrjTmTo", authDomain:"photo-df51e.firebaseapp.com", databaseURL:"https://photo-df51e-default-rtdb.asia-southeast1.firebasedatabase.app", projectId:"photo-df51e", storageBucket:"photo-df51e.firebasestorage.app", messagingSenderId:"388250901051", appId:"1:388250901051:web:8a159cf4a9890eeafe1a1e" };
+        const app = initializeApp(cfg), db = getDatabase(app);
+        
+        window._fbSaveReceiver = async (data) => {
+            try {
+                const lines = data.fullText.split('\n').map(l => l.trim()).filter(l => l);
+                const phoneMatch = data.fullText.match(/(0\d{1,2}-?\d{3}-?\d{4}|0\d{8,9})/);
+                const phone = phoneMatch ? phoneMatch[0].replace(/-/g, '') : '-';
+                const name = lines[0] || 'ไม่ระบุชื่อ';
+                const id = Date.now().toString();
+                await set(ref(db, `receivers/${id}`), { id, name, phone, address: data.fullText, createdAt: new Date().toISOString() });
+                return true;
+            } catch (e) { return false; }
+        };
+        window._fbGetReceivers = async () => {
+            const s = await get(ref(db, 'receivers'));
+            return s.exists() ? Object.values(s.val()).reverse() : [];
+        };
+        window._fbSaveHistory = h => set(ref(db, `history/${h.id}`), h);
+        window._fbGetHistory = async () => {
+            const s = await get(ref(db, 'history'));
+            return s.exists() ? Object.values(s.val()).reverse() : [];
+        };
+        window._fbDeleteReceiver = async (id) => { await remove(ref(db, `receivers/${id}`)); };
+        window._fbClearAllReceivers = async () => { await remove(ref(db, 'receivers')); };
+    </script>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">FOOTLIVE</div>
-  <div>
-    <small style="color:var(--muted)">อัปเดตล่าสุด: <span id="last-updated">-</span></small>
-    <button class="btn-refresh" onclick="refresh()"><span>🔄</span> รีเฟรช</button>
-  </div>
+<div id="labelPrintContainer"><div id="labelPrintContent"></div></div>
+<div id="toast"></div>
+
+<div id="labelModal" class="modal-overlay">
+    <div class="modal-box narrow">
+        <div class="modal-hdr"><h2>📦 สร้างฉลาก 100x150</h2><button class="btn-close" onclick="closeModal('labelModal')">✕ ปิด</button></div>
+        <div class="form-row">
+            <div class="form-group"><label>ข้อมูลผู้รับ</label><textarea id="mReceiver" rows="4"></textarea></div>
+        </div>
+        <div class="label-preview-wrap">
+            <div id="labelPreview" class="shipping-label">
+                <img class="label-wm" src="https://img2.pic.in.th/13223.png">
+                <div class="lz label-hdr"><h2>Chiangmai Freshmilk</h2></div>
+                <div class="lz label-line-solid"></div>
+                <div class="lz label-sender" id="pSender"></div>
+                <div class="lz label-line-dashed"></div>
+                <div class="lz label-recv-box"><span class="label-recv-title">ผู้รับ (TO):</span></div>
+                <div class="lz label-recv-text" id="pReceiver"></div>
+                <div class="lz label-footer">
+                    <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true">
+                </div>
+                <div class="lz label-ts" id="pTs"></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button onclick="printLabel()" class="btn-green">🖨️ พิมพ์ฉลาก</button>
+            <button onclick="closeModal('labelModal')" style="background:#6b7280; color:white;">ยกเลิก</button>
+        </div>
+    </div>
 </div>
 
-<div class="container" id="container">
-  <div class="error">กำลังโหลดข้อมูล...</div>
+<div id="pickerModal" class="modal-overlay">
+    <div class="modal-box wide">
+        <div class="modal-hdr"><h2>📋 เลือกผู้รับ</h2><button class="btn-close" onclick="closeModal('pickerModal')">✕</button></div>
+        <div class="recv-list" id="pickerList"></div>
+    </div>
+</div>
+
+<div id="historyModal" class="modal-overlay">
+    <div class="modal-box wide">
+        <div class="modal-hdr">
+            <h2>🕐 ประวัติการพิมพ์</h2>
+            <button class="btn-close" onclick="closeModal('historyModal')">✕ ปิด</button>
+        </div>
+        <div class="history-toolbar">
+            <input type="text" class="history-search" id="historySearch" placeholder="🔍 ค้นหาชื่อ หรือที่อยู่..." oninput="filterHistory()">
+            <span class="history-count" id="historyCount"></span>
+            <button class="btn-clear-all" onclick="clearAllHistory()">🗑️ ล้างทั้งหมด</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <div class="history-loading">กำลังโหลดข้อมูล</div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h1>📸 ใบจ่ายชดเชยสินค้า</h1>
+    <div class="controls">
+        <div class="section-title">📷 รูปภาพ</div>
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;">
+            <div id="row1Thumb" onclick="clickRow1()"><span id="r1ph">📥 คลิก/Paste</span><button id="row1Del" onclick="delRow1(event)">✕</button></div>
+            <div style="flex:1;">
+                <label class="upload-label" for="photoInput">📁 เพิ่มรูปแถวล่าง</label>
+                <input type="file" id="photoInput" accept="image/*" multiple>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                    <input type="text" id="imgUrlInput" placeholder="🔗 วางลิ้งค์รูปภาพ แล้วกด Enter หรือ ➕" style="flex:1;padding:7px 10px;border:2px dashed #ccc;border-radius:8px;font-size:13px;font-family:inherit;color:#444;outline:none;" onkeydown="if(event.key==='Enter')addImgFromUrl()">
+                    <button onclick="addImgFromUrl()" style="flex:none;min-width:0;width:auto;padding:7px 13px;font-size:16px;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer;">➕</button>
+                </div>
+                <div id="thumbnailStrip"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="max-width:150px;"><label>รูปต่อแถว</label><input type="number" id="photosPerRow" value="3" min="1"></div>
+            <div class="form-group"><label>เลขที่เอกสาร</label><input type="text" id="documentNumber" readonly></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="max-width:160px;">
+                <label>🛒 แพลตฟอร์ม</label>
+                <select id="platform">
+                    <option value="">-- เลือกแพลตฟอร์ม --</option>
+                    <option value="Shopee">🟠 Shopee</option>
+                    <option value="TikTok">⬛ TikTok Shop</option>
+                    <option value="Lazada">🔵 Lazada</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📋 เลขออเดอร์</label>
+                <input type="text" id="orderNumber" placeholder="กรอกเลขออเดอร์">
+            </div>
+        </div>
+
+        <div class="section-title">📬 ข้อมูลผู้รับ</div>
+        <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:6px;">
+                <button onclick="openHistory()" class="btn-teal" style="flex:none;width:auto;padding:6px 14px;font-size:12px;min-width:0;">🕐 ประวัติการพิมพ์</button>
+                <button onclick="openPicker()" class="btn-blue" style="flex:none;width:auto;padding:6px 14px;font-size:12px;min-width:0;">👤 เลือกจาก DB</button>
+            </div>
+            <textarea id="pageText" rows="3" style="width:100%;display:block;"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-green" onclick="handlePrint()">🖨️ Print A4</button>
+            <button class="btn-amber" onclick="openLabelModal()">📦 สร้างฉลาก 100x150</button>
+            <button class="btn-teal" onclick="saveToSheets()">📊 บันทึก Google Sheets</button>
+            <button class="btn-red" onclick="location.reload()">🗑️ Clear</button>
+        </div>
+    </div>
+    <div class="print-area" id="printArea"></div>
 </div>
 
 <script>
-const PROXY = 'api.php';
-let allEvents = [];
+    let row1Photo = null, row2Photos = [], photosPerRow = 3;
+    let _historyCache = [];
+    const SENDER = 'บริษัท เชียงใหม่เฟรชมิลค์ จำกัด 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687';
 
-async function refresh() {
-  const container = document.getElementById('container');
-  const btn = document.querySelector('.btn-refresh span');
-  btn.style.display = 'inline-block';
-  btn.style.animation = 'spin 1s linear infinite';
+    (function(){
+        const now=new Date(), d=String(now.getDate()).padStart(2,'0'), m=String(now.getMonth()+1).padStart(2,'0'), y=now.getFullYear();
+        document.getElementById('documentNumber').value=`CFM${d}${m}${y}${Math.floor(Math.random()*100).toString().padStart(3,'0')}`;
+    })();
 
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const [liveRes, todayRes] = await Promise.all([
-      fetch(`${PROXY}?action=live`).then(r => r.json()),
-      fetch(`${PROXY}?action=today&date=${today}`).then(r => r.json())
-    ]);
+    document.getElementById('photoInput').addEventListener('change',e=>{
+        [...e.target.files].forEach(f=>{ row2Photos.push(URL.createObjectURL(f)); });
+        renderPhotos(); renderThumbs();
+    });
 
-    const liveEvents = (liveRes.events || []).map(e => ({...e, _isLive: true}));
-    const scheduledEvents = (todayRes.events || []).filter(e => 
-      !liveEvents.some(l => l.idEvent === e.idEvent)
-    );
+    document.getElementById('photosPerRow').addEventListener('change',function(){photosPerRow=+this.value;renderPhotos();});
+    document.getElementById('pageText').addEventListener('input',renderPhotos);
 
-    allEvents = [...liveEvents, ...scheduledEvents];
-    render(allEvents);
+    function clickRow1(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=e=>{if(e.target.files[0])loadRow1(e.target.files[0]);};i.click();}
+    function loadRow1(file){ row1Photo = URL.createObjectURL(file); renderPhotos(); renderRow1Thumb(); }
+    function delRow1(e){ e.stopPropagation(); row1Photo=null; renderPhotos(); renderRow1Thumb(); }
+    function renderRow1Thumb(){
+        const w=document.getElementById('row1Thumb'),ph=document.getElementById('r1ph'),del=document.getElementById('row1Del');
+        w.querySelectorAll('img').forEach(i=>i.remove());
+        if(row1Photo){const img=document.createElement('img');img.src=row1Photo;w.insertBefore(img,ph);ph.style.display='none';del.style.display='block';}
+        else{ph.style.display='';del.style.display='none';}
+    }
+    function renderThumbs(){
+        const s=document.getElementById('thumbnailStrip'); s.innerHTML='';
+        row2Photos.forEach((src,i)=>{
+            const w=document.createElement('div'); w.className='thumb-wrap';
+            w.innerHTML=`<img src="${src}"><button class="thumb-del" onclick="row2Photos.splice(${i},1);renderPhotos();renderThumbs();">✕</button>`;
+            s.appendChild(w);
+        });
+    }
 
-    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('th-TH');
-  } catch (err) {
-    container.innerHTML = `<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
-  } finally {
-    btn.style.animation = '';
-  }
-}
+    function addImgFromUrl(){
+        const inp = document.getElementById('imgUrlInput');
+        const url = inp.value.trim();
+        if (!url) return;
+        const img = new Image();
+        img.onload = () => { row2Photos.push(url); renderPhotos(); renderThumbs(); inp.value=''; inp.style.borderColor='#ccc'; };
+        img.onerror = () => { inp.style.borderColor='#ef4444'; setTimeout(()=>inp.style.borderColor='#ccc',1500); };
+        img.src = url;
+    }
 
-function render(events) {
-  const container = document.getElementById('container');
-  if (events.length === 0) {
-    container.innerHTML = '<div class="error">ไม่มีรายการแข่งขันในขณะนี้</div>';
-    return;
-  }
+    function renderPhotos(){
+        const area=document.getElementById('printArea'); area.innerHTML='';
+        const total=Math.max(1,Math.ceil(row2Photos.length/photosPerRow));
+        for(let p=0;p<total;p++){
+            const page=document.createElement('div'); page.className='a4-page';
+            const r1=document.createElement('div'); r1.className='photo-row';
+            const pc1=document.createElement('div'); pc1.className='photo-container full-width';
+            if(row1Photo) pc1.innerHTML=`<img src="${row1Photo}" style="object-fit:contain;">`;
+            r1.appendChild(pc1); page.appendChild(r1);
+            const r2=document.createElement('div'); r2.className='photo-row';
+            for(let i=0; i<photosPerRow; i++){
+                const idx=p*photosPerRow+i;
+                const pc=document.createElement('div'); pc.className='photo-container';
+                if(row2Photos[idx]) pc.innerHTML=`<img src="${row2Photos[idx]}">`;
+                r2.appendChild(pc);
+            }
+            page.appendChild(r2);
+            const txt=document.getElementById('pageText').value;
+            if(txt.trim()) page.innerHTML+=`<div class="page-text">${txt.replace(/\n/g,'<br>')}</div>`;
+            area.appendChild(page);
+        }
+    }
 
-  container.innerHTML = events.map(e => `
-    <div class="match-card">
-      <div class="team">
-        <img src="https://www.thesportsdb.com/images/media/team/badge/small/${e.idHomeTeam}.png" onerror="this.src='https://via.placeholder.com/60?text=TEAM'">
-        <span>${e.strHomeTeam}</span>
-      </div>
-      <div class="score-area">
-        ${e._isLive ? '<span class="live-badge">LIVE</span>' : ''}
-        <div class="score">${e.intHomeScore ?? '-'}:${e.intAwayScore ?? '-'}</div>
-        <div class="time">${e.strTime ? e.strTime.substring(0, 5) : 'N/A'}</div>
-        <div style="font-size:0.7rem; color:var(--dim); margin-top:5px;">${e.strLeague}</div>
-      </div>
-      <div class="team">
-        <img src="https://www.thesportsdb.com/images/media/team/badge/small/${e.idAwayTeam}.png" onerror="this.src='https://via.placeholder.com/60?text=TEAM'">
-        <span>${e.strAwayTeam}</span>
-      </div>
-    </div>
-  `).join('');
-}
+    function ts(){ const n=new Date(); return `พิมพ์: ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()+543} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
 
-window.addEventListener('DOMContentLoaded', refresh);
+    function updatePreview(){
+        const rv=document.getElementById('mReceiver').value;
+        document.getElementById('pReceiver').innerHTML=('คุณ '+rv).replace(/\n/g,'<br>');
+        document.getElementById('pSender').innerHTML=SENDER.replace('สารภี เชียงใหม่', 'สารภี<br>เชียงใหม่');
+        document.getElementById('pTs').textContent=ts();
+    }
+
+    function openLabelModal(){
+        document.getElementById('mReceiver').value=document.getElementById('pageText').value;
+        updatePreview();
+        document.getElementById('labelModal').classList.add('open');
+    }
+    document.getElementById('mReceiver').addEventListener('input',updatePreview);
+
+    function printLabel(){
+        const rv=document.getElementById('mReceiver').value;
+        const pc=document.getElementById('labelPrintContent');
+        const previewNode=document.getElementById('labelPreview');
+
+        // ดึง Layout ทั้งหมดจากพรีวิวไปพิมพ์เลย จะได้หน้าตาเหมือนกันเป๊ะ 100%
+        pc.innerHTML = previewNode.outerHTML;
+        
+        if(pc.firstElementChild) {
+            pc.firstElementChild.removeAttribute('id'); // ลบ ID ป้องกันการทับซ้อน
+            pc.firstElementChild.style.border = 'none'; // ลบขอบตอนพิมพ์จริง
+        }
+
+        document.getElementById('pageStyleA4').media = 'not all';
+        document.getElementById('pageStyleLabel').media = 'print';
+        document.body.classList.add('print-label');
+        window.print();
+        setTimeout(()=>{
+            document.body.classList.remove('print-label');
+            document.getElementById('pageStyleA4').media = 'print';
+        }, 500);
+        window._fbSaveReceiver({fullText:rv});
+    }
+
+    async function openPicker(){
+        document.getElementById('pickerModal').classList.add('open');
+        const list=await window._fbGetReceivers();
+        const l=document.getElementById('pickerList'); l.innerHTML='';
+        list.forEach(r=>{
+            const d=document.createElement('div'); d.className='recv-card';
+            d.innerHTML=`<b>${r.name}</b><br>${r.address}`;
+            d.onclick=()=>{document.getElementById('pageText').value=r.address; renderPhotos(); closeModal('pickerModal');};
+            l.appendChild(d);
+        });
+    }
+
+    // ===== History Functions =====
+    function formatThaiDate(isoStr) {
+        if (!isoStr) return '';
+        try {
+            const d = new Date(isoStr);
+            const day = d.getDate();
+            const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            const month = months[d.getMonth()];
+            const year = d.getFullYear() + 543;
+            const hh = String(d.getHours()).padStart(2,'0');
+            const mm = String(d.getMinutes()).padStart(2,'0');
+            return `${day} ${month} ${year} เวลา ${hh}:${mm} น.`;
+        } catch(e) { return isoStr; }
+    }
+
+    function renderHistoryList(items) {
+        const el = document.getElementById('historyList');
+        const countEl = document.getElementById('historyCount');
+        countEl.textContent = `ทั้งหมด ${items.length} รายการ`;
+
+        if (items.length === 0) {
+            el.innerHTML = `<div class="history-empty"><div class="he-icon">📭</div>ไม่พบข้อมูลประวัติการพิมพ์</div>`;
+            return;
+        }
+
+        el.innerHTML = '';
+        items.forEach(r => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            card.id = `hcard-${r.id}`;
+            const addrPreview = (r.address || '').replace(/\n/g, ' ');
+            card.innerHTML = `
+                <div class="hc-icon">👤</div>
+                <div class="hc-body">
+                    <div class="hc-name">${escHtml(r.name || 'ไม่ระบุชื่อ')}</div>
+                    <div class="hc-phone">📞 ${escHtml(r.phone || '-')}</div>
+                    <div class="hc-addr">${escHtml(addrPreview)}</div>
+                    <div class="hc-time">🕐 ${formatThaiDate(r.createdAt)}</div>
+                </div>
+                <button class="hc-use-btn" onclick="useHistoryItem(${JSON.stringify(r.address || '').replace(/"/g,'&quot;')})">ใช้ที่อยู่นี้</button>
+                <button class="hc-del-btn" onclick="deleteHistoryItem('${escHtml(r.id)}')">✕</button>
+            `;
+            el.appendChild(card);
+        });
+    }
+
+    function filterHistory() {
+        const q = document.getElementById('historySearch').value.toLowerCase().trim();
+        if (!q) { renderHistoryList(_historyCache); return; }
+        const filtered = _historyCache.filter(r =>
+            (r.name || '').toLowerCase().includes(q) ||
+            (r.address || '').toLowerCase().includes(q) ||
+            (r.phone || '').includes(q)
+        );
+        renderHistoryList(filtered);
+    }
+
+    function useHistoryItem(address) {
+        document.getElementById('pageText').value = address;
+        renderPhotos();
+        closeModal('historyModal');
+    }
+
+    async function openHistory() {
+        document.getElementById('historyModal').classList.add('open');
+        document.getElementById('historySearch').value = '';
+        document.getElementById('historyCount').textContent = '';
+        document.getElementById('historyList').innerHTML = '<div class="history-loading">กำลังโหลดข้อมูล</div>';
+
+        try {
+            const list = await window._fbGetReceivers();
+            _historyCache = list;
+            renderHistoryList(list);
+        } catch(e) {
+            document.getElementById('historyList').innerHTML = `<div class="history-empty"><div class="he-icon">⚠️</div>เกิดข้อผิดพลาด กรุณาลองใหม่</div>`;
+        }
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function deleteHistoryItem(id) {
+        const card = document.getElementById(`hcard-${id}`);
+        if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
+        try {
+            await window._fbDeleteReceiver(id);
+            _historyCache = _historyCache.filter(r => r.id !== id);
+            const q = document.getElementById('historySearch').value.toLowerCase().trim();
+            const filtered = q ? _historyCache.filter(r =>
+                (r.name||'').toLowerCase().includes(q)||(r.address||'').toLowerCase().includes(q)||(r.phone||'').includes(q)
+            ) : _historyCache;
+            renderHistoryList(filtered);
+        } catch(e) {
+            if (card) { card.style.opacity = ''; card.style.pointerEvents = ''; }
+            alert('เกิดข้อผิดพลาด ไม่สามารถลบได้');
+        }
+    }
+
+    async function clearAllHistory() {
+        if (!confirm(`ต้องการล้างประวัติทั้งหมด ${_historyCache.length} รายการ?\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`)) return;
+        document.getElementById('historyList').innerHTML = '<div class="history-loading">กำลังลบข้อมูล</div>';
+        try {
+            await window._fbClearAllReceivers();
+            _historyCache = [];
+            renderHistoryList([]);
+        } catch(e) {
+            document.getElementById('historyList').innerHTML = `<div class="history-empty"><div class="he-icon">⚠️</div>เกิดข้อผิดพลาด กรุณาลองใหม่</div>`;
+        }
+    }
+    // ===========================
+
+    function handlePrint(){
+        document.getElementById('pageStyleLabel').media = 'not all';
+        document.getElementById('pageStyleA4').media = 'print';
+        document.body.classList.add('print-a4');
+        window.print();
+        setTimeout(()=>{
+            document.body.classList.remove('print-a4');
+            document.getElementById('pageStyleLabel').media = 'print';
+            document.getElementById('pageStyleA4').media = 'print';
+        }, 500);
+    }
+    // ===== Google Sheets Integration =====
+    // วิธีใช้: สร้าง Google Apps Script Web App แล้วใส่ URL ที่นี่
+    const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw9in2f5Ios1I7kQ69wVmLepCZMTo0DFn9MvxF200UJwTb7M_g02L8Vtp6C9hYdmeNE9g/exec'; // ← ใส่ URL จาก Google Apps Script ตรงนี้
+
+    function showToast(msg, color='#10b981', duration=3000){
+        const t=document.getElementById('toast');
+        t.textContent=msg; t.style.background=color; t.style.display='block';
+        clearTimeout(t._tid);
+        t._tid=setTimeout(()=>t.style.display='none', duration);
+    }
+
+    async function saveToSheets(){
+        const platform = document.getElementById('platform').value;
+        const orderNumber = document.getElementById('orderNumber').value.trim();
+        const docNumber = document.getElementById('documentNumber').value;
+        const recipient = document.getElementById('pageText').value.trim();
+
+        if (!platform) { showToast('⚠️ กรุณาเลือกแพลตฟอร์ม', '#f59e0b'); return; }
+        if (!orderNumber) { showToast('⚠️ กรุณากรอกเลขออเดอร์', '#f59e0b'); return; }
+
+        if (!SHEETS_WEBHOOK_URL) {
+            showToast('⚙️ ยังไม่ได้ตั้งค่า SHEETS_WEBHOOK_URL', '#8b5cf6', 4000);
+            alert(`📋 ขั้นตอนการตั้งค่า Google Sheets:\n\n1. เปิด Google Sheets ที่ต้องการ\n2. ไปที่ Extensions → Apps Script\n3. วางโค้ดด้านล่าง แล้ว Deploy → Web App\n4. คัดลอก URL มาใส่ใน SHEETS_WEBHOOK_URL\n\n--- โค้ด Apps Script ---\nfunction doPost(e) {\n  var data = JSON.parse(e.postData.contents);\n  var sheet = SpreadsheetApp.getActiveSheet();\n  sheet.appendRow([\n    data.date, data.docNumber, data.platform,\n    data.orderNumber, data.recipient\n  ]);\n  return ContentService.createTextOutput('OK');\n}`);
+            return;
+        }
+
+        const now = new Date();
+        const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        const payload = { date: dateStr, docNumber, platform, orderNumber, recipient };
+
+        showToast('⏳ กำลังบันทึก...', '#667eea', 10000);
+        try {
+            await fetch(SHEETS_WEBHOOK_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            showToast('✅ บันทึกลง Google Sheets แล้ว!', '#10b981');
+        } catch(err) {
+            showToast('❌ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', '#ef4444', 4000);
+        }
+    }
+    // =====================================
+
+    function closeModal(id){document.getElementById(id).classList.remove('open');}
 </script>
-
 </body>
 </html>
