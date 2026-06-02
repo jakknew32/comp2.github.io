@@ -147,7 +147,7 @@ body{
 .shipping-label{
   width:100mm;height:150mm;
   border:1px solid #999;background:white;
-  padding:6mm 0 0 0;
+  padding:3mm 0 0 0;
   display:flex;flex-direction:column;
   font-family:'Kanit','Sarabun','Tahoma',sans-serif;
   box-sizing:border-box;position:relative;overflow:hidden;
@@ -155,11 +155,11 @@ body{
 }
 .sl-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(30deg);width:80mm;opacity:.07;pointer-events:none;z-index:0}
 .sl-z{position:relative;z-index:1}
-.sl-hdr{text-align:center;padding:0 5mm 6px 5mm}
+.sl-hdr{text-align:center;padding:0 5mm 4px 5mm}
 .sl-hdr h2{font-size:24px;font-weight:800;margin:0;color:#000;letter-spacing:-.5px}
 .sl-line{border-top:1.5px solid #333;margin:0}
-.sl-line-dash{border-top:1.5px dashed #999;margin:0 0 8px 0}
-.sl-sender{text-align:center;font-size:11px;line-height:1.4;color:#444;padding:4px 5mm}
+.sl-line-dash{border-top:1.5px dashed #999;margin:0 0 6px 0}
+.sl-sender{text-align:center;font-size:10px;line-height:1.3;color:#444;padding:3px 4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl-recv-box{
   background:#000 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;
   text-align:center;padding:7px;margin-bottom:8px;width:100%;
@@ -434,7 +434,7 @@ body{
 </div>
 
 <script>
-const SENDER = 'บริษัท เชียงใหม่เฟรชมิลค์ จำกัด\n57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่\nโทร. 089-6354687';
+const SENDER = 'บริษัท เชียงใหม่เฟรชมิลค์ จำกัด 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687';
 let labels = JSON.parse(localStorage.getItem('cfm_labels') || '[]');
 let editingId = null;
 let importData = [];
@@ -593,19 +593,21 @@ function makeLabelHTML(lb, num){
   const fs=document.getElementById('fontSizePref').value;
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
   const fullAddr = lb.addr || '';
-  const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}${lb.note?'\n('+lb.note+')':''}` : fullAddr;
-  
+  const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}` : fullAddr;
+  const noteHTML = lb.note ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 หมายเหตุ: ${esc(lb.note)}</div>` : '';
+
   return `<div class="shipping-label">
     <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
     <div class="sl-z" style="position:absolute;top:3mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;">ใบที่ ${num}</div>
     <div class="sl-z sl-hdr"><h2>Chiangmai Freshmilk</h2></div>
     <div class="sl-z sl-line"></div>
-    <div class="sl-z sl-sender">${SENDER.replace(/\n/g,'<br>')}</div>
+    <div class="sl-z sl-sender">${esc(SENDER)}</div>
     <div class="sl-z sl-line-dash"></div>
     <div class="sl-z sl-recv-box" style="background:${recvBg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <span class="sl-recv-title">ผู้รับ (TO):</span>
     </div>
     <div class="sl-z sl-recv-text" style="font-size:${fs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
+    ${noteHTML}
     <div class="sl-z sl-footer">
       <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" onerror="this.style.display='none'">
     </div>
@@ -647,18 +649,21 @@ function buildPrintDoc(list){
   
   const labels_html = list.map((lb,i)=>{
     const fullAddr = lb.addr||'';
-    const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}${lb.note?'\n('+lb.note+')':''}`:fullAddr;
-    return `<div class="shipping-label" style="page-break-after:always;">
+    const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}`:fullAddr;
+    const notePrint = lb.note ? `<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 หมายเหตุ: ${esc(lb.note)}</div>` : '';
+    const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
+    return `<div class="shipping-label" style="${pageBreak}">
       <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
-      <div style="position:absolute;top:3mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
-      <div style="position:relative;z-index:1;text-align:center;padding:0 5mm 6px 5mm;"><h2 style="font-size:24px;font-weight:800;margin:0;color:#000;letter-spacing:-.5px;font-family:'Kanit','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
+      <div style="position:absolute;top:2mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit','Sarabun',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
+      <div style="position:relative;z-index:1;text-align:center;padding:0 5mm 4px 5mm;"><h2 style="font-size:24px;font-weight:800;margin:0;color:#000;letter-spacing:-.5px;font-family:'Kanit','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
       <div style="position:relative;z-index:1;border-top:1.5px solid #333;margin:0"></div>
-      <div style="position:relative;z-index:1;text-align:center;font-size:11px;line-height:1.4;color:#444;padding:4px 5mm;">${SENDER.replace(/\n/g,'<br>')}</div>
-      <div style="position:relative;z-index:1;border-top:1.5px dashed #999;margin:0 0 8px 0;"></div>
+      <div style="position:relative;z-index:1;text-align:center;font-size:10px;line-height:1.3;color:#444;padding:3px 4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(SENDER)}</div>
+      <div style="position:relative;z-index:1;border-top:1.5px dashed #999;margin:0 0 6px 0;"></div>
       <div style="position:relative;z-index:1;background:${recvBg} !important;text-align:center;padding:7px;margin-bottom:8px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span style="font-weight:800;font-size:15px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span>
       </div>
       <div style="position:relative;z-index:1;text-align:center;font-size:${fs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${esc(displayText).replace(/\n/g,'<br>')}</div>
+      ${notePrint}
       <div style="position:relative;z-index:1;margin-top:auto;border-top:1.5px solid #333;text-align:center;">
         <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" style="width:100%;height:auto;display:block;" onerror="this.style.display='none'">
       </div>
@@ -671,8 +676,8 @@ function buildPrintDoc(list){
     <style>
     *{margin:0;padding:0;box-sizing:border-box}
     @page{size:100mm 150mm;margin:0}
-    body{background:white;font-family:'Kanit','Sarabun','Tahoma',sans-serif}
-    .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:6mm 0 0 0;display:flex;flex-direction:column;font-family:'Kanit','Sarabun','Tahoma',sans-serif;box-sizing:border-box;position:relative;overflow:hidden;}
+    html,body{margin:0;padding:0;background:white;font-family:'Kanit','Sarabun','Tahoma',sans-serif}
+    .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:3mm 0 0 0;display:flex;flex-direction:column;font-family:'Kanit','Sarabun','Tahoma',sans-serif;box-sizing:border-box;position:relative;overflow:hidden;}
     .sl-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(30deg);width:80mm;opacity:.07;pointer-events:none;z-index:0;}
     </style>
     </head><body>${labels_html}</body></html>`;
