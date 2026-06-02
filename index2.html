@@ -284,6 +284,10 @@ body{
       <textarea id="f_addr" rows="4" placeholder="บ้านเลขที่ / หมู่บ้าน / ถนน&#10;แขวง/ตำบล เขต/อำเภอ&#10;จังหวัด รหัสไปรษณีย์"></textarea>
     </div>
     <div class="form-group">
+      <label>เลขออเดอร์</label>
+      <input type="text" id="f_order" placeholder="เลขออเดอร์ (ถ้ามี)">
+    </div>
+    <div class="form-group">
       <label>หมายเหตุ</label>
       <input type="text" id="f_note" placeholder="เพิ่มเติม (ถ้ามี)">
     </div>
@@ -462,7 +466,7 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 function openAdd(){
   editingId=null;
   document.getElementById('editModalTitle').textContent='➕ เพิ่มฉลากใหม่';
-  ['f_name','f_phone','f_addr','f_note'].forEach(id=>document.getElementById(id).value='');
+  ['f_name','f_phone','f_addr','f_order','f_note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('editModal').classList.add('open');
   setTimeout(()=>document.getElementById('f_name').focus(),100);
 }
@@ -474,6 +478,7 @@ function openEdit(id){
   document.getElementById('f_name').value=lb.name||'';
   document.getElementById('f_phone').value=lb.phone||'';
   document.getElementById('f_addr').value=lb.addr||'';
+  document.getElementById('f_order').value=lb.order||'';
   document.getElementById('f_note').value=lb.note||'';
   document.getElementById('editModal').classList.add('open');
 }
@@ -487,12 +492,12 @@ function saveLabel(){
     const idx=labels.findIndex(l=>l.id===editingId);
     if(idx>=0){
       labels[idx]={...labels[idx], name, phone:document.getElementById('f_phone').value.trim(),
-        addr, note:document.getElementById('f_note').value.trim()};
+        addr, order:document.getElementById('f_order').value.trim(), note:document.getElementById('f_note').value.trim()};
     }
     showToast('✅ แก้ไขฉลากแล้ว');
   } else {
     labels.push({id:uid(), name, phone:document.getElementById('f_phone').value.trim(),
-      addr, note:document.getElementById('f_note').value.trim(), selected:false, createdAt:new Date().toISOString()});
+      addr, order:document.getElementById('f_order').value.trim(), note:document.getElementById('f_note').value.trim(), selected:false, createdAt:new Date().toISOString()});
     showToast('✅ เพิ่มฉลากแล้ว');
   }
   save(); closeModal('editModal'); renderList(); renderPreview();
@@ -595,7 +600,8 @@ function makeLabelHTML(lb, num){
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
   const fullAddr = lb.addr || '';
   const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}` : fullAddr;
-  const noteHTML = lb.note ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 หมายเหตุ: ${esc(lb.note)}</div>` : '';
+  const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}` : (lb.note?`หมายเหตุ: ${esc(lb.note)}`:'');
+  const noteHTML = orderLine ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 ${orderLine}</div>` : '';
 
   return `<div class="shipping-label">
     <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
@@ -651,7 +657,7 @@ function buildPrintDoc(list){
   const labels_html = list.map((lb,i)=>{
     const fullAddr = lb.addr||'';
     const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}`:fullAddr;
-    const notePrint = lb.note ? `<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 หมายเหตุ: ${esc(lb.note)}</div>` : '';
+    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}`:lb.note?`หมายเหตุ: ${esc(lb.note)}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
       <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
@@ -725,8 +731,8 @@ function handleDrop(e){
 }
 function handleFile(e){ const file=e.target.files[0]; if(file) processFile(file); }
 
-// คอลัมน์ที่ใช้ (index เริ่มจาก 0): S=18, BA=52, BB=53, BD=55
-const COL_NOTE=18, COL_NAME=52, COL_PHONE=53, COL_ADDR=55;
+// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, BA=52, BB=53, BD=55
+const COL_ORDER=2, COL_NOTE=18, COL_NAME=52, COL_PHONE=53, COL_ADDR=55;
 
 function colLetter(n){ // 0=A, 25=Z, 26=AA ...
   let s='';
@@ -778,6 +784,7 @@ function parseRowsFixed(rows){
       name:String(r[COL_NAME]||'').trim(),
       phone:String(r[COL_PHONE]||'').trim(),
       addr:String(r[COL_ADDR]||'').trim(),
+      order:String(r[COL_ORDER]||'').trim(),
       note:String(r[COL_NOTE]||'').trim(),
       selected:true,
       createdAt:new Date().toISOString()
