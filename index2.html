@@ -306,16 +306,17 @@ body{
         <div style="font-size:40px;margin-bottom:8px">📁</div>
         <strong style="font-size:15px">คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่</strong>
         <p>รองรับ .xlsx, .xls, .csv</p>
-        <p style="font-size:11px;margin-top:6px;color:#aaa">คอลัมน์ที่ต้องการ: ชื่อ, เบอร์โทร, ที่อยู่ (หรือ name, phone, address)</p>
+        <p style="font-size:11px;margin-top:6px;color:#aaa">เริ่มอ่านจากแถวที่ 2 | คอลัมน์ที่ใช้: S=หมายเหตุ, BA=ชื่อ, BB=เบอร์โทร, BD=ที่อยู่</p>
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
       <div style="background:#f8f8fc;border-radius:10px;padding:14px;margin-top:14px">
-        <p style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📋 ตัวอย่างรูปแบบข้อมูล:</p>
+        <p style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📋 คอลัมน์ที่อ่าน (เริ่มแถว 2):</p>
         <table class="import-table">
-          <thead><tr><th>ชื่อ</th><th>เบอร์โทร</th><th>ที่อยู่</th><th>หมายเหตุ</th></tr></thead>
+          <thead><tr><th>คอลัมน์ S</th><th>คอลัมน์ BA</th><th>คอลัมน์ BB</th><th>คอลัมน์ BD</th></tr></thead>
+          <thead><tr><th>หมายเหตุ</th><th>ชื่อผู้รับ</th><th>เบอร์โทร</th><th>ที่อยู่</th></tr></thead>
           <tbody>
-            <tr><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 ม.5 ต.สันทราย อ.สารภี เชียงใหม่ 50140</td><td>ด่วน</td></tr>
-            <tr><td>สมหญิง รักดี</td><td>0812345678</td><td>56/7 ถ.นิมมาน อ.เมือง เชียงใหม่ 50200</td><td></td></tr>
+            <tr><td>ด่วน</td><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 ม.5 สารภี เชียงใหม่ 50140</td></tr>
+            <tr><td></td><td>สมหญิง รักดี</td><td>0812345678</td><td>56/7 ถ.นิมมาน เมือง เชียงใหม่ 50200</td></tr>
           </tbody>
         </table>
       </div>
@@ -724,63 +725,63 @@ function handleDrop(e){
 }
 function handleFile(e){ const file=e.target.files[0]; if(file) processFile(file); }
 
+// คอลัมน์ที่ใช้ (index เริ่มจาก 0): S=18, BA=52, BB=53, BD=55
+const COL_NOTE=18, COL_NAME=52, COL_PHONE=53, COL_ADDR=55;
+
+function colLetter(n){ // 0=A, 25=Z, 26=AA ...
+  let s='';
+  n++;
+  while(n>0){ n--; s=String.fromCharCode(65+(n%26))+s; n=Math.floor(n/26); }
+  return s;
+}
+
 function processFile(file){
   const ext=file.name.split('.').pop().toLowerCase();
   const reader=new FileReader();
   if(ext==='csv'){
-    reader.onload=e=>parseCSV(e.target.result);
+    reader.onload=e=>parseCSVFixed(e.target.result);
     reader.readAsText(file,'utf-8');
   } else {
     reader.onload=e=>{
       const wb=XLSX.read(e.target.result,{type:'binary'});
       const ws=wb.Sheets[wb.SheetNames[0]];
-      const data=XLSX.utils.sheet_to_json(ws,{defval:''});
-      parseRows(data);
+      // อ่านเป็น array of arrays เริ่มแถว 2 (index 1)
+      const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      parseRowsFixed(data.slice(1)); // ข้ามแถว 1 (header)
     };
     reader.readAsBinaryString(file);
   }
 }
 
-function parseCSV(text){
-  const lines=text.split('\n').filter(l=>l.trim());
-  if(!lines.length) return;
-  const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+function parseCSVFixed(text){
+  const lines=text.split('\n');
+  if(lines.length<2) return;
+  // ข้ามแถวแรก (header) เริ่มจากแถวที่ 2
   const rows=lines.slice(1).map(line=>{
-    const vals=line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,))/g)||[];
-    const obj={};
-    headers.forEach((h,i)=>{ obj[h]=(vals[i]||'').replace(/^"|"$/g,'').trim(); });
-    return obj;
+    const vals=[]; let cur='',inQ=false;
+    for(let c of line+','){
+      if(c==='"'){ inQ=!inQ; }
+      else if(c===','&&!inQ){ vals.push(cur.trim()); cur=''; }
+      else cur+=c;
+    }
+    return vals;
   });
-  parseRows(rows);
+  parseRowsFixed(rows);
 }
 
-function parseRows(rows){
-  const colMap={
-    name:['ชื่อ','name','ชื่อผู้รับ','ผู้รับ','NAME','Name'],
-    phone:['เบอร์โทร','phone','โทร','เบอร์','tel','Tel','Phone','เบอร์มือถือ'],
-    addr:['ที่อยู่','address','Address','ที่อยู่เต็ม','addr'],
-    note:['หมายเหตุ','note','Note','หมาย','remark']
-  };
-  function findKey(obj, aliases){ 
-    for(const a of aliases){ if(obj.hasOwnProperty(a)) return a; }
-    return null;
-  }
-  if(!rows.length){ showToast('❌ ไม่พบข้อมูล','#dc2626'); return; }
-  const sample=rows[0];
-  const nk=findKey(sample,colMap.name);
-  const pk=findKey(sample,colMap.phone);
-  const ak=findKey(sample,colMap.addr);
-  const ok=findKey(sample,colMap.note);
-  
-  importData=rows.filter(r=>r[nk]||r[ak]).map(r=>({
-    id:uid(),
-    name:nk?String(r[nk]||'').trim():'',
-    phone:pk?String(r[pk]||'').trim():'',
-    addr:ak?String(r[ak]||'').trim():'',
-    note:ok?String(r[ok]||'').trim():'',
-    selected:true,
-    createdAt:new Date().toISOString()
-  }));
+function parseRowsFixed(rows){
+  // rows = array of arrays, ใช้ index ตรงๆ
+  importData=rows
+    .filter(r=>String(r[COL_NAME]||'').trim()||String(r[COL_ADDR]||'').trim())
+    .map(r=>({
+      id:uid(),
+      name:String(r[COL_NAME]||'').trim(),
+      phone:String(r[COL_PHONE]||'').trim(),
+      addr:String(r[COL_ADDR]||'').trim(),
+      note:String(r[COL_NOTE]||'').trim(),
+      selected:true,
+      createdAt:new Date().toISOString()
+    }));
 
   if(!importData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
 
