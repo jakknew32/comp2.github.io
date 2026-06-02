@@ -1,709 +1,815 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ใบจ่ายชดเชยสินค้า - Chiangmai Freshmilk</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; padding: 20px;
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        h1 { color: white; text-align: center; margin-bottom: 30px; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
-        .controls { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 30px; }
-        .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #999; margin: 20px 0 10px; padding-bottom: 5px; border-bottom: 2px solid #f0f0f0; }
-        .section-title:first-child { margin-top: 0; }
-        .upload-label { display: inline-block; background: linear-gradient(135deg,#667eea,#764ba2); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: transform 0.2s; }
-        .upload-label:hover { transform: translateY(-2px); }
-        #photoInput { display: none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ปริ้นฉลาก - Chiangmai Freshmilk</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#1a1a2e;
+  --accent:#e94560;
+  --accent2:#0f3460;
+  --surface:#ffffff;
+  --surface2:#f8f8fc;
+  --border:#e2e2ec;
+  --text:#1a1a2e;
+  --text2:#6b6b8a;
+  --green:#059669;
+  --amber:#d97706;
+  --red:#dc2626;
+  --blue:#2563eb;
+  --teal:#0d9488;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+}
 
-        #row1Thumb { position: relative; width: 180px; height: 110px; border-radius: 8px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #f9fafb; font-size: 13px; color: #9ca3af; text-align: center; flex-shrink: 0; overflow: hidden; }
-        #row1Thumb img { width: 100%; height: 100%; object-fit: cover; }
-        #row1Del { display: none; position: absolute; top: 2px; right: 2px; background: rgba(239,68,68,.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 18px; text-align: center; cursor: pointer; padding: 0; min-width: 0; flex: none; }
+body{
+  font-family:'Sarabun',sans-serif;
+  background:#f0f0f8;
+  min-height:100vh;
+  color:var(--text);
+}
 
-        #thumbnailStrip { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
-        .thumb-wrap { position: relative; width: 68px; height: 68px; border-radius: 7px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.15); cursor: grab; border: 2px solid transparent; transition: border-color .2s; }
-        .thumb-wrap:hover { border-color: #667eea; }
-        .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .thumb-del { position: absolute; top: 2px; right: 2px; background: rgba(239,68,68,.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 18px; text-align: center; cursor: pointer; padding: 0; min-width: 0; flex: none; }
+/* ===== HEADER ===== */
+.app-header{
+  background:var(--primary);
+  color:white;
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 2px 20px rgba(0,0,0,.3);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.app-header h1{font-family:'Kanit',sans-serif;font-size:22px;font-weight:700;letter-spacing:.5px}
+.app-header h1 span{color:var(--accent);font-size:13px;font-weight:400;margin-left:10px;opacity:.9}
+.header-actions{display:flex;gap:10px}
 
-        .form-row { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-end; }
-        .form-group { flex: 1; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #444; font-size: 13px; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 9px 11px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color .2s; }
-        .form-group textarea { resize: vertical; min-height: 76px; }
-        .url-row { display: flex; gap: 10px; margin-bottom: 14px; }
-        .url-row input { flex: 1; padding: 9px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+/* ===== LAYOUT ===== */
+.main-layout{display:grid;grid-template-columns:380px 1fr;gap:20px;padding:20px;max-width:1400px;margin:0 auto}
 
-        .button-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-        button { flex: 1; min-width: 130px; padding: 11px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit; }
-        .btn-green { background: #10b981; color: white; }
-        .btn-red { background: #ef4444; color: white; }
-        .btn-blue { background: #667eea; color: white; }
-        .btn-amber { background: #f59e0b; color: white; }
-        .btn-purple { background: #8b5cf6; color: white; }
-        .btn-teal { background: #0d9488; color: white; }
+/* ===== PANEL ===== */
+.panel{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
+.panel-header{padding:16px 20px;background:var(--primary);color:white;display:flex;align-items:center;gap:10px}
+.panel-header h2{font-family:'Kanit',sans-serif;font-size:16px;font-weight:600}
+.panel-body{padding:20px}
 
-        .print-area { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .a4-page { width: 210mm; height: 297mm; margin: 0 auto 20mm; background: white; padding: 4mm; box-shadow: 0 0 10px rgba(0,0,0,.1); box-sizing: border-box; display: flex; flex-direction: column; gap: 1mm; }
-        .photo-row { display: flex; gap: 1mm; justify-content: center; }
-        .photo-row:first-child { flex: 0 0 142mm; }
-        .photo-row:nth-child(2) { flex: 1 1 auto; min-height: 0; }
-        .photo-container.full-width { width: 100%; height: 100%; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f9fafb; cursor: pointer; }
-        .photo-container { flex: 1; height: 100%; min-height: 0; border: none; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f9fafb; }
-        .photo-container img { width: 100%; height: 100%; object-fit: cover; }
-        .page-text { flex-shrink: 0; padding: 2mm; text-align: center; font-size: 12px; color: #333; border-top: 1px solid #e0e0e0; }
+/* ===== FORM ELEMENTS ===== */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.form-group input,.form-group textarea,.form-group select{
+  width:100%;padding:9px 12px;
+  border:1.5px solid var(--border);border-radius:8px;
+  font-size:14px;font-family:'Sarabun',sans-serif;
+  background:var(--surface);color:var(--text);
+  transition:border-color .15s;
+}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:90px;line-height:1.6}
 
-        @media print {
-            body.print-label { background: white !important; padding: 0 !important; margin: 0 !important; }
-            body.print-label h1, body.print-label .controls, body.print-label .print-area, body.print-label .modal-overlay { display: none !important; }
-            
-            #labelPrintContainer { 
-                display: block !important; 
-                position: absolute !important; 
-                top: 0 !important; left: 0 !important; 
-                width: 100mm !important; height: 150mm !important;
-            }
+/* ===== BUTTONS ===== */
+.btn{padding:9px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:var(--accent);color:white}
+.btn-secondary{background:var(--accent2);color:white}
+.btn-green{background:var(--green);color:white}
+.btn-amber{background:var(--amber);color:white}
+.btn-red{background:var(--red);color:white}
+.btn-blue{background:var(--blue);color:white}
+.btn-teal{background:var(--teal);color:white}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:5px}
 
-            body.print-label .shipping-label { 
-                width: 100mm !important; 
-                height: 150mm !important; 
-                border: none !important; 
-                padding: 6mm 0 0 0 !important; 
-                margin: 0 !important;
-            }
+/* ===== LABEL LIST ===== */
+.label-list{display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;padding-right:2px}
+.label-list::-webkit-scrollbar{width:5px}
+.label-list::-webkit-scrollbar-track{background:#f0f0f8;border-radius:3px}
+.label-list::-webkit-scrollbar-thumb{background:#c0c0d8;border-radius:3px}
 
-            body.print-a4 {
-                background: white !important;
-                padding: 0 !important;
-            }
-            body.print-a4 h1,
-            body.print-a4 .controls {
-                display: none !important;
-            }
-            body.print-a4 .container {
-                max-width: 100% !important;
-            }
-            body.print-a4 .print-area {
-                box-shadow: none !important;
-                padding: 0 !important;
-                border-radius: 0 !important;
-                background: white !important;
-            }
-            body.print-a4 .a4-page {
-                box-shadow: none !important;
-                width: 210mm !important;
-                height: 297mm !important;
-                min-height: unset !important;
-                margin: 0 !important;
-                padding: 4mm !important;
-                page-break-after: always;
-                break-after: page;
-            }
-            body.print-a4 #labelPrintContainer {
-                display: none !important;
-            }
-            body.print-a4 .modal-overlay {
-                display: none !important;
-            }
-        }
+.label-card{
+  border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;
+  position:relative;transition:all .15s;background:var(--surface);
+  cursor:pointer;
+}
+.label-card:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(233,69,96,.1)}
+.label-card.active{border-color:var(--accent);background:#fff5f7;box-shadow:0 2px 14px rgba(233,69,96,.15)}
+.label-card.selected-print{border-color:var(--green);background:#f0fdf4}
+.lc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.lc-num{
+  background:var(--primary);color:white;
+  font-size:11px;font-weight:700;
+  padding:2px 8px;border-radius:12px;
+  font-family:'Kanit',sans-serif;
+}
+.lc-actions{display:flex;gap:5px}
+.lc-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px}
+.lc-phone{font-size:12px;color:var(--accent);font-weight:600;margin-bottom:3px}
+.lc-addr{font-size:12px;color:var(--text2);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
-        @media print {
-            body.print-a4 + * { display: none; }
-        }
+/* ===== IMPORT AREA ===== */
+.import-zone{
+  border:2px dashed var(--border);border-radius:10px;padding:20px;
+  text-align:center;cursor:pointer;transition:all .15s;
+  background:var(--surface2);margin-bottom:14px;
+}
+.import-zone:hover,.import-zone.drag-over{border-color:var(--accent);background:#fff5f7}
+.import-zone p{font-size:13px;color:var(--text2);margin-top:6px}
 
-        @media print and (not (body.print-label)) {
-            @page { size: A4; margin: 0; }
-        }
+/* ===== SELECT ALL BAR ===== */
+.select-bar{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:var(--surface2);border-radius:8px;margin-bottom:12px;
+  border:1px solid var(--border);
+}
+.select-bar label{font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;flex:1}
+.select-bar input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.select-count{font-size:12px;color:var(--text2)}
 
-        /* Modal & Label Preview */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.8); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 20px; }
-        .modal-overlay.open { display: flex; }
-        .modal-box { background: white; border-radius: 15px; padding: 26px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
-        .modal-box.narrow { max-width: 560px; }
-        .modal-box.wide { max-width: 700px; }
-        .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-        .modal-hdr h2 { margin: 0; color: #333; font-size: 18px; }
-        .btn-close { background: #ef4444; color: white; border: none; padding: 6px 13px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; min-width: 0; flex: none; }
+/* ===== PRINT PREVIEW ===== */
+.preview-toolbar{
+  display:flex;align-items:center;gap:10px;padding:12px 20px;
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.preview-container{
+  padding:20px;background:#e8e8f0;min-height:500px;
+  display:flex;flex-direction:column;gap:16px;align-items:center;
+}
 
-        .label-preview-wrap { text-align: center; margin-bottom: 18px; }
-        .shipping-label { 
-            width: 100mm; height: 150mm; 
-            border: 1px solid #ccc; background: white; 
-            padding: 6mm 0 0 0; 
-            display: flex; 
-            flex-direction: column; font-family: 'Kanit','Sarabun','Tahoma',sans-serif; 
-            box-sizing: border-box; position: relative; overflow: hidden; margin: 0 auto;
-        }
-        .label-wm { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(30deg); width: 80mm; opacity: .12; pointer-events: none; z-index: 0; }
-        .lz { position: relative; z-index: 1; }
-        .label-hdr { text-align: center; padding: 0 5mm 8px 5mm; } 
-        .label-hdr h2 { font-size: 26px; font-weight: 800; margin: 0; color: #000; letter-spacing: -0.5px; }
-        .label-line-solid { border-top: 1.5px solid #333; margin: 0; } 
-        .label-sender { text-align: center; font-size: 13px; line-height: 1.4; color: #333; padding: 5px 5mm; }
-        .label-line-dashed { border-top: 1.5px dashed #999; margin: 0 0 10px 0; } 
-        
-        .label-recv-box { background: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; text-align: center; padding: 8px; margin-bottom: 10px; border-radius: 0; width: 100%; } 
-        .label-recv-title { font-weight: 800; font-size: 16px; color: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        
-        .label-recv-text { text-align: center; font-size: 18px; line-height: 1.6; font-weight: 600; color: #000; white-space: pre-line; word-wrap: break-word; flex: 1; padding: 0 5mm; }
-        
-        .label-footer { margin-top: auto; border-top: 1.5px solid #333; text-align: center; display: flex; flex-direction: column; }
-        .label-footer img { width: 100%; height: auto; display: block; } 
-        
-        .label-ts { font-size: 11px; color: #666; text-align: left; padding: 5px 5mm; background: white; }
+/* ===== SHIPPING LABEL ===== */
+.shipping-label{
+  width:100mm;height:150mm;
+  border:1px solid #999;background:white;
+  padding:6mm 0 0 0;
+  display:flex;flex-direction:column;
+  font-family:'Kanit','Sarabun','Tahoma',sans-serif;
+  box-sizing:border-box;position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,.15);
+}
+.sl-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(30deg);width:80mm;opacity:.07;pointer-events:none;z-index:0}
+.sl-z{position:relative;z-index:1}
+.sl-hdr{text-align:center;padding:0 5mm 6px 5mm}
+.sl-hdr h2{font-size:24px;font-weight:800;margin:0;color:#000;letter-spacing:-.5px}
+.sl-line{border-top:1.5px solid #333;margin:0}
+.sl-line-dash{border-top:1.5px dashed #999;margin:0 0 8px 0}
+.sl-sender{text-align:center;font-size:11px;line-height:1.4;color:#444;padding:4px 5mm}
+.sl-recv-box{
+  background:#000 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;
+  text-align:center;padding:7px;margin-bottom:8px;width:100%;
+}
+.sl-recv-title{font-weight:800;font-size:15px;color:#fff !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
+.sl-recv-text{
+  text-align:center;font-size:17px;line-height:1.6;font-weight:600;
+  color:#000;white-space:pre-line;word-wrap:break-word;
+  flex:1;padding:0 5mm;overflow:hidden;
+}
+.sl-footer{margin-top:auto;border-top:1.5px solid #333;text-align:center;display:flex;flex-direction:column}
+.sl-footer img{width:100%;height:auto;display:block}
+.sl-ts{font-size:10px;color:#666;text-align:left;padding:4px 5mm;background:white}
+.sl-badge{
+  position:absolute;top:3mm;right:3mm;z-index:2;
+  background:var(--accent);color:white;font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;
+}
 
-        #labelPrintContainer { display: none; position: fixed; top: -9999px; left: -9999px; }
-        .recv-list { display: flex; flex-direction: column; gap: 7px; max-height: 370px; overflow-y: auto; }
-        .recv-card { border: 2px solid #e0e0e0; border-radius: 9px; padding: 11px 13px; cursor: pointer; transition: all .15s; }
-        .recv-card:hover { border-color: #667eea; background: #f5f3ff; }
-        #toast { position: fixed; bottom: 28px; right: 28px; padding: 13px 20px; border-radius: 9px; color: white; font-weight: 600; font-size: 14px; z-index: 99999; display: none; box-shadow: 0 4px 18px rgba(0,0,0,.3); }
+/* ===== GRID LAYOUT FOR MULTIPLE LABELS ===== */
+.labels-grid{display:flex;flex-wrap:wrap;gap:16px;justify-content:center}
 
-        #pageText { min-height: 80px; font-size: 15px; line-height: 1.7; }
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  display:none;justify-content:center;align-items:center;
+  z-index:1000;padding:20px;
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:white;border-radius:16px;padding:28px;
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-hdr h2{font-family:'Kanit',sans-serif;font-size:18px;font-weight:700;color:var(--primary)}
 
-        /* ===== History Modal Styles ===== */
-        .history-toolbar { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
-        .history-search { flex: 1; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; min-width: 180px; }
-        .history-search:focus { outline: none; border-color: #667eea; }
-        .history-count { font-size: 13px; color: #888; white-space: nowrap; }
-        .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; padding-right: 2px; }
-        .history-card { border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px; transition: all .15s; cursor: pointer; position: relative; }
-        .history-card:hover { border-color: #667eea; background: #f5f3ff; }
-        .history-card .hc-icon { width: 38px; height: 38px; background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-        .history-card .hc-body { flex: 1; min-width: 0; }
-        .history-card .hc-name { font-weight: 700; font-size: 15px; color: #1f2937; margin-bottom: 2px; }
-        .history-card .hc-phone { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
-        .history-card .hc-addr { font-size: 13px; color: #374151; line-height: 1.45; white-space: pre-line; max-height: 48px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .history-card .hc-time { font-size: 11px; color: #9ca3af; margin-top: 5px; }
-        .history-card .hc-use-btn { background: #667eea; color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; align-self: center; font-family: inherit; transition: background .15s; min-width: 0; flex: none; }
-        .history-card .hc-use-btn:hover { background: #5a6fd6; }
-        .history-card .hc-del-btn { background: none; color: #ef4444; border: 1.5px solid #fca5a5; border-radius: 7px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; align-self: center; font-family: inherit; transition: all .15s; min-width: 0; flex: none; margin-left: 4px; }
-        .history-card .hc-del-btn:hover { background: #ef4444; color: white; border-color: #ef4444; }
-        .btn-clear-all { background: none; color: #ef4444; border: 2px solid #fca5a5; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .15s; min-width: 0; flex: none; }
-        .btn-clear-all:hover { background: #ef4444; color: white; border-color: #ef4444; }
-        .history-empty { text-align: center; padding: 40px 20px; color: #9ca3af; font-size: 15px; }
-        .history-empty .he-icon { font-size: 48px; margin-bottom: 10px; }
-        .history-loading { text-align: center; padding: 30px; color: #9ca3af; font-size: 14px; }
-        .history-loading::after { content: ''; display: inline-block; width: 18px; height: 18px; border: 2px solid #e0e0e0; border-top-color: #667eea; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-left: 8px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+/* ===== TOAST ===== */
+#toast{
+  position:fixed;bottom:28px;right:28px;padding:12px 20px;
+  border-radius:10px;color:white;font-weight:600;font-size:14px;
+  z-index:9999;display:none;box-shadow:0 6px 24px rgba(0,0,0,.25);
+  animation:slideUp .3s ease;max-width:320px;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-    <style id="pageStyleLabel" media="print">
-        body.print-label { }
-        @page { size: 100mm 150mm; margin: 0; }
-        /* Force black background on label recv box when printing */
-        .label-recv-box { background: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        .label-recv-title { color: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    </style>
-    <style id="pageStyleA4" media="print">
-        body.print-a4 { }
-        @page { size: A4 portrait; margin: 0; }
-    </style>
+/* ===== STATS BAR ===== */
+.stats-bar{
+  display:flex;gap:12px;padding:14px 20px;
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.stat-chip{
+  display:flex;align-items:center;gap:6px;
+  background:white;border:1px solid var(--border);
+  border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;
+}
+.stat-chip .dot{width:8px;height:8px;border-radius:50%}
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-        const cfg = { apiKey:"AIzaSyDZolsNGRpa_ZTPco_lbaBfliXNBrjTmTo", authDomain:"photo-df51e.firebaseapp.com", databaseURL:"https://photo-df51e-default-rtdb.asia-southeast1.firebasedatabase.app", projectId:"photo-df51e", storageBucket:"photo-df51e.firebasestorage.app", messagingSenderId:"388250901051", appId:"1:388250901051:web:8a159cf4a9890eeafe1a1e" };
-        const app = initializeApp(cfg), db = getDatabase(app);
-        
-        window._fbSaveReceiver = async (data) => {
-            try {
-                const lines = data.fullText.split('\n').map(l => l.trim()).filter(l => l);
-                const phoneMatch = data.fullText.match(/(0\d{1,2}-?\d{3}-?\d{4}|0\d{8,9})/);
-                const phone = phoneMatch ? phoneMatch[0].replace(/-/g, '') : '-';
-                const name = lines[0] || 'ไม่ระบุชื่อ';
-                const id = Date.now().toString();
-                await set(ref(db, `receivers/${id}`), { id, name, phone, address: data.fullText, createdAt: new Date().toISOString() });
-                return true;
-            } catch (e) { return false; }
-        };
-        window._fbGetReceivers = async () => {
-            const s = await get(ref(db, 'receivers'));
-            return s.exists() ? Object.values(s.val()).reverse() : [];
-        };
-        window._fbSaveHistory = h => set(ref(db, `history/${h.id}`), h);
-        window._fbGetHistory = async () => {
-            const s = await get(ref(db, 'history'));
-            return s.exists() ? Object.values(s.val()).reverse() : [];
-        };
-        window._fbDeleteReceiver = async (id) => { await remove(ref(db, `receivers/${id}`)); };
-        window._fbClearAllReceivers = async () => { await remove(ref(db, 'receivers')); };
-    </script>
+/* ===== PRINT STYLES ===== */
+@media print{
+  body{background:white !important}
+  .app-header,.main-layout{display:none !important}
+  #printFrame{display:block !important;position:fixed;top:0;left:0;width:100%;height:100%}
+}
+
+/* ===== SCROLLBAR ===== */
+.preview-container::-webkit-scrollbar{width:6px}
+.preview-container::-webkit-scrollbar-track{background:#e0e0ec}
+.preview-container::-webkit-scrollbar-thumb{background:#c0c0d8;border-radius:3px}
+
+/* ===== EMPTY STATE ===== */
+.empty-state{
+  text-align:center;padding:50px 20px;color:var(--text2);
+}
+.empty-icon{font-size:56px;margin-bottom:14px}
+.empty-state p{font-size:14px;line-height:1.8}
+
+/* ===== DIVIDER ===== */
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* ===== TABS ===== */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ===== IMPORT PREVIEW TABLE ===== */
+.import-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.import-table th{background:var(--primary);color:white;padding:7px 10px;text-align:left;font-weight:600}
+.import-table td{padding:6px 10px;border-bottom:1px solid var(--border)}
+.import-table tr:hover td{background:var(--surface2)}
+
+/* === RESPONSIVE === */
+@media(max-width:900px){
+  .main-layout{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
 
-<div id="labelPrintContainer"><div id="labelPrintContent"></div></div>
 <div id="toast"></div>
+<div id="printFrame" style="display:none"></div>
 
-<div id="labelModal" class="modal-overlay">
-    <div class="modal-box narrow">
-        <div class="modal-hdr"><h2>📦 สร้างฉลาก 100x150</h2><button class="btn-close" onclick="closeModal('labelModal')">✕ ปิด</button></div>
-        <div class="form-row">
-            <div class="form-group"><label>ข้อมูลผู้รับ</label><textarea id="mReceiver" rows="4"></textarea></div>
-        </div>
-        <div class="label-preview-wrap">
-            <div id="labelPreview" class="shipping-label">
-                <img class="label-wm" src="https://img2.pic.in.th/13223.png">
-                <div class="lz label-hdr"><h2>Chiangmai Freshmilk</h2></div>
-                <div class="lz label-line-solid"></div>
-                <div class="lz label-sender" id="pSender"></div>
-                <div class="lz label-line-dashed"></div>
-                <div class="lz label-recv-box" style="background:#000 !important;text-align:center;padding:8px;margin-bottom:10px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><span class="label-recv-title" style="font-weight:800;font-size:16px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span></div>
-                <div class="lz label-recv-text" id="pReceiver"></div>
-                <div class="lz label-footer">
-                    <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true">
-                </div>
-                <div class="lz label-ts" id="pTs"></div>
-            </div>
-        </div>
-        <div style="display:flex;gap:10px;">
-            <button onclick="printLabel()" class="btn-green">🖨️ พิมพ์ฉลาก</button>
-            <button onclick="closeModal('labelModal')" style="background:#6b7280; color:white;">ยกเลิก</button>
-        </div>
+<!-- ADD/EDIT MODAL -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h2 id="editModalTitle">➕ เพิ่มฉลากใหม่</h2>
+      <button class="btn btn-red btn-sm" onclick="closeModal('editModal')">✕ ปิด</button>
     </div>
+    <div class="form-group">
+      <label>ชื่อผู้รับ *</label>
+      <input type="text" id="f_name" placeholder="ชื่อ-นามสกุล">
+    </div>
+    <div class="form-group">
+      <label>เบอร์โทร</label>
+      <input type="text" id="f_phone" placeholder="089-XXXXXXX">
+    </div>
+    <div class="form-group">
+      <label>ที่อยู่เต็ม *</label>
+      <textarea id="f_addr" rows="4" placeholder="บ้านเลขที่ / หมู่บ้าน / ถนน&#10;แขวง/ตำบล เขต/อำเภอ&#10;จังหวัด รหัสไปรษณีย์"></textarea>
+    </div>
+    <div class="form-group">
+      <label>หมายเหตุ</label>
+      <input type="text" id="f_note" placeholder="เพิ่มเติม (ถ้ามี)">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveLabel()">💾 บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeModal('editModal')">ยกเลิก</button>
+    </div>
+  </div>
 </div>
 
-<div id="pickerModal" class="modal-overlay">
-    <div class="modal-box wide">
-        <div class="modal-hdr"><h2>📋 เลือกผู้รับ</h2><button class="btn-close" onclick="closeModal('pickerModal')">✕</button></div>
-        <div class="recv-list" id="pickerList"></div>
+<!-- IMPORT MODAL -->
+<div id="importModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:680px">
+    <div class="modal-hdr">
+      <h2>📊 นำเข้าจาก Excel / CSV</h2>
+      <button class="btn btn-red btn-sm" onclick="closeModal('importModal')">✕ ปิด</button>
     </div>
+    <div id="importStep1">
+      <div class="import-zone" id="importZone" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+        <div style="font-size:40px;margin-bottom:8px">📁</div>
+        <strong style="font-size:15px">คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่</strong>
+        <p>รองรับ .xlsx, .xls, .csv</p>
+        <p style="font-size:11px;margin-top:6px;color:#aaa">คอลัมน์ที่ต้องการ: ชื่อ, เบอร์โทร, ที่อยู่ (หรือ name, phone, address)</p>
+      </div>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
+      <div style="background:#f8f8fc;border-radius:10px;padding:14px;margin-top:14px">
+        <p style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📋 ตัวอย่างรูปแบบข้อมูล:</p>
+        <table class="import-table">
+          <thead><tr><th>ชื่อ</th><th>เบอร์โทร</th><th>ที่อยู่</th><th>หมายเหตุ</th></tr></thead>
+          <tbody>
+            <tr><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 ม.5 ต.สันทราย อ.สารภี เชียงใหม่ 50140</td><td>ด่วน</td></tr>
+            <tr><td>สมหญิง รักดี</td><td>0812345678</td><td>56/7 ถ.นิมมาน อ.เมือง เชียงใหม่ 50200</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="importStep2" style="display:none">
+      <div id="importPreview"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn btn-green" style="flex:1" onclick="confirmImport()">✅ นำเข้าทั้งหมด</button>
+        <button class="btn btn-ghost" onclick="resetImport()">↩️ เลือกไฟล์ใหม่</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="historyModal" class="modal-overlay">
-    <div class="modal-box wide">
-        <div class="modal-hdr">
-            <h2>🕐 ประวัติการพิมพ์</h2>
-            <button class="btn-close" onclick="closeModal('historyModal')">✕ ปิด</button>
-        </div>
-        <div class="history-toolbar">
-            <input type="text" class="history-search" id="historySearch" placeholder="🔍 ค้นหาชื่อ หรือที่อยู่..." oninput="filterHistory()">
-            <span class="history-count" id="historyCount"></span>
-            <button class="btn-clear-all" onclick="clearAllHistory()">🗑️ ล้างทั้งหมด</button>
-        </div>
-        <div class="history-list" id="historyList">
-            <div class="history-loading">กำลังโหลดข้อมูล</div>
-        </div>
-    </div>
+<!-- APP HEADER -->
+<div class="app-header">
+  <h1>📦 ปริ้นฉลาก <span>Chiangmai Freshmilk</span></h1>
+  <div class="header-actions">
+    <button class="btn btn-ghost" style="color:white;border-color:rgba(255,255,255,.3)" onclick="openImport()">📊 นำเข้า Excel/CSV</button>
+    <button class="btn btn-primary" onclick="openAdd()">➕ เพิ่มฉลาก</button>
+  </div>
 </div>
 
-<div class="container">
-    <h1>📸 ใบจ่ายชดเชยสินค้า</h1>
-    <div class="controls">
-        <div class="section-title">📷 รูปภาพ</div>
-        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;">
-            <div id="row1Thumb" onclick="clickRow1()"><span id="r1ph">📥 คลิก/Paste</span><button id="row1Del" onclick="delRow1(event)">✕</button></div>
-            <div style="flex:1;">
-                <label class="upload-label" for="photoInput">📁 เพิ่มรูปแถวล่าง</label>
-                <input type="file" id="photoInput" accept="image/*" multiple>
-                <div style="display:flex;gap:6px;margin-top:8px;">
-                    <input type="text" id="imgUrlInput" placeholder="🔗 วางลิ้งค์รูปภาพ แล้วกด Enter หรือ ➕" style="flex:1;padding:7px 10px;border:2px dashed #ccc;border-radius:8px;font-size:13px;font-family:inherit;color:#444;outline:none;" onkeydown="if(event.key==='Enter')addImgFromUrl()">
-                    <button onclick="addImgFromUrl()" style="flex:none;min-width:0;width:auto;padding:7px 13px;font-size:16px;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer;">➕</button>
-                </div>
-                <div id="thumbnailStrip"></div>
-            </div>
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- LEFT: Label Manager -->
+  <div>
+    <div class="panel">
+      <div class="panel-header">
+        <span style="font-size:18px">🗂️</span>
+        <h2>รายการฉลาก</h2>
+        <span id="totalBadge" style="margin-left:auto;background:var(--accent);color:white;font-size:11px;padding:2px 9px;border-radius:12px;font-weight:700">0 ใบ</span>
+      </div>
+      
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-chip"><div class="dot" style="background:var(--green)"></div><span id="statSelected">เลือก 0</span></div>
+        <div class="stat-chip"><div class="dot" style="background:var(--blue)"></div><span id="statTotal">ทั้งหมด 0</span></div>
+      </div>
+      
+      <div class="panel-body">
+        <!-- Select All -->
+        <div class="select-bar">
+          <label><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this.checked)"> เลือกทั้งหมด</label>
+          <span class="select-count" id="selectCount">0 รายการ</span>
+          <button class="btn btn-red btn-xs" onclick="deleteSelected()" id="deleteSelBtn" style="display:none">🗑️ ลบ</button>
+        </div>
+        
+        <!-- Search -->
+        <div style="margin-bottom:12px;position:relative">
+          <input type="text" placeholder="🔍 ค้นหาชื่อหรือที่อยู่..." oninput="searchLabels(this.value)"
+            style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Sarabun',sans-serif">
         </div>
 
-        <div class="form-row">
-            <div class="form-group" style="max-width:150px;"><label>รูปต่อแถว</label><input type="number" id="photosPerRow" value="3" min="1"></div>
-            <div class="form-group"><label>เลขที่เอกสาร</label><input type="text" id="documentNumber" readonly></div>
-        </div>
-        <div class="form-row">
-            <div class="form-group" style="max-width:160px;">
-                <label>🛒 แพลตฟอร์ม</label>
-                <select id="platform">
-                    <option value="">-- เลือกแพลตฟอร์ม --</option>
-                    <option value="Shopee">🟠 Shopee</option>
-                    <option value="TikTok">⬛ TikTok Shop</option>
-                    <option value="Lazada">🔵 Lazada</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>📋 เลขออเดอร์</label>
-                <input type="text" id="orderNumber" placeholder="กรอกเลขออเดอร์">
-            </div>
+        <!-- List -->
+        <div class="label-list" id="labelList">
+          <div class="empty-state">
+            <div class="empty-icon">📪</div>
+            <p>ยังไม่มีฉลาก<br>กด <b>"เพิ่มฉลาก"</b> หรือ<br>นำเข้าจาก Excel/CSV</p>
+          </div>
         </div>
 
-        <div class="section-title">📬 ข้อมูลผู้รับ</div>
-        <div style="margin-bottom:14px;">
-            <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:6px;">
-                <button onclick="openHistory()" class="btn-teal" style="flex:none;width:auto;padding:6px 14px;font-size:12px;min-width:0;">🕐 ประวัติการพิมพ์</button>
-                <button onclick="openPicker()" class="btn-blue" style="flex:none;width:auto;padding:6px 14px;font-size:12px;min-width:0;">👤 เลือกจาก DB</button>
-            </div>
-            <textarea id="pageText" rows="3" style="width:100%;display:block;"></textarea>
+        <div class="divider"></div>
+        
+        <!-- Action Buttons -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-green" style="width:100%;justify-content:center;font-size:14px" onclick="printSelected()">
+            🖨️ พิมพ์ที่เลือก (<span id="printCount">0</span> ใบ)
+          </button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px" onclick="printAll()">📄 พิมพ์ทั้งหมด</button>
+            <button class="btn btn-red btn-sm" style="flex:1;justify-content:center" onclick="clearAll()">🗑️ ล้างทั้งหมด</button>
+          </div>
         </div>
-
-        <div class="button-group">
-            <button class="btn-green" onclick="handlePrint()">🖨️ Print A4</button>
-            <button class="btn-amber" onclick="openLabelModal()">📦 สร้างฉลาก 100x150</button>
-            <button class="btn-teal" onclick="saveToSheets()">📊 บันทึก Google Sheets</button>
-            <button class="btn-red" onclick="location.reload()">🗑️ Clear</button>
-        </div>
+      </div>
     </div>
-    <div class="print-area" id="printArea"></div>
+  </div>
+
+  <!-- RIGHT: Preview -->
+  <div class="panel" style="min-height:600px;display:flex;flex-direction:column">
+    <div class="panel-header">
+      <span style="font-size:18px">👁️</span>
+      <h2>ตัวอย่างฉลาก</h2>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <select id="previewMode" onchange="renderPreview()" style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'Sarabun',sans-serif">
+          <option value="grid">แสดงแบบกริด</option>
+          <option value="single">ทีละใบ</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="preview-toolbar">
+      <span style="font-size:12px;color:var(--text2)">สีฉลาก:</span>
+      <select id="labelTheme" onchange="renderPreview()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Sarabun',sans-serif">
+        <option value="default">⚫ ดำ (ปกติ)</option>
+        <option value="red">🔴 แดง</option>
+        <option value="blue">🔵 น้ำเงิน</option>
+      </select>
+      <span style="font-size:12px;color:var(--text2);margin-left:10px">ขนาดตัวอักษร:</span>
+      <select id="fontSizePref" onchange="renderPreview()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Sarabun',sans-serif">
+        <option value="17">ปกติ</option>
+        <option value="15">เล็ก</option>
+        <option value="19">ใหญ่</option>
+      </select>
+    </div>
+
+    <div class="preview-container" id="previewContainer">
+      <div class="empty-state" style="margin:auto">
+        <div class="empty-icon">📦</div>
+        <p>เพิ่มฉลากเพื่อดูตัวอย่าง</p>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-    let row1Photo = null, row2Photos = [], photosPerRow = 3;
-    let _historyCache = [];
-    const SENDER = 'บริษัท เชียงใหม่เฟรชมิลค์ จำกัด 57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่ โทร. 089-6354687';
+const SENDER = 'บริษัท เชียงใหม่เฟรชมิลค์ จำกัด\n57/1 ม.6 ต.ท่าวังตาล สารภี เชียงใหม่\nโทร. 089-6354687';
+let labels = JSON.parse(localStorage.getItem('cfm_labels') || '[]');
+let editingId = null;
+let importData = [];
+let searchQ = '';
 
-    (function(){
-        const now=new Date(), d=String(now.getDate()).padStart(2,'0'), m=String(now.getMonth()+1).padStart(2,'0'), y=now.getFullYear();
-        document.getElementById('documentNumber').value=`CFM${d}${m}${y}${Math.floor(Math.random()*100).toString().padStart(3,'0')}`;
-    })();
+function save(){ localStorage.setItem('cfm_labels', JSON.stringify(labels)); }
 
-    function fileToBase64(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); }); }
+function ts(){
+  const n=new Date();
+  return `พิมพ์: ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()+543} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
 
-    document.getElementById('photoInput').addEventListener('change', async e=>{
-        for(const f of [...e.target.files]){ row2Photos.push(await fileToBase64(f)); }
-        renderPhotos(); renderThumbs();
-    });
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
 
-    document.getElementById('photosPerRow').addEventListener('change',function(){photosPerRow=+this.value;renderPhotos();});
-    document.getElementById('pageText').addEventListener('input',renderPhotos);
+function showToast(msg, color='#059669', dur=3000){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.background=color; t.style.display='block';
+  clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none', dur);
+}
 
-    function clickRow1(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async e=>{if(e.target.files[0])loadRow1(e.target.files[0]);};i.click();}
-    async function loadRow1(file){ row1Photo = await fileToBase64(file); renderPhotos(); renderRow1Thumb(); }
-    function delRow1(e){ e.stopPropagation(); row1Photo=null; renderPhotos(); renderRow1Thumb(); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
-    // รองรับ Paste จากคลิปบอร์ดทั่วทั้งหน้า
-    document.addEventListener('paste', async e => {
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        for (const item of items) {
-            if (item.type.startsWith('image/')) {
-                e.preventDefault();
-                const file = item.getAsFile();
-                row1Photo = await fileToBase64(file);
-                renderPhotos();
-                renderRow1Thumb();
-                // flash เพื่อแจ้งว่า paste สำเร็จ
-                const thumb = document.getElementById('row1Thumb');
-                thumb.style.border = '2px solid #10b981';
-                setTimeout(() => thumb.style.border = '2px dashed #ccc', 800);
-                break;
-            }
-        }
-    });
-    function renderRow1Thumb(){
-        const w=document.getElementById('row1Thumb'),ph=document.getElementById('r1ph'),del=document.getElementById('row1Del');
-        w.querySelectorAll('img').forEach(i=>i.remove());
-        if(row1Photo){const img=document.createElement('img');img.src=row1Photo;w.insertBefore(img,ph);ph.style.display='none';del.style.display='block';}
-        else{ph.style.display='';del.style.display='none';}
+// ===== LABEL CRUD =====
+function openAdd(){
+  editingId=null;
+  document.getElementById('editModalTitle').textContent='➕ เพิ่มฉลากใหม่';
+  ['f_name','f_phone','f_addr','f_note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('editModal').classList.add('open');
+  setTimeout(()=>document.getElementById('f_name').focus(),100);
+}
+
+function openEdit(id){
+  const lb = labels.find(l=>l.id===id); if(!lb) return;
+  editingId=id;
+  document.getElementById('editModalTitle').textContent='✏️ แก้ไขฉลาก';
+  document.getElementById('f_name').value=lb.name||'';
+  document.getElementById('f_phone').value=lb.phone||'';
+  document.getElementById('f_addr').value=lb.addr||'';
+  document.getElementById('f_note').value=lb.note||'';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveLabel(){
+  const name=document.getElementById('f_name').value.trim();
+  const addr=document.getElementById('f_addr').value.trim();
+  if(!name){ showToast('⚠️ กรุณากรอกชื่อผู้รับ','#d97706'); return; }
+  if(!addr){ showToast('⚠️ กรุณากรอกที่อยู่','#d97706'); return; }
+  if(editingId){
+    const idx=labels.findIndex(l=>l.id===editingId);
+    if(idx>=0){
+      labels[idx]={...labels[idx], name, phone:document.getElementById('f_phone').value.trim(),
+        addr, note:document.getElementById('f_note').value.trim()};
     }
-    function renderThumbs(){
-        const s=document.getElementById('thumbnailStrip'); s.innerHTML='';
-        row2Photos.forEach((src,i)=>{
-            const w=document.createElement('div'); w.className='thumb-wrap';
-            w.innerHTML=`<img src="${src}"><button class="thumb-del" onclick="row2Photos.splice(${i},1);renderPhotos();renderThumbs();">✕</button>`;
-            s.appendChild(w);
-        });
+    showToast('✅ แก้ไขฉลากแล้ว');
+  } else {
+    labels.push({id:uid(), name, phone:document.getElementById('f_phone').value.trim(),
+      addr, note:document.getElementById('f_note').value.trim(), selected:false, createdAt:new Date().toISOString()});
+    showToast('✅ เพิ่มฉลากแล้ว');
+  }
+  save(); closeModal('editModal'); renderList(); renderPreview();
+}
+
+function deleteLabel(id){
+  labels=labels.filter(l=>l.id!==id); save(); renderList(); renderPreview();
+  showToast('🗑️ ลบฉลากแล้ว','#dc2626');
+}
+
+function deleteSelected(){
+  const sel=labels.filter(l=>l.selected);
+  if(sel.length===0){ showToast('⚠️ ยังไม่ได้เลือกฉลาก','#d97706'); return; }
+  if(!confirm(`ลบ ${sel.length} ฉลากที่เลือก?`)) return;
+  labels=labels.filter(l=>!l.selected); save(); renderList(); renderPreview();
+  showToast(`🗑️ ลบ ${sel.length} ฉลากแล้ว`,'#dc2626');
+}
+
+function clearAll(){
+  if(!labels.length) return;
+  if(!confirm(`ล้างฉลากทั้งหมด ${labels.length} ใบ?`)) return;
+  labels=[]; save(); renderList(); renderPreview();
+  showToast('🗑️ ล้างทั้งหมดแล้ว','#dc2626');
+}
+
+function toggleSelect(id, checked){
+  const lb=labels.find(l=>l.id===id); if(lb) lb.selected=checked;
+  updateSelectUI();
+  renderPreview();
+}
+
+function toggleSelectAll(checked){
+  const filtered=getFiltered();
+  filtered.forEach(lb=>{ const l=labels.find(x=>x.id===lb.id); if(l) l.selected=checked; });
+  updateSelectUI(); renderList(); renderPreview();
+}
+
+function updateSelectUI(){
+  const sel=labels.filter(l=>l.selected).length;
+  document.getElementById('selectCount').textContent=`${sel} รายการ`;
+  document.getElementById('printCount').textContent=sel;
+  document.getElementById('statSelected').textContent=`เลือก ${sel}`;
+  document.getElementById('statTotal').textContent=`ทั้งหมด ${labels.length}`;
+  document.getElementById('totalBadge').textContent=`${labels.length} ใบ`;
+  document.getElementById('deleteSelBtn').style.display=sel>0?'':'none';
+  const all=getFiltered();
+  document.getElementById('selectAllCb').checked=all.length>0 && all.every(l=>l.selected);
+}
+
+function getFiltered(){
+  if(!searchQ) return labels;
+  const q=searchQ.toLowerCase();
+  return labels.filter(l=>(l.name||'').toLowerCase().includes(q)||(l.addr||'').toLowerCase().includes(q)||(l.phone||'').includes(q));
+}
+
+function searchLabels(q){ searchQ=q; renderList(); }
+
+// ===== RENDER LIST =====
+function renderList(){
+  const el=document.getElementById('labelList');
+  const filtered=getFiltered();
+  updateSelectUI();
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">${searchQ?'🔍':'📪'}</div><p>${searchQ?'ไม่พบผลการค้นหา':'ยังไม่มีฉลาก<br>กด "เพิ่มฉลาก" หรือนำเข้าจาก Excel/CSV'}</p></div>`;
+    return;
+  }
+  el.innerHTML='';
+  filtered.forEach((lb,i)=>{
+    const idx=labels.findIndex(x=>x.id===lb.id);
+    const card=document.createElement('div');
+    card.className='label-card'+(lb.selected?' selected-print':'');
+    card.innerHTML=`
+      <div class="lc-header">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;flex:1">
+          <input type="checkbox" ${lb.selected?'checked':''} 
+            onchange="toggleSelect('${lb.id}',this.checked)" 
+            style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer"
+            onclick="event.stopPropagation()">
+          <span class="lc-num">#${idx+1}</span>
+        </label>
+        <div class="lc-actions">
+          <button class="btn btn-amber btn-xs" onclick="openEdit('${lb.id}');event.stopPropagation()">✏️</button>
+          <button class="btn btn-red btn-xs" onclick="deleteLabel('${lb.id}');event.stopPropagation()">🗑️</button>
+        </div>
+      </div>
+      <div class="lc-name">${esc(lb.name||'ไม่ระบุชื่อ')}</div>
+      ${lb.phone?`<div class="lc-phone">📞 ${esc(lb.phone)}</div>`:''}
+      <div class="lc-addr">${esc(lb.addr||'ไม่มีที่อยู่')}</div>
+      ${lb.note?`<div style="font-size:11px;color:var(--amber);margin-top:3px;font-weight:600">📝 ${esc(lb.note)}</div>`:''}
+    `;
+    card.addEventListener('click', ()=>{ lb.selected=!lb.selected; renderList(); renderPreview(); });
+    el.appendChild(card);
+  });
+}
+
+// ===== RENDER PREVIEW =====
+function makeLabelHTML(lb, num){
+  const theme=document.getElementById('labelTheme').value;
+  const fs=document.getElementById('fontSizePref').value;
+  const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
+  const fullAddr = lb.addr || '';
+  const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}${lb.note?'\n('+lb.note+')':''}` : fullAddr;
+  
+  return `<div class="shipping-label">
+    <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
+    <div class="sl-z" style="position:absolute;top:3mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;">ใบที่ ${num}</div>
+    <div class="sl-z sl-hdr"><h2>Chiangmai Freshmilk</h2></div>
+    <div class="sl-z sl-line"></div>
+    <div class="sl-z sl-sender">${SENDER.replace(/\n/g,'<br>')}</div>
+    <div class="sl-z sl-line-dash"></div>
+    <div class="sl-z sl-recv-box" style="background:${recvBg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+      <span class="sl-recv-title">ผู้รับ (TO):</span>
+    </div>
+    <div class="sl-z sl-recv-text" style="font-size:${fs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
+    <div class="sl-z sl-footer">
+      <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" onerror="this.style.display='none'">
+    </div>
+    <div class="sl-z sl-ts">${ts()}</div>
+  </div>`;
+}
+
+function renderPreview(){
+  const container=document.getElementById('previewContainer');
+  const mode=document.getElementById('previewMode').value;
+  const toShow = labels.filter(l=>l.selected);
+  
+  if(!toShow.length){
+    const allSel = labels.filter(l=>l.selected);
+    if(labels.length===0){
+      container.innerHTML=`<div class="empty-state" style="margin:auto"><div class="empty-icon">📦</div><p>เพิ่มฉลากเพื่อดูตัวอย่าง</p></div>`;
+    } else {
+      container.innerHTML=`<div class="empty-state" style="margin:auto"><div class="empty-icon">☑️</div><p>เลือกฉลากเพื่อดูตัวอย่าง<br><span style="font-size:12px">ติ๊กช่องหน้ารายการ หรือกด "เลือกทั้งหมด"</span></p></div>`;
     }
+    return;
+  }
 
-    function addImgFromUrl(){
-        const inp = document.getElementById('imgUrlInput');
-        const url = inp.value.trim();
-        if (!url) return;
-        const img = new Image();
-        img.onload = () => { row2Photos.push(url); renderPhotos(); renderThumbs(); inp.value=''; inp.style.borderColor='#ccc'; };
-        img.onerror = () => { inp.style.borderColor='#ef4444'; setTimeout(()=>inp.style.borderColor='#ccc',1500); };
-        img.src = url;
-    }
+  if(mode==='grid'){
+    container.innerHTML=`<div class="labels-grid">${toShow.map((lb,i)=>makeLabelHTML(lb,i+1)).join('')}</div>`;
+  } else {
+    let html=toShow.map((lb,i)=>`<div style="text-align:center;margin-bottom:20px">
+      <p style="font-size:11px;color:#888;margin-bottom:8px">ฉลากที่ ${i+1} / ${toShow.length}</p>
+      ${makeLabelHTML(lb,i+1)}
+    </div>`).join('');
+    container.innerHTML=html;
+  }
+}
 
-    function renderPhotos(){
-        const area=document.getElementById('printArea'); area.innerHTML='';
-        const total=Math.max(1,Math.ceil(row2Photos.length/photosPerRow));
-        for(let p=0;p<total;p++){
-            const page=document.createElement('div'); page.className='a4-page';
-            const r1=document.createElement('div'); r1.className='photo-row';
-            const pc1=document.createElement('div'); pc1.className='photo-container full-width';
-            if(row1Photo) pc1.innerHTML=`<img src="${row1Photo}" style="object-fit:contain;">`;
-            r1.appendChild(pc1); page.appendChild(r1);
-            const r2=document.createElement('div'); r2.className='photo-row';
-            for(let i=0; i<photosPerRow; i++){
-                const idx=p*photosPerRow+i;
-                const pc=document.createElement('div'); pc.className='photo-container';
-                if(row2Photos[idx]) pc.innerHTML=`<img src="${row2Photos[idx]}">`;
-                r2.appendChild(pc);
-            }
-            page.appendChild(r2);
-            const txt=document.getElementById('pageText').value;
-            if(txt.trim()) page.innerHTML+=`<div class="page-text">${txt.replace(/\n/g,'<br>')}</div>`;
-            area.appendChild(page);
-        }
-    }
+// ===== PRINT =====
+function buildPrintDoc(list){
+  const theme=document.getElementById('labelTheme').value;
+  const fs=document.getElementById('fontSizePref').value;
+  const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
+  
+  const labels_html = list.map((lb,i)=>{
+    const fullAddr = lb.addr||'';
+    const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}${lb.note?'\n('+lb.note+')':''}`:fullAddr;
+    return `<div class="shipping-label" style="page-break-after:always;">
+      <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
+      <div style="position:absolute;top:3mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
+      <div style="position:relative;z-index:1;text-align:center;padding:0 5mm 6px 5mm;"><h2 style="font-size:24px;font-weight:800;margin:0;color:#000;letter-spacing:-.5px;font-family:'Kanit','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
+      <div style="position:relative;z-index:1;border-top:1.5px solid #333;margin:0"></div>
+      <div style="position:relative;z-index:1;text-align:center;font-size:11px;line-height:1.4;color:#444;padding:4px 5mm;">${SENDER.replace(/\n/g,'<br>')}</div>
+      <div style="position:relative;z-index:1;border-top:1.5px dashed #999;margin:0 0 8px 0;"></div>
+      <div style="position:relative;z-index:1;background:${recvBg} !important;text-align:center;padding:7px;margin-bottom:8px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <span style="font-weight:800;font-size:15px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span>
+      </div>
+      <div style="position:relative;z-index:1;text-align:center;font-size:${fs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${esc(displayText).replace(/\n/g,'<br>')}</div>
+      <div style="position:relative;z-index:1;margin-top:auto;border-top:1.5px solid #333;text-align:center;">
+        <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" style="width:100%;height:auto;display:block;" onerror="this.style.display='none'">
+      </div>
+      <div style="position:relative;z-index:1;font-size:10px;color:#666;text-align:left;padding:4px 5mm;background:white;">${ts()}</div>
+    </div>`;
+  }).join('');
 
-    function ts(){ const n=new Date(); return `พิมพ์: ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()+543} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    @page{size:100mm 150mm;margin:0}
+    body{background:white;font-family:'Kanit','Sarabun','Tahoma',sans-serif}
+    .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:6mm 0 0 0;display:flex;flex-direction:column;font-family:'Kanit','Sarabun','Tahoma',sans-serif;box-sizing:border-box;position:relative;overflow:hidden;}
+    .sl-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(30deg);width:80mm;opacity:.07;pointer-events:none;z-index:0;}
+    </style>
+    </head><body>${labels_html}</body></html>`;
+}
 
-    function updatePreview(){
-        const rv=document.getElementById('mReceiver').value;
-        document.getElementById('pReceiver').innerHTML=('คุณ '+rv).replace(/\n/g,'<br>');
-        document.getElementById('pSender').innerHTML=SENDER.replace('สารภี เชียงใหม่', 'สารภี<br>เชียงใหม่');
-        document.getElementById('pTs').textContent=ts();
-    }
+function printSelected(){
+  const sel=labels.filter(l=>l.selected);
+  if(!sel.length){ showToast('⚠️ กรุณาเลือกฉลากก่อน','#d97706'); return; }
+  doPrint(sel);
+}
 
-    function openLabelModal(){
-        document.getElementById('mReceiver').value=document.getElementById('pageText').value;
-        updatePreview();
-        document.getElementById('labelModal').classList.add('open');
-    }
-    document.getElementById('mReceiver').addEventListener('input',updatePreview);
+function printAll(){
+  if(!labels.length){ showToast('⚠️ ยังไม่มีฉลาก','#d97706'); return; }
+  doPrint(labels);
+}
 
-    function printLabel(){
-        const rv=document.getElementById('mReceiver').value;
-        const pc=document.getElementById('labelPrintContent');
-        const previewNode=document.getElementById('labelPreview');
+function doPrint(list){
+  const html=buildPrintDoc(list);
+  const w=window.open('','_blank','width=800,height=600');
+  if(!w){ showToast('❌ ไม่สามารถเปิดหน้าพิมพ์ได้','#dc2626'); return; }
+  w.document.write(html);
+  w.document.close();
+  w.onload=()=>{ setTimeout(()=>{ w.focus(); w.print(); w.close(); },400); };
+  showToast(`🖨️ เปิดหน้าพิมพ์ ${list.length} ใบ`);
+}
 
-        pc.innerHTML = previewNode.outerHTML;
-        
-        if(pc.firstElementChild) {
-            pc.firstElementChild.removeAttribute('id');
-            pc.firstElementChild.style.border = 'none';
-            // Force black box inline on the cloned node
-            const recvBox = pc.firstElementChild.querySelector('.label-recv-box');
-            if(recvBox) {
-                recvBox.style.cssText = 'background:#000 !important;text-align:center;padding:8px;margin-bottom:10px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;';
-                const title = recvBox.querySelector('.label-recv-title');
-                if(title) title.style.cssText = 'font-weight:800;font-size:16px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;';
-            }
-        }
+// ===== IMPORT =====
+function openImport(){
+  resetImport();
+  document.getElementById('importModal').classList.add('open');
+}
 
-        document.getElementById('pageStyleA4').media = 'not all';
-        document.getElementById('pageStyleLabel').media = 'print';
-        document.body.classList.add('print-label');
-        window.print();
-        setTimeout(()=>{
-            document.body.classList.remove('print-label');
-            document.getElementById('pageStyleA4').media = 'print';
-        }, 500);
-        window._fbSaveReceiver({fullText:rv});
-    }
+function resetImport(){
+  importData=[];
+  document.getElementById('importStep1').style.display='';
+  document.getElementById('importStep2').style.display='none';
+  document.getElementById('fileInput').value='';
+}
 
-    async function openPicker(){
-        document.getElementById('pickerModal').classList.add('open');
-        const list=await window._fbGetReceivers();
-        const l=document.getElementById('pickerList'); l.innerHTML='';
-        list.forEach(r=>{
-            const d=document.createElement('div'); d.className='recv-card';
-            d.innerHTML=`<b>${r.name}</b><br>${r.address}`;
-            d.onclick=()=>{document.getElementById('pageText').value=r.address; renderPhotos(); closeModal('pickerModal');};
-            l.appendChild(d);
-        });
-    }
+function handleDragOver(e){ e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function handleDrop(e){
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  const file=e.dataTransfer.files[0]; if(file) processFile(file);
+}
+function handleFile(e){ const file=e.target.files[0]; if(file) processFile(file); }
 
-    // ===== History Functions =====
-    function formatThaiDate(isoStr) {
-        if (!isoStr) return '';
-        try {
-            const d = new Date(isoStr);
-            const day = d.getDate();
-            const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-            const month = months[d.getMonth()];
-            const year = d.getFullYear() + 543;
-            const hh = String(d.getHours()).padStart(2,'0');
-            const mm = String(d.getMinutes()).padStart(2,'0');
-            return `${day} ${month} ${year} เวลา ${hh}:${mm} น.`;
-        } catch(e) { return isoStr; }
-    }
+function processFile(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  const reader=new FileReader();
+  if(ext==='csv'){
+    reader.onload=e=>parseCSV(e.target.result);
+    reader.readAsText(file,'utf-8');
+  } else {
+    reader.onload=e=>{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+      parseRows(data);
+    };
+    reader.readAsBinaryString(file);
+  }
+}
 
-    function renderHistoryList(items) {
-        const el = document.getElementById('historyList');
-        const countEl = document.getElementById('historyCount');
-        countEl.textContent = `ทั้งหมด ${items.length} รายการ`;
+function parseCSV(text){
+  const lines=text.split('\n').filter(l=>l.trim());
+  if(!lines.length) return;
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+  const rows=lines.slice(1).map(line=>{
+    const vals=line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,))/g)||[];
+    const obj={};
+    headers.forEach((h,i)=>{ obj[h]=(vals[i]||'').replace(/^"|"$/g,'').trim(); });
+    return obj;
+  });
+  parseRows(rows);
+}
 
-        if (items.length === 0) {
-            el.innerHTML = `<div class="history-empty"><div class="he-icon">📭</div>ไม่พบข้อมูลประวัติการพิมพ์</div>`;
-            return;
-        }
+function parseRows(rows){
+  const colMap={
+    name:['ชื่อ','name','ชื่อผู้รับ','ผู้รับ','NAME','Name'],
+    phone:['เบอร์โทร','phone','โทร','เบอร์','tel','Tel','Phone','เบอร์มือถือ'],
+    addr:['ที่อยู่','address','Address','ที่อยู่เต็ม','addr'],
+    note:['หมายเหตุ','note','Note','หมาย','remark']
+  };
+  function findKey(obj, aliases){ 
+    for(const a of aliases){ if(obj.hasOwnProperty(a)) return a; }
+    return null;
+  }
+  if(!rows.length){ showToast('❌ ไม่พบข้อมูล','#dc2626'); return; }
+  const sample=rows[0];
+  const nk=findKey(sample,colMap.name);
+  const pk=findKey(sample,colMap.phone);
+  const ak=findKey(sample,colMap.addr);
+  const ok=findKey(sample,colMap.note);
+  
+  importData=rows.filter(r=>r[nk]||r[ak]).map(r=>({
+    id:uid(),
+    name:nk?String(r[nk]||'').trim():'',
+    phone:pk?String(r[pk]||'').trim():'',
+    addr:ak?String(r[ak]||'').trim():'',
+    note:ok?String(r[ok]||'').trim():'',
+    selected:true,
+    createdAt:new Date().toISOString()
+  }));
 
-        el.innerHTML = '';
-        items.forEach(r => {
-            const card = document.createElement('div');
-            card.className = 'history-card';
-            card.id = `hcard-${r.id}`;
-            const addrPreview = (r.address || '').replace(/\n/g, ' ');
-            card.innerHTML = `
-                <div class="hc-icon">👤</div>
-                <div class="hc-body">
-                    <div class="hc-name">${escHtml(r.name || 'ไม่ระบุชื่อ')}</div>
-                    <div class="hc-phone">📞 ${escHtml(r.phone || '-')}</div>
-                    <div class="hc-addr">${escHtml(addrPreview)}</div>
-                    <div class="hc-time">🕐 ${formatThaiDate(r.createdAt)}</div>
-                </div>
-                <button class="hc-use-btn" onclick="useHistoryItem(${JSON.stringify(r.address || '').replace(/"/g,'&quot;')})">ใช้ที่อยู่นี้</button>
-                <button class="hc-del-btn" onclick="deleteHistoryItem('${escHtml(r.id)}')">✕</button>
-            `;
-            el.appendChild(card);
-        });
-    }
+  if(!importData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
 
-    function filterHistory() {
-        const q = document.getElementById('historySearch').value.toLowerCase().trim();
-        if (!q) { renderHistoryList(_historyCache); return; }
-        const filtered = _historyCache.filter(r =>
-            (r.name || '').toLowerCase().includes(q) ||
-            (r.address || '').toLowerCase().includes(q) ||
-            (r.phone || '').includes(q)
-        );
-        renderHistoryList(filtered);
-    }
+  document.getElementById('importStep1').style.display='none';
+  document.getElementById('importStep2').style.display='';
+  document.getElementById('importPreview').innerHTML=`
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">✅</span>
+      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้าทั้งหมด</span></div>
+    </div>
+    <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <table class="import-table">
+        <thead><tr><th>#</th><th>ชื่อ</th><th>เบอร์โทร</th><th>ที่อยู่</th></tr></thead>
+        <tbody>${importData.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.addr)}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
 
-    function useHistoryItem(address) {
-        document.getElementById('pageText').value = address;
-        renderPhotos();
-        closeModal('historyModal');
-    }
+function confirmImport(){
+  if(!importData.length) return;
+  labels=[...labels,...importData];
+  save(); renderList(); renderPreview();
+  closeModal('importModal');
+  showToast(`✅ นำเข้า ${importData.length} ฉลากแล้ว`);
+  importData=[];
+}
 
-    async function openHistory() {
-        document.getElementById('historyModal').classList.add('open');
-        document.getElementById('historySearch').value = '';
-        document.getElementById('historyCount').textContent = '';
-        document.getElementById('historyList').innerHTML = '<div class="history-loading">กำลังโหลดข้อมูล</div>';
+function esc(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-        try {
-            const list = await window._fbGetReceivers();
-            _historyCache = list;
-            renderHistoryList(list);
-        } catch(e) {
-            document.getElementById('historyList').innerHTML = `<div class="history-empty"><div class="he-icon">⚠️</div>เกิดข้อผิดพลาด กรุณาลองใหม่</div>`;
-        }
-    }
-
-    function escHtml(str) {
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    async function deleteHistoryItem(id) {
-        const card = document.getElementById(`hcard-${id}`);
-        if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
-        try {
-            await window._fbDeleteReceiver(id);
-            _historyCache = _historyCache.filter(r => r.id !== id);
-            const q = document.getElementById('historySearch').value.toLowerCase().trim();
-            const filtered = q ? _historyCache.filter(r =>
-                (r.name||'').toLowerCase().includes(q)||(r.address||'').toLowerCase().includes(q)||(r.phone||'').includes(q)
-            ) : _historyCache;
-            renderHistoryList(filtered);
-        } catch(e) {
-            if (card) { card.style.opacity = ''; card.style.pointerEvents = ''; }
-            alert('เกิดข้อผิดพลาด ไม่สามารถลบได้');
-        }
-    }
-
-    async function clearAllHistory() {
-        if (!confirm(`ต้องการล้างประวัติทั้งหมด ${_historyCache.length} รายการ?\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`)) return;
-        document.getElementById('historyList').innerHTML = '<div class="history-loading">กำลังลบข้อมูล</div>';
-        try {
-            await window._fbClearAllReceivers();
-            _historyCache = [];
-            renderHistoryList([]);
-        } catch(e) {
-            document.getElementById('historyList').innerHTML = `<div class="history-empty"><div class="he-icon">⚠️</div>เกิดข้อผิดพลาด กรุณาลองใหม่</div>`;
-        }
-    }
-    // ===========================
-
-    function handlePrint(){
-        document.getElementById('pageStyleLabel').media = 'not all';
-        document.getElementById('pageStyleA4').media = 'print';
-        document.body.classList.add('print-a4');
-        window.print();
-        setTimeout(()=>{
-            document.body.classList.remove('print-a4');
-            document.getElementById('pageStyleLabel').media = 'print';
-            document.getElementById('pageStyleA4').media = 'print';
-        }, 500);
-    }
-
-    // ===== Google Sheets Integration =====
-    const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw9in2f5Ios1I7kQ69wVmLepCZMTo0DFn9MvxF200UJwTb7M_g02L8Vtp6C9hYdmeNE9g/exec';
-
-    function showToast(msg, color='#10b981', duration=3000){
-        const t=document.getElementById('toast');
-        t.textContent=msg; t.style.background=color; t.style.display='block';
-        clearTimeout(t._tid);
-        t._tid=setTimeout(()=>t.style.display='none', duration);
-    }
-
-    async function captureA4Preview() {
-        // ย่อรูปลงให้เล็ก เพื่อให้ payload ไม่เกิน Apps Script limit (~50KB base64)
-        const W = 200, H = 283; // A4 ratio, ขนาดเล็ก
-        const canvas = document.createElement('canvas');
-        canvas.width = W; canvas.height = H;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, W, H);
-
-        const loadImg = src => new Promise(res => {
-            const img = new Image();
-            img.onload = () => res(img);
-            img.onerror = () => res(null);
-            img.src = src;
-        });
-
-        const row1H = Math.round(H * 0.60);
-        if (row1Photo) {
-            const img = await loadImg(row1Photo);
-            if (img) {
-                const scale = Math.min(W / img.naturalWidth, row1H / img.naturalHeight);
-                const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
-                ctx.drawImage(img, (W - dw) / 2, (row1H - dh) / 2, dw, dh);
-            }
-        }
-
-        const row2Y = row1H + 1;
-        const row2H = H - row2Y - 1;
-        const count = Math.min(row2Photos.length, photosPerRow);
-        if (count > 0) {
-            const cellW = Math.floor(W / count);
-            for (let i = 0; i < count; i++) {
-                const img = await loadImg(row2Photos[i]);
-                if (!img) continue;
-                const scale = Math.min(cellW / img.naturalWidth, row2H / img.naturalHeight);
-                const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
-                ctx.drawImage(img, i * cellW + (cellW - dw) / 2, row2Y + (row2H - dh) / 2, dw, dh);
-            }
-        }
-
-        // ส่งกลับเฉพาะ base64 ส่วน data (ตัด prefix ออก)
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-        return dataUrl.split(',')[1]; // เฉพาะ base64 string ไม่มี prefix
-    }
-
-    async function saveToSheets(){
-        const platform = document.getElementById('platform').value;
-        const orderNumber = document.getElementById('orderNumber').value.trim();
-        const recipient = document.getElementById('pageText').value.trim();
-
-        if (!platform) { showToast('⚠️ กรุณาเลือกแพลตฟอร์ม', '#f59e0b'); return; }
-        if (!orderNumber) { showToast('⚠️ กรุณากรอกเลขออเดอร์', '#f59e0b'); return; }
-
-        const now = new Date();
-        const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-
-        showToast('⏳ กำลังสร้างรูปพรีวิว...', '#667eea', 15000);
-        const imageBase64 = await captureA4Preview();
-
-        showToast('⏳ กำลังบันทึก...', '#667eea', 15000);
-        try {
-            await fetch(SHEETS_WEBHOOK_URL, {
-                method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date: dateStr, platform, orderNumber, recipient, imageBase64: imageBase64 || '' })
-            });
-            showToast('✅ บันทึกลง Google Sheets แล้ว!', '#10b981');
-        } catch(err) {
-            showToast('❌ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', '#ef4444', 4000);
-        }
-    }
-    // =====================================
-
-    function closeModal(id){document.getElementById(id).classList.remove('open');}
+// ===== INIT =====
+renderList();
+renderPreview();
 </script>
 </body>
 </html>
