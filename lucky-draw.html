@@ -597,11 +597,12 @@ function renderList(){
 function makeLabelHTML(lb, num){
   const theme=document.getElementById('labelTheme').value;
   const fs=document.getElementById('fontSizePref').value;
+  const recvFs = Math.max(10, parseInt(fs,10) - 2);
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
   const fullAddr = lb.addr || '';
   const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}` : fullAddr;
   const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}` : (lb.note?`หมายเหตุ: ${esc(lb.note)}`:'');
-  const noteHTML = orderLine ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 ${orderLine}</div>` : '';
+  const noteHTML = orderLine ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:14px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 ${orderLine}</div>` : '';
 
   return `<div class="shipping-label">
     <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
@@ -613,7 +614,7 @@ function makeLabelHTML(lb, num){
     <div class="sl-z sl-recv-box" style="background:${recvBg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <span class="sl-recv-title">ผู้รับ (TO):</span>
     </div>
-    <div class="sl-z sl-recv-text" style="font-size:${fs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
+    <div class="sl-z sl-recv-text" style="font-size:${recvFs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
     ${noteHTML}
     <div class="sl-z sl-footer">
       <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" onerror="this.style.display='none'">
@@ -652,12 +653,13 @@ function renderPreview(){
 function buildPrintDoc(list){
   const theme=document.getElementById('labelTheme').value;
   const fs=document.getElementById('fontSizePref').value;
+  const recvFs = Math.max(10, parseInt(fs,10) - 2);
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
   
   const labels_html = list.map((lb,i)=>{
     const fullAddr = lb.addr||'';
     const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}`:fullAddr;
-    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}`:lb.note?`หมายเหตุ: ${esc(lb.note)}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
+    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${lb.note?' / รายการที่ส่ง: '+esc(lb.note):''}`:lb.note?`หมายเหตุ: ${esc(lb.note)}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:14px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
       <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
@@ -669,7 +671,7 @@ function buildPrintDoc(list){
       <div style="position:relative;z-index:1;background:${recvBg} !important;text-align:center;padding:7px;margin-bottom:8px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span style="font-weight:800;font-size:15px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span>
       </div>
-      <div style="position:relative;z-index:1;text-align:center;font-size:${fs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${esc(displayText).replace(/\n/g,'<br>')}</div>
+      <div style="position:relative;z-index:1;text-align:center;font-size:${recvFs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${esc(displayText).replace(/\n/g,'<br>')}</div>
       ${notePrint}
       <div style="position:relative;z-index:1;margin-top:auto;border-top:1.5px solid #333;text-align:center;">
         <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" style="width:100%;height:auto;display:block;" onerror="this.style.display='none'">
