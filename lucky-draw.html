@@ -310,7 +310,7 @@ body{
         <div style="font-size:40px;margin-bottom:8px">📁</div>
         <strong style="font-size:15px">คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่</strong>
         <p>รองรับ .xlsx, .xls, .csv</p>
-        <p style="font-size:11px;margin-top:6px;color:#aaa">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=หมายเหตุ, Y=จำนวน(ตัวคูณ), AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
+        <p style="font-size:11px;margin-top:6px;color:#aaa">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=หมายเหตุ, AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
       <div style="background:#f8f8fc;border-radius:10px;padding:14px;margin-top:14px">
@@ -730,8 +730,8 @@ function handleDrop(e){
 }
 function handleFile(e){ const file=e.target.files[0]; if(file) processFile(file); }
 
-// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, Y=24, AX=49, AY=50, BA=52
-const COL_ORDER=2, COL_NOTE=18, COL_QTY=24, COL_NAME=49, COL_PHONE=50, COL_ADDR=52;
+// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, AX=49, AY=50, BA=52
+const COL_ORDER=2, COL_NOTE=18, COL_NAME=49, COL_PHONE=50, COL_ADDR=52;
 
 function normalizePhone(p){
   p=String(p||'').trim();
@@ -775,31 +775,20 @@ function parseCSVFixed(text){
 }
 
 function parseRowsFixed(rows){
-  // rows = array of arrays, ใช้ index ตรงๆ
   const parsed=rows
     .filter(r=>String(r[COL_NAME]||'').trim()||String(r[COL_ADDR]||'').trim())
-    .map(r=>{
-      const qty=Math.max(1, parseInt(String(r[COL_QTY]||'1').trim())||1);
-      return {
-        id:uid(),
-        name:String(r[COL_NAME]||'').trim(),
-        phone:normalizePhone(r[COL_PHONE]),
-        addr:String(r[COL_ADDR]||'').trim(),
-        order:String(r[COL_ORDER]||'').trim(),
-        note:String(r[COL_NOTE]||'').trim(),
-        qty,
-        selected:true,
-        createdAt:new Date().toISOString()
-      };
-    });
+    .map(r=>({
+      id:uid(),
+      name:String(r[COL_NAME]||'').trim(),
+      phone:normalizePhone(r[COL_PHONE]),
+      addr:String(r[COL_ADDR]||'').trim(),
+      order:String(r[COL_ORDER]||'').trim(),
+      note:String(r[COL_NOTE]||'').trim(),
+      selected:true,
+      createdAt:new Date().toISOString()
+    }));
 
-  // ขยายตาม qty (ตัวคูณจากคอลัมน์ Y)
-  importData=[];
-  parsed.forEach(lb=>{
-    for(let i=0;i<lb.qty;i++){
-      importData.push({...lb, id:uid()});
-    }
-  });
+  importData=parsed;
 
   if(!importData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
 
@@ -808,12 +797,12 @@ function parseRowsFixed(rows){
   document.getElementById('importPreview').innerHTML=`
     <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
       <span style="font-size:20px">✅</span>
-      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${parsed.length} แถว → รวม ${importData.length} ฉลาก (รวมตัวคูณ)</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้าทั้งหมด</span></div>
+      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้าทั้งหมด</span></div>
     </div>
     <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table class="import-table">
-        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>จำนวน</th><th>หมายเหตุ</th></tr></thead>
-        <tbody>${parsed.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td style="text-align:center;font-weight:700;color:var(--accent)">${r.qty}</td><td>${esc(r.note)}</td></tr>`).join('')}</tbody>
+        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>หมายเหตุ</th></tr></thead>
+        <tbody>${importData.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td>${esc(r.note)}</td></tr>`).join('')}</tbody>
       </table>
     </div>`;
 }
