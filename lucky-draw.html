@@ -310,17 +310,16 @@ body{
         <div style="font-size:40px;margin-bottom:8px">📁</div>
         <strong style="font-size:15px">คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่</strong>
         <p>รองรับ .xlsx, .xls, .csv</p>
-        <p style="font-size:11px;margin-top:6px;color:#aaa">เริ่มอ่านจากแถวที่ 2 | คอลัมน์ที่ใช้: S=หมายเหตุ, BA=ชื่อ, BB=เบอร์โทร, BD=ที่อยู่</p>
+        <p style="font-size:11px;margin-top:6px;color:#aaa">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=หมายเหตุ, Y=จำนวน(ตัวคูณ), AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
       <div style="background:#f8f8fc;border-radius:10px;padding:14px;margin-top:14px">
         <p style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📋 คอลัมน์ที่อ่าน (เริ่มแถว 2):</p>
         <table class="import-table">
-          <thead><tr><th>คอลัมน์ S</th><th>คอลัมน์ BA</th><th>คอลัมน์ BB</th><th>คอลัมน์ BD</th></tr></thead>
-          <thead><tr><th>หมายเหตุ</th><th>ชื่อผู้รับ</th><th>เบอร์โทร</th><th>ที่อยู่</th></tr></thead>
+          <thead><tr><th>C - เลขออเดอร์</th><th>S - หมายเหตุ</th><th>Y - จำนวน</th><th>AX - ชื่อ</th><th>AY - เบอร์</th><th>BA - ที่อยู่</th></tr></thead>
           <tbody>
-            <tr><td>ด่วน</td><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 ม.5 สารภี เชียงใหม่ 50140</td></tr>
-            <tr><td></td><td>สมหญิง รักดี</td><td>0812345678</td><td>56/7 ถ.นิมมาน เมือง เชียงใหม่ 50200</td></tr>
+            <tr><td>ORD001</td><td>ด่วน</td><td>2</td><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 สารภี เชียงใหม่</td></tr>
+            <tr><td>ORD002</td><td></td><td>1</td><td>สมหญิง รักดี</td><td>0812345678</td><td>56/7 เมือง เชียงใหม่</td></tr>
           </tbody>
         </table>
       </div>
@@ -597,12 +596,11 @@ function renderList(){
 function makeLabelHTML(lb, num){
   const theme=document.getElementById('labelTheme').value;
   const fs=document.getElementById('fontSizePref').value;
-  const recvFs = Math.max(10, parseInt(fs,10) - 2);
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
   const fullAddr = lb.addr || '';
   const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}` : fullAddr;
   const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}` : (lb.note?`หมายเหตุ: ${esc(lb.note)}`:'');
-  const noteHTML = orderLine ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:14px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 ${orderLine}</div>` : '';
+  const noteHTML = orderLine ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 ${orderLine}</div>` : '';
 
   return `<div class="shipping-label">
     <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
@@ -614,7 +612,7 @@ function makeLabelHTML(lb, num){
     <div class="sl-z sl-recv-box" style="background:${recvBg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <span class="sl-recv-title">ผู้รับ (TO):</span>
     </div>
-    <div class="sl-z sl-recv-text" style="font-size:${recvFs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
+    <div class="sl-z sl-recv-text" style="font-size:${fs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
     ${noteHTML}
     <div class="sl-z sl-footer">
       <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" onerror="this.style.display='none'">
@@ -653,13 +651,12 @@ function renderPreview(){
 function buildPrintDoc(list){
   const theme=document.getElementById('labelTheme').value;
   const fs=document.getElementById('fontSizePref').value;
-  const recvFs = Math.max(10, parseInt(fs,10) - 2);
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
   
   const labels_html = list.map((lb,i)=>{
     const fullAddr = lb.addr||'';
     const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}`:fullAddr;
-    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${lb.note?' / รายการที่ส่ง: '+esc(lb.note):''}`:lb.note?`หมายเหตุ: ${esc(lb.note)}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:14px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
+    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}`:lb.note?`หมายเหตุ: ${esc(lb.note)}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
       <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
@@ -671,7 +668,7 @@ function buildPrintDoc(list){
       <div style="position:relative;z-index:1;background:${recvBg} !important;text-align:center;padding:7px;margin-bottom:8px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span style="font-weight:800;font-size:15px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span>
       </div>
-      <div style="position:relative;z-index:1;text-align:center;font-size:${recvFs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${esc(displayText).replace(/\n/g,'<br>')}</div>
+      <div style="position:relative;z-index:1;text-align:center;font-size:${fs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${esc(displayText).replace(/\n/g,'<br>')}</div>
       ${notePrint}
       <div style="position:relative;z-index:1;margin-top:auto;border-top:1.5px solid #333;text-align:center;">
         <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" style="width:100%;height:auto;display:block;" onerror="this.style.display='none'">
@@ -733,8 +730,8 @@ function handleDrop(e){
 }
 function handleFile(e){ const file=e.target.files[0]; if(file) processFile(file); }
 
-// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, BA=52, BB=53, BD=55
-const COL_ORDER=2, COL_NOTE=18, COL_NAME=52, COL_PHONE=53, COL_ADDR=55;
+// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, Y=24, AX=49, AY=50, BA=52
+const COL_ORDER=2, COL_NOTE=18, COL_QTY=24, COL_NAME=49, COL_PHONE=50, COL_ADDR=52;
 
 function normalizePhone(p){
   p=String(p||'').trim();
@@ -779,18 +776,30 @@ function parseCSVFixed(text){
 
 function parseRowsFixed(rows){
   // rows = array of arrays, ใช้ index ตรงๆ
-  importData=rows
+  const parsed=rows
     .filter(r=>String(r[COL_NAME]||'').trim()||String(r[COL_ADDR]||'').trim())
-    .map(r=>({
-      id:uid(),
-      name:String(r[COL_NAME]||'').trim(),
-      phone:normalizePhone(r[COL_PHONE]),
-      addr:String(r[COL_ADDR]||'').trim(),
-      order:String(r[COL_ORDER]||'').trim(),
-      note:String(r[COL_NOTE]||'').trim(),
-      selected:true,
-      createdAt:new Date().toISOString()
-    }));
+    .map(r=>{
+      const qty=Math.max(1, parseInt(String(r[COL_QTY]||'1').trim())||1);
+      return {
+        id:uid(),
+        name:String(r[COL_NAME]||'').trim(),
+        phone:normalizePhone(r[COL_PHONE]),
+        addr:String(r[COL_ADDR]||'').trim(),
+        order:String(r[COL_ORDER]||'').trim(),
+        note:String(r[COL_NOTE]||'').trim(),
+        qty,
+        selected:true,
+        createdAt:new Date().toISOString()
+      };
+    });
+
+  // ขยายตาม qty (ตัวคูณจากคอลัมน์ Y)
+  importData=[];
+  parsed.forEach(lb=>{
+    for(let i=0;i<lb.qty;i++){
+      importData.push({...lb, id:uid()});
+    }
+  });
 
   if(!importData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
 
@@ -799,12 +808,12 @@ function parseRowsFixed(rows){
   document.getElementById('importPreview').innerHTML=`
     <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
       <span style="font-size:20px">✅</span>
-      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้าทั้งหมด</span></div>
+      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${parsed.length} แถว → รวม ${importData.length} ฉลาก (รวมตัวคูณ)</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้าทั้งหมด</span></div>
     </div>
     <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table class="import-table">
-        <thead><tr><th>#</th><th>ชื่อ</th><th>เบอร์โทร</th><th>ที่อยู่</th></tr></thead>
-        <tbody>${importData.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.addr)}</td></tr>`).join('')}</tbody>
+        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>จำนวน</th><th>หมายเหตุ</th></tr></thead>
+        <tbody>${parsed.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td style="text-align:center;font-weight:700;color:var(--accent)">${r.qty}</td><td>${esc(r.note)}</td></tr>`).join('')}</tbody>
       </table>
     </div>`;
 }
