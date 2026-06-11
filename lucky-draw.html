@@ -6,6 +6,26 @@
 <title>ปริ้นฉลาก - Chiangmai Freshmilk</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  const cfg={apiKey:"AIzaSyDZolsNGRpa_ZTPco_lbaBfliXNBrjTmTo",authDomain:"photo-df51e.firebaseapp.com",databaseURL:"https://photo-df51e-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"photo-df51e",storageBucket:"photo-df51e.firebasestorage.app",messagingSenderId:"388250901051",appId:"1:388250901051:web:8a159cf4a9890eeafe1a1e"};
+  const app=initializeApp(cfg),db=getDatabase(app);
+  window._fbSavePrintHistory=async(list)=>{
+    try{
+      await Promise.all(list.map(lb=>push(ref(db,"printHistory"),{name:lb.name||"",phone:lb.phone||"",addr:lb.addr||"",order:lb.order||"",note:lb.note||"",printedAt:new Date().toISOString()})));
+      return true;
+    }catch(e){console.error(e);return false;}
+  };
+  window._fbGetHistory=async()=>{
+    const s=await get(ref(db,"printHistory"));
+    if(!s.exists())return[];
+    return Object.entries(s.val()).map(([k,v])=>({_key:k,...v})).sort((a,b)=>b.printedAt.localeCompare(a.printedAt));
+  };
+  window._fbDeleteHistory=async(key)=>remove(ref(db,`printHistory/${key}`));
+  window._fbClearHistory=async()=>remove(ref(db,"printHistory"));
+</script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -220,6 +240,29 @@ body{
 }
 .stat-chip .dot{width:8px;height:8px;border-radius:50%}
 
+/* ===== HISTORY MODAL ===== */
+.history-card{border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;transition:all .15s;position:relative;background:white}
+.history-card:hover{border-color:var(--accent);background:#fff5f7}
+.hc-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hc-body{flex:1;min-width:0}
+.hc-order{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:2px}
+.hc-name{font-weight:700;font-size:14px;color:var(--text);margin-bottom:1px}
+.hc-phone{font-size:12px;color:var(--text2);margin-bottom:3px}
+.hc-addr{font-size:12px;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hc-note{font-size:11px;color:var(--amber);font-weight:600;margin-top:3px}
+.hc-time{font-size:11px;color:#9ca3af;margin-top:5px}
+.hc-actions{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+.history-list-wrap{display:flex;flex-direction:column;gap:8px;max-height:450px;overflow-y:auto;padding-right:2px}
+.history-list-wrap::-webkit-scrollbar{width:5px}
+.history-list-wrap::-webkit-scrollbar-thumb{background:#c0c0d8;border-radius:3px}
+.history-toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.history-search{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Sarabun',sans-serif;min-width:180px}
+.history-search:focus{outline:none;border-color:var(--accent)}
+.history-empty{text-align:center;padding:50px 20px;color:var(--text2)}
+.history-empty .he-icon{font-size:48px;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid #e0e0e0;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-left:8px}
+
 /* ===== PRINT STYLES ===== */
 @media print{
   body{background:white !important}
@@ -339,6 +382,7 @@ body{
   <h1>📦 ปริ้นฉลาก <span>Chiangmai Freshmilk</span></h1>
   <div class="header-actions">
     <button class="btn btn-ghost" style="color:white;border-color:rgba(255,255,255,.3)" onclick="openImport()">📊 นำเข้า Excel/CSV</button>
+    <button class="btn btn-teal" onclick="openHistory()">🕐 ประวัติการปริ้น</button>
     <button class="btn btn-primary" onclick="openAdd()">➕ เพิ่มฉลาก</button>
   </div>
 </div>
@@ -435,6 +479,25 @@ body{
     </div>
   </div>
 
+</div>
+
+
+<!-- HISTORY MODAL -->
+<div id="historyModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:680px">
+    <div class="modal-hdr">
+      <h2>🕐 ประวัติการปริ้น</h2>
+      <button class="btn btn-red btn-sm" onclick="closeModal('historyModal')">✕ ปิด</button>
+    </div>
+    <div class="history-toolbar">
+      <input type="text" class="history-search" id="historySearch" placeholder="🔍 ค้นหาชื่อ ออเดอร์ เบอร์...">
+      <span id="historyCount" style="font-size:12px;color:var(--text2);white-space:nowrap"></span>
+      <button class="btn btn-red btn-sm" onclick="clearAllHistory()">🗑️ ล้างทั้งหมด</button>
+    </div>
+    <div class="history-list-wrap" id="historyListWrap">
+      <div class="history-empty"><div class="he-icon">📭</div><p>กำลังโหลด<span class="spinner"></span></p></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -708,6 +771,12 @@ function doPrint(list){
   w.document.close();
   w.onload=()=>{ setTimeout(()=>{ w.focus(); w.print(); w.close(); },400); };
   showToast(`🖨️ เปิดหน้าพิมพ์ ${list.length} ใบ`);
+  // บันทึกลง Firebase
+  if(window._fbSavePrintHistory){
+    window._fbSavePrintHistory(list).then(ok=>{
+      if(ok) showToast(`💾 บันทึกประวัติ ${list.length} รายการแล้ว`,'#0d9488',2500);
+    });
+  }
 }
 
 // ===== IMPORT =====
@@ -819,6 +888,117 @@ function confirmImport(){
 function esc(str){
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+
+// ===== FIREBASE HISTORY =====
+let _historyCache = [];
+
+function formatThaiDate(isoStr){
+  if(!isoStr) return '';
+  try{
+    const d=new Date(isoStr);
+    const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()+543} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`;
+  }catch(e){return isoStr;}
+}
+
+function renderHistoryList(items){
+  const el=document.getElementById('historyListWrap');
+  document.getElementById('historyCount').textContent=`ทั้งหมด ${items.length} รายการ`;
+  if(!items.length){
+    el.innerHTML='<div class="history-empty"><div class="he-icon">📭</div><p>ไม่พบประวัติการปริ้น</p></div>';
+    return;
+  }
+  el.innerHTML='';
+  items.forEach(r=>{
+    const card=document.createElement('div');
+    card.className='history-card';
+    card.id=`hcard-${r._key}`;
+    card.innerHTML=`
+      <div class="hc-icon">📦</div>
+      <div class="hc-body">
+        ${r.order?`<div class="hc-order">📋 ${esc(r.order)}</div>`:''}
+        <div class="hc-name">${esc(r.name||'ไม่ระบุชื่อ')}</div>
+        ${r.phone?`<div class="hc-phone">📞 ${esc(r.phone)}</div>`:''}
+        <div class="hc-addr">${esc(r.addr||'-')}</div>
+        ${r.note?`<div class="hc-note">📝 ${esc(r.note)}</div>`:''}
+        <div class="hc-time">🕐 ${formatThaiDate(r.printedAt)}</div>
+      </div>
+      <div class="hc-actions">
+        <button class="btn btn-green btn-xs" onclick="reprintFromHistory(${JSON.stringify(r).replace(/"/g,'&quot;')})">🖨️ Reprint</button>
+        <button class="btn btn-amber btn-xs" onclick="loadFromHistory(${JSON.stringify(r).replace(/"/g,'&quot;')})">📋 โหลด</button>
+        <button class="btn btn-red btn-xs" onclick="deleteHistoryItem('${r._key}')">🗑️</button>
+      </div>`;
+    el.appendChild(card);
+  });
+}
+
+function filterHistory(){
+  const q=document.getElementById('historySearch').value.toLowerCase().trim();
+  if(!q){ renderHistoryList(_historyCache); return; }
+  renderHistoryList(_historyCache.filter(r=>
+    (r.name||'').toLowerCase().includes(q)||
+    (r.order||'').toLowerCase().includes(q)||
+    (r.phone||'').includes(q)||
+    (r.addr||'').toLowerCase().includes(q)
+  ));
+}
+
+async function openHistory(){
+  document.getElementById('historyModal').classList.add('open');
+  document.getElementById('historySearch').value='';
+  document.getElementById('historySearch').oninput=filterHistory;
+  document.getElementById('historyListWrap').innerHTML='<div class="history-empty"><div class="he-icon">⏳</div><p>กำลังโหลด<span class="spinner"></span></p></div>';
+  try{
+    _historyCache=await window._fbGetHistory();
+    renderHistoryList(_historyCache);
+  }catch(e){
+    document.getElementById('historyListWrap').innerHTML='<div class="history-empty"><div class="he-icon">⚠️</div><p>โหลดข้อมูลไม่สำเร็จ</p></div>';
+  }
+}
+
+function reprintFromHistory(r){
+  const lb={id:uid(),name:r.name||'',phone:r.phone||'',addr:r.addr||'',order:r.order||'',note:r.note||''};
+  doPrint([lb]);
+}
+
+function loadFromHistory(r){
+  // โหลดเข้ารายการปัจจุบันเพื่อแก้ไข/ปริ้น
+  const lb={id:uid(),name:r.name||'',phone:r.phone||'',addr:r.addr||'',order:r.order||'',note:r.note||'',selected:true,createdAt:new Date().toISOString()};
+  labels.push(lb);
+  save(); renderList(); renderPreview();
+  closeModal('historyModal');
+  showToast('✅ โหลดข้อมูลเข้ารายการแล้ว');
+}
+
+async function deleteHistoryItem(key){
+  const card=document.getElementById(`hcard-${key}`);
+  if(card){card.style.opacity='.4';card.style.pointerEvents='none';}
+  try{
+    await window._fbDeleteHistory(key);
+    _historyCache=_historyCache.filter(r=>r._key!==key);
+    filterHistory();
+    showToast('🗑️ ลบแล้ว','#dc2626',2000);
+  }catch(e){
+    if(card){card.style.opacity='';card.style.pointerEvents='';}
+    showToast('❌ ลบไม่สำเร็จ','#dc2626');
+  }
+}
+
+async function clearAllHistory(){
+  if(!_historyCache.length) return;
+  if(!confirm(`ล้างประวัติทั้งหมด ${_historyCache.length} รายการ?`)) return;
+  document.getElementById('historyListWrap').innerHTML='<div class="history-empty"><div class="he-icon">⏳</div><p>กำลังลบ<span class="spinner"></span></p></div>';
+  try{
+    await window._fbClearHistory();
+    _historyCache=[];
+    renderHistoryList([]);
+    showToast('🗑️ ล้างประวัติทั้งหมดแล้ว','#dc2626');
+  }catch(e){
+    showToast('❌ ลบไม่สำเร็จ','#dc2626');
+  }
+}
+// ============================
 
 // ===== INIT =====
 renderList();
