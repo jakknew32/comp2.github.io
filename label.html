@@ -220,7 +220,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 }
 .empty-pane p{font-size:13px;text-align:center;line-height:1.7}
 
-/* ── SHIPPING LABEL (ORIGINAL CODES & STYLES) ── */
+/* ── SHIPPING LABEL ── */
 .shipping-label{
   width:100mm;height:150mm;background:white;
   padding:3mm 0 0 0;
@@ -229,17 +229,6 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   box-sizing:border-box;position:relative;overflow:hidden;
   box-shadow:0 2px 16px rgba(13,27,42,.14),0 0 0 1px rgba(13,27,42,.08);
   border-radius:3px;
-}
-.sl-wm{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  background:repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 12px,
-    rgba(245,158,11,.04) 12px,
-    rgba(245,158,11,.04) 13px
-  );
-  pointer-events:none;z-index:0;
 }
 .sl-z{position:relative;z-index:1}
 .sl-hdr{
@@ -739,7 +728,7 @@ function renderList(){
       </div>
       <div class="lcard-actions">
         <button class="btn btn-outline btn-xs" onclick="openEdit('${lb.id}');event.stopPropagation()">✏️</button>
-        <button class="btn btn-red btn-xs" onclick="deleteLabel('${lb.id}');event.stopPropagation()">🗑></button>
+        <button class="btn btn-red btn-xs" onclick="deleteLabel('${lb.id}');event.stopPropagation()">🗑️</button>
       </div>
     `;
     card.addEventListener('click', ()=>{ lb.selected=!lb.selected; renderList(); renderPreview(); });
@@ -747,7 +736,7 @@ function renderList(){
   });
 }
 
-// ===== RENDER PREVIEW (ORIGINAL LABEL FORMATTING) =====
+// ===== RENDER PREVIEW (ORIGINAL LABEL FORMATTING - NO WATERMARK) =====
 function makeLabelHTML(lb, num){
   const theme=document.getElementById('labelTheme').value;
   const fs=document.getElementById('fontSizePref').value;
@@ -758,7 +747,6 @@ function makeLabelHTML(lb, num){
   const noteHTML = orderLine ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 ${orderLine}</div>` : '';
 
   return `<div class="shipping-label">
-    <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
     <div class="sl-z" style="position:absolute;top:3mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;">ใบที่ ${num}</div>
     <div class="sl-hdr sl-z"><h2>Chiangmai Freshmilk</h2></div>
     <div class="sl-z sl-line"></div>
@@ -813,7 +801,6 @@ function buildPrintDoc(list){
     const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}`:lb.note?`หมายเหตุ: ${esc(lb.note)}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
-      <img class="sl-wm" src="https://img2.pic.in.th/13223.png" onerror="this.style.display='none'">
       <div style="position:absolute;top:2mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit','Sarabun',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
       <div style="position:relative;z-index:1;text-align:center;padding:0 5mm 4px 5mm;"><h2 style="font-size:24px;font-weight:800;margin:0;color:#000;letter-spacing:-.5px;font-family:'Kanit','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
       <div style="position:relative;z-index:1;border-top:1.5px solid #333;margin:0"></div>
@@ -838,7 +825,6 @@ function buildPrintDoc(list){
     @page{size:100mm 150mm;margin:0}
     html,body{margin:0;padding:0;background:white;font-family:'Kanit','Sarabun','Tahoma',sans-serif}
     .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:3mm 0 0 0;display:flex;flex-direction:column;font-family:'Kanit','Sarabun','Tahoma',sans-serif;box-sizing:border-box;position:relative;overflow:hidden;}
-    .sl-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(30deg);width:80mm;opacity:.07;pointer-events:none;z-index:0;}
     </style>
     </head><body>${labels_html}</body></html>`;
 }
