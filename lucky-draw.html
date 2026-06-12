@@ -383,6 +383,7 @@ body{
   <div class="header-actions">
     <button class="btn btn-ghost" style="color:white;border-color:rgba(255,255,255,.3)" onclick="openImport()">📊 นำเข้า Excel/CSV</button>
     <button class="btn btn-teal" onclick="openHistory()">🕐 ประวัติการปริ้น</button>
+    <button class="btn btn-green" onclick="openExport()">📥 Export Excel</button>
     <button class="btn btn-primary" onclick="openAdd()">➕ เพิ่มฉลาก</button>
   </div>
 </div>
@@ -481,6 +482,32 @@ body{
 
 </div>
 
+
+<!-- EXPORT MODAL -->
+<div id="exportModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-hdr">
+      <h2>📥 Export ประวัติเป็น Excel</h2>
+      <button class="btn btn-red btn-sm" onclick="closeModal('exportModal')">✕ ปิด</button>
+    </div>
+    <div style="margin-bottom:16px">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">เลือกเดือนที่ต้องการ Export หรือ Export ทั้งหมด</p>
+      <div class="form-group">
+        <label>เดือน / ปี</label>
+        <select id="exportMonth" style="font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sarabun',sans-serif;width:100%">
+          <option value="all">📋 ทั้งหมด</option>
+        </select>
+      </div>
+      <div id="exportPreviewInfo" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;color:var(--text2);margin-top:10px;display:none">
+        <span id="exportPreviewText"></span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-green" style="flex:1;justify-content:center" onclick="doExport()">⬇️ ดาวน์โหลด Excel</button>
+      <button class="btn btn-ghost" onclick="closeModal('exportModal')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
 
 <!-- HISTORY MODAL -->
 <div id="historyModal" class="modal-overlay">
@@ -997,6 +1024,101 @@ async function clearAllHistory(){
   }catch(e){
     showToast('❌ ลบไม่สำเร็จ','#dc2626');
   }
+}
+// ============================
+
+
+// ===== EXPORT EXCEL =====
+let _exportCache = [];
+
+async function openExport(){
+  document.getElementById('exportModal').classList.add('open');
+  const sel = document.getElementById('exportMonth');
+  sel.innerHTML = '<option value="all">📋 ทั้งหมด</option>';
+  document.getElementById('exportPreviewInfo').style.display='none';
+  try{
+    _exportCache = await window._fbGetHistory();
+    // สร้าง list เดือนที่มีข้อมูล
+    const months = {};
+    _exportCache.forEach(r=>{
+      const d = new Date(r.printedAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const thMonth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+      const label = `${thMonth[d.getMonth()]} ${d.getFullYear()+543}`;
+      if(!months[key]) months[key] = {label, count:0};
+      months[key].count++;
+    });
+    Object.entries(months).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([k,v])=>{
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = `📅 ${v.label}  (${v.count} รายการ)`;
+      sel.appendChild(opt);
+    });
+    updateExportPreview();
+    sel.onchange = updateExportPreview;
+    if(!_exportCache.length) showToast('⚠️ ยังไม่มีประวัติการปริ้น','#d97706');
+  }catch(e){
+    showToast('❌ โหลดข้อมูลไม่สำเร็จ','#dc2626');
+  }
+}
+
+function getExportData(){
+  const val = document.getElementById('exportMonth').value;
+  if(val === 'all') return _exportCache;
+  const [yr, mo] = val.split('-').map(Number);
+  return _exportCache.filter(r=>{
+    const d = new Date(r.printedAt);
+    return d.getFullYear()===yr && (d.getMonth()+1)===mo;
+  });
+}
+
+function updateExportPreview(){
+  const data = getExportData();
+  const info = document.getElementById('exportPreviewInfo');
+  const txt = document.getElementById('exportPreviewText');
+  info.style.display = '';
+  txt.innerHTML = `📊 พบ <strong>${data.length} รายการ</strong> พร้อม Export`;
+}
+
+function doExport(){
+  const data = getExportData();
+  if(!data.length){ showToast('⚠️ ไม่มีข้อมูลในช่วงที่เลือก','#d97706'); return; }
+
+  const val = document.getElementById('exportMonth').value;
+  const thMonth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  let filename;
+  if(val==='all'){
+    filename = `CFM_ประวัติปริ้น_ทั้งหมด_${data.length}รายการ.xlsx`;
+  } else {
+    const [yr,mo] = val.split('-').map(Number);
+    filename = `CFM_ประวัติปริ้น_${thMonth[mo-1]}${yr+543}.xlsx`;
+  }
+
+  // สร้าง worksheet
+  const rows = data.map((r,i)=>{
+    const d = new Date(r.printedAt);
+    const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return {
+      '#': i+1,
+      'วันที่ปริ้น': dateStr,
+      'เลขออเดอร์': r.order||'',
+      'ชื่อผู้รับ': r.name||'',
+      'เบอร์โทร': r.phone||'',
+      'ที่อยู่': r.addr||'',
+      'หมายเหตุ': r.note||''
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // ปรับความกว้างคอลัมน์
+  ws['!cols'] = [
+    {wch:5},{wch:22},{wch:20},{wch:22},{wch:14},{wch:50},{wch:20}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'ประวัติปริ้น');
+  XLSX.writeFile(wb, filename);
+  showToast(`✅ Export ${data.length} รายการแล้ว`,'#059669');
+  closeModal('exportModal');
 }
 // ============================
 
