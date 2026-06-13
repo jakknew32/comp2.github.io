@@ -29,17 +29,17 @@
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  /* คอนโซลแดชบอร์ดสไตล์เครื่องมือโปร (B2B Slate Tech) */
-  --ink:       #0F172A;
-  --ink-soft:  #334155;
-  --muted:     #64748B;
-  --border:    #E2E8F0;
-  --border-soft:#F1F5F9;
+  /* Core palette */
+  --ink:       #0D1B2A;
+  --ink-soft:  #2C3E50;
+  --muted:     #6B7C93;
+  --border:    #DDE3EC;
+  --border-soft:#EEF1F6;
   --surface:   #FFFFFF;
-  --ground:    #F8FAFC;
-  --ground2:   #E2E8F0;
+  --ground:    #F4F6FA;
+  --ground2:   #EDF0F7;
 
-  /* สีระบบดั้งเดิม */
+  /* Accents */
   --amber:     #F59E0B;
   --amber-bg:  #FFFBEB;
   --amber-border:#FDE68A;
@@ -50,15 +50,19 @@
   --blue:      #3B82F6;
   --teal:      #0D9488;
 
+  /* Typography */
   --font-sans: 'IBM Plex Sans Thai', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 12px;
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
 
-  --sh-sm: 0 1px 3px rgba(15,23,42,.06);
-  --sh-md: 0 4px 6px -1px rgba(15,23,42,.1);
+  /* Shadow */
+  --sh-sm: 0 1px 3px rgba(13,27,42,.08), 0 1px 2px rgba(13,27,42,.05);
+  --sh-md: 0 4px 12px rgba(13,27,42,.08), 0 2px 6px rgba(13,27,42,.05);
+  --sh-lg: 0 16px 40px rgba(13,27,42,.12), 0 4px 12px rgba(13,27,42,.06);
 }
 
 body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5}
@@ -72,7 +76,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 }
 .topbar-logo{display:flex;align-items:center;gap:10px}
 .topbar-logo-mark{
-  width:32px;height:32px;background:var(--amber);border-radius:6px;
+  width:32px;height:32px;background:var(--amber);border-radius:7px;
   display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
 }
 .topbar-brand{font-size:15px;font-weight:700;letter-spacing:.2px}
@@ -85,24 +89,24 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   display:inline-flex;align-items:center;gap:6px;
   padding:7px 14px;border:none;border-radius:var(--r-sm);
   font-size:12px;font-weight:600;cursor:pointer;
-  transition:all .12s ease;font-family:var(--font-sans);
+  transition:all .15s;font-family:var(--font-sans);
   letter-spacing:.2px;white-space:nowrap;
 }
-.btn:hover{filter:brightness(1.06);transform:translateY(-0.5px)}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .btn:active{transform:translateY(0);filter:brightness(.96)}
-.btn-ink{background:var(--ink-soft);color:white}
+.btn-ink{background:var(--ink);color:white}
 .btn-amber{background:var(--amber);color:var(--ink)}
 .btn-green{background:var(--green);color:white}
 .btn-red{background:var(--red);color:white}
 .btn-teal{background:var(--teal);color:white}
 .btn-blue{background:var(--blue);color:white}
-.btn-ghost{background:transparent;color:white;border:1px solid rgba(255,255,255,.2)}
-.btn-ghost:hover{background:rgba(255,255,255,.08)}
-.btn-outline{background:var(--surface);color:var(--ink-soft);border:1px solid var(--border)}
+.btn-ghost{background:transparent;color:white;border:1px solid rgba(255,255,255,.25)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.btn-outline{background:var(--surface);color:var(--ink-soft);border:1.5px solid var(--border)}
 .btn-outline:hover{border-color:var(--amber);color:var(--ink)}
 .btn-sm{padding:5px 10px;font-size:11px}
-.btn-xs{padding:3px 8px;font-size:11px;border-radius:3px}
-.btn-icon{width:30px;height:30px;padding:0;justify-content:center;font-size:14px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:4px}
+.btn-icon{width:30px;height:30px;padding:0;justify-content:center;font-size:14px;border-radius:var(--r-sm)}
 
 /* ── LAYOUT ── */
 .workspace{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 56px)}
@@ -168,7 +172,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 .lcard-top{display:flex;align-items:center;gap:6px;margin-bottom:3px}
 .lcard-num{
   font-size:10px;font-weight:700;font-family:var(--font-mono);
-  background:var(--ink-soft);color:white;padding:1px 6px;border-radius:3px;
+  background:var(--ink);color:white;padding:1px 6px;border-radius:3px;
 }
 .lcard-name{font-size:13px;font-weight:600;color:var(--ink);flex:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -230,6 +234,18 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   box-shadow:0 2px 16px rgba(13,27,42,.14),0 0 0 1px rgba(13,27,42,.08);
   border-radius:3px;
 }
+/* diagonal stripe watermark — signature element */
+.sl-wm{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 12px,
+    rgba(245,158,11,.04) 12px,
+    rgba(245,158,11,.04) 13px
+  );
+  pointer-events:none;z-index:0;
+}
 .sl-z{position:relative;z-index:1}
 .sl-hdr{
   text-align:center;padding:0 4mm 3px 4mm;
@@ -283,16 +299,15 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 /* ── MODAL ── */
 .modal-overlay{
   position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(13,27,42,.4);backdrop-filter:blur(4px);
+  background:rgba(13,27,42,.6);backdrop-filter:blur(6px);
   display:none;justify-content:center;align-items:center;
   z-index:1000;padding:20px;
 }
 .modal-overlay.open{display:flex}
 .modal-box{
-  background:var(--surface);border-radius:var(--r-lg);padding:24px;
+  background:var(--surface);border-radius:var(--r-lg);padding:28px;
   width:100%;max-width:500px;max-height:90vh;overflow-y:auto;
-  box-shadow:0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-  border:1px solid var(--border);
+  box-shadow:var(--sh-lg);border:1px solid var(--border);
 }
 .modal-box.wide{max-width:680px}
 .modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border-soft)}
@@ -312,6 +327,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 }
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{
   outline:none;border-color:var(--amber);
+  box-shadow:0 0 0 3px rgba(245,158,11,.12);
 }
 .form-group textarea{resize:vertical;min-height:90px;line-height:1.6}
 
@@ -326,7 +342,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 .import-zone p{font-size:12px;color:var(--muted)}
 
 .import-table{width:100%;border-collapse:collapse;font-size:12px}
-.import-table th{background:var(--ink-soft);color:white;padding:7px 10px;text-align:left;font-weight:600;font-size:11px}
+.import-table th{background:var(--ink);color:white;padding:7px 10px;text-align:left;font-weight:600;font-size:11px}
 .import-table td{padding:6px 10px;border-bottom:1px solid var(--border-soft)}
 .import-table tr:hover td{background:var(--ground)}
 
@@ -338,8 +354,8 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 }
 .hcard:hover{border-color:var(--amber);background:var(--amber-bg)}
 .hcard-icon{
-  width:36px;height:36px;background:var(--ink-soft);border-radius:var(--r-sm);
-  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:white;
+  width:36px;height:36px;background:var(--ink);border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
 }
 .hcard-body{flex:1;min-width:0}
 .hcard-order{font-size:10px;font-weight:700;font-family:var(--font-mono);color:var(--amber);margin-bottom:2px}
@@ -365,7 +381,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 #toast{
   position:fixed;bottom:24px;right:24px;padding:11px 18px;
   border-radius:var(--r-sm);color:white;font-weight:600;font-size:13px;
-  z-index:9999;display:none;box-shadow:var(--sh-md);
+  z-index:9999;display:none;box-shadow:var(--sh-lg);
   animation:slideUp .25s ease;max-width:300px;
   font-family:var(--font-sans);
 }
@@ -378,7 +394,11 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 .empty-state{text-align:center;padding:40px 16px;color:var(--muted)}
 .empty-state .ei{font-size:40px;margin-bottom:10px}
 .empty-state p{font-size:13px;line-height:1.8}
-.labels-grid {display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:var(--font-mono)}
+.tag-amber{background:var(--amber-bg);color:#7C4A00;border:1px solid var(--amber-border)}
+.tag-green{background:var(--green-bg);color:#065F46;border:1px solid #A7F3D0}
+
+.labels-grid{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-content:flex-start}
 
 /* ── PRINT ── */
 @media print{
@@ -537,6 +557,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
         <button class="btn btn-amber" style="flex:1;justify-content:center;font-size:13px" onclick="printSelected()">
           🖨️ พิมพ์ที่เลือก (<span id="printCount">0</span>)
         </button>
+        <button class="btn btn-teal btn-sm" onclick="savePDFSelected()">💾 PDF</button>
         <button class="btn btn-ink btn-sm" onclick="printAll()">📄 ทั้งหมด</button>
         <button class="btn btn-red btn-sm btn-icon" onclick="clearAll()" title="ล้างทั้งหมด">🗑️</button>
       </div>
@@ -681,15 +702,15 @@ function toggleSelectAll(checked){
 
 function updateSelectUI(){
   const sel=labels.filter(l=>l.selected).length;
-  const printCountEl = document.getElementById('printCount');
-  if(printCountEl) printCountEl.textContent=sel;
+  document.getElementById('printCount').textContent=sel;
   document.getElementById('statSelNum').textContent=sel;
   document.getElementById('statTotalNum').textContent=labels.length;
+  // badge removed in new design
   document.getElementById('deleteSelBtn').style.display=sel>0?'':'none';
   const all=getFiltered();
   document.getElementById('selectAllCb').checked=all.length>0 && all.every(l=>l.selected);
   const toShow=labels.filter(l=>l.selected);
-  document.getElementById('previewInfo').textContent=toShow.length?`${toShow.length} ใบ`:'';
+  const pi=document.getElementById('previewInfo'); if(pi) pi.textContent=toShow.length?`${toShow.length} ใบ`:'';
 }
 
 function getFiltered(){
@@ -736,7 +757,7 @@ function renderList(){
   });
 }
 
-// ===== RENDER PREVIEW (ORIGINAL LABEL FORMATTING - NO WATERMARK) =====
+// ===== RENDER PREVIEW =====
 function makeLabelHTML(lb, num){
   const theme=document.getElementById('labelTheme').value;
   const fs=document.getElementById('fontSizePref').value;
@@ -744,15 +765,16 @@ function makeLabelHTML(lb, num){
   const fullAddr = lb.addr || '';
   const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}` : fullAddr;
   const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}` : (lb.note?`หมายเหตุ: ${esc(lb.note)}`:'');
-  const noteHTML = orderLine ? `<div class="sl-z" style="text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;">📝 ${orderLine}</div>` : '';
+  const noteHTML = orderLine ? `<div class="sl-z sl-note-box">📝 ${orderLine}</div>` : '';
 
   return `<div class="shipping-label">
+    <div class="sl-wm"></div>
     <div class="sl-z" style="position:absolute;top:3mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;">ใบที่ ${num}</div>
-    <div class="sl-hdr sl-z"><h2>Chiangmai Freshmilk</h2></div>
+    <div class="sl-z sl-hdr"><h2>Chiangmai Freshmilk</h2></div>
     <div class="sl-z sl-line"></div>
     <div class="sl-z sl-sender">${esc(SENDER)}</div>
     <div class="sl-z sl-line-dash"></div>
-    <div class="sl-z sl-recv-box" style="background:${recvBg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+    <div class="sl-z sl-recv-box" style="background:${recvBg}!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <span class="sl-recv-title">ผู้รับ (TO):</span>
     </div>
     <div class="sl-z sl-recv-text" style="font-size:${fs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
@@ -770,6 +792,7 @@ function renderPreview(){
   const toShow = labels.filter(l=>l.selected);
   
   if(!toShow.length){
+    const allSel = labels.filter(l=>l.selected);
     if(labels.length===0){
       container.innerHTML=`<div class="empty-pane"><div class="empty-pane-icon">📦</div><p>เพิ่มฉลากเพื่อดูตัวอย่าง</p></div>`;
     } else {
@@ -779,13 +802,9 @@ function renderPreview(){
   }
 
   if(mode==='grid'){
-    container.innerHTML=`<div class="labels-grid">${toShow.map((lb,i)=>makeLabelHTML(lb,i+1)).join('')}</div>`;
+    container.innerHTML=toShow.map((lb,i)=>makeLabelHTML(lb,i+1)).join('');
   } else {
-    let html=toShow.map((lb,i)=>`<div style="text-align:center;margin-bottom:20px">
-      <p style="font-size:11px;color:#888;margin-bottom:8px">ฉลากที่ ${i+1} / ${toShow.length}</p>
-      ${makeLabelHTML(lb,i+1)}
-    </div>`).join('');
-    container.innerHTML=html;
+    container.innerHTML=toShow.map((lb,i)=>`<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%"><p style="font-size:10px;font-family:var(--font-mono);color:var(--muted)">${i+1} / ${toShow.length}</p>${makeLabelHTML(lb,i+1)}</div>`).join('');
   }
 }
 
@@ -802,7 +821,7 @@ function buildPrintDoc(list){
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
       <div style="position:absolute;top:2mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit','Sarabun',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
-      <div style="position:relative;z-index:1;text-align:center;padding:0 5mm 4px 5mm;"><h2 style="font-size:24px;font-weight:800;margin:0;color:#000;letter-spacing:-.5px;font-family:'Kanit','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
+      <div style="position:relative;z-index:1;text-align:center;padding:5px 4mm 3px;background:#0D1B2A;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><h2 style="font-size:18px;font-weight:700;margin:0;color:#F59E0B;letter-spacing:.3px;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
       <div style="position:relative;z-index:1;border-top:1.5px solid #333;margin:0"></div>
       <div style="position:relative;z-index:1;text-align:center;font-size:10px;line-height:1.3;color:#444;padding:3px 4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(SENDER)}</div>
       <div style="position:relative;z-index:1;border-top:1.5px dashed #999;margin:0 0 6px 0;"></div>
@@ -819,12 +838,12 @@ function buildPrintDoc(list){
   }).join('');
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
     *{margin:0;padding:0;box-sizing:border-box}
     @page{size:100mm 150mm;margin:0}
-    html,body{margin:0;padding:0;background:white;font-family:'Kanit','Sarabun','Tahoma',sans-serif}
-    .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:3mm 0 0 0;display:flex;flex-direction:column;font-family:'Kanit','Sarabun','Tahoma',sans-serif;box-sizing:border-box;position:relative;overflow:hidden;}
+    html,body{margin:0;padding:0;background:white;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif}
+    .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:3mm 0 0 0;display:flex;flex-direction:column;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;box-sizing:border-box;position:relative;overflow:hidden;}
     </style>
     </head><body>${labels_html}</body></html>`;
 }
@@ -848,12 +867,56 @@ function doPrint(list){
   w.document.close();
   w.onload=()=>{ setTimeout(()=>{ w.focus(); w.print(); w.close(); },400); };
   showToast(`🖨️ เปิดหน้าพิมพ์ ${list.length} ใบ`);
+  // บันทึกลง Firebase
   if(window._fbSavePrintHistory){
     window._fbSavePrintHistory(list).then(ok=>{
       if(ok) showToast(`💾 บันทึกประวัติ ${list.length} รายการแล้ว`,'#0d9488',2500);
     });
   }
 }
+
+
+// ===== SAVE PDF =====
+function savePDFSelected(){
+  const sel=labels.filter(l=>l.selected);
+  if(!sel.length){ showToast('⚠️ กรุณาเลือกฉลากก่อน','#d97706'); return; }
+  doSavePDF(sel);
+}
+
+function doSavePDF(list){
+  const html = buildPrintDoc(list);
+  // Wrap with PDF-save instruction page
+  const pdfHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      @page{size:100mm 150mm;margin:0}
+      html,body{background:white;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif}
+      .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:3mm 0 0 0;display:flex;flex-direction:column;box-sizing:border-box;position:relative;overflow:hidden;}
+    </style>
+    <script>
+      window.onload = function(){
+        // Auto-trigger print dialog — user picks "Save as PDF"
+        setTimeout(function(){
+          window.print();
+        }, 600);
+      }
+    <\/script>
+    </head>
+    <body>${html.split('<body>')[1].split('</body>')[0]}</body></html>`;
+
+  const blob = new Blob([pdfHtml], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const w    = window.open(url,'_blank','width=500,height=400');
+  if(!w){ showToast('❌ ป้องกัน popup — กรุณาอนุญาตก่อน','#dc2626',4000); return; }
+  const ts2  = ()=>{ const n=new Date(); return `${n.getDate()}${String(n.getMonth()+1).padStart(2,'0')}${n.getFullYear()+543}`; };
+  showToast(`📄 เปิดหน้า PDF ${list.length} ใบ — เลือก "Save as PDF" ในไดอะล็อก`,'#0d9488',5000);
+  // Firebase save
+  if(window._fbSavePrintHistory){
+    window._fbSavePrintHistory(list);
+  }
+}
+// ========================
 
 // ===== IMPORT =====
 function openImport(){
@@ -875,6 +938,7 @@ function handleDrop(e){
 }
 function handleFile(e){ const file=e.target.files[0]; if(file) processFile(file); }
 
+// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, AX=49, AY=50, BA=52
 const COL_ORDER=2, COL_NOTE=18, COL_NAME=49, COL_PHONE=50, COL_ADDR=52;
 
 function normalizePhone(p){
@@ -894,8 +958,9 @@ function processFile(file){
     reader.onload=e=>{
       const wb=XLSX.read(e.target.result,{type:'binary'});
       const ws=wb.Sheets[wb.SheetNames[0]];
+      // อ่านเป็น array of arrays เริ่มแถว 2 (index 1)
       const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      parseRowsFixed(data.slice(1));
+      parseRowsFixed(data.slice(1)); // ข้ามแถว 1 (header)
     };
     reader.readAsBinaryString(file);
   }
@@ -904,6 +969,7 @@ function processFile(file){
 function parseCSVFixed(text){
   const lines=text.split('\n');
   if(lines.length<2) return;
+  // ข้ามแถวแรก (header) เริ่มจากแถวที่ 2
   const rows=lines.slice(1).map(line=>{
     const vals=[]; let cur='',inQ=false;
     for(let c of line+','){
@@ -961,6 +1027,7 @@ function confirmImport(){
 function esc(str){
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
 
 // ===== FIREBASE HISTORY =====
 let _historyCache = [];
@@ -1035,6 +1102,7 @@ function reprintFromHistory(r){
 }
 
 function loadFromHistory(r){
+  // โหลดเข้ารายการปัจจุบันเพื่อแก้ไข/ปริ้น
   const lb={id:uid(),name:r.name||'',phone:r.phone||'',addr:r.addr||'',order:r.order||'',note:r.note||'',selected:true,createdAt:new Date().toISOString()};
   labels.push(lb);
   save(); renderList(); renderPreview();
@@ -1069,6 +1137,8 @@ async function clearAllHistory(){
     showToast('❌ ลบไม่สำเร็จ','#dc2626');
   }
 }
+// ============================
+
 
 // ===== EXPORT EXCEL =====
 let _exportCache = [];
@@ -1080,6 +1150,7 @@ async function openExport(){
   document.getElementById('exportPreviewInfo').style.display='none';
   try{
     _exportCache = await window._fbGetHistory();
+    // สร้าง list เดือนที่มีข้อมูล
     const months = {};
     _exportCache.forEach(r=>{
       const d = new Date(r.printedAt);
@@ -1135,6 +1206,7 @@ function doExport(){
     filename = `CFM_ประวัติปริ้น_${thMonth[mo-1]}${yr+543}.xlsx`;
   }
 
+  // สร้าง worksheet
   const rows = data.map((r,i)=>{
     const d = new Date(r.printedAt);
     const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
@@ -1150,6 +1222,7 @@ function doExport(){
   });
 
   const ws = XLSX.utils.json_to_sheet(rows);
+  // ปรับความกว้างคอลัมน์
   ws['!cols'] = [
     {wch:5},{wch:22},{wch:20},{wch:22},{wch:14},{wch:50},{wch:20}
   ];
@@ -1159,6 +1232,7 @@ function doExport(){
   showToast(`✅ Export ${data.length} รายการแล้ว`,'#059669');
   closeModal('exportModal');
 }
+// ============================
 
 // ===== INIT =====
 renderList();
