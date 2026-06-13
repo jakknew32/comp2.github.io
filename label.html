@@ -885,23 +885,41 @@ function savePDFSelected(){
   doSavePDF(sel);
 }
 
+// pre-fetch image to base64 (bypass CORS for html2canvas)
+async function imgToBase64(url){
+  try {
+    const res = await fetch(url, {mode:'cors'});
+    if(!res.ok) throw new Error('fetch fail');
+    const blob = await res.blob();
+    return await new Promise(res2 => {
+      const r = new FileReader();
+      r.onload = e => res2(e.target.result);
+      r.readAsDataURL(blob);
+    });
+  } catch(e) {
+    return null; // ไม่มีรูปดีกว่า error
+  }
+}
+
 async function doSavePDF(list){
+  showToast(`⏳ กำลังโหลดรูป...`,'#0d9488',60000);
+
+  // pre-fetch รูปทั้งหมดเป็น base64
+  const DDT_URL = 'https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true';
+  const [ddt64] = await Promise.all([imgToBase64(DDT_URL)]);
+
   showToast(`⏳ กำลังสร้าง PDF ${list.length} ใบ...`,'#0d9488',60000);
 
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:[100,150] });
 
-  // สร้าง iframe ซ่อน — inject CSS ทั้งหมดจากหน้าหลักเข้าไป
+  // สร้าง iframe ซ่อน inject CSS ทั้งหมด
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:378px;height:567px;border:none;';
   document.body.appendChild(iframe);
-
-  // รอ iframe โหลด
   await new Promise(res => { iframe.onload = res; iframe.src = 'about:blank'; });
 
   const idoc = iframe.contentDocument;
-
-  // คัดลอก CSS ทั้งหมดจากหน้าหลัก
   const styles = [...document.querySelectorAll('style,link[rel="stylesheet"]')]
     .map(el => el.outerHTML).join('\n');
 
@@ -909,36 +927,56 @@ async function doSavePDF(list){
   idoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">${styles}</head>
     <body style="margin:0;padding:0;background:white;"></body></html>`);
   idoc.close();
-
-  // รอ font โหลด
-  await new Promise(res => setTimeout(res, 800));
+  await new Promise(res => setTimeout(res, 900));
 
   for(let i=0; i<list.length; i++){
     const lb = list[i];
 
-    // inject label HTML
+    // สร้าง label HTML แล้วแทนที่รูปด้วย base64
+    let labelHTML = makeLabelHTML(lb, i+1);
+
+    // แทนที่ footer img ด้วย base64
+    if(ddt64){
+      labelHTML = labelHTML.replace(
+        /src="https:\/\/github\.com\/jakknew32[^"]*"/g,
+        `src="${ddt64}"`
+      );
+    } else {
+      // ถ้าโหลดไม่ได้ ซ่อนรูปไปเลย
+      labelHTML = labelHTML.replace(
+        /<img[^>]*jakknew32[^>]*>/g,
+        '<div style="height:8mm;background:#f0f0f0;"></div>'
+      );
+    }
+
+    // ลบ sl-wm img ที่โหลดไม่ได้ (ใช้ CSS แทนอยู่แล้ว)
+    labelHTML = labelHTML.replace(/<img[^>]*img2\.pic\.in\.th[^>]*>/g, '');
+
     const labelWrap = idoc.createElement('div');
     labelWrap.style.cssText = 'width:378px;height:567px;overflow:hidden;';
-    labelWrap.innerHTML = makeLabelHTML(lb, i+1);
+    labelWrap.innerHTML = labelHTML;
+
     const labelEl = labelWrap.firstElementChild;
-    labelEl.style.width  = '378px';
-    labelEl.style.height = '567px';
-    labelEl.style.boxShadow = 'none';
-    labelEl.style.borderRadius = '0';
-    labelEl.style.border = 'none';
+    if(labelEl){
+      labelEl.style.width  = '378px';
+      labelEl.style.height = '567px';
+      labelEl.style.boxShadow = 'none';
+      labelEl.style.borderRadius = '0';
+      labelEl.style.border = 'none';
+    }
 
     idoc.body.innerHTML = '';
     idoc.body.appendChild(labelWrap);
 
-    // รอ render
-    await new Promise(res => setTimeout(res, 150));
+    // รอ img base64 render
+    await new Promise(res => setTimeout(res, 200));
 
-    showToast(`⏳ ${i+1}/${list.length} กำลังสร้าง PDF...`,'#0d9488',60000);
+    showToast(`⏳ ${i+1}/${list.length} กำลัง render...`,'#0d9488',60000);
 
     const canvas = await html2canvas(labelWrap, {
       scale: 3,
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       backgroundColor: '#ffffff',
       logging: false,
       width: 378,
