@@ -886,53 +886,79 @@ function savePDFSelected(){
 }
 
 async function doSavePDF(list){
-  showToast('⏳ กำลังสร้าง PDF...','#0d9488',30000);
+  showToast(`⏳ กำลังสร้าง PDF ${list.length} ใบ...`,'#0d9488',60000);
 
-  // สร้าง label ทีละใบ render บน off-screen div
   const { jsPDF } = window.jspdf;
-  // 100mm x 150mm
   const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:[100,150] });
 
-  // temp container
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:377px;'; // 100mm @ 96dpi ≈ 377px
-  document.body.appendChild(wrap);
+  // สร้าง iframe ซ่อน — inject CSS ทั้งหมดจากหน้าหลักเข้าไป
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:378px;height:567px;border:none;';
+  document.body.appendChild(iframe);
+
+  // รอ iframe โหลด
+  await new Promise(res => { iframe.onload = res; iframe.src = 'about:blank'; });
+
+  const idoc = iframe.contentDocument;
+
+  // คัดลอก CSS ทั้งหมดจากหน้าหลัก
+  const styles = [...document.querySelectorAll('style,link[rel="stylesheet"]')]
+    .map(el => el.outerHTML).join('\n');
+
+  idoc.open();
+  idoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">${styles}</head>
+    <body style="margin:0;padding:0;background:white;"></body></html>`);
+  idoc.close();
+
+  // รอ font โหลด
+  await new Promise(res => setTimeout(res, 800));
 
   for(let i=0; i<list.length; i++){
     const lb = list[i];
-    wrap.innerHTML = makeLabelHTML(lb, i+1);
-    const el = wrap.firstElementChild;
-    // ปรับขนาด render ให้คมชัด
-    el.style.width  = '377px';
-    el.style.height = '566px'; // 150mm @ 96dpi
-    el.style.boxShadow = 'none';
-    el.style.borderRadius = '0';
 
-    showToast(`⏳ กำลังสร้าง PDF ใบที่ ${i+1}/${list.length}...`,'#0d9488',30000);
+    // inject label HTML
+    const labelWrap = idoc.createElement('div');
+    labelWrap.style.cssText = 'width:378px;height:567px;overflow:hidden;';
+    labelWrap.innerHTML = makeLabelHTML(lb, i+1);
+    const labelEl = labelWrap.firstElementChild;
+    labelEl.style.width  = '378px';
+    labelEl.style.height = '567px';
+    labelEl.style.boxShadow = 'none';
+    labelEl.style.borderRadius = '0';
+    labelEl.style.border = 'none';
 
-    const canvas = await html2canvas(el, {
-      scale: 3,           // 3x = คมชัด
+    idoc.body.innerHTML = '';
+    idoc.body.appendChild(labelWrap);
+
+    // รอ render
+    await new Promise(res => setTimeout(res, 150));
+
+    showToast(`⏳ ${i+1}/${list.length} กำลังสร้าง PDF...`,'#0d9488',60000);
+
+    const canvas = await html2canvas(labelWrap, {
+      scale: 3,
       useCORS: true,
+      allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      width: 377,
-      height: 566,
+      width: 378,
+      height: 567,
+      windowWidth: 378,
+      windowHeight: 567,
     });
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    if(i > 0) pdf.addPage([100,150], 'portrait');
+    const imgData = canvas.toDataURL('image/jpeg', 0.97);
+    if(i > 0) pdf.addPage([100, 150], 'portrait');
     pdf.addImage(imgData, 'JPEG', 0, 0, 100, 150);
   }
 
-  document.body.removeChild(wrap);
+  document.body.removeChild(iframe);
 
-  // filename with date
-  const n=new Date();
+  const n = new Date();
   const fname = `CFM_Labels_${n.getDate()}${String(n.getMonth()+1).padStart(2,'0')}${n.getFullYear()+543}_${list.length}ใบ.pdf`;
   pdf.save(fname);
 
-  showToast(`✅ ดาวน์โหลด PDF ${list.length} ใบแล้ว — ${fname}`,'#10B981',5000);
-
+  showToast(`✅ บันทึก PDF ${list.length} ใบ → ${fname}`,'#10B981',5000);
   if(window._fbSavePrintHistory) window._fbSavePrintHistory(list);
 }
 // ========================
