@@ -6,6 +6,8 @@
 <title>Label Studio — Chiangmai Freshmilk</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, push, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -876,45 +878,62 @@ function doPrint(list){
 }
 
 
-// ===== SAVE PDF =====
+// ===== SAVE PDF (direct, no print dialog) =====
 function savePDFSelected(){
   const sel=labels.filter(l=>l.selected);
   if(!sel.length){ showToast('⚠️ กรุณาเลือกฉลากก่อน','#d97706'); return; }
   doSavePDF(sel);
 }
 
-function doSavePDF(list){
-  const html = buildPrintDoc(list);
-  // Wrap with PDF-save instruction page
-  const pdfHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-      *{margin:0;padding:0;box-sizing:border-box}
-      @page{size:100mm 150mm;margin:0}
-      html,body{background:white;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif}
-      .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:3mm 0 0 0;display:flex;flex-direction:column;box-sizing:border-box;position:relative;overflow:hidden;}
-    </style>
-    <script>
-      window.onload = function(){
-        // Auto-trigger print dialog — user picks "Save as PDF"
-        setTimeout(function(){
-          window.print();
-        }, 600);
-      }
-    <\/script>
-    </head>
-    <body>${html.split('<body>')[1].split('</body>')[0]}</body></html>`;
+async function doSavePDF(list){
+  showToast('⏳ กำลังสร้าง PDF...','#0d9488',30000);
 
-  const blob = new Blob([pdfHtml], {type:'text/html'});
-  const url  = URL.createObjectURL(blob);
-  const w    = window.open(url,'_blank','width=500,height=400');
-  if(!w){ showToast('❌ ป้องกัน popup — กรุณาอนุญาตก่อน','#dc2626',4000); return; }
-  const ts2  = ()=>{ const n=new Date(); return `${n.getDate()}${String(n.getMonth()+1).padStart(2,'0')}${n.getFullYear()+543}`; };
-  showToast(`📄 เปิดหน้า PDF ${list.length} ใบ — เลือก "Save as PDF" ในไดอะล็อก`,'#0d9488',5000);
-  // Firebase save
-  if(window._fbSavePrintHistory){
-    window._fbSavePrintHistory(list);
+  // สร้าง label ทีละใบ render บน off-screen div
+  const { jsPDF } = window.jspdf;
+  // 100mm x 150mm
+  const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:[100,150] });
+
+  // temp container
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:377px;'; // 100mm @ 96dpi ≈ 377px
+  document.body.appendChild(wrap);
+
+  for(let i=0; i<list.length; i++){
+    const lb = list[i];
+    wrap.innerHTML = makeLabelHTML(lb, i+1);
+    const el = wrap.firstElementChild;
+    // ปรับขนาด render ให้คมชัด
+    el.style.width  = '377px';
+    el.style.height = '566px'; // 150mm @ 96dpi
+    el.style.boxShadow = 'none';
+    el.style.borderRadius = '0';
+
+    showToast(`⏳ กำลังสร้าง PDF ใบที่ ${i+1}/${list.length}...`,'#0d9488',30000);
+
+    const canvas = await html2canvas(el, {
+      scale: 3,           // 3x = คมชัด
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: 377,
+      height: 566,
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    if(i > 0) pdf.addPage([100,150], 'portrait');
+    pdf.addImage(imgData, 'JPEG', 0, 0, 100, 150);
   }
+
+  document.body.removeChild(wrap);
+
+  // filename with date
+  const n=new Date();
+  const fname = `CFM_Labels_${n.getDate()}${String(n.getMonth()+1).padStart(2,'0')}${n.getFullYear()+543}_${list.length}ใบ.pdf`;
+  pdf.save(fname);
+
+  showToast(`✅ ดาวน์โหลด PDF ${list.length} ใบแล้ว — ${fname}`,'#10B981',5000);
+
+  if(window._fbSavePrintHistory) window._fbSavePrintHistory(list);
 }
 // ========================
 
