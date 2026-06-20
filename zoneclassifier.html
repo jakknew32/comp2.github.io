@@ -189,7 +189,13 @@
       <option value="">ทั้งหมด</option>
     </select>
     <label>ค้นหา:</label>
-    <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
+      <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
+      <label>หมุดตำแหน่ง:</label>
+      <input type="text" id="marker-input" placeholder="พิมพ์ที่อยู่หรือใส่ lat,lng" style="min-width:220px">
+      <label>รัศมี (กม.):</label>
+      <input type="number" id="radius-input" value="15" min="1" max="200" style="width:72px">
+      <button class="topbar-btn btn-outline" id="btn-geosearch" onclick="startGeoSearch()">ค้นหาในรัศมี</button>
+      <span id="geo-status" style="font-size:12px;color:var(--muted);margin-left:6px"></span>
     <span id="result-count" class="badge-count">0 รายการ</span>
   </div>
 
@@ -265,6 +271,58 @@ function formatPhone(raw) {
 // ---- GLOBALS ----
 let allOrders = [];
 let filteredOrders = [];
+// geocode cache (address -> {lat,lon}) stored in localStorage to avoid repeated lookups
+const geocodeCacheKey = 'cfm_geocode_cache_v1';
+let geocodeCache = {};
+try { geocodeCache = JSON.parse(localStorage.getItem(geocodeCacheKey) || '{}'); } catch(e) { geocodeCache = {}; }
+
+function saveGeocodeCache() { try { localStorage.setItem(geocodeCacheKey, JSON.stringify(geocodeCache)); } catch(e){} }
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function geocodeAddress(q){
+  if (!q) return null;
+  const key = String(q).trim();
+  if (geocodeCache[key]) return geocodeCache[key];
+  // Use Nominatim (OpenStreetMap) public API — respect rate limits (1 req/sec)
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(key)}&limit=1&accept-language=th`;
+  try{
+    const res = await fetch(url, { headers:{'User-Agent':'CFM-Zone-Classifer/1.0 (script)'} });
+    if (!res.ok) return null;
+    const j = await res.json();
+    if (j && j.length>0){
+      const lat = parseFloat(j[0].lat);
+      const lon = parseFloat(j[0].lon);
+      geocodeCache[key] = {lat,lon}; saveGeocodeCache();
+      return geocodeCache[key];
+    }
+  }catch(e){ console.error('geocode error', e); }
+  return null;
+}
+
+async function ensureOrderGeocoded(o){
+  if (o.lat && o.lon) return {lat:o.lat,lon:o.lon};
+  // try province+district+address combinations for better results
+  const candidates = [o.address, `${o.address} ${o.district} ${o.province}`, `${o.district} ${o.province}`, o.province];
+  for (const c of candidates){
+    if (!c) continue;
+    const g = await geocodeAddress(c);
+    if (g){ o.lat = g.lat; o.lon = g.lon; return g; }
+    // be polite to Nominatim
+    await sleep(1100);
+  }
+  return null;
+}
+
+function haversineKm(lat1, lon1, lat2, lon2){
+  const toRad = v => v*Math.PI/180;
+  const R = 6371; // km
+  const dLat = toRad(lat2-lat1);
+  const dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R*c;
+}
 
 // ---- DRAG & DROP ----
 function onDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag-over'); }
@@ -386,6 +444,55 @@ function applyFilter() {
   document.getElementById('result-count').textContent = `${filteredOrders.length} รายการ`;
   renderStats();
   renderResults();
+}
+
+// ---- GEO-SEARCH ----
+async function startGeoSearch(){
+  const markerText = document.getElementById('marker-input').value.trim();
+  const radiusKm = Number(document.getElementById('radius-input').value) || 15;
+  const statusEl = document.getElementById('geo-status');
+  if (!markerText){ statusEl.textContent = 'กรุณาใส่ที่อยู่หรือ lat,lng'; return; }
+
+  statusEl.textContent = 'กำลังค้นหาตำแหน่งหมุด...';
+  let marker = null;
+  // parse lat,lng if provided
+  const latlonMatch = markerText.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+  if (latlonMatch){ marker = {lat:parseFloat(latlonMatch[1]), lon:parseFloat(latlonMatch[2])}; }
+  else {
+    marker = await geocodeAddress(markerText);
+    await sleep(1100);
+  }
+
+  if (!marker){ statusEl.textContent = 'ไม่พบตำแหน่งหมุด'; return; }
+  statusEl.textContent = `หมุด: ${marker.lat.toFixed(5)}, ${marker.lon.toFixed(5)} — กำลังประมวลผล...`;
+
+  // operate on current filteredOrders snapshot
+  const list = filteredOrders.slice();
+  if (list.length === 0){ statusEl.textContent = 'ไม่มีรายการในผลลัพธ์ที่เลือก'; return; }
+
+  let processed = 0;
+  for (const o of list){
+    // skip if already have coords
+    if (!o.lat || !o.lon){
+      await ensureOrderGeocoded(o);
+    }
+    if (o.lat && o.lon){
+      o._distance = haversineKm(marker.lat, marker.lon, Number(o.lat), Number(o.lon));
+    } else {
+      o._distance = Infinity;
+    }
+    processed++; statusEl.textContent = `ประมวลผล ${processed}/${list.length}...`;
+    // be polite between geocode calls (only needed when we actually called geocode)
+    await sleep(200);
+  }
+
+  // filter by radius
+  const kept = list.filter(o=>isFinite(o._distance) && o._distance <= radiusKm).sort((a,b)=>a._distance - b._distance);
+  filteredOrders = kept;
+  document.getElementById('result-count').textContent = `${filteredOrders.length} รายการ`;
+  renderStats();
+  renderResults();
+  statusEl.textContent = `เสร็จ: พบ ${filteredOrders.length} รายการภายใน ${radiusKm} กม.`;
 }
 
 // ---- STATS ----
