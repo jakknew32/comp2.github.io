@@ -104,6 +104,10 @@
   .z8  { background: #FEF2F2; color: #7F1D1D; }
   .z9  { background: #E0F2FE; color: #075985; }
   .z10 { background: #F3F4F6; color: #374151; }
+  .z11 { background: #EFFAF5; color: #065F46; }
+
+  .zone-footer { padding: 10px 16px; background: #fff; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; font-weight: 700; font-size: 13px; }
+  .zone-footer .tot-num { margin-left:6px; font-weight:700; }
 
   /* ---------- EMPTY / INFO ---------- */
   .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 14px; }
@@ -197,9 +201,9 @@
 // ---- ZONE CONFIG ----
 const ZONE_LIST = [
   'กรุงเทพเหนือ','กรุงเทพตะวันออก','กรุงเทพตะวันตก','กรุงเทพฝั่งธน',
-  'นนทบุรี','ปทุมธานี','สมุทรสาคร','สมุทรสงคราม','นครปฐม','ชลบุรี','อื่นๆ'
+  'นนทบุรี','ปทุมธานี','สมุทรสาคร','สมุทรสงคราม','นครปฐม','ชลบุรี','สมุทรปราการ','อื่นๆ'
 ];
-const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10'];
+const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11'];
 
 // เขต → โซน
 const DISTRICT_ZONE = {
@@ -234,7 +238,7 @@ const DISTRICT_ZONE = {
 
 const PROVINCE_ZONE = {
   'นนทบุรี':'นนทบุรี','ปทุมธานี':'ปทุมธานี',
-  'สมุทรสาคร':'สมุทรสาคร','สมุทรสงคราม':'สมุทรสงคราม',
+  'สมุทรสาคร':'สมุทรสาคร','สมุทรสงคราม':'สมุทรสงคราม','สมุทรปราการ':'สมุทรปราการ',
   'นครปฐม':'นครปฐม','ชลบุรี':'ชลบุรี',
 };
 
@@ -430,16 +434,14 @@ function renderResults() {
     const orders = byZone[zone];
     if (!orders || orders.length === 0) return;
     const cls = ZONE_CLASSES[zi] || 'z10';
+    const plainSum = orders.reduce((s,o)=>s+(+o.qty_plain||0),0);
+    const chocSum  = orders.reduce((s,o)=>s+(+o.qty_choc ||0),0);
+    const honeySum = orders.reduce((s,o)=>s+(+o.qty_honey||0),0);
     html += `
       <div class="zone-section">
         <div class="zone-header ${cls}">
           ${zone}
           <span class="badge-count">${orders.length} ออเดอร์</span>
-          <span style="font-size:12px;opacity:.7;margin-left:auto">
-            Plain ${orders.reduce((s,o)=>s+(+o.qty_plain||0),0)} &nbsp;|&nbsp;
-            Choc ${orders.reduce((s,o)=>s+(+o.qty_choc||0),0)} &nbsp;|&nbsp;
-            Honey ${orders.reduce((s,o)=>s+(+o.qty_honey||0),0)}
-          </span>
         </div>
         <div class="zone-table-wrap">
           <table>
@@ -474,6 +476,11 @@ function renderResults() {
               </tr>`).join('')}
             </tbody>
           </table>
+          <div class="zone-footer">
+            <div style="color:#1A56DB">Plain <span class="tot-num">${plainSum}</span></div>
+            <div style="color:#7E3AF2">Choc <span class="tot-num">${chocSum}</span></div>
+            <div style="color:#D03801">Honey <span class="tot-num">${honeySum}</span></div>
+          </div>
         </div>
       </div>`;
   });
