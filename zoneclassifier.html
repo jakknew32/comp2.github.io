@@ -84,6 +84,7 @@
   .address-cell { max-width: 260px; font-size: 12px; line-height: 1.5; color: var(--gray); }
   .phone-cell { white-space: nowrap; }
   .qty-cell { text-align: center; font-weight: 600; }
+  .distance-cell { text-align: center; font-weight: 700; width:90px; }
   .qty-plain { color: #1A56DB; }
   .qty-choc  { color: #7E3AF2; }
   .qty-honey { color: #D03801; }
@@ -557,6 +558,10 @@ function renderResults() {
   let html = '';
   ZONE_LIST.forEach((zone, zi) => {
     const orders = byZone[zone];
+    // If distances are present, sort orders by distance (nearest first)
+    if (orders && orders.length>0) {
+      orders.sort((a,b)=>((isFinite(a._distance)?a._distance:Infinity) - (isFinite(b._distance)?b._distance:Infinity)));
+    }
     if (!orders || orders.length === 0) return;
     const cls = ZONE_CLASSES[zi] || 'z10';
     const plainSum = orders.reduce((s,o)=>s+(+o.qty_plain||0),0);
@@ -576,6 +581,7 @@ function renderResults() {
                 <th>เลขออเดอร์</th>
                 <th>ชื่อลูกค้า</th>
                 <th>เบอร์โทร</th>
+                <th>ระยะ (กม.)</th>
                 <th>เขต</th>
                 <th>ที่อยู่</th>
                 <th style="text-align:center">Plain</th>
@@ -591,6 +597,7 @@ function renderResults() {
                 <td class="order-id">${o.order_id}</td>
                 <td>${o.customer}</td>
                 <td class="phone-cell">${o.phone}</td>
+                <td class="distance-cell">${(o._distance && isFinite(o._distance)) ? o._distance.toFixed(2) : '-'}</td>
                 <td style="white-space:nowrap;font-size:12px">${o.district}</td>
                 <td class="address-cell">${o.address}</td>
                 <td class="qty-cell qty-plain">${o.qty_plain||'-'}</td>
