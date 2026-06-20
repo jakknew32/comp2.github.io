@@ -196,6 +196,7 @@
       <input type="number" id="radius-input" value="15" min="1" max="200" style="width:72px">
       <button class="topbar-btn btn-outline" id="btn-geosearch" onclick="startGeoSearch()">ค้นหาในรัศมี</button>
       <span id="geo-status" style="font-size:12px;color:var(--muted);margin-left:6px"></span>
+      <button class="topbar-btn btn-outline" id="btn-clear" onclick="clearResults()">เคลียร์รายการ</button>
     <span id="result-count" class="badge-count">0 รายการ</span>
   </div>
 
@@ -493,6 +494,23 @@ async function startGeoSearch(){
   renderStats();
   renderResults();
   statusEl.textContent = `เสร็จ: พบ ${filteredOrders.length} รายการภายใน ${radiusKm} กม.`;
+}
+
+function clearResults(){
+  allOrders = [];
+  filteredOrders = [];
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('stats-row').style.display = 'none';
+  document.getElementById('filter-bar').style.display = 'none';
+  document.getElementById('info-row').style.display = 'none';
+  document.getElementById('btn-export').style.display = 'none';
+  document.getElementById('btn-print').style.display = 'none';
+  const rc = document.getElementById('result-count'); if (rc) rc.textContent = '0 รายการ';
+  const zf = document.getElementById('zone-filter'); if (zf) zf.innerHTML = '<option value="">ทั้งหมด</option>';
+  const si = document.getElementById('search-input'); if (si) si.value = '';
+  const mi = document.getElementById('marker-input'); if (mi) mi.value = '';
+  const ri = document.getElementById('radius-input'); if (ri) ri.value = '15';
+  const gs = document.getElementById('geo-status'); if (gs) gs.textContent = '';
 }
 
 // ---- STATS ----
