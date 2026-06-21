@@ -7,140 +7,97 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --blue:    #1A56DB;
-    --blue-lt: #EBF5FF;
-    --blue-dk: #1e40af;
-    --teal:    #0694A2;
-    --teal-lt: #E6FFFA;
-    --green:   #057A55;
-    --green-lt:#F3FAF7;
-    --orange:  #D03801;
-    --orange-lt:#FFF8F1;
-    --purple:  #7E3AF2;
-    --purple-lt:#F5F3FF;
-    --pink:    #BF125D;
-    --pink-lt: #FDF2F8;
-    --gray:    #374151;
-    --gray-lt: #F9FAFB;
-    --border:  #E5E7EB;
-    --text:    #111827;
-    --muted:   #6B7280;
-    --radius:  8px;
-    --radius-lg:12px;
+    --blue:#1A56DB;--blue-lt:#EBF5FF;--blue-dk:#1e40af;
+    --green:#057A55;--orange:#D03801;--purple:#7E3AF2;
+    --gray:#374151;--gray-lt:#F9FAFB;--border:#E5E7EB;
+    --text:#111827;--muted:#6B7280;--radius:8px;--radius-lg:12px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: #F3F4F6; color: var(--text); font-size: 15px; }
-
-  /* ---------- TOP BAR ---------- */
-  .topbar { background: #fff; border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; gap: 12px; height: 56px; position: sticky; top: 0; z-index: 100; }
-  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; color: var(--blue-dk); }
-  .logo svg { width: 28px; height: 28px; }
-  .topbar-spacer { flex: 1; }
-  .topbar-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: background .15s; }
-  .btn-outline { background: #fff; border: 1px solid var(--border); color: var(--gray); }
-  .btn-outline:hover { background: var(--gray-lt); }
-  .btn-primary { background: var(--blue); color: #fff; }
-  .btn-primary:hover { background: var(--blue-dk); }
-  .btn-success { background: var(--green); color: #fff; }
-  .btn-success:hover { background: #046c4e; }
-
-  /* ---------- MAIN ---------- */
-  .main { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
-
-  /* ---------- UPLOAD ZONE ---------- */
-  #upload-zone { background: #fff; border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
-  #upload-zone:hover, #upload-zone.drag-over { border-color: var(--blue); background: var(--blue-lt); }
-  #upload-zone svg { width: 48px; height: 48px; color: #9CA3AF; margin-bottom: 12px; }
-  #upload-zone h2 { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  #upload-zone p { font-size: 13px; color: var(--muted); }
-  #file-input { display: none; }
-  .upload-label { display: inline-block; margin-top: 16px; padding: 8px 20px; background: var(--blue); color: #fff; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; }
-  .upload-label:hover { background: var(--blue-dk); }
-
-  /* ---------- STATS ROW ---------- */
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
-  .stat-card { background: #fff; border-radius: var(--radius); padding: 14px 16px; border: 1px solid var(--border); }
-  .stat-num { font-size: 24px; font-weight: 700; color: var(--blue-dk); line-height: 1; }
-  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-  /* ---------- FILTER BAR ---------- */
-  .filter-bar { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-  .filter-bar label { font-size: 13px; color: var(--muted); white-space: nowrap; }
-  .filter-bar select, .filter-bar input { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px; font-size: 13px; color: var(--text); background: #fff; outline: none; }
-  .filter-bar select:focus, .filter-bar input:focus { border-color: var(--blue); }
-  .filter-bar input { flex: 1; min-width: 180px; }
-  .badge-count { background: var(--blue-lt); color: var(--blue-dk); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; }
-
-  /* ---------- ZONE SECTIONS ---------- */
-  .zone-section { margin-bottom: 24px; }
-  .zone-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: var(--radius) var(--radius) 0 0; font-weight: 700; font-size: 14px; }
-  .zone-table-wrap { background: #fff; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th { background: #F9FAFB; text-align: left; padding: 9px 12px; font-size: 12px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
-  tbody tr:hover { background: #F9FAFB; }
-  tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }
-  tbody tr:last-child td { border-bottom: none; }
-  .order-id { font-family: monospace; font-size: 12px; color: var(--muted); }
-  .address-cell { max-width: 260px; font-size: 12px; line-height: 1.5; color: var(--gray); }
-  .phone-cell { white-space: nowrap; }
-  .qty-cell { text-align: center; font-weight: 600; }
-  .distance-cell { text-align: center; font-weight: 700; width:90px; }
-  .qty-plain { color: #1A56DB; }
-  .qty-choc  { color: #7E3AF2; }
-  .qty-honey { color: #D03801; }
-  .status-badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
-  .status-pending  { background: #FEF3C7; color: #92400E; }
-  .status-delivered{ background: #D1FAE5; color: #065F46; }
-  .status-problem  { background: #FEE2E2; color: #991B1B; }
-
-  /* ---------- ZONE COLORS ---------- */
-  .z0  { background: #EFF6FF; color: #1E3A8A; }
-  .z1  { background: #F0FDF4; color: #14532D; }
-  .z2  { background: #FFF7ED; color: #7C2D12; }
-  .z3  { background: #FDF4FF; color: #581C87; }
-  .z4  { background: #FFF1F2; color: #881337; }
-  .z5  { background: #F0FDFA; color: #134E4A; }
-  .z6  { background: #FFFBEB; color: #713F12; }
-  .z7  { background: #F5F3FF; color: #3730A3; }
-  .z8  { background: #FEF2F2; color: #7F1D1D; }
-  .z9  { background: #E0F2FE; color: #075985; }
-  .z10 { background: #F3F4F6; color: #374151; }
-  .z11 { background: #EFFAF5; color: #065F46; }
-
-  .zone-footer { padding: 10px 16px; background: #fff; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; font-weight: 700; font-size: 13px; }
-  .zone-footer .tot-num { margin-left:6px; font-weight:700; }
-
-  /* ---------- EMPTY / INFO ---------- */
-  .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 14px; }
-  .info-row { background: var(--blue-lt); border: 1px solid #BFDBFE; border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--blue-dk); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-
-  /* ---------- PRINT ---------- */
-  @media print {
-    .topbar, .filter-bar, .upload-section, .no-print { display: none !important; }
-    body { background: #fff; font-size: 12px; }
-    .main { padding: 0; max-width: 100%; }
-    .zone-section { break-inside: avoid; }
-    .stats-row { display: none; }
-    .print-title { display: block !important; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Sarabun','Segoe UI',sans-serif;background:#F3F4F6;color:var(--text);font-size:15px}
+  .topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:12px;height:56px;position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;color:var(--blue-dk)}
+  .topbar-spacer{flex:1}
+  .topbar-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:background .15s;white-space:nowrap}
+  .btn-outline{background:#fff;border:1px solid var(--border);color:var(--gray)}
+  .btn-outline:hover{background:var(--gray-lt)}
+  .btn-success{background:var(--green);color:#fff}
+  .btn-success:hover{background:#046c4e}
+  .main{max-width:1280px;margin:0 auto;padding:24px 16px}
+  #upload-zone{background:#fff;border:2px dashed var(--border);border-radius:var(--radius-lg);padding:48px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+  #upload-zone:hover,#upload-zone.drag-over{border-color:var(--blue);background:var(--blue-lt)}
+  #upload-zone svg{width:48px;height:48px;color:#9CA3AF;margin-bottom:12px}
+  #upload-zone h2{font-size:17px;font-weight:600;margin-bottom:4px}
+  #upload-zone p{font-size:13px;color:var(--muted)}
+  #file-input{display:none}
+  .upload-label{display:inline-block;margin-top:16px;padding:8px 20px;background:var(--blue);color:#fff;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer}
+  .upload-label:hover{background:var(--blue-dk)}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+  .stat-card{background:#fff;border-radius:var(--radius);padding:14px 16px;border:1px solid var(--border)}
+  .stat-num{font-size:24px;font-weight:700;color:var(--blue-dk);line-height:1}
+  .stat-label{font-size:12px;color:var(--muted);margin-top:4px}
+  .filter-bar{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .filter-bar label{font-size:13px;color:var(--muted);white-space:nowrap}
+  .filter-bar select,.filter-bar input[type=text],.filter-bar input[type=number]{border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;color:var(--text);background:#fff;outline:none}
+  .filter-bar select:focus,.filter-bar input:focus{border-color:var(--blue)}
+  #search-input{flex:1;min-width:160px}
+  #marker-input{min-width:200px}
+  #radius-input{width:68px}
+  .badge-count{background:var(--blue-lt);color:var(--blue-dk);font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;white-space:nowrap}
+  .zone-section{margin-bottom:24px}
+  .zone-header{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:var(--radius) var(--radius) 0 0;font-weight:700;font-size:14px}
+  .zone-table-wrap{background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{background:#F9FAFB;text-align:left;padding:9px 12px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+  tbody tr:hover{background:#FAFAFA}
+  tbody tr.has-problem{background:#FFF5F5}
+  tbody tr.has-problem:hover{background:#FEE2E2}
+  tbody td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  .order-id{font-family:monospace;font-size:12px;color:var(--muted)}
+  .address-cell{max-width:200px;font-size:12px;line-height:1.5;color:var(--gray)}
+  .phone-cell{white-space:nowrap}
+  .qty-cell{text-align:center;font-weight:600}
+  .qty-plain{color:#1A56DB}.qty-choc{color:#7E3AF2}.qty-honey{color:#D03801}
+  .status-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600}
+  .status-pending{background:#FEF3C7;color:#92400E}
+  .status-delivered{background:#D1FAE5;color:#065F46}
+  .status-problem{background:#FEE2E2;color:#991B1B}
+  .dist-badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;background:#EEF2FF;color:#3730A3;font-weight:600;white-space:nowrap}
+  .maps-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:var(--radius);background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s}
+  .maps-btn:hover{background:#DCFCE7}
+  .zone-footer{padding:10px 16px;background:#FAFAFA;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:16px;font-size:13px}
+  .zone-footer span{font-weight:700}
+  .z0{background:#EFF6FF;color:#1E3A8A}.z1{background:#F0FDF4;color:#14532D}
+  .z2{background:#FFF7ED;color:#7C2D12}.z3{background:#FDF4FF;color:#581C87}
+  .z4{background:#FFF1F2;color:#881337}.z5{background:#F0FDFA;color:#134E4A}
+  .z6{background:#FFFBEB;color:#713F12}.z7{background:#F5F3FF;color:#3730A3}
+  .z8{background:#FEF2F2;color:#7F1D1D}.z9{background:#E0F2FE;color:#075985}
+  .z10{background:#F0FDF4;color:#166534}.z11{background:#F3F4F6;color:#374151}
+  .empty-state{text-align:center;padding:48px 24px;color:var(--muted);font-size:14px}
+  #loading{display:none;text-align:center;padding:32px;color:var(--muted);font-size:14px}
+  .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* geo progress bar */
+  .geo-progress-wrap{background:#F3F4F6;border-radius:99px;height:6px;width:100%;margin-top:6px;overflow:hidden;display:none}
+  .geo-progress-bar{height:6px;background:var(--blue);border-radius:99px;transition:width .3s;width:0%}
+  @media print{
+    .topbar,.filter-bar,#upload-section,.no-print{display:none!important}
+    body{background:#fff;font-size:12px}
+    .main{padding:0;max-width:100%}
+    .zone-section{break-inside:avoid}
+    #stats-row{display:none}
+    .print-title{display:block!important;font-size:16px;font-weight:700;margin-bottom:12px}
   }
-  .print-title { display: none; }
-
-  /* ---------- LOADING ---------- */
-  #loading { display: none; text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
-  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 8px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .print-title{display:none}
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar no-print">
   <div class="logo">
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="8" fill="#1A56DB"/>
-      <path d="M8 22 Q10 10 16 10 Q22 10 24 22" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <circle cx="16" cy="10" r="3" fill="#fff"/>
-    </svg>
+    <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#1A56DB"/>
+    <path d="M8 22 Q10 10 16 10 Q22 10 24 22" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="16" cy="10" r="3" fill="#fff"/></svg>
     CFM Zone Classifier
   </div>
   <div class="topbar-spacer"></div>
@@ -149,7 +106,7 @@
     อัปโหลดไฟล์
   </button>
   <button class="topbar-btn btn-success no-print" onclick="exportExcel()" id="btn-export" style="display:none">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
     Export Excel
   </button>
   <button class="topbar-btn btn-outline no-print" onclick="window.print()" id="btn-print" style="display:none">
@@ -159,502 +116,492 @@
 </div>
 
 <div class="main">
-  <!-- UPLOAD -->
   <div id="upload-section" class="no-print" style="margin-bottom:24px">
-    <div id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+    <div id="upload-zone" onclick="document.getElementById('file-input').click()"
+         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+      </svg>
       <h2>ลากวางหรือเลือกไฟล์ Excel</h2>
-      <p>รองรับไฟล์ .xlsx และ .xls — คอลัมน์ BC=จังหวัด, BD=เขต, AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
-      <label class="upload-label" onclick="event.stopPropagation(); document.getElementById('file-input').click()">เลือกไฟล์</label>
+      <p>รองรับ .xlsx / .xls &nbsp;|&nbsp; BC=จังหวัด &nbsp; BD=เขต &nbsp; AX=ชื่อ &nbsp; AY=เบอร์ &nbsp; BA=ที่อยู่ &nbsp; BG=รหัสไปรษณีย์</p>
+      <label class="upload-label" onclick="event.stopPropagation();document.getElementById('file-input').click()">เลือกไฟล์</label>
       <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(event)">
     </div>
-    <div id="loading"><span class="spinner"></span>กำลังประมวลผล...</div>
+    <div id="loading"><span class="spinner"></span><span id="loading-text">กำลังประมวลผล...</span></div>
   </div>
 
-  <!-- PRINT TITLE -->
-  <div class="print-title" id="print-title">รายงานแยกโซน — Chiangmai Freshmilk</div>
-
-  <!-- STATS -->
+  <div class="print-title">รายงานแยกโซน — Chiangmai Freshmilk</div>
   <div id="stats-row" class="stats-row" style="display:none"></div>
 
-  <!-- INFO -->
-  <div id="info-row" style="display:none" class="info-row no-print">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <span id="info-text"></span>
-  </div>
-
-  <!-- FILTER BAR -->
   <div id="filter-bar" class="filter-bar no-print" style="display:none">
     <label>โซน:</label>
-    <select id="zone-filter" onchange="applyFilter()">
+    <select id="zone-filter" onchange="applyFilter()"><option value="">ทั้งหมด</option></select>
+    <label>สถานะ:</label>
+    <select id="status-filter" onchange="applyFilter()">
       <option value="">ทั้งหมด</option>
+      <option value="pending">🟡 ค้างส่ง</option>
+      <option value="delivered">🟢 ส่งแล้ว</option>
+      <option value="problem">🔴 มีปัญหา</option>
     </select>
     <label>ค้นหา:</label>
-      <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
-      <label>หมุดตำแหน่ง:</label>
-      <input type="text" id="marker-input" placeholder="พิมพ์ที่อยู่หรือใส่ lat,lng" style="min-width:220px">
-      <label>รัศมี (กม.):</label>
-      <input type="number" id="radius-input" value="15" min="1" max="200" style="width:72px">
-      <button class="topbar-btn btn-outline" id="btn-geosearch" onclick="startGeoSearch()">ค้นหาในรัศมี</button>
-      <span id="geo-status" style="font-size:12px;color:var(--muted);margin-left:6px"></span>
-      <button class="topbar-btn btn-outline" id="btn-clear" onclick="clearResults()">เคลียร์รายการ</button>
+    <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
+    <label>📍 หมุด:</label>
+    <input type="text" id="marker-input" placeholder="ที่อยู่ หรือ lat,lng">
+    <label>รัศมี (กม.):</label>
+    <input type="number" id="radius-input" value="15" min="1" max="300">
+    <button class="topbar-btn btn-outline" onclick="startGeoSearch()">ค้นหาในรัศมี</button>
+    <button class="topbar-btn btn-outline" onclick="resetFilter()">รีเซ็ต</button>
     <span id="result-count" class="badge-count">0 รายการ</span>
+    <div style="width:100%;display:flex;flex-direction:column;gap:4px">
+      <span id="geo-status" style="font-size:12px;color:var(--muted)"></span>
+      <div class="geo-progress-wrap" id="geo-progress-wrap">
+        <div class="geo-progress-bar" id="geo-progress-bar"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- RESULTS -->
   <div id="results"></div>
 </div>
 
 <script>
-// ---- ZONE CONFIG ----
+// ── ZONE MAPPING ─────────────────────────────────────────────
 const ZONE_LIST = [
   'กรุงเทพเหนือ','กรุงเทพตะวันออก','กรุงเทพตะวันตก','กรุงเทพฝั่งธน',
   'นนทบุรี','ปทุมธานี','สมุทรสาคร','สมุทรสงคราม','นครปฐม','ชลบุรี','สมุทรปราการ','อื่นๆ'
 ];
-const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11'];
-
-// เขต → โซน
-const DISTRICT_ZONE = {
-  // กรุงเทพเหนือ
-  'เขตบางเขน':'กรุงเทพเหนือ','เขตดอนเมือง':'กรุงเทพเหนือ','เขตสายไหม':'กรุงเทพเหนือ',
-  'เขตหลักสี่':'กรุงเทพเหนือ','เขตลาดพร้าว':'กรุงเทพเหนือ','เขตจตุจักร':'กรุงเทพเหนือ',
-  'เขตบึงกุ่ม':'กรุงเทพเหนือ','เขตลาดยาว':'กรุงเทพเหนือ','เขตบางซื่อ':'กรุงเทพเหนือ',
-  'เขตห้วยขวาง':'กรุงเทพเหนือ','เขตดินแดง':'กรุงเทพเหนือ','เขตวังทองหลาง':'กรุงเทพเหนือ',
-  // กรุงเทพตะวันออก
-  'เขตมีนบุรี':'กรุงเทพตะวันออก','เขตลาดกระบัง':'กรุงเทพตะวันออก',
-  'เขตสะพานสูง':'กรุงเทพตะวันออก','เขตประเวศ':'กรุงเทพตะวันออก',
-  'เขตบางนา':'กรุงเทพตะวันออก','เขตสวนหลวง':'กรุงเทพตะวันออก',
-  'เขตพระโขนง':'กรุงเทพตะวันออก','เขตคลองเตย':'กรุงเทพตะวันออก',
-  'เขตหนองจอก':'กรุงเทพตะวันออก','เขตคันนายาว':'กรุงเทพตะวันออก',
-  'เขตบึงกุ่ม':'กรุงเทพตะวันออก',
-  // กรุงเทพตะวันตก (ฝั่งพระนครกลาง-ใต้)
-  'เขตพระนคร':'กรุงเทพตะวันตก','เขตดุสิต':'กรุงเทพตะวันตก',
-  'เขตพญาไท':'กรุงเทพตะวันตก','เขตปทุมวัน':'กรุงเทพตะวันตก',
-  'เขตบางรัก':'กรุงเทพตะวันตก','เขตสาทร':'กรุงเทพตะวันตก',
-  'เขตวัฒนา':'กรุงเทพตะวันตก','เขตยานนาวา':'กรุงเทพตะวันตก',
-  'เขตบางคอแหลม':'กรุงเทพตะวันตก','เขตบางพลัด':'กรุงเทพตะวันตก',
-  'เขตราษฎร์บูรณะ':'กรุงเทพตะวันตก','เขตสัมพันธวงศ์':'กรุงเทพตะวันตก',
-  'เขตบางกอกน้อย':'กรุงเทพตะวันตก','เขตบางกอกใหญ่':'กรุงเทพตะวันตก',
-  'เขตป้อมปราบศัตรูพ่าย':'กรุงเทพตะวันตก','เขตสัมพันธวงศ์':'กรุงเทพตะวันตก',
-  // กรุงเทพฝั่งธน
-  'เขตธนบุรี':'กรุงเทพฝั่งธน','เขตคลองสาน':'กรุงเทพฝั่งธน',
-  'เขตจอมทอง':'กรุงเทพฝั่งธน','เขตบางแค':'กรุงเทพฝั่งธน',
-  'เขตหนองแขม':'กรุงเทพฝั่งธน','เขตภาษีเจริญ':'กรุงเทพฝั่งธน',
-  'เขตบางบอน':'กรุงเทพฝั่งธน','เขตทวีวัฒนา':'กรุงเทพฝั่งธน',
-  'เขตตลิ่งชัน':'กรุงเทพฝั่งธน','เขตหนองแขม':'กรุงเทพฝั่งธน',
-};
-
-const PROVINCE_ZONE = {
-  'นนทบุรี':'นนทบุรี','ปทุมธานี':'ปทุมธานี',
-  'สมุทรสาคร':'สมุทรสาคร','สมุทรสงคราม':'สมุทรสงคราม','สมุทรปราการ':'สมุทรปราการ',
+const ZONE_CLASSES=['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11'];
+const DZ={};
+['เขตบางเขน','เขตดอนเมือง','เขตสายไหม','เขตหลักสี่','เขตลาดพร้าว',
+ 'เขตจตุจักร','เขตบางซื่อ','เขตห้วยขวาง','เขตดินแดง','เขตวังทองหลาง',
+ 'เขตรามอินทรา','เขตบางกะปิ'].forEach(d=>DZ[d]='กรุงเทพเหนือ');
+['เขตมีนบุรี','เขตลาดกระบัง','เขตสะพานสูง','เขตประเวศ','เขตบางนา',
+ 'เขตสวนหลวง','เขตพระโขนง','เขตคลองเตย','เขตหนองจอก','เขตคันนายาว',
+ 'เขตบึงกุ่ม'].forEach(d=>DZ[d]='กรุงเทพตะวันออก');
+['เขตพระนคร','เขตดุสิต','เขตพญาไท','เขตปทุมวัน','เขตบางรัก',
+ 'เขตยานนาวา','เขตบางคอแหลม','เขตบางพลัด','เขตราษฎร์บูรณะ','เขตวัฒนา',
+ 'เขตสัมพันธวงศ์','เขตป้อมปราบศัตรูพ่าย','เขตจักรวรรดิ',
+ 'เขตบางกอกน้อย','เขตบางกอกใหญ่'].forEach(d=>DZ[d]='กรุงเทพตะวันตก');
+['เขตธนบุรี','เขตคลองสาน','เขตจอมทอง','เขตบางแค','เขตหนองแขม',
+ 'เขตภาษีเจริญ','เขตบางบอน','เขตทวีวัฒนา','เขตตลิ่งชัน',
+ 'เขตบางขุนเทียน'].forEach(d=>DZ[d]='กรุงเทพฝั่งธน');
+const PROVINCE_ZONE={
+  'นนทบุรี':'นนทบุรี','ปทุมธานี':'ปทุมธานี','สมุทรสาคร':'สมุทรสาคร',
+  'สมุทรสงคราม':'สมุทรสงคราม','สมุทรปราการ':'สมุทรปราการ',
   'นครปฐม':'นครปฐม','ชลบุรี':'ชลบุรี',
 };
-
-function detectZone(district, province) {
-  // จังหวัดอื่นก่อน
-  for (const [key, zone] of Object.entries(PROVINCE_ZONE)) {
-    if (province && province.includes(key)) return zone;
-  }
-  // เขตใน กทม
-  if (district && DISTRICT_ZONE[district]) return DISTRICT_ZONE[district];
-  // ถ้าเป็น กทม แต่ไม่รู้เขต
-  if (province && province.includes('กรุงเทพ')) return 'กรุงเทพเหนือ'; // fallback
+function detectZone(district,province){
+  for(const[k,v]of Object.entries(PROVINCE_ZONE))if(province&&province.includes(k))return v;
+  if(district&&DZ[district])return DZ[district];
+  if(province&&province.includes('กรุงเทพ'))return 'อื่นๆ';
   return 'อื่นๆ';
 }
-
-function formatPhone(raw) {
-  if (!raw) return '-';
-  let s = String(raw).replace(/\.0$/, '').replace(/\D/g, '');
-  if (s.startsWith('66') && s.length === 11) s = '0' + s.slice(2);
-  if (s.startsWith('660') && s.length === 12) s = '0' + s.slice(3);
-  return s || '-';
+function formatPhone(raw){
+  if(!raw)return'-';
+  let s=String(raw).replace(/\.0$/,'').replace(/\D/g,'');
+  if(s.startsWith('66')&&s.length===11)s='0'+s.slice(2);
+  if(s.startsWith('660')&&s.length===12)s='0'+s.slice(3);
+  return s||'-';
 }
 
-// ---- GLOBALS ----
-let allOrders = [];
-let filteredOrders = [];
-// geocode cache (address -> {lat,lon}) stored in localStorage to avoid repeated lookups
-const geocodeCacheKey = 'cfm_geocode_cache_v1';
-let geocodeCache = {};
-try { geocodeCache = JSON.parse(localStorage.getItem(geocodeCacheKey) || '{}'); } catch(e) { geocodeCache = {}; }
+// ── ADDRESS PARSER ───────────────────────────────────────────
+// แยกส่วนที่อยู่ไทยให้ Nominatim เข้าใจ
+// ที่อยู่มักอยู่ในรูป: "เลขที่ ชื่อหมู่บ้าน/อาคาร ซอย/ถนน แขวง เขต จังหวัด รหัสไปรษณีย์"
+function parseThaiAddress(raw, district, province, zipcode) {
+  if (!raw || raw === '-') return null;
 
-function saveGeocodeCache() { try { localStorage.setItem(geocodeCacheKey, JSON.stringify(geocodeCache)); } catch(e){} }
+  let addr = raw.trim();
 
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+  // ตัด dup district/province ออก (มักซ้ำในที่อยู่)
+  // เหลือแค่ส่วนก่อน "แขวง" แรก เพื่อให้ได้ เลขที่+ซอย+ถนน
+  const kwangIdx = addr.search(/แขวง|ตำบล/);
+  let streetPart = kwangIdx > 10 ? addr.substring(0, kwangIdx).trim() : addr;
 
-async function geocodeAddress(q){
-  if (!q) return null;
-  const key = String(q).trim();
-  if (geocodeCache[key]) return geocodeCache[key];
-  // Use Nominatim (OpenStreetMap) public API — respect rate limits (1 req/sec)
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(key)}&limit=1&accept-language=th`;
-  try{
-    const res = await fetch(url, { headers:{'User-Agent':'CFM-Zone-Classifer/1.0 (script)'} });
+  // ตัดคำอธิบายในวงเล็บออก เช่น (Lolding Point 6) ให้ไม่สับสน Nominatim
+  streetPart = streetPart.replace(/\([^)]*\)/g, '').trim();
+
+  // ตัดคำเกิน เช่น (เขียน1078ค่ะ) ฯลฯ
+  streetPart = streetPart.replace(/\s{2,}/g,' ').trim();
+
+  // เอาแค่ 60 ตัวอักษรแรก เพื่อไม่ให้ query ยาวเกิน
+  if (streetPart.length > 60) streetPart = streetPart.substring(0, 60).trim();
+
+  const distClean = district ? district.replace(/^เขต/, '').replace(/^อำเภอ/, '') : '';
+  const provClean = province ? province.replace(/^จังหวัด/, '') : '';
+
+  return { streetPart, distClean, provClean, zipcode };
+}
+
+// สร้าง query หลายระดับ เรียงจากแม่นที่สุด → กว้างที่สุด
+function buildNominatimQueries(parsed) {
+  const { streetPart, distClean, provClean, zipcode } = parsed;
+  const queries = [];
+
+  // Level 1: ซอย/ถนน + เขต + จังหวัด + ไปรษณีย์ (แม่นที่สุด)
+  if (streetPart && distClean && provClean && zipcode)
+    queries.push(`${streetPart} ${distClean} ${provClean} ${zipcode} Thailand`);
+
+  // Level 2: ซอย/ถนน + เขต + จังหวัด
+  if (streetPart && distClean && provClean)
+    queries.push(`${streetPart} ${distClean} ${provClean} Thailand`);
+
+  // Level 3: เขต + จังหวัด + ไปรษณีย์ (ไม่มีถนน — fallback แต่แม่นกว่าส่งทั้งก้อน)
+  if (distClean && provClean && zipcode)
+    queries.push(`${distClean} ${provClean} ${zipcode} Thailand`);
+
+  // Level 4: เขต + จังหวัด เท่านั้น (ใช้เป็น centroid ของเขต)
+  if (distClean && provClean)
+    queries.push(`${distClean} ${provClean} Thailand`);
+
+  return queries;
+}
+
+// ── GEOCODER (Nominatim) ─────────────────────────────────────
+const CACHE_KEY = 'cfm_geo_v4';
+let geoCache = {};
+try { geoCache = JSON.parse(localStorage.getItem(CACHE_KEY)||'{}'); } catch(e){}
+function saveCache(){ try{localStorage.setItem(CACHE_KEY,JSON.stringify(geoCache));}catch(e){} }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// Rate limit: Nominatim ต้องการ >= 1 req/sec
+let lastNomReq = 0;
+async function geocodeNominatim(query) {
+  const ck = 'N4:'+query;
+  if (geoCache[ck]) return geoCache[ck];
+
+  // enforce 1.1s gap
+  const now = Date.now();
+  const wait = 1100 - (now - lastNomReq);
+  if (wait > 0) await sleep(wait);
+  lastNomReq = Date.now();
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&accept-language=th&countrycodes=th`;
+    const res = await fetch(url, {headers:{'User-Agent':'CFM-Zone/4.0 (chiangmaifreshmilk)'}});
     if (!res.ok) return null;
     const j = await res.json();
-    if (j && j.length>0){
-      const lat = parseFloat(j[0].lat);
-      const lon = parseFloat(j[0].lon);
-      geocodeCache[key] = {lat,lon}; saveGeocodeCache();
-      return geocodeCache[key];
+    if (j && j.length > 0) {
+      const r = {lat:parseFloat(j[0].lat), lon:parseFloat(j[0].lon), type:j[0].type, display:j[0].display_name};
+      geoCache[ck] = r; saveCache();
+      return r;
     }
-  }catch(e){ console.error('geocode error', e); }
+  } catch(e){ console.error('Nominatim err', e); }
   return null;
 }
 
-async function ensureOrderGeocoded(o){
-  if (o.lat && o.lon) return {lat:o.lat,lon:o.lon};
-  // try province+district+address combinations for better results
-  const candidates = [o.address, `${o.address} ${o.district} ${o.province}`, `${o.district} ${o.province}`, o.province];
-  for (const c of candidates){
-    if (!c) continue;
-    const g = await geocodeAddress(c);
-    if (g){ o.lat = g.lat; o.lon = g.lon; return g; }
-    // be polite to Nominatim
-    await sleep(1100);
+async function ensureGeocoded(o) {
+  if (o.lat && o.lon) return;
+  const parsed = parseThaiAddress(o.address, o.district, o.province, o.zipcode);
+  if (!parsed) return;
+  const queries = buildNominatimQueries(parsed);
+  for (const q of queries) {
+    const g = await geocodeNominatim(q);
+    if (g) {
+      o.lat = g.lat; o.lon = g.lon;
+      // แสดง level ที่สำเร็จ
+      o.geoLevel = queries.indexOf(q) + 1;
+      return;
+    }
   }
-  return null;
 }
 
-function haversineKm(lat1, lon1, lat2, lon2){
-  const toRad = v => v*Math.PI/180;
-  const R = 6371; // km
-  const dLat = toRad(lat2-lat1);
-  const dLon = toRad(lon2-lon1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-  const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R*c;
+function haversineKm(lat1,lon1,lat2,lon2){
+  const R=6371,r=v=>v*Math.PI/180;
+  const dL=r(lat2-lat1),dG=r(lon2-lon1);
+  const a=Math.sin(dL/2)**2+Math.cos(r(lat1))*Math.cos(r(lat2))*Math.sin(dG/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-// ---- DRAG & DROP ----
-function onDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag-over'); }
-function onDragLeave(e) { document.getElementById('upload-zone').classList.remove('drag-over'); }
-function onDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-zone').classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) processFile(file);
+// Google Maps URL: ถ้ามีพิกัดใช้พิกัด, ถ้าไม่มีใช้ที่อยู่ที่ parse แล้ว (แม่นกว่าส่งดิบ)
+function mapsUrl(o) {
+  if (o.lat && o.lon) return `https://www.google.com/maps?q=${o.lat},${o.lon}`;
+  // สร้าง query ที่ดีสำหรับ Google Maps
+  const parsed = parseThaiAddress(o.address, o.district, o.province, o.zipcode);
+  let q;
+  if (parsed) {
+    const {streetPart, distClean, provClean, zipcode} = parsed;
+    q = [streetPart, distClean, provClean, zipcode].filter(Boolean).join(' ');
+  } else {
+    q = `${o.address} ${o.district} ${o.province}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 }
-function handleFile(e) { const file = e.target.files[0]; if (file) processFile(file); }
 
-// ---- PARSE EXCEL ----
-function processFile(file) {
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('results').innerHTML = '';
-  document.getElementById('stats-row').style.display = 'none';
-  document.getElementById('filter-bar').style.display = 'none';
-  document.getElementById('info-row').style.display = 'none';
+// ── FILE HANDLING ────────────────────────────────────────────
+let allOrders=[], filteredOrders=[], geoMarker=null;
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+function onDragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag-over')}
+function onDragLeave(){document.getElementById('upload-zone').classList.remove('drag-over')}
+function onDrop(e){e.preventDefault();onDragLeave();const f=e.dataTransfer.files[0];if(f)processFile(f)}
+function handleFile(e){const f=e.target.files[0];if(f)processFile(f)}
 
-      const orders = [];
-      const seenId = {};
-
-      for (let i = 0; i < data.length; i++) {
-        const row = data[i];
-        const orderNum = row[2];
-        const district = row[55];   // BD
-        const province = row[54];   // BC
-        const address  = row[52];   // BA
-        const customer = row[49];   // AX
-        const phone    = row[50];   // AY
-        const status   = row[0];    // A (สถานะ)
-        const qty_plain= row[57];   // BF
-        const qty_honey= row[59];   // BH
-        const qty_choc = row[58];   // BG
-        const note     = row[51];   // AZ
-        const amount   = row[26];   // AA (ยอดสุทธิ)
-
-        if (!orderNum || !district) continue;
-        // skip header-like rows
-        if (String(orderNum).includes('สถานะ')) continue;
-        // skip คำสั่งซื้อผิด
-        if (String(status).includes('คำสั่งซื้อผิด')) continue;
-        // skip separator/remark rows
-        if (!customer && !address) continue;
-
-        const zone = detectZone(String(district||''), String(province||''));
-
-        const key = `${orderNum}_${i}`;
-        if (!seenId[key]) {
-          seenId[key] = true;
+function processFile(file){
+  document.getElementById('loading').style.display='block';
+  document.getElementById('loading-text').textContent='กำลังอ่านไฟล์...';
+  document.getElementById('results').innerHTML='';
+  document.getElementById('stats-row').style.display='none';
+  document.getElementById('filter-bar').style.display='none';
+  geoMarker=null;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      const orders=[],seen={};
+      for(let i=0;i<data.length;i++){
+        const row=data[i];
+        const orderNum=row[2];if(!orderNum)continue;
+        if(String(orderNum).includes('สถานะ'))continue;
+        const status=row[0];
+        if(String(status||'').includes('คำสั่งซื้อผิด'))continue;
+        const district=row[55],province=row[54],address=row[52];
+        const customer=row[49],phone=row[50],note=row[51];
+        const zipcode=row[56]?String(row[56]).replace(/\.0$/,''):'';
+        const qty_plain=row[57],qty_choc=row[58],qty_honey=row[59];
+        const amount=row[26];
+        if(!customer&&!address)continue;
+        if(!district&&!province)continue;
+        const key=`${orderNum}_${i}`;
+        if(!seen[key]){
+          seen[key]=true;
           orders.push({
-            order_id: String(orderNum),
-            customer: String(customer||'-'),
-            phone: formatPhone(phone),
-            district: String(district||''),
-            province: String(province||''),
-            address: String(address||'-'),
-            zone,
-            status: String(status||''),
-            qty_plain: qty_plain || 0,
-            qty_choc:  qty_choc  || 0,
-            qty_honey: qty_honey || 0,
-            note: note ? String(note) : '',
-            amount: amount || 0,
+            order_id:String(orderNum),customer:String(customer||'-'),
+            phone:formatPhone(phone),district:String(district||''),
+            province:String(province||''),address:String(address||'-'),
+            zipcode,zone:detectZone(String(district||''),String(province||'')),
+            status:String(status||''),
+            qty_plain:+qty_plain||0,qty_choc:+qty_choc||0,qty_honey:+qty_honey||0,
+            note:note?String(note):'',amount:amount||0,
+            lat:null,lon:null,_distance:null,geoLevel:null,
           });
         }
       }
-
-      allOrders = orders;
-      document.getElementById('loading').style.display = 'none';
-
-      if (orders.length === 0) {
-        document.getElementById('results').innerHTML = '<div class="empty-state">ไม่พบข้อมูลออเดอร์ในไฟล์นี้<br><small>กรุณาตรวจสอบว่าโครงสร้างคอลัมน์ถูกต้อง (BD=เขต, BC=จังหวัด)</small></div>';
+      allOrders=orders;
+      document.getElementById('loading').style.display='none';
+      if(orders.length===0){
+        document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
         return;
       }
-
-      // populate zone filter
-      const zf = document.getElementById('zone-filter');
-      zf.innerHTML = '<option value="">ทั้งหมด</option>';
-      const zonesPresent = [...new Set(orders.map(o=>o.zone))].sort();
-      zonesPresent.forEach(z => {
-        const opt = document.createElement('option');
-        opt.value = z; opt.textContent = z;
-        zf.appendChild(opt);
+      const zf=document.getElementById('zone-filter');
+      zf.innerHTML='<option value="">ทั้งหมด</option>';
+      [...new Set(orders.map(o=>o.zone))].sort().forEach(z=>{
+        const opt=document.createElement('option');opt.value=z;opt.textContent=z;zf.appendChild(opt);
       });
-
-      document.getElementById('filter-bar').style.display = 'flex';
-      document.getElementById('btn-export').style.display = '';
-      document.getElementById('btn-print').style.display = '';
-
+      document.getElementById('filter-bar').style.display='flex';
+      document.getElementById('btn-export').style.display='';
+      document.getElementById('btn-print').style.display='';
       applyFilter();
-    } catch(err) {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('results').innerHTML = `<div class="empty-state">เกิดข้อผิดพลาด: ${err.message}</div>`;
+    }catch(err){
+      document.getElementById('loading').style.display='none';
+      document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${err.message}</div>`;
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ---- FILTER ----
-function applyFilter() {
-  const zf = document.getElementById('zone-filter').value;
-  const q  = document.getElementById('search-input').value.toLowerCase();
-
-  filteredOrders = allOrders.filter(o => {
-    if (zf && o.zone !== zf) return false;
-    if (q && !`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q)) return false;
+// ── FILTER ───────────────────────────────────────────────────
+function classifyStatus(s){
+  if(!s||s==='null'||s==='nan'||s==='NaT')return'other';
+  if(s.includes('ค้าง'))return'pending';
+  if(s.includes('ส่งแล้ว')||s.includes('จัดส่งแล้ว')||s.includes('ส่งสำเร็จ'))return'delivered';
+  if(s.includes('ปัญหา')||s.includes('ผิดพลาด'))return'problem';
+  return'other';
+}
+function applyFilter(){
+  const zf=document.getElementById('zone-filter').value;
+  const sf=document.getElementById('status-filter').value;
+  const q=document.getElementById('search-input').value.toLowerCase();
+  filteredOrders=allOrders.filter(o=>{
+    if(zf&&o.zone!==zf)return false;
+    if(sf&&classifyStatus(o.status)!==sf)return false;
+    if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
     return true;
   });
-
-  document.getElementById('result-count').textContent = `${filteredOrders.length} รายการ`;
-  renderStats();
-  renderResults();
+  document.getElementById('result-count').textContent=`${filteredOrders.length} รายการ`;
+  renderStats();renderResults();
+}
+function resetFilter(){
+  geoMarker=null;
+  allOrders.forEach(o=>{o._distance=null;});
+  ['search-input','marker-input','geo-status'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('zone-filter').value='';
+  document.getElementById('status-filter').value='';
+  document.getElementById('radius-input').value='15';
+  document.getElementById('geo-progress-wrap').style.display='none';
+  applyFilter();
 }
 
-// ---- GEO-SEARCH ----
+// ── GEO-SEARCH ───────────────────────────────────────────────
 async function startGeoSearch(){
-  const markerText = document.getElementById('marker-input').value.trim();
-  const radiusKm = Number(document.getElementById('radius-input').value) || 15;
-  const statusEl = document.getElementById('geo-status');
-  if (!markerText){ statusEl.textContent = 'กรุณาใส่ที่อยู่หรือ lat,lng'; return; }
+  const markerText=document.getElementById('marker-input').value.trim();
+  const radiusKm=Number(document.getElementById('radius-input').value)||15;
+  const statusEl=document.getElementById('geo-status');
+  const progWrap=document.getElementById('geo-progress-wrap');
+  const progBar=document.getElementById('geo-progress-bar');
+  if(!markerText){statusEl.textContent='กรุณาใส่ที่อยู่หรือ lat,lng';return;}
 
-  statusEl.textContent = 'กำลังค้นหาตำแหน่งหมุด...';
-  let marker = null;
-  // parse lat,lng if provided
-  const latlonMatch = markerText.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
-  if (latlonMatch){ marker = {lat:parseFloat(latlonMatch[1]), lon:parseFloat(latlonMatch[2])}; }
-  else {
-    marker = await geocodeAddress(markerText);
-    await sleep(1100);
+  statusEl.textContent='กำลังค้นหาตำแหน่งหมุด...';
+  progWrap.style.display='block'; progBar.style.width='0%';
+
+  const latlonMatch=markerText.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+  if(latlonMatch){
+    geoMarker={lat:parseFloat(latlonMatch[1]),lon:parseFloat(latlonMatch[2])};
+  } else {
+    // geocode หมุด ด้วย Nominatim เช่นกัน
+    const parsedMarker=parseThaiAddress(markerText,'','','');
+    const markerQ=parsedMarker?markerText+' Thailand':markerText;
+    geoMarker=await geocodeNominatim(markerQ);
+  }
+  if(!geoMarker){statusEl.textContent='ไม่พบตำแหน่งหมุด ลองใส่เป็น lat,lng แทนครับ';progWrap.style.display='none';return;}
+
+  const list=filteredOrders.length>0?filteredOrders.slice():allOrders.slice();
+  let done=0;
+  for(const o of list){
+    await ensureGeocoded(o);
+    o._distance=(o.lat&&o.lon)?haversineKm(geoMarker.lat,geoMarker.lon,o.lat,o.lon):Infinity;
+    done++;
+    const pct=Math.round(done/list.length*100);
+    progBar.style.width=pct+'%';
+    statusEl.textContent=`geocode ${done}/${list.length} รายการ... (${pct}%)`;
   }
 
-  if (!marker){ statusEl.textContent = 'ไม่พบตำแหน่งหมุด'; return; }
-  statusEl.textContent = `หมุด: ${marker.lat.toFixed(5)}, ${marker.lon.toFixed(5)} — กำลังประมวลผล...`;
-
-  // operate on current filteredOrders snapshot
-  const list = filteredOrders.slice();
-  if (list.length === 0){ statusEl.textContent = 'ไม่มีรายการในผลลัพธ์ที่เลือก'; return; }
-
-  let processed = 0;
-  for (const o of list){
-    // skip if already have coords
-    if (!o.lat || !o.lon){
-      await ensureOrderGeocoded(o);
-    }
-    if (o.lat && o.lon){
-      o._distance = haversineKm(marker.lat, marker.lon, Number(o.lat), Number(o.lon));
-    } else {
-      o._distance = Infinity;
-    }
-    processed++; statusEl.textContent = `ประมวลผล ${processed}/${list.length}...`;
-    // be polite between geocode calls (only needed when we actually called geocode)
-    await sleep(200);
-  }
-
-  // filter by radius
-  const kept = list.filter(o=>isFinite(o._distance) && o._distance <= radiusKm).sort((a,b)=>a._distance - b._distance);
-  filteredOrders = kept;
-  document.getElementById('result-count').textContent = `${filteredOrders.length} รายการ`;
-  renderStats();
-  renderResults();
-  statusEl.textContent = `เสร็จ: พบ ${filteredOrders.length} รายการภายใน ${radiusKm} กม.`;
+  filteredOrders=list.filter(o=>isFinite(o._distance)&&o._distance<=radiusKm)
+                     .sort((a,b)=>a._distance-b._distance);
+  document.getElementById('result-count').textContent=`${filteredOrders.length} รายการ`;
+  renderStats();renderResults();
+  progBar.style.width='100%';
+  statusEl.textContent=`✓ พบ ${filteredOrders.length} รายการภายใน ${radiusKm} กม. จากหมุด (${geoMarker.lat.toFixed(4)}, ${geoMarker.lon.toFixed(4)})`;
 }
 
-function clearResults(){
-  allOrders = [];
-  filteredOrders = [];
-  document.getElementById('results').innerHTML = '';
-  document.getElementById('stats-row').style.display = 'none';
-  document.getElementById('filter-bar').style.display = 'none';
-  document.getElementById('info-row').style.display = 'none';
-  document.getElementById('btn-export').style.display = 'none';
-  document.getElementById('btn-print').style.display = 'none';
-  const rc = document.getElementById('result-count'); if (rc) rc.textContent = '0 รายการ';
-  const zf = document.getElementById('zone-filter'); if (zf) zf.innerHTML = '<option value="">ทั้งหมด</option>';
-  const si = document.getElementById('search-input'); if (si) si.value = '';
-  const mi = document.getElementById('marker-input'); if (mi) mi.value = '';
-  const ri = document.getElementById('radius-input'); if (ri) ri.value = '15';
-  const gs = document.getElementById('geo-status'); if (gs) gs.textContent = '';
-}
-
-// ---- STATS ----
-function renderStats() {
-  const sr = document.getElementById('stats-row');
-  sr.style.display = 'grid';
-  const total = filteredOrders.length;
-  const zones = new Set(filteredOrders.map(o=>o.zone)).size;
-  const totalPlain = filteredOrders.reduce((s,o)=>s+(+o.qty_plain||0),0);
-  const totalHoney = filteredOrders.reduce((s,o)=>s+(+o.qty_honey||0),0);
-  const totalChoc  = filteredOrders.reduce((s,o)=>s+(+o.qty_choc ||0),0);
-  sr.innerHTML = `
+// ── STATS ────────────────────────────────────────────────────
+function renderStats(){
+  const sr=document.getElementById('stats-row');sr.style.display='grid';
+  const total=filteredOrders.length;
+  const zones=new Set(filteredOrders.map(o=>o.zone)).size;
+  const tP=filteredOrders.reduce((s,o)=>s+o.qty_plain,0);
+  const tC=filteredOrders.reduce((s,o)=>s+o.qty_choc,0);
+  const tH=filteredOrders.reduce((s,o)=>s+o.qty_honey,0);
+  sr.innerHTML=`
     <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">ออเดอร์ทั้งหมด</div></div>
     <div class="stat-card"><div class="stat-num">${zones}</div><div class="stat-label">โซนที่มีออเดอร์</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:#1A56DB">${totalPlain}</div><div class="stat-label">HP-Plain (กล่อง)</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:#7E3AF2">${totalChoc}</div><div class="stat-label">HP-Choc (กล่อง)</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:#D03801">${totalHoney}</div><div class="stat-label">HP-Honey (กล่อง)</div></div>
-  `;
+    <div class="stat-card"><div class="stat-num" style="color:#1A56DB">${tP}</div><div class="stat-label">HP-Plain (กล่อง)</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#7E3AF2">${tC}</div><div class="stat-label">HP-Choc (กล่อง)</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#D03801">${tH}</div><div class="stat-label">HP-Honey (กล่อง)</div></div>`;
 }
 
-// ---- RENDER TABLE ----
-function statusBadge(s) {
-  if (!s || s==='null') return '';
-  if (s.includes('ค้าง')) return `<span class="status-badge status-pending">ค้างส่ง</span>`;
-  if (s.includes('ส่งแล้ว')||s.includes('จัดส่งแล้ว')) return `<span class="status-badge status-delivered">ส่งแล้ว</span>`;
-  if (s.includes('ปัญหา')) return `<span class="status-badge status-problem">มีปัญหา</span>`;
-  return `<span class="status-badge" style="background:#F3F4F6;color:#374151">${s}</span>`;
+// ── RENDER TABLE ─────────────────────────────────────────────
+function statusBadge(s){
+  const cls=classifyStatus(s);
+  if(cls==='pending') return`<span class="status-badge status-pending">ค้างส่ง</span>`;
+  if(cls==='delivered')return`<span class="status-badge status-delivered">ส่งแล้ว</span>`;
+  if(cls==='problem') return`<span class="status-badge status-problem">มีปัญหา</span>`;
+  if(!s||s==='null'||s==='nan'||s==='NaT')return'';
+  return`<span class="status-badge" style="background:#F3F4F6;color:#374151">${s}</span>`;
 }
 
-function renderResults() {
-  const el = document.getElementById('results');
-  if (filteredOrders.length === 0) {
-    el.innerHTML = '<div class="empty-state">ไม่พบรายการที่ตรงกัน</div>';
-    return;
-  }
+// badge แสดง precision level ของ geocode
+const GEO_LEVEL_LABEL=['','L1:ซอย+เขต','L2:ซอย','L3:เขต+ไปรษณีย์','L4:เขต'];
+const GEO_LEVEL_COLOR=['','#D1FAE5','#FEF9C3','#FEE2E2','#F3E8FF'];
+const GEO_LEVEL_TEXT=['','#065F46','#854D0E','#991B1B','#6B21A8'];
 
-  const byZone = {};
-  ZONE_LIST.forEach(z => byZone[z] = []);
-  filteredOrders.forEach(o => {
-    if (!byZone[o.zone]) byZone[o.zone] = [];
-    byZone[o.zone].push(o);
-  });
+function renderResults(){
+  const el=document.getElementById('results');
+  if(filteredOrders.length===0){el.innerHTML='<div class="empty-state">ไม่พบรายการที่ตรงกัน</div>';return;}
+  const byZone={};
+  ZONE_LIST.forEach(z=>byZone[z]=[]);
+  filteredOrders.forEach(o=>{if(!byZone[o.zone])byZone[o.zone]=[];byZone[o.zone].push(o);});
+  const showDist=filteredOrders.some(o=>o._distance!==null&&isFinite(o._distance));
 
-  let html = '';
-  ZONE_LIST.forEach((zone, zi) => {
-    const orders = byZone[zone];
-    // If distances are present, sort orders by distance (nearest first)
-    if (orders && orders.length>0) {
-      orders.sort((a,b)=>((isFinite(a._distance)?a._distance:Infinity) - (isFinite(b._distance)?b._distance:Infinity)));
-    }
-    if (!orders || orders.length === 0) return;
-    const cls = ZONE_CLASSES[zi] || 'z10';
-    const plainSum = orders.reduce((s,o)=>s+(+o.qty_plain||0),0);
-    const chocSum  = orders.reduce((s,o)=>s+(+o.qty_choc ||0),0);
-    const honeySum = orders.reduce((s,o)=>s+(+o.qty_honey||0),0);
-    html += `
-      <div class="zone-section">
-        <div class="zone-header ${cls}">
-          ${zone}
-          <span class="badge-count">${orders.length} ออเดอร์</span>
+  let html='';
+  ZONE_LIST.forEach((zone,zi)=>{
+    const orders=byZone[zone];if(!orders||orders.length===0)return;
+    const cls=ZONE_CLASSES[zi]||'z11';
+    const tP=orders.reduce((s,o)=>s+o.qty_plain,0);
+    const tC=orders.reduce((s,o)=>s+o.qty_choc,0);
+    const tH=orders.reduce((s,o)=>s+o.qty_honey,0);
+    html+=`<div class="zone-section">
+      <div class="zone-header ${cls}">${zone} <span class="badge-count">${orders.length} ออเดอร์</span></div>
+      <div class="zone-table-wrap"><table>
+        <thead><tr>
+          <th>#</th><th>เลขออเดอร์</th><th>ชื่อลูกค้า</th><th>เบอร์โทร</th>
+          <th>เขต</th><th>ที่อยู่</th>
+          ${showDist?'<th>ระยะห่าง</th>':''}
+          <th style="text-align:center">Plain</th>
+          <th style="text-align:center">Choc</th>
+          <th style="text-align:center">Honey</th>
+          <th>สถานะ</th><th>หมายเหตุ</th><th>แผนที่</th>
+        </tr></thead><tbody>
+        ${orders.map((o,i)=>{
+          const isProblem=o.status.includes('ปัญหา');
+          let distCell='';
+          if(showDist){
+            if(o._distance!==null&&isFinite(o._distance)){
+              const lvl=o.geoLevel||0;
+              const lbl=GEO_LEVEL_LABEL[lvl]||'';
+              const bg=GEO_LEVEL_COLOR[lvl]||'#EEF2FF';
+              const tc=GEO_LEVEL_TEXT[lvl]||'#3730A3';
+              const tooltip=lbl?` title="${lbl} (ความแม่นอาจแตกต่างกัน)"` :'';
+              distCell=`<td style="white-space:nowrap"><span class="dist-badge" style="background:${bg};color:${tc}"${tooltip}>📍 ${o._distance.toFixed(1)} กม.</span></td>`;
+            } else {
+              distCell=`<td><span style="font-size:11px;color:var(--muted)">—</span></td>`;
+            }
+          }
+          return`<tr class="${isProblem?'has-problem':''}">
+            <td style="color:var(--muted);font-size:12px">${i+1}</td>
+            <td class="order-id">${o.order_id}</td>
+            <td>${o.customer}</td>
+            <td class="phone-cell">${o.phone}</td>
+            <td style="white-space:nowrap;font-size:12px">${o.district}</td>
+            <td class="address-cell">${o.address}${o.zipcode?` <span style="color:var(--muted);font-size:11px">${o.zipcode}</span>`:''}</td>
+            ${showDist?distCell:''}
+            <td class="qty-cell qty-plain">${o.qty_plain||'-'}</td>
+            <td class="qty-cell qty-choc">${o.qty_choc||'-'}</td>
+            <td class="qty-cell qty-honey">${o.qty_honey||'-'}</td>
+            <td>${statusBadge(o.status)}</td>
+            <td style="font-size:12px;color:var(--muted);max-width:120px">${o.note||''}</td>
+            <td><a href="${mapsUrl(o)}" target="_blank" rel="noopener" class="maps-btn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Maps
+            </a></td>
+          </tr>`;
+        }).join('')}
+        </tbody></table>
+        <div class="zone-footer">
+          <div style="color:#1A56DB">Plain <span>${tP}</span></div>
+          <div style="color:#7E3AF2">Choc <span>${tC}</span></div>
+          <div style="color:#D03801">Honey <span>${tH}</span></div>
         </div>
-        <div class="zone-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>เลขออเดอร์</th>
-                <th>ชื่อลูกค้า</th>
-                <th>เบอร์โทร</th>
-                <th>ระยะ (กม.)</th>
-                <th>เขต</th>
-                <th>ที่อยู่</th>
-                <th style="text-align:center">Plain</th>
-                <th style="text-align:center">Choc</th>
-                <th style="text-align:center">Honey</th>
-                <th>สถานะ</th>
-                <th>หมายเหตุ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${orders.map((o,i) => `<tr>
-                <td style="color:var(--muted);font-size:12px">${i+1}</td>
-                <td class="order-id">${o.order_id}</td>
-                <td>${o.customer}</td>
-                <td class="phone-cell">${o.phone}</td>
-                <td class="distance-cell">${(o._distance && isFinite(o._distance)) ? o._distance.toFixed(2) : '-'}</td>
-                <td style="white-space:nowrap;font-size:12px">${o.district}</td>
-                <td class="address-cell">${o.address}</td>
-                <td class="qty-cell qty-plain">${o.qty_plain||'-'}</td>
-                <td class="qty-cell qty-choc">${o.qty_choc||'-'}</td>
-                <td class="qty-cell qty-honey">${o.qty_honey||'-'}</td>
-                <td>${statusBadge(o.status)}</td>
-                <td style="font-size:12px;color:var(--muted)">${o.note||''}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-          <div class="zone-footer">
-            <div style="color:#1A56DB">Plain <span class="tot-num">${plainSum}</span></div>
-            <div style="color:#7E3AF2">Choc <span class="tot-num">${chocSum}</span></div>
-            <div style="color:#D03801">Honey <span class="tot-num">${honeySum}</span></div>
-          </div>
-        </div>
-      </div>`;
+      </div></div>`;
   });
-  el.innerHTML = html;
+  el.innerHTML=html;
 }
 
-// ---- EXPORT EXCEL ----
-function exportExcel() {
-  if (filteredOrders.length === 0) return;
-  const wb = XLSX.utils.book_new();
-
-  // Summary sheet
-  const summaryRows = [['โซน','จำนวนออเดอร์','HP-Plain','HP-Choc','HP-Honey']];
-  const byZone = {};
-  ZONE_LIST.forEach(z => byZone[z] = []);
-  filteredOrders.forEach(o => { if(!byZone[o.zone]) byZone[o.zone]=[]; byZone[o.zone].push(o); });
-  ZONE_LIST.forEach(zone => {
-    const orders = byZone[zone];
-    if (!orders||orders.length===0) return;
-    summaryRows.push([
-      zone, orders.length,
-      orders.reduce((s,o)=>s+(+o.qty_plain||0),0),
-      orders.reduce((s,o)=>s+(+o.qty_choc||0),0),
-      orders.reduce((s,o)=>s+(+o.qty_honey||0),0),
-    ]);
+// ── EXPORT ───────────────────────────────────────────────────
+function exportExcel(){
+  if(filteredOrders.length===0)return;
+  const wb=XLSX.utils.book_new();
+  const byZone={};ZONE_LIST.forEach(z=>byZone[z]=[]);
+  filteredOrders.forEach(o=>{if(!byZone[o.zone])byZone[o.zone]=[];byZone[o.zone].push(o);});
+  const sumRows=[['โซน','จำนวนออเดอร์','HP-Plain','HP-Choc','HP-Honey']];
+  ZONE_LIST.forEach(zone=>{
+    const orders=byZone[zone];if(!orders||orders.length===0)return;
+    sumRows.push([zone,orders.length,
+      orders.reduce((s,o)=>s+o.qty_plain,0),
+      orders.reduce((s,o)=>s+o.qty_choc,0),
+      orders.reduce((s,o)=>s+o.qty_honey,0)]);
   });
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'สรุปโซน');
-
-  // Per-zone sheets
-  ZONE_LIST.forEach((zone, zi) => {
-    const orders = byZone[zone];
-    if (!orders||orders.length===0) return;
-    const rows = [['เลขออเดอร์','ชื่อลูกค้า','เบอร์โทร','เขต','จังหวัด','ที่อยู่','HP-Plain','HP-Choc','HP-Honey','สถานะ','หมายเหตุ']];
-    orders.forEach(o => rows.push([o.order_id,o.customer,o.phone,o.district,o.province,o.address,o.qty_plain||0,o.qty_choc||0,o.qty_honey||0,o.status,o.note]));
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [14,20,14,14,16,36,8,8,8,12,20].map(w=>({wch:w}));
-    XLSX.utils.book_append_sheet(wb, ws, zone.replace(/[:\\\/\?\*\[\]]/g,'_').substring(0,31));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows),'สรุปโซน');
+  ZONE_LIST.forEach(zone=>{
+    const orders=byZone[zone];if(!orders||orders.length===0)return;
+    const rows=[['เลขออเดอร์','ชื่อลูกค้า','เบอร์โทร','เขต','จังหวัด','รหัสไปรษณีย์','ที่อยู่','HP-Plain','HP-Choc','HP-Honey','สถานะ','หมายเหตุ'],
+      ...orders.map(o=>[o.order_id,o.customer,o.phone,o.district,o.province,o.zipcode,o.address,o.qty_plain,o.qty_choc,o.qty_honey,o.status,o.note])];
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[14,20,14,14,16,8,36,8,8,8,14,20].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb,ws,zone.replace(/[:\\\/\?\*\[\]]/g,'_').substring(0,31));
   });
-
-  const today = new Date().toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
-  XLSX.writeFile(wb, `CFM_Zone_${today}.xlsx`);
+  const d=new Date().toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
+  XLSX.writeFile(wb,`CFM_Zone_${d}.xlsx`);
 }
 </script>
 </body>
