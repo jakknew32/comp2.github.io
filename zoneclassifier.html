@@ -284,40 +284,48 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
   position: sticky; top: 56px; z-index: 10;
   box-shadow: 0 2px 4px rgba(0,0,0,.08);
 }
-.zone-table-wrap {
+.zone-cards-wrap {
+  border: 1px solid var(--border); border-top: none;
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  background: var(--bg-page); padding: var(--sp-3);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--sp-3);
+}
+/* order card */
+.order-card {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-top: none; border-radius: 0 0 var(--r-md) var(--r-md);
-  overflow: hidden; box-shadow: var(--shadow-sm);
+  border-radius: var(--r-lg); padding: var(--sp-4);
+  box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: var(--sp-2);
+  transition: box-shadow .15s, transform .15s;
+  position: relative; overflow: hidden;
 }
-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
-thead th {
-  background: var(--gray-50); text-align: left;
-  padding: var(--sp-2) var(--sp-3); font-size: var(--text-xs);
-  font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border);
-  white-space: nowrap; position: sticky; top: 98px; z-index: 5;
-}
-tbody tr { transition: background .1s; }
-tbody tr:hover { background: var(--gray-50); }
-tbody tr.has-problem { background: var(--danger-lt); }
-tbody tr.has-problem:hover { background: #fecaca; }
-tbody td { padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); vertical-align: top; }
-tbody tr:last-child td { border-bottom: none; }
-.order-id { font-family: monospace; font-size: var(--text-xs); color: var(--muted); }
-.address-cell { max-width: 200px; font-size: var(--text-xs); line-height: 1.5; color: var(--gray-700); }
-.phone-cell { white-space: nowrap; }
-.qty-cell { text-align: center; font-weight: 600; }
-.qty-plain { color: var(--plain-color); }
-.qty-choc  { color: var(--choc-color); }
-.qty-honey { color: var(--honey-color); }
-.status-badge { display: inline-block; font-size: var(--text-xs); padding: 2px var(--sp-2); border-radius: var(--r-full); font-weight: 600; }
-.s-pending   { background: var(--warning-lt); color: #92400E; }
-.s-delivered { background: var(--success-lt); color: #065F46; }
-.s-problem   { background: var(--danger-lt);  color: #991B1B; }
-.dist-badge { display: inline-block; font-size: var(--text-xs); padding: 2px 6px; border-radius: var(--r-full); background: #EEF2FF; color: #3730A3; font-weight: 600; white-space: nowrap; }
-.maps-btn { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-xs); padding: 3px var(--sp-2); border-radius: var(--r-sm); background: var(--success-lt); color: var(--success); border: 1px solid #6EE7B7; cursor: pointer; text-decoration: none; transition: background .15s; white-space: nowrap; }
-.maps-btn:hover { background: #A7F3D0; }
+.order-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.order-card.is-problem { border-left: 4px solid var(--danger); }
+.order-card.is-pending  { border-left: 4px solid #F59E0B; }
+.order-card.is-delivered{ border-left: 4px solid var(--success); }
+
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
+.card-order-id { font-family: monospace; font-size: var(--text-xs); color: var(--muted); }
+.card-name { font-size: var(--text-md); font-weight: 700; color: var(--text); margin-top: 2px; }
+.card-row { display: flex; align-items: flex-start; gap: var(--sp-2); font-size: var(--text-sm); color: var(--gray-700); line-height: 1.5; }
+.card-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.card-products { display: flex; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--gray-50); border-radius: var(--r-md); }
+.card-qty { display: flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: 700; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: var(--sp-1); }
+
+/* status badge — เด่นขึ้น ใช้สีเต็ม */
+.status-badge { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-xs); padding: 4px 10px; border-radius: var(--r-full); font-weight: 700; letter-spacing: .02em; }
+.s-pending  { background: #FEF3C7; color: #78350F; border: 1.5px solid #FCD34D; }
+.s-delivered{ background: #D1FAE5; color: #064E3B; border: 1.5px solid #6EE7B7; }
+.s-problem  { background: #FEE2E2; color: #7F1D1D; border: 1.5px solid #FCA5A5; }
+
+.dist-badge { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-xs); padding: 3px 8px; border-radius: var(--r-full); background: #EEF2FF; color: #3730A3; font-weight: 600; }
+.maps-btn { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: 600; padding: 6px var(--sp-3); border-radius: var(--r-md); background: var(--brand); color: #fff; border: none; cursor: pointer; text-decoration: none; transition: background .15s; }
+.maps-btn:hover { background: var(--brand-dk); }
 .maps-btn:focus { outline: 2px solid var(--brand); outline-offset: 2px; }
-.zone-footer { padding: var(--sp-2) var(--sp-4); background: var(--gray-50); border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: var(--sp-4); font-size: var(--text-sm); }
+
+.zone-footer { padding: var(--sp-2) var(--sp-4); background: var(--bg-card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--r-md) var(--r-md); display: flex; justify-content: flex-end; gap: var(--sp-4); font-size: var(--text-sm); }
 .zone-footer span { font-weight: 700; }
 
 /* Zone color classes */
@@ -351,7 +359,8 @@ tbody tr:last-child td { border-bottom: none; }
   .main { padding: 0; max-width: 100%; }
   .zone-section { break-inside: avoid; }
   .zone-header { position: static; box-shadow: none; }
-  thead th { position: static; }
+  .zone-cards-wrap { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
+  .order-card { box-shadow: none; border: 1px solid #ccc; }
   .print-title { display: block !important; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
 }
 .print-title { display: none; }
@@ -807,49 +816,44 @@ function renderResults(){
           Plain ${tP} &nbsp;·&nbsp; Choc ${tC} &nbsp;·&nbsp; Honey ${tH}
         </span>
       </div>
-      <div class="zone-table-wrap"><table>
-        <thead><tr>
-          <th>#</th><th>เลขออเดอร์</th><th>ชื่อลูกค้า</th><th>เบอร์โทร</th>
-          <th>เขต</th><th>ที่อยู่</th>
-          ${showDist?'<th>ระยะห่าง</th>':''}
-          <th style="text-align:center">Plain</th>
-          <th style="text-align:center">Choc</th>
-          <th style="text-align:center">Honey</th>
-          <th>สถานะ</th><th>หมายเหตุ</th><th>แผนที่</th>
-        </tr></thead><tbody>
-        ${orders.map((o,i)=>{
-          const isProblem=classifyStatus(o.status)==='problem';
-          let distCell='';
-          if(showDist){
-            distCell=(o._distance!==null&&isFinite(o._distance))
-              ?`<td><span class="dist-badge">📍 ${o._distance.toFixed(1)} กม.</span></td>`
-              :`<td><span style="font-size:var(--text-xs);color:var(--muted)">—</span></td>`;
-          }
-          return`<tr class="${isProblem?'has-problem':''}">
-            <td style="color:var(--muted);font-size:var(--text-xs)">${i+1}</td>
-            <td class="order-id">${o.order_id}</td>
-            <td>${o.customer}</td>
-            <td class="phone-cell">${o.phone}</td>
-            <td style="white-space:nowrap;font-size:var(--text-xs)">${o.district}</td>
-            <td class="address-cell">${o.address}${o.zipcode?` <span style="color:var(--muted);font-size:var(--text-xs)">${o.zipcode}</span>`:''}</td>
-            ${showDist?distCell:''}
-            <td class="qty-cell qty-plain">${o.qty_plain||'-'}</td>
-            <td class="qty-cell qty-choc">${o.qty_choc||'-'}</td>
-            <td class="qty-cell qty-honey">${o.qty_honey||'-'}</td>
-            <td>${statusBadge(o.status)}</td>
-            <td style="font-size:var(--text-xs);color:var(--muted);max-width:120px">${o.note||''}</td>
-            <td><a href="${mapsUrl(o)}" target="_blank" rel="noopener" class="maps-btn">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Maps
-            </a></td>
-          </tr>`;
+      <div class="zone-cards-wrap">
+        ${orders.map(o=>{
+          const sc=classifyStatus(o.status);
+          const cardCls=sc==='problem'?'is-problem':sc==='pending'?'is-pending':sc==='delivered'?'is-delivered':'';
+          const distHtml=showDist&&o._distance!==null&&isFinite(o._distance)
+            ?`<span class="dist-badge">📍 ${o._distance.toFixed(1)} กม.</span>`:'' ;
+          return`<div class="order-card ${cardCls}">
+            <div class="card-top">
+              <div>
+                <div class="card-order-id">🧾 ${o.order_id}</div>
+                <div class="card-name">👤 ${o.customer}</div>
+              </div>
+              ${statusBadge(o.status)}
+            </div>
+            <div class="card-row"><span class="card-icon">📞</span><span>${o.phone}</span></div>
+            <div class="card-row"><span class="card-icon">📍</span><span>${o.address}${o.zipcode?` <span style="color:var(--muted);font-size:var(--text-xs)">${o.zipcode}</span>`:''} ${o.district}</span></div>
+            <div class="card-products">
+              <div class="card-qty" style="color:var(--plain-color)">🥛 Plain <span>${o.qty_plain||0}</span></div>
+              <div class="card-qty" style="color:var(--choc-color)">🍫 Choc <span>${o.qty_choc||0}</span></div>
+              <div class="card-qty" style="color:var(--honey-color)">🍯 Honey <span>${o.qty_honey||0}</span></div>
+            </div>
+            ${o.note?`<div class="card-row" style="color:var(--muted);font-size:var(--text-xs)">📝 ${o.note}</div>`:''}
+            <div class="card-footer">
+              ${distHtml}
+              <a href="${mapsUrl(o)}" target="_blank" rel="noopener" class="maps-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                เปิดแผนที่
+              </a>
+            </div>
+          </div>`;
         }).join('')}
-        </tbody></table>
-        <div class="zone-footer">
-          <div style="color:var(--plain-color)">Plain <span>${tP}</span></div>
-          <div style="color:var(--choc-color)">Choc <span>${tC}</span></div>
-          <div style="color:var(--honey-color)">Honey <span>${tH}</span></div>
-        </div>
-      </div></div>`;
+      </div>
+      <div class="zone-footer">
+        <div style="color:var(--plain-color)">Plain <span>${tP}</span></div>
+        <div style="color:var(--choc-color)">Choc <span>${tC}</span></div>
+        <div style="color:var(--honey-color)">Honey <span>${tH}</span></div>
+      </div>
+    </div>`;
   });
   el.innerHTML=html;
 }
