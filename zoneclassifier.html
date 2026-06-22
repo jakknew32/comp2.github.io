@@ -618,11 +618,15 @@ function processFile(file){
         const qty_plain=row[57],qty_choc=row[58],qty_honey=row[59];
         if(!customer&&!address)continue;
         if(!district&&!province)continue;
-        const key=`${orderNum}_${i}`;
-        if(!seen[key]){
-          seen[key]=true;
-          orders.push({
-            order_id:String(orderNum),customer:String(customer||'-'),
+        const oid=String(orderNum);
+        if(seen[oid]){
+          // order ซ้ำ — บวก qty เพิ่ม
+          seen[oid].qty_plain+=(+qty_plain||0);
+          seen[oid].qty_choc +=(+qty_choc ||0);
+          seen[oid].qty_honey+=(+qty_honey||0);
+        } else {
+          const o={
+            order_id:oid,customer:String(customer||'-'),
             phone:formatPhone(phone),district:String(district||''),
             province:String(province||''),address:String(address||'-'),
             zipcode,zone:detectZone(String(district||''),String(province||'')),
@@ -630,7 +634,9 @@ function processFile(file){
             qty_plain:+qty_plain||0,qty_choc:+qty_choc||0,qty_honey:+qty_honey||0,
             note:note?String(note):'',
             lat:null,lon:null,_distance:null,geoLevel:null,
-          });
+          };
+          seen[oid]=o;
+          orders.push(o);
         }
       }
       allOrders=orders;
