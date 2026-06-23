@@ -417,7 +417,7 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
       <p>รองรับ .xlsx / .xls &nbsp;·&nbsp; BC=จังหวัด &nbsp;·&nbsp; BD=เขต &nbsp;·&nbsp; AX=ชื่อ &nbsp;·&nbsp; AY=เบอร์ &nbsp;·&nbsp; BA=ที่อยู่ &nbsp;·&nbsp; BG=ไปรษณีย์</p>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">
         <label class="upload-label" onclick="event.stopPropagation();document.getElementById('file-input').click()">📂 เลือกไฟล์ Excel</label>
-        <button class="upload-label" style="background:#0F9D58;cursor:pointer;border:none" onclick="event.stopPropagation();showSheetsDialog()">
+        <button class="upload-label" style="background:#0F9D58;cursor:pointer;border:none" onclick="event.stopPropagation();loadFromSheetsQuick()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           โหลดจาก Google Sheets
         </button>
@@ -918,6 +918,55 @@ function extractSheetId(url){
 function extractGid(url){
   const m=url.match(/[#&?]gid=(\d+)/);
   return m?m[1]:'0';
+}
+
+// Quick loader: use the input's default URL (or provided URL) and load without opening modal
+async function loadFromSheetsQuick(optionalUrl){
+  const defaultInput=document.getElementById('sheets-url');
+  const url=String(optionalUrl||defaultInput.value||'').trim();
+  if(!url){
+    // fallback to showing modal so user can paste
+    showSheetsDialog();
+    return;
+  }
+
+  const sheetId=extractSheetId(url);
+  if(!sheetId){
+    // invalid, show modal for user correction
+    showSheetsDialog();
+    return;
+  }
+
+  const gid=extractGid(url);
+  const csvUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+
+  document.getElementById('loading').style.display='block';
+  document.getElementById('loading-text').textContent='กำลังโหลดจาก Google Sheets...';
+  document.getElementById('results').innerHTML='';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('filter-bar').style.display='none';
+
+  const proxies=[
+    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u=>`https://cors-anywhere.herokuapp.com/${u}`,
+  ];
+
+  let lastErr='';
+  for(const proxy of proxies){
+    try{
+      const res=await fetch(proxy(csvUrl),{headers:{'X-Requested-With':'XMLHttpRequest'}});
+      if(!res.ok){lastErr=`HTTP ${res.status}`;continue;}
+      const text=await res.text();
+      if(text.trim().startsWith('<')){lastErr='ได้รับ HTML แทน CSV';continue;}
+      if(!text||text.trim().length===0){lastErr='ไม่พบข้อมูลใน Sheet';continue;}
+      processCSVText(text);
+      return;
+    }catch(e){lastErr=e.message;continue;}
+  }
+
+  document.getElementById('loading').style.display='none';
+  document.getElementById('results').innerHTML=`<div class="empty-state">โหลดไม่สำเร็จ: ${lastErr}<br><small>โปรดตรวจสอบการตั้งค่าการแชร์ของ Google Sheet (ทุกคนที่มีลิงก์ → ผู้ดู)</small></div>`;
 }
 
 async function loadFromSheets(){
