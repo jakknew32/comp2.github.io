@@ -364,6 +364,15 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
   .print-title { display: block !important; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
 }
 .print-title { display: none; }
+/* Sheets dialog */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg-card);border-radius:var(--r-xl);padding:var(--sp-6);width:100%;max-width:480px;box-shadow:var(--shadow-md)}
+.modal h3{font-size:var(--text-lg);font-weight:700;margin-bottom:var(--sp-2);color:var(--text)}
+.modal p{font-size:var(--text-sm);color:var(--muted);margin-bottom:var(--sp-4);line-height:1.6}
+.modal input[type=text]{width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px var(--sp-3);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;margin-bottom:var(--sp-3)}
+.modal input[type=text]:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15)}
+.modal-btns{display:flex;gap:var(--sp-2);justify-content:flex-end}
 </style>
 </head>
 <body>
@@ -406,7 +415,13 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
       </svg>
       <h2>ลากวางหรือเลือกไฟล์ Excel</h2>
       <p>รองรับ .xlsx / .xls &nbsp;·&nbsp; BC=จังหวัด &nbsp;·&nbsp; BD=เขต &nbsp;·&nbsp; AX=ชื่อ &nbsp;·&nbsp; AY=เบอร์ &nbsp;·&nbsp; BA=ที่อยู่ &nbsp;·&nbsp; BG=ไปรษณีย์</p>
-      <label class="upload-label" onclick="event.stopPropagation();document.getElementById('file-input').click()">เลือกไฟล์</label>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+        <label class="upload-label" onclick="event.stopPropagation();document.getElementById('file-input').click()">📂 เลือกไฟล์ Excel</label>
+        <button class="upload-label" style="background:#0F9D58;cursor:pointer;border:none" onclick="event.stopPropagation();showSheetsDialog()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          โหลดจาก Google Sheets
+        </button>
+      </div>
       <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(event)">
     </div>
     <div id="loading" style="margin-top:var(--sp-4)"><span class="spinner"></span><span id="loading-text">กำลังประมวลผล...</span></div>
@@ -448,6 +463,8 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
       <option value="delivered">🟢 ส่งแล้ว</option>
       <option value="problem">🔴 มีปัญหา</option>
     </select>
+    <label>วันที่:</label>
+    <select id="date-filter" onchange="applyFilter()"><option value="">ทั้งหมด</option></select>
     <label>ค้นหา:</label>
     <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
     <label>📍 หมุด:</label>
@@ -605,55 +622,7 @@ function processFile(file){
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
-      const orders=[],seen={};
-      for(let i=0;i<data.length;i++){
-        const row=data[i];
-        const orderNum=row[2];if(!orderNum)continue;
-        if(String(orderNum).includes('สถานะ'))continue;
-        const status=row[0];
-        if(String(status||'').includes('คำสั่งซื้อผิด'))continue;
-        const district=row[55],province=row[54],address=row[52];
-        const customer=row[49],phone=row[50],note=row[51];
-        const zipcode=row[56]?String(row[56]).replace(/\.0$/,''):'';
-        const qty_plain=row[57],qty_choc=row[58],qty_honey=row[59];
-        if(!customer&&!address)continue;
-        if(!district&&!province)continue;
-        const oid=String(orderNum);
-        if(seen[oid]){
-          // order ซ้ำ — บวก qty เพิ่ม
-          seen[oid].qty_plain+=(+qty_plain||0);
-          seen[oid].qty_choc +=(+qty_choc ||0);
-          seen[oid].qty_honey+=(+qty_honey||0);
-        } else {
-          const o={
-            order_id:oid,customer:String(customer||'-'),
-            phone:formatPhone(phone),district:String(district||''),
-            province:String(province||''),address:String(address||'-'),
-            zipcode,zone:detectZone(String(district||''),String(province||'')),
-            status:String(status||''),
-            qty_plain:+qty_plain||0,qty_choc:+qty_choc||0,qty_honey:+qty_honey||0,
-            note:note?String(note):'',
-            lat:null,lon:null,_distance:null,geoLevel:null,
-          };
-          seen[oid]=o;
-          orders.push(o);
-        }
-      }
-      allOrders=orders;
-      document.getElementById('loading').style.display='none';
-      if(orders.length===0){
-        document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
-        return;
-      }
-      const zf=document.getElementById('zone-filter');
-      zf.innerHTML='<option value="">ทั้งหมด</option>';
-      [...new Set(orders.map(o=>o.zone))].sort().forEach(z=>{
-        const opt=document.createElement('option');opt.value=z;opt.textContent=z;zf.appendChild(opt);
-      });
-      document.getElementById('filter-bar').style.display='flex';
-      document.getElementById('btn-export').style.display='';
-      document.getElementById('btn-print').style.display='';
-      applyFilter();
+      buildOrdersFromRows(data);
     }catch(err){
       document.getElementById('loading').style.display='none';
       document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${err.message}</div>`;
@@ -663,13 +632,25 @@ function processFile(file){
 }
 
 // ── FILTER ───────────────────────────────────────────────────
+// แปลง 6 ตัวแรกของ order_id เป็นวันที่ไทย
+function parseOrderDate(order_id){
+  const m = String(order_id).match(/^(\d{2})(\d{2})(\d{2})/);
+  if(!m) return null;
+  const yy=+m[1], mm=+m[2], dd=+m[3];
+  const buddhistYear = 2500 + yy;
+  const thMonths=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return { key: `${yy}${String(mm).padStart(2,'0')}${String(dd).padStart(2,'0')}`, label: `${dd} ${thMonths[mm]} ${buddhistYear}` };
+}
+
 function applyFilter(){
   const zf=document.getElementById('zone-filter').value;
   const sf=document.getElementById('status-filter').value;
+  const df=document.getElementById('date-filter').value;
   const q=document.getElementById('search-input').value.toLowerCase();
   filteredOrders=allOrders.filter(o=>{
     if(zf&&o.zone!==zf)return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
+    if(df){ const d=parseOrderDate(o.order_id); if(!d||d.key!==df)return false; }
     if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
     return true;
   });
@@ -697,6 +678,7 @@ function resetFilter(){
   ['search-input','marker-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('zone-filter').value='';
   document.getElementById('status-filter').value='';
+  document.getElementById('date-filter').value='';
   document.getElementById('radius-input').value='15';
   document.getElementById('geo-status').textContent='';
   document.getElementById('geo-progress-wrap').style.display='none';
@@ -889,6 +871,211 @@ function exportExcel(){
   });
   const d=new Date().toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
   XLSX.writeFile(wb,`CFM_Zone_${d}.xlsx`);
+}
+</script>
+
+<!-- ── GOOGLE SHEETS MODAL ── -->
+<div class="modal-overlay" id="sheets-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3>📊 โหลดจาก Google Sheets</h3>
+    <p>
+      วางลิงก์ Google Sheets ได้เลย<br>
+      <b>ต้องแชร์ Sheet ก่อน:</b> แชร์ → ทุกคนที่มีลิงก์ → ผู้ดู
+    </p>
+    <input type="text" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/.../edit"
+      value="https://docs.google.com/spreadsheets/d/1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ/edit">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      💡 ระบบจะดึงข้อมูล Sheet แรกอัตโนมัติ ไม่ต้อง export
+    </div>
+    <div id="sheets-error" style="display:none;font-size:13px;color:#DC2626;background:#FEE2E2;border-radius:6px;padding:8px 12px;margin-bottom:12px"></div>
+    <div class="modal-btns">
+      <button class="filter-btn" onclick="closeModal()">ยกเลิก</button>
+      <button class="filter-btn primary" onclick="loadFromSheets()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.83"/></svg>
+        โหลดข้อมูล
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── GOOGLE SHEETS LOADER ─────────────────────────────────────
+function showSheetsDialog(){
+  document.getElementById('sheets-modal').classList.add('show');
+  document.getElementById('sheets-error').style.display='none';
+  setTimeout(()=>document.getElementById('sheets-url').focus(),100);
+}
+function closeModal(){
+  document.getElementById('sheets-modal').classList.remove('show');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+function extractSheetId(url){
+  const m=url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return m?m[1]:null;
+}
+
+function extractGid(url){
+  const m=url.match(/[#&?]gid=(\d+)/);
+  return m?m[1]:'0';
+}
+
+async function loadFromSheets(){
+  const url=document.getElementById('sheets-url').value.trim();
+  const errEl=document.getElementById('sheets-error');
+  errEl.style.display='none';
+
+  const sheetId=extractSheetId(url);
+  if(!sheetId){
+    errEl.textContent='ลิงก์ไม่ถูกต้อง กรุณาวาง URL จาก Google Sheets';
+    errEl.style.display='block'; return;
+  }
+
+  const gid=extractGid(url);
+  const csvUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  // CORS proxies — ลองทีละตัว
+  const proxies=[
+    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u=>`https://cors-anywhere.herokuapp.com/${u}`,
+  ];
+
+  const btn=document.querySelector('#sheets-modal .primary');
+  const origText=btn.innerHTML;
+  btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:6px"></span>กำลังโหลด...';
+  btn.disabled=true;
+
+  let lastErr='';
+  for(const proxy of proxies){
+    try{
+      const res=await fetch(proxy(csvUrl),{headers:{'X-Requested-With':'XMLHttpRequest'}});
+      if(!res.ok){lastErr=`HTTP ${res.status}`;continue;}
+      const text=await res.text();
+      // ถ้าได้ HTML กลับมา (CORS redirect) ให้ลอง proxy ถัดไป
+      if(text.trim().startsWith('<')){lastErr='ได้รับ HTML แทน CSV';continue;}
+      if(!text||text.trim().length===0){lastErr='ไม่พบข้อมูลใน Sheet';continue;}
+      closeModal();
+      btn.innerHTML=origText; btn.disabled=false;
+      processCSVText(text);
+      return;
+    }catch(e){lastErr=e.message;continue;}
+  }
+  // ทุก proxy ล้มเหลว
+  errEl.textContent=`โหลดไม่สำเร็จ: ${lastErr} — กรุณาตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
+  errEl.style.display='block';
+  btn.innerHTML=origText; btn.disabled=false;
+}
+
+// ── PARSE CSV (รองรับที่อยู่มีเครื่องหมาย comma ใน quotes) ──
+function parseCSV(text){
+  const rows=[];
+  const lines=text.split('\n');
+  for(const line of lines){
+    if(!line.trim()) continue;
+    const row=[];
+    let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){
+        if(inQ&&line[i+1]==='"'){cur+='"';i++;} // escaped quote
+        else inQ=!inQ;
+      } else if(c===','&&!inQ){
+        row.push(cur); cur='';
+      } else { cur+=c; }
+    }
+    row.push(cur);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function processCSVText(text){
+  // guard: ถ้าได้ HTML (CORS error) ให้แสดง error
+  if(text.trim().startsWith('<')){
+    document.getElementById('results').innerHTML='<div class="empty-state">โหลดไม่สำเร็จ: ได้รับ HTML แทน CSV<br><small>กรุณาตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว</small></div>';
+    return;
+  }
+  document.getElementById('loading').style.display='block';
+  document.getElementById('loading-text').textContent='กำลังประมวลผลข้อมูล...';
+  document.getElementById('results').innerHTML='';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('filter-bar').style.display='none';
+  geoMarker=null;
+
+  setTimeout(()=>{
+    try {
+      const data=parseCSV(text);
+      buildOrdersFromRows(data);
+    } catch(e){
+      document.getElementById('loading').style.display='none';
+      document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${e.message}</div>`;
+    }
+  },50);
+}
+
+// ── SHARED PARSER (ใช้ทั้ง Excel และ CSV) ───────────────────
+function buildOrdersFromRows(data){
+  const orders=[],seen={};
+  for(let i=0;i<data.length;i++){
+    const row=data[i];
+    const orderNum=row[2]; if(!orderNum||!String(orderNum).trim()) continue;
+    if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain')) continue;
+    const status=row[0];
+    if(String(status||'').includes('คำสั่งซื้อผิด')) continue;
+    const sc=classifyStatus(String(status||''));
+    // ไม่ skip delivered ที่นี่ — ให้ filter เอา
+    const district=row[55], province=row[54], address=row[52];
+    const customer=row[49], phone=row[50], note=row[51];
+    const zipcode=row[56]?String(row[56]).replace(/\.0$/,''):'';
+    const qty_plain=row[57], qty_choc=row[58], qty_honey=row[59];
+    if(!customer&&!address) continue;
+    if(!district&&!province) continue;
+    const oid=String(orderNum).trim();
+    if(seen[oid]){
+      seen[oid].qty_plain+=(+qty_plain||0);
+      seen[oid].qty_choc +=(+qty_choc ||0);
+      seen[oid].qty_honey+=(+qty_honey||0);
+    } else {
+      const o={
+        order_id:oid, customer:String(customer||'-'),
+        phone:formatPhone(phone), district:String(district||''),
+        province:String(province||''), address:String(address||'-'),
+        zipcode, zone:detectZone(String(district||''),String(province||'')),
+        status:String(status||''),
+        qty_plain:+qty_plain||0, qty_choc:+qty_choc||0, qty_honey:+qty_honey||0,
+        note:note?String(note):'',
+        lat:null, lon:null, _distance:null, geoLevel:null,
+      };
+      seen[oid]=o; orders.push(o);
+    }
+  }
+
+  allOrders=orders;
+  document.getElementById('loading').style.display='none';
+
+  if(orders.length===0){
+    document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
+    return;
+  }
+
+  const zf=document.getElementById('zone-filter');
+  zf.innerHTML='<option value="">ทั้งหมด</option>';
+  [...new Set(orders.map(o=>o.zone))].sort().forEach(z=>{
+    const opt=document.createElement('option');opt.value=z;opt.textContent=z;zf.appendChild(opt);
+  });
+
+  // populate date filter — เรียงวันที่จากน้อยไปมาก
+  const df=document.getElementById('date-filter');
+  df.innerHTML='<option value="">ทั้งหมด</option>';
+  const dateMap={};
+  orders.forEach(o=>{ const d=parseOrderDate(o.order_id); if(d&&!dateMap[d.key])dateMap[d.key]=d.label; });
+  Object.keys(dateMap).sort().forEach(key=>{
+    const opt=document.createElement('option');opt.value=key;opt.textContent=dateMap[key];df.appendChild(opt);
+  });
+  document.getElementById('filter-bar').style.display='flex';
+  document.getElementById('btn-export').style.display='';
+  document.getElementById('btn-print').style.display='';
+  applyFilter();
 }
 </script>
 </body>
