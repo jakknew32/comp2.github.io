@@ -535,6 +535,8 @@ function classifyStatus(s){
   if(s.includes('ปัญหา')||s.includes('ผิดพลาด'))return'problem';
   return'other';
 }
+// expose to global in case callers expect it on window
+try{window.classifyStatus = classifyStatus;}catch(e){}
 
 // ── ADDRESS PARSER ───────────────────────────────────────────
 function parseThaiAddress(raw,district,province,zipcode){
