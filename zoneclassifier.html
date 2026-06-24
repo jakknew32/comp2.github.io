@@ -6,17 +6,11 @@
 <title>CFM Zone Classifier — Chiangmai Freshmilk</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* ═══════════════════════════════════════════════
-   DESIGN TOKENS — single source of truth
-═══════════════════════════════════════════════ */
 :root {
-  /* Brand */
   --brand:        #1A56DB;
   --brand-dk:     #1e40af;
   --brand-lt:     #EBF5FF;
   --brand-mid:    #BFDBFE;
-
-  /* Semantic */
   --success:      #057A55;
   --success-lt:   #D1FAE5;
   --success-dk:   #046c4e;
@@ -24,8 +18,6 @@
   --warning-lt:   #FEF3C7;
   --danger:       #DC2626;
   --danger-lt:    #FEE2E2;
-
-  /* Neutral */
   --gray-50:  #F9FAFB;
   --gray-100: #F3F4F6;
   --gray-200: #E5E7EB;
@@ -33,44 +25,23 @@
   --gray-500: #6B7280;
   --gray-700: #374151;
   --gray-900: #111827;
-
-  /* Surfaces */
   --bg-page:    #F1F5F9;
   --bg-card:    #ffffff;
   --bg-topbar:  #1e40af;
   --border:     var(--gray-200);
   --text:       var(--gray-900);
   --muted:      var(--gray-500);
-
-  /* Typography scale */
   --text-xs:  11px;
   --text-sm:  13px;
   --text-md:  15px;
   --text-lg:  17px;
   --text-xl:  20px;
   --text-2xl: 24px;
-
-  /* Spacing scale (4px base) */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 20px;
-  --sp-6: 24px;
-
-  /* Radius */
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 12px;
-  --r-xl: 16px;
-  --r-full: 9999px;
-
-  /* Shadow */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-full: 9999px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
   --shadow-md: 0 4px 12px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
   --shadow-topbar: 0 2px 8px rgba(30,64,175,.25);
-
-  /* Zone palette — all in tokens */
   --z0-bg:#EFF6FF; --z0-fg:#1E3A8A;
   --z1-bg:#F0FDF4; --z1-fg:#14532D;
   --z2-bg:#FFF7ED; --z2-fg:#7C2D12;
@@ -82,67 +53,40 @@
   --z8-bg:#FEF2F2; --z8-fg:#7F1D1D;
   --z9-bg:#E0F2FE; --z9-fg:#075985;
   --z10-bg:#ECFDF5;--z10-fg:#166534;
-  --z11-bg:#F3F4F6;--z11-fg:#374151;
-
-  /* Qty colors */
+  --z11-bg:#FFF0F9;--z11-fg:#831843;
+  --z12-bg:#F0F9FF;--z12-fg:#0C4A6E;
+  --z13-bg:#F3F4F6;--z13-fg:#374151;
   --plain-color: #1A56DB;
   --choc-color:  #7E3AF2;
   --honey-color: #D03801;
 }
-
-/* ── DARK MODE ─────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-page:   #0F172A;
-    --bg-card:   #1E293B;
-    --bg-topbar: #0F172A;
-    --border:    #334155;
-    --text:      #F1F5F9;
-    --muted:     #94A3B8;
-    --gray-50:   #1E293B;
-    --gray-100:  #0F172A;
-    --gray-200:  #334155;
-    --gray-500:  #94A3B8;
-    --gray-700:  #CBD5E1;
-    --gray-900:  #F1F5F9;
-    --brand-lt:  #1e3a6e;
-    --brand-mid: #1e40af;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,.3);
-    --shadow-md: 0 4px 12px rgba(0,0,0,.4);
+    --bg-page:   #0F172A; --bg-card:   #1E293B; --bg-topbar: #0F172A;
+    --border:    #334155; --text:      #F1F5F9; --muted:     #94A3B8;
+    --gray-50:   #1E293B; --gray-100:  #0F172A; --gray-200:  #334155;
+    --gray-500:  #94A3B8; --gray-700:  #CBD5E1; --gray-900:  #F1F5F9;
+    --brand-lt:  #1e3a6e; --brand-mid: #1e40af;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.3); --shadow-md: 0 4px 12px rgba(0,0,0,.4);
     --shadow-topbar: 0 2px 8px rgba(0,0,0,.4);
-    --z0-bg:#1e2d4a; --z0-fg:#93C5FD;
-    --z1-bg:#14271e; --z1-fg:#6EE7B7;
-    --z2-bg:#2d1a0e; --z2-fg:#FBB97A;
-    --z3-bg:#1e0f2d; --z3-fg:#D8B4FE;
-    --z4-bg:#2d0f14; --z4-fg:#FCA5A5;
-    --z5-bg:#0e2720; --z5-fg:#5EEAD4;
-    --z6-bg:#2d2108; --z6-fg:#FDE68A;
-    --z7-bg:#1a1640; --z7-fg:#A5B4FC;
-    --z8-bg:#2d1010; --z8-fg:#FCA5A5;
-    --z9-bg:#0c2233; --z9-fg:#7DD3FC;
+    --z0-bg:#1e2d4a; --z0-fg:#93C5FD; --z1-bg:#14271e; --z1-fg:#6EE7B7;
+    --z2-bg:#2d1a0e; --z2-fg:#FBB97A; --z3-bg:#1e0f2d; --z3-fg:#D8B4FE;
+    --z4-bg:#2d0f14; --z4-fg:#FCA5A5; --z5-bg:#0e2720; --z5-fg:#5EEAD4;
+    --z6-bg:#2d2108; --z6-fg:#FDE68A; --z7-bg:#1a1640; --z7-fg:#A5B4FC;
+    --z8-bg:#2d1010; --z8-fg:#FCA5A5; --z9-bg:#0c2233; --z9-fg:#7DD3FC;
     --z10-bg:#0f2d1e;--z10-fg:#6EE7B7;
-    --z11-bg:#1E293B;--z11-fg:#94A3B8;
-    --success-lt: #14271e;
-    --danger-lt:  #2d0f14;
-    --warning-lt: #2d2108;
-    --brand-lt:   #1e2d4a;
+    --z11-bg:#2d0f22;--z11-fg:#F9A8D4;
+    --z12-bg:#0c1e2d;--z12-fg:#7DD3FC;
+    --z13-bg:#1E293B;--z13-fg:#94A3B8;
+    --success-lt: #14271e; --danger-lt:  #2d0f14; --warning-lt: #2d2108; --brand-lt:   #1e2d4a;
   }
 }
-
-/* ═══════════════════════════════════════════════
-   RESET & BASE
-═══════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page); color: var(--text); font-size: var(--text-md); line-height: 1.5; }
 
-/* ═══════════════════════════════════════════════
-   TOPBAR — redesigned with brand color + shadow
-═══════════════════════════════════════════════ */
 .topbar {
-  background: var(--bg-topbar);
-  box-shadow: var(--shadow-topbar);
-  padding: 0 var(--sp-6);
-  display: flex; align-items: center; gap: var(--sp-3);
+  background: var(--bg-topbar); box-shadow: var(--shadow-topbar);
+  padding: 0 var(--sp-6); display: flex; align-items: center; gap: var(--sp-3);
   height: 56px; position: sticky; top: 0; z-index: 200;
 }
 .logo { display: flex; align-items: center; gap: var(--sp-2); font-weight: 700; font-size: var(--text-md); color: #fff; }
@@ -163,14 +107,8 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 .btn-print { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25); }
 .btn-print:hover { background: rgba(255,255,255,.22); }
 
-/* ═══════════════════════════════════════════════
-   MAIN LAYOUT
-═══════════════════════════════════════════════ */
 .main { max-width: 1280px; margin: 0 auto; padding: var(--sp-6) var(--sp-4); }
 
-/* ═══════════════════════════════════════════════
-   UPLOAD ZONE
-═══════════════════════════════════════════════ */
 #upload-zone {
   background: var(--bg-card); border: 2px dashed var(--border);
   border-radius: var(--r-xl); padding: 48px var(--sp-6);
@@ -191,12 +129,8 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 }
 .upload-label:hover { background: var(--brand-dk); }
 
-/* ═══════════════════════════════════════════════
-   DASHBOARD — donut + summary bar
-═══════════════════════════════════════════════ */
 .dashboard { display: grid; grid-template-columns: 260px 1fr; gap: var(--sp-4); margin-bottom: var(--sp-5); }
 @media (max-width: 720px) { .dashboard { grid-template-columns: 1fr; } }
-
 .donut-card {
   background: var(--bg-card); border-radius: var(--r-lg);
   border: 1px solid var(--border); box-shadow: var(--shadow-sm);
@@ -214,44 +148,30 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .legend-name { flex: 1; color: var(--text); }
 .legend-count { font-weight: 700; color: var(--muted); }
-
 .stats-panel { display: flex; flex-direction: column; gap: var(--sp-3); }
 .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--sp-3); }
-.stat-card {
-  background: var(--bg-card); border-radius: var(--r-md);
-  padding: var(--sp-4); border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-}
+.stat-card { background: var(--bg-card); border-radius: var(--r-md); padding: var(--sp-4); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
 .stat-num { font-size: var(--text-2xl); font-weight: 700; color: var(--brand); line-height: 1; }
 .stat-label { font-size: var(--text-xs); color: var(--muted); margin-top: var(--sp-1); }
-
-/* hidden banner แสดง filtered-out count */
 .filter-info {
   background: var(--brand-lt); border: 1px solid var(--brand-mid);
   border-radius: var(--r-md); padding: var(--sp-2) var(--sp-4);
   font-size: var(--text-sm); color: var(--brand-dk);
   display: none; align-items: center; gap: var(--sp-2);
 }
-@media (prefers-color-scheme: dark) {
-  .filter-info { color: #93C5FD; }
-}
+@media (prefers-color-scheme: dark) { .filter-info { color: #93C5FD; } }
 
-/* ═══════════════════════════════════════════════
-   FILTER BAR
-═══════════════════════════════════════════════ */
 .filter-bar {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4);
   display: flex; align-items: center; gap: var(--sp-2);
-  flex-wrap: wrap; margin-bottom: var(--sp-4);
-  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap; margin-bottom: var(--sp-4); box-shadow: var(--shadow-sm);
 }
 .filter-bar label { font-size: var(--text-sm); color: var(--muted); white-space: nowrap; }
 .filter-bar select, .filter-bar input[type=text], .filter-bar input[type=number] {
   border: 1px solid var(--border); border-radius: var(--r-md);
   padding: 6px var(--sp-2); font-size: var(--text-sm);
-  color: var(--text); background: var(--bg-card); outline: none;
-  transition: border-color .15s;
+  color: var(--text); background: var(--bg-card); outline: none; transition: border-color .15s;
 }
 .filter-bar select:focus, .filter-bar input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(26,86,219,.15); }
 #search-input { flex: 1; min-width: 150px; }
@@ -271,16 +191,28 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 .geo-progress-wrap { background: var(--gray-200); border-radius: var(--r-full); height: 5px; width: 100%; overflow: hidden; display: none; margin-top: 2px; }
 .geo-progress-bar { height: 5px; background: var(--brand); border-radius: var(--r-full); transition: width .3s; width: 0%; }
 
-/* ═══════════════════════════════════════════════
-   ZONE SECTIONS — sticky header
-═══════════════════════════════════════════════ */
+/* ── ZONE CARD-SEARCH BAR ── */
+.zone-search-bar {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-top: none; border-bottom: none;
+}
+.zone-search-input {
+  flex: 1; border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 5px var(--sp-3); font-size: var(--text-sm);
+  color: var(--text); background: var(--bg-card); outline: none;
+  transition: border-color .15s;
+}
+.zone-search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(26,86,219,.15); }
+.zone-search-count { font-size: var(--text-xs); color: var(--muted); white-space: nowrap; }
+
 .zone-section { margin-bottom: var(--sp-6); }
 .zone-header {
   display: flex; align-items: center; gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-4);
   border-radius: var(--r-md) var(--r-md) 0 0;
   font-weight: 700; font-size: var(--text-sm);
-  /* sticky — ต่ำกว่า topbar (56px) */
   position: sticky; top: 56px; z-index: 10;
   box-shadow: 0 2px 4px rgba(0,0,0,.08);
 }
@@ -292,7 +224,6 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--sp-3);
 }
-/* order card */
 .order-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: var(--sp-4);
@@ -304,7 +235,7 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 .order-card.is-problem { border-left: 4px solid var(--danger); }
 .order-card.is-pending  { border-left: 4px solid #F59E0B; }
 .order-card.is-delivered{ border-left: 4px solid var(--success); }
-
+.order-card.card-hidden { display: none; }
 .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
 .card-order-id { font-family: monospace; font-size: var(--text-xs); color: var(--muted); }
 .card-name { font-size: var(--text-md); font-weight: 700; color: var(--text); margin-top: 2px; }
@@ -313,58 +244,51 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 .card-products { display: flex; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--gray-50); border-radius: var(--r-md); }
 .card-qty { display: flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: 700; }
 .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: var(--sp-1); }
-
-/* status badge — เด่นขึ้น ใช้สีเต็ม */
 .status-badge { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-xs); padding: 4px 10px; border-radius: var(--r-full); font-weight: 700; letter-spacing: .02em; }
 .s-pending  { background: #FEF3C7; color: #78350F; border: 1.5px solid #FCD34D; }
 .s-delivered{ background: #D1FAE5; color: #064E3B; border: 1.5px solid #6EE7B7; }
 .s-problem  { background: #FEE2E2; color: #7F1D1D; border: 1.5px solid #FCA5A5; }
-
 .dist-badge { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-xs); padding: 3px 8px; border-radius: var(--r-full); background: #EEF2FF; color: #3730A3; font-weight: 600; }
 .maps-btn { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: 600; padding: 6px var(--sp-3); border-radius: var(--r-md); background: var(--brand); color: #fff; border: none; cursor: pointer; text-decoration: none; transition: background .15s; }
 .maps-btn:hover { background: var(--brand-dk); }
-.maps-btn:focus { outline: 2px solid var(--brand); outline-offset: 2px; }
-
 .zone-footer { padding: var(--sp-2) var(--sp-4); background: var(--bg-card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--r-md) var(--r-md); display: flex; justify-content: flex-end; gap: var(--sp-4); font-size: var(--text-sm); }
 .zone-footer span { font-weight: 700; }
+.no-cards-msg { grid-column: 1/-1; text-align: center; padding: var(--sp-6); color: var(--muted); font-size: var(--text-sm); }
 
-/* Zone color classes */
-.z0  { background: var(--z0-bg);  color: var(--z0-fg);  }
-.z1  { background: var(--z1-bg);  color: var(--z1-fg);  }
-.z2  { background: var(--z2-bg);  color: var(--z2-fg);  }
-.z3  { background: var(--z3-bg);  color: var(--z3-fg);  }
-.z4  { background: var(--z4-bg);  color: var(--z4-fg);  }
-.z5  { background: var(--z5-bg);  color: var(--z5-fg);  }
-.z6  { background: var(--z6-bg);  color: var(--z6-fg);  }
-.z7  { background: var(--z7-bg);  color: var(--z7-fg);  }
-.z8  { background: var(--z8-bg);  color: var(--z8-fg);  }
-.z9  { background: var(--z9-bg);  color: var(--z9-fg);  }
-.z10 { background: var(--z10-bg); color: var(--z10-fg); }
-.z11 { background: var(--z11-bg); color: var(--z11-fg); }
+/* Zone color classes — z11=กรุงเทพกลาง(pink), z12=ต่างจังหวัด(sky), z13=อื่นๆ(gray) */
+.z0{background:var(--z0-bg);color:var(--z0-fg);}
+.z1{background:var(--z1-bg);color:var(--z1-fg);}
+.z2{background:var(--z2-bg);color:var(--z2-fg);}
+.z3{background:var(--z3-bg);color:var(--z3-fg);}
+.z4{background:var(--z4-bg);color:var(--z4-fg);}
+.z5{background:var(--z5-bg);color:var(--z5-fg);}
+.z6{background:var(--z6-bg);color:var(--z6-fg);}
+.z7{background:var(--z7-bg);color:var(--z7-fg);}
+.z8{background:var(--z8-bg);color:var(--z8-fg);}
+.z9{background:var(--z9-bg);color:var(--z9-fg);}
+.z10{background:var(--z10-bg);color:var(--z10-fg);}
+.z11{background:var(--z11-bg);color:var(--z11-fg);}
+.z12{background:var(--z12-bg);color:var(--z12-fg);}
+.z13{background:var(--z13-bg);color:var(--z13-fg);}
 
-/* ═══════════════════════════════════════════════
-   MISC
-═══════════════════════════════════════════════ */
 .empty-state { text-align: center; padding: 48px var(--sp-6); color: var(--muted); font-size: var(--text-md); }
 #loading { display: none; text-align: center; padding: 32px; color: var(--muted); font-size: var(--text-md); }
 .spinner { display: inline-block; width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: var(--sp-2); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ═══════════════════════════════════════════════
-   PRINT
-═══════════════════════════════════════════════ */
 @media print {
-  .topbar, .filter-bar, #upload-section, #dashboard, .no-print { display: none !important; }
+  .topbar, .filter-bar, #upload-section, #dashboard, .no-print, .zone-search-bar { display: none !important; }
   body { background: #fff; font-size: 12px; color: #000; }
   .main { padding: 0; max-width: 100%; }
   .zone-section { break-inside: avoid; }
   .zone-header { position: static; box-shadow: none; }
   .zone-cards-wrap { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
   .order-card { box-shadow: none; border: 1px solid #ccc; }
+  .order-card.card-hidden { display: flex !important; }
   .print-title { display: block !important; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
 }
 .print-title { display: none; }
-/* Sheets dialog */
+
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
 .modal-overlay.show{display:flex}
 .modal{background:var(--bg-card);border-radius:var(--r-xl);padding:var(--sp-6);width:100%;max-width:480px;box-shadow:var(--shadow-md)}
@@ -377,7 +301,6 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 </head>
 <body>
 
-<!-- ── TOPBAR ── -->
 <div class="topbar no-print">
   <div class="logo">
     <svg viewBox="0 0 32 32" fill="none">
@@ -404,7 +327,6 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 </div>
 
 <div class="main">
-  <!-- UPLOAD -->
   <div id="upload-section" class="no-print" style="margin-bottom:var(--sp-5)">
     <div id="upload-zone" onclick="document.getElementById('file-input').click()"
          ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
@@ -429,7 +351,6 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 
   <div class="print-title">รายงานแยกโซน — Chiangmai Freshmilk</div>
 
-  <!-- DASHBOARD -->
   <div id="dashboard" class="dashboard" style="display:none">
     <div class="donut-card">
       <div class="donut-title">สัดส่วนออเดอร์ตามโซน</div>
@@ -444,7 +365,6 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
     </div>
     <div class="stats-panel">
       <div class="stats-row" id="stats-row"></div>
-      <!-- filter-info banner -->
       <div class="filter-info" id="filter-info">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <span id="filter-info-text"></span>
@@ -452,7 +372,6 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
     </div>
   </div>
 
-  <!-- FILTER BAR -->
   <div id="filter-bar" class="filter-bar no-print" style="display:none">
     <label>โซน:</label>
     <select id="zone-filter" onchange="applyFilter()"><option value="">ทั้งหมด</option></select>
@@ -485,42 +404,90 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 
 <script>
 // ── ZONE CONFIG ──────────────────────────────────────────────
+// เพิ่ม กรุงเทพกลาง (index 4) และ ต่างจังหวัด (index 12), อื่นๆ (index 13)
 const ZONE_LIST = [
-  'กรุงเทพเหนือ','กรุงเทพตะวันออก','กรุงเทพตะวันตก','กรุงเทพฝั่งธน',
-  'นนทบุรี','ปทุมธานี','สมุทรสาคร','สมุทรสงคราม','นครปฐม','ชลบุรี','สมุทรปราการ','อื่นๆ'
+  'กรุงเทพเหนือ',     // z0
+  'กรุงเทพกลาง',     // z1  ← ใหม่
+  'กรุงเทพตะวันออก', // z2
+  'กรุงเทพตะวันตก',  // z3
+  'กรุงเทพฝั่งธน',   // z4
+  'นนทบุรี',          // z5
+  'ปทุมธานี',         // z6
+  'สมุทรสาคร',        // z7
+  'สมุทรสงคราม',      // z8
+  'นครปฐม',           // z9
+  'ชลบุรี',           // z10
+  'สมุทรปราการ',      // z11
+  'ต่างจังหวัด',      // z12 ← ใหม่
+  'อื่นๆ',            // z13
 ];
-const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11'];
-// Donut colors (vivid, readable on both light/dark)
+const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11','z12','z13'];
 const ZONE_DONUT = [
-  '#3B82F6','#10B981','#F97316','#A855F7','#F43F5E',
-  '#06B6D4','#EAB308','#6366F1','#EF4444','#0EA5E9','#22C55E','#94A3B8'
+  '#3B82F6','#EC4899','#10B981','#F97316','#A855F7',
+  '#06B6D4','#EAB308','#6366F1','#84CC16','#0EA5E9',
+  '#22C55E','#F43F5E','#8B5CF6','#94A3B8'
 ];
 
+// ── DISTRICT → ZONE MAP (ใช้ forEach หลีกเลี่ยง duplicate key) ──
 const DZ = {};
+
+// กรุงเทพเหนือ
 ['เขตบางเขน','เขตดอนเมือง','เขตสายไหม','เขตหลักสี่','เขตลาดพร้าว',
  'เขตจตุจักร','เขตบางซื่อ','เขตห้วยขวาง','เขตดินแดง','เขตวังทองหลาง',
  'เขตรามอินทรา','เขตบางกะปิ'].forEach(d=>DZ[d]='กรุงเทพเหนือ');
+
+// กรุงเทพกลาง ← ใหม่
+['เขตสาทร','เขตคลองสามวา','เขตทุ่งครุ','เขตราชเทวี'].forEach(d=>DZ[d]='กรุงเทพกลาง');
+
+// กรุงเทพตะวันออก
 ['เขตมีนบุรี','เขตลาดกระบัง','เขตสะพานสูง','เขตประเวศ','เขตบางนา',
  'เขตสวนหลวง','เขตพระโขนง','เขตคลองเตย','เขตหนองจอก','เขตคันนายาว',
  'เขตบึงกุ่ม'].forEach(d=>DZ[d]='กรุงเทพตะวันออก');
+
+// กรุงเทพตะวันตก
 ['เขตพระนคร','เขตดุสิต','เขตพญาไท','เขตปทุมวัน','เขตบางรัก',
  'เขตยานนาวา','เขตบางคอแหลม','เขตบางพลัด','เขตราษฎร์บูรณะ','เขตวัฒนา',
  'เขตสัมพันธวงศ์','เขตป้อมปราบศัตรูพ่าย','เขตจักรวรรดิ',
  'เขตบางกอกน้อย','เขตบางกอกใหญ่'].forEach(d=>DZ[d]='กรุงเทพตะวันตก');
+
+// กรุงเทพฝั่งธน
 ['เขตธนบุรี','เขตคลองสาน','เขตจอมทอง','เขตบางแค','เขตหนองแขม',
  'เขตภาษีเจริญ','เขตบางบอน','เขตทวีวัฒนา','เขตตลิ่งชัน',
  'เขตบางขุนเทียน'].forEach(d=>DZ[d]='กรุงเทพฝั่งธน');
+
+// จังหวัดปริมณฑลที่กำหนด
 const PROVINCE_ZONE = {
   'นนทบุรี':'นนทบุรี','ปทุมธานี':'ปทุมธานี','สมุทรสาคร':'สมุทรสาคร',
   'สมุทรสงคราม':'สมุทรสงคราม','สมุทรปราการ':'สมุทรปราการ',
   'นครปฐม':'นครปฐม','ชลบุรี':'ชลบุรี',
 };
-function detectZone(d,p){
-  for(const[k,v]of Object.entries(PROVINCE_ZONE))if(p&&p.includes(k))return v;
-  if(d&&DZ[d])return DZ[d];
-  if(p&&p.includes('กรุงเทพ'))return 'อื่นๆ';
+
+// จังหวัดที่ถือว่าเป็น "กรุงเทพ"
+const BKK_ALIASES = ['กรุงเทพ','กทม','bangkok'];
+
+function detectZone(d, p) {
+  const dStr = String(d||'').trim();
+  const pStr = String(p||'').trim();
+
+  // 1. เช็คจังหวัดปริมณฑลก่อน
+  for (const [k, v] of Object.entries(PROVINCE_ZONE)) {
+    if (pStr.includes(k)) return v;
+  }
+
+  // 2. เช็คเขตใน map
+  if (dStr && DZ[dStr]) return DZ[dStr];
+
+  // 3. กรุงเทพแต่เขตไม่อยู่ใน map → อื่นๆ
+  if (BKK_ALIASES.some(a => pStr.toLowerCase().includes(a) || dStr.toLowerCase().includes(a))) {
+    return 'อื่นๆ';
+  }
+
+  // 4. มีจังหวัด แต่ไม่ใช่ปริมณฑล/กรุงเทพ → ต่างจังหวัด
+  if (pStr && pStr.length > 0) return 'ต่างจังหวัด';
+
   return 'อื่นๆ';
 }
+
 function formatPhone(raw){
   if(!raw)return'-';
   let s=String(raw).replace(/\.0$/,'').replace(/\D/g,'');
@@ -536,7 +503,6 @@ function classifyStatus(s){
   return'other';
 }
 
-// ── ADDRESS PARSER ───────────────────────────────────────────
 function parseThaiAddress(raw,district,province,zipcode){
   if(!raw||raw==='-')return null;
   let addr=raw.trim();
@@ -558,7 +524,6 @@ function buildNominatimQueries(p){
   ].filter(Boolean);
 }
 
-// ── GEOCODER ────────────────────────────────────────────────
 const CACHE_KEY='cfm_geo_v4';
 let geoCache={};
 try{geoCache=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');}catch(e){}
@@ -600,10 +565,8 @@ function mapsUrl(o){
   return`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 }
 
-// ── STATE ────────────────────────────────────────────────────
 let allOrders=[],filteredOrders=[],geoMarker=null;
 
-// ── FILE HANDLING ─────────────────────────────────────────────
 function onDragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag-over')}
 function onDragLeave(){document.getElementById('upload-zone').classList.remove('drag-over')}
 function onDrop(e){e.preventDefault();onDragLeave();const f=e.dataTransfer.files[0];if(f)processFile(f)}
@@ -631,15 +594,13 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-// ── FILTER ───────────────────────────────────────────────────
-// แปลง 6 ตัวแรกของ order_id เป็นวันที่ไทย
 function parseOrderDate(order_id){
-  const m = String(order_id).match(/^(\d{2})(\d{2})(\d{2})/);
-  if(!m) return null;
-  const yy=+m[1], mm=+m[2], dd=+m[3];
-  const buddhistYear = 2500 + yy;
+  const m=String(order_id).match(/^(\d{2})(\d{2})(\d{2})/);
+  if(!m)return null;
+  const yy=+m[1],mm=+m[2],dd=+m[3];
+  const buddhistYear=2500+yy;
   const thMonths=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  return { key: `${yy}${String(mm).padStart(2,'0')}${String(dd).padStart(2,'0')}`, label: `${dd} ${thMonths[mm]} ${buddhistYear}` };
+  return{key:`${yy}${String(mm).padStart(2,'0')}${String(dd).padStart(2,'0')}`,label:`${dd} ${thMonths[mm]} ${buddhistYear}`};
 }
 
 function applyFilter(){
@@ -650,7 +611,7 @@ function applyFilter(){
   filteredOrders=allOrders.filter(o=>{
     if(zf&&o.zone!==zf)return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
-    if(df){ const d=parseOrderDate(o.order_id); if(!d||d.key!==df)return false; }
+    if(df){const d=parseOrderDate(o.order_id);if(!d||d.key!==df)return false;}
     if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
     return true;
   });
@@ -661,12 +622,10 @@ function applyFilter(){
     fi.style.display='flex';
     const parts=[];
     if(zf)parts.push(`โซน "${zf}"`);
-    if(sf){const lbl={pending:'ค้างส่ง',delivered:'ส่งแล้ว',problem:'มีปัญหา'};parts.push(`สถานะ "${lbl[sf]||sf}"`);};
+    if(sf){const lbl={pending:'ค้างส่ง',delivered:'ส่งแล้ว',problem:'มีปัญหา'};parts.push(`สถานะ "${lbl[sf]||sf}"`);}
     if(q)parts.push(`ค้นหา "${q}"`);
     ft.textContent=`ซ่อน ${hidden} รายการ (filter: ${parts.join(', ')})`;
-  } else {
-    fi.style.display='none';
-  }
+  }else{fi.style.display='none';}
   document.getElementById('result-count').textContent=`${filteredOrders.length} รายการ`;
   renderDashboard();
   renderResults();
@@ -685,7 +644,6 @@ function resetFilter(){
   applyFilter();
 }
 
-// ── GEO-SEARCH ───────────────────────────────────────────────
 async function startGeoSearch(){
   const markerText=document.getElementById('marker-input').value.trim();
   const radiusKm=Number(document.getElementById('radius-input').value)||15;
@@ -715,13 +673,10 @@ async function startGeoSearch(){
   statusEl.textContent=`✓ พบ ${filteredOrders.length} รายการภายใน ${radiusKm} กม.`;
 }
 
-// ── DASHBOARD (donut + stats) ─────────────────────────────────
 function renderDashboard(){
   const db=document.getElementById('dashboard');
   if(filteredOrders.length===0){db.style.display='none';return;}
   db.style.display='grid';
-
-  // Stats
   const tP=filteredOrders.reduce((s,o)=>s+o.qty_plain,0);
   const tC=filteredOrders.reduce((s,o)=>s+o.qty_choc,0);
   const tH=filteredOrders.reduce((s,o)=>s+o.qty_honey,0);
@@ -732,27 +687,18 @@ function renderDashboard(){
     <div class="stat-card"><div class="stat-num" style="color:var(--plain-color)">${tP}</div><div class="stat-label">HP-Plain (กล่อง)</div></div>
     <div class="stat-card"><div class="stat-num" style="color:var(--choc-color)">${tC}</div><div class="stat-label">HP-Choc (กล่อง)</div></div>
     <div class="stat-card"><div class="stat-num" style="color:var(--honey-color)">${tH}</div><div class="stat-label">HP-Honey (กล่อง)</div></div>`;
-
-  // Donut
   const byZone={};
   filteredOrders.forEach(o=>{byZone[o.zone]=(byZone[o.zone]||0)+1;});
   const entries=Object.entries(byZone).sort((a,b)=>b[1]-a[1]);
   const total=filteredOrders.length;
   document.getElementById('donut-total').textContent=total;
-
-  const R=70,cx=80,cy=80,stroke=22;
-  const circumference=2*Math.PI*R;
-  let offset=0;
-  let svgParts='';
+  const R=70,cx=80,cy=80,stroke=22,circumference=2*Math.PI*R;
+  let offset=0,svgParts='';
   const legendParts=[];
   entries.forEach(([zone,count])=>{
     const zi=ZONE_LIST.indexOf(zone);
-    const color=ZONE_DONUT[zi>=0?zi:11];
-    const pct=count/total;
-    const dash=pct*circumference;
-    const gap=circumference-dash;
-    // rotate so segments start from top
-    const rotate=-90+(offset/circumference)*360;
+    const color=ZONE_DONUT[zi>=0?zi:ZONE_DONUT.length-1];
+    const pct=count/total,dash=pct*circumference,gap=circumference-dash;
     svgParts+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" style="cursor:pointer" onclick="quickFilterZone('${zone}')" title="${zone}: ${count} ออเดอร์"/>`;
     offset+=dash;
     legendParts.push(`<div class="legend-row" onclick="quickFilterZone('${zone}')">
@@ -771,7 +717,6 @@ function quickFilterZone(zone){
   document.getElementById('filter-bar').scrollIntoView({behavior:'smooth'});
 }
 
-// ── RENDER TABLE ─────────────────────────────────────────────
 function statusBadge(s){
   const c=classifyStatus(s);
   if(c==='pending')  return`<span class="status-badge s-pending">ค้างส่ง</span>`;
@@ -781,6 +726,34 @@ function statusBadge(s){
   return`<span class="status-badge" style="background:var(--gray-100);color:var(--gray-700)">${s}</span>`;
 }
 
+// ── CARD SEARCH (per-zone) ────────────────────────────────────
+function filterZoneCards(zoneId, inputEl) {
+  const q = inputEl.value.trim().toLowerCase();
+  const wrap = document.getElementById('cards-' + zoneId);
+  if (!wrap) return;
+  const cards = wrap.querySelectorAll('.order-card');
+  let visible = 0;
+  cards.forEach(card => {
+    const text = card.dataset.search || '';
+    const match = !q || text.includes(q);
+    card.classList.toggle('card-hidden', !match);
+    if (match) visible++;
+  });
+  const countEl = document.getElementById('zone-search-count-' + zoneId);
+  if (countEl) {
+    countEl.textContent = q ? `${visible} / ${cards.length} การ์ด` : `${cards.length} การ์ด`;
+  }
+  // แสดงข้อความเมื่อไม่พบ
+  let noMsg = wrap.querySelector('.no-cards-msg');
+  if (visible === 0 && q) {
+    if (!noMsg) { noMsg = document.createElement('div'); noMsg.className='no-cards-msg'; wrap.appendChild(noMsg); }
+    noMsg.textContent = `ไม่พบการ์ดที่ตรงกับ "${inputEl.value.trim()}"`;
+    noMsg.style.display='';
+  } else if (noMsg) {
+    noMsg.style.display='none';
+  }
+}
+
 function renderResults(){
   const el=document.getElementById('results');
   if(filteredOrders.length===0){el.innerHTML='<div class="empty-state">ไม่พบรายการที่ตรงกัน</div>';return;}
@@ -788,14 +761,14 @@ function renderResults(){
   ZONE_LIST.forEach(z=>byZone[z]=[]);
   filteredOrders.forEach(o=>{if(!byZone[o.zone])byZone[o.zone]=[];byZone[o.zone].push(o);});
   const showDist=filteredOrders.some(o=>o._distance!==null&&isFinite(o._distance));
-
   let html='';
   ZONE_LIST.forEach((zone,zi)=>{
     const orders=byZone[zone];if(!orders||orders.length===0)return;
-    const cls=ZONE_CLASSES[zi]||'z11';
+    const cls=ZONE_CLASSES[zi]||'z13';
     const tP=orders.reduce((s,o)=>s+o.qty_plain,0);
     const tC=orders.reduce((s,o)=>s+o.qty_choc,0);
     const tH=orders.reduce((s,o)=>s+o.qty_honey,0);
+    const zoneId='zone_'+zi;
     html+=`<div class="zone-section">
       <div class="zone-header ${cls}">
         ${zone}
@@ -804,13 +777,21 @@ function renderResults(){
           Plain ${tP} &nbsp;·&nbsp; Choc ${tC} &nbsp;·&nbsp; Honey ${tH}
         </span>
       </div>
-      <div class="zone-cards-wrap">
+      <div class="zone-search-bar no-print">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="zone-search-input" placeholder="ค้นหาในโซนนี้... (ชื่อ / เบอร์ / ที่อยู่ / เลขออเดอร์)"
+          oninput="filterZoneCards('${zoneId}', this)">
+        <span class="zone-search-count" id="zone-search-count-${zoneId}">${orders.length} การ์ด</span>
+      </div>
+      <div class="zone-cards-wrap" id="cards-${zoneId}">
         ${orders.map(o=>{
           const sc=classifyStatus(o.status);
           const cardCls=sc==='problem'?'is-problem':sc==='pending'?'is-pending':sc==='delivered'?'is-delivered':'';
           const distHtml=showDist&&o._distance!==null&&isFinite(o._distance)
-            ?`<span class="dist-badge">📍 ${o._distance.toFixed(1)} กม.</span>`:'' ;
-          return`<div class="order-card ${cardCls}">
+            ?`<span class="dist-badge">📍 ${o._distance.toFixed(1)} กม.</span>`:'';
+          // data-search ใช้สำหรับ card search
+          const searchData=`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase();
+          return`<div class="order-card ${cardCls}" data-search="${searchData.replace(/"/g,'&quot;')}">
             <div class="card-top">
               <div>
                 <div class="card-order-id">🧾 ${o.order_id}</div>
@@ -846,7 +827,6 @@ function renderResults(){
   el.innerHTML=html;
 }
 
-// ── EXPORT ───────────────────────────────────────────────────
 function exportExcel(){
   if(filteredOrders.length===0)return;
   const wb=XLSX.utils.book_new();
@@ -874,19 +854,13 @@ function exportExcel(){
 }
 </script>
 
-<!-- ── GOOGLE SHEETS MODAL ── -->
 <div class="modal-overlay" id="sheets-modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <h3>📊 โหลดจาก Google Sheets</h3>
-    <p>
-      วางลิงก์ Google Sheets ได้เลย<br>
-      <b>ต้องแชร์ Sheet ก่อน:</b> แชร์ → ทุกคนที่มีลิงก์ → ผู้ดู
-    </p>
+    <p>วางลิงก์ Google Sheets ได้เลย<br><b>ต้องแชร์ Sheet ก่อน:</b> แชร์ → ทุกคนที่มีลิงก์ → ผู้ดู</p>
     <input type="text" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/.../edit"
       value="https://docs.google.com/spreadsheets/d/1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ/edit">
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-      💡 ระบบจะดึงข้อมูล Sheet แรกอัตโนมัติ ไม่ต้อง export
-    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">💡 ระบบจะดึงข้อมูล Sheet แรกอัตโนมัติ ไม่ต้อง export</div>
     <div id="sheets-error" style="display:none;font-size:13px;color:#DC2626;background:#FEE2E2;border-radius:6px;padding:8px 12px;margin-bottom:12px"></div>
     <div class="modal-btns">
       <button class="filter-btn" onclick="closeModal()">ยกเลิก</button>
@@ -899,98 +873,67 @@ function exportExcel(){
 </div>
 
 <script>
-// ── GOOGLE SHEETS LOADER ─────────────────────────────────────
 function showSheetsDialog(){
   document.getElementById('sheets-modal').classList.add('show');
   document.getElementById('sheets-error').style.display='none';
   setTimeout(()=>document.getElementById('sheets-url').focus(),100);
 }
-function closeModal(){
-  document.getElementById('sheets-modal').classList.remove('show');
-}
+function closeModal(){document.getElementById('sheets-modal').classList.remove('show');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-
-function extractSheetId(url){
-  const m=url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-  return m?m[1]:null;
-}
-
-function extractGid(url){
-  const m=url.match(/[#&?]gid=(\d+)/);
-  return m?m[1]:'0';
-}
+function extractSheetId(url){const m=url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:null;}
+function extractGid(url){const m=url.match(/[#&?]gid=(\d+)/);return m?m[1]:'0';}
 
 async function loadFromSheets(){
   const url=document.getElementById('sheets-url').value.trim();
   const errEl=document.getElementById('sheets-error');
   errEl.style.display='none';
-
   const sheetId=extractSheetId(url);
-  if(!sheetId){
-    errEl.textContent='ลิงก์ไม่ถูกต้อง กรุณาวาง URL จาก Google Sheets';
-    errEl.style.display='block'; return;
-  }
-
+  if(!sheetId){errEl.textContent='ลิงก์ไม่ถูกต้อง';errEl.style.display='block';return;}
   const gid=extractGid(url);
   const csvUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  // CORS proxies — ลองทีละตัว
   const proxies=[
     u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
     u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
     u=>`https://cors-anywhere.herokuapp.com/${u}`,
   ];
-
   const btn=document.querySelector('#sheets-modal .primary');
   const origText=btn.innerHTML;
   btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:6px"></span>กำลังโหลด...';
   btn.disabled=true;
-
   let lastErr='';
   for(const proxy of proxies){
     try{
       const res=await fetch(proxy(csvUrl),{headers:{'X-Requested-With':'XMLHttpRequest'}});
       if(!res.ok){lastErr=`HTTP ${res.status}`;continue;}
       const text=await res.text();
-      // ถ้าได้ HTML กลับมา (CORS redirect) ให้ลอง proxy ถัดไป
       if(text.trim().startsWith('<')){lastErr='ได้รับ HTML แทน CSV';continue;}
       if(!text||text.trim().length===0){lastErr='ไม่พบข้อมูลใน Sheet';continue;}
-      closeModal();
-      btn.innerHTML=origText; btn.disabled=false;
-      processCSVText(text);
-      return;
+      closeModal();btn.innerHTML=origText;btn.disabled=false;
+      processCSVText(text);return;
     }catch(e){lastErr=e.message;continue;}
   }
-  // ทุก proxy ล้มเหลว
   errEl.textContent=`โหลดไม่สำเร็จ: ${lastErr} — กรุณาตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
-  errEl.style.display='block';
-  btn.innerHTML=origText; btn.disabled=false;
+  errEl.style.display='block';btn.innerHTML=origText;btn.disabled=false;
 }
 
-// ── PARSE CSV (รองรับที่อยู่มีเครื่องหมาย comma ใน quotes) ──
 function parseCSV(text){
   const rows=[];
   const lines=text.split('\n');
   for(const line of lines){
-    if(!line.trim()) continue;
-    const row=[];
-    let cur='', inQ=false;
+    if(!line.trim())continue;
+    const row=[];let cur='',inQ=false;
     for(let i=0;i<line.length;i++){
       const c=line[i];
-      if(c==='"'){
-        if(inQ&&line[i+1]==='"'){cur+='"';i++;} // escaped quote
-        else inQ=!inQ;
-      } else if(c===','&&!inQ){
-        row.push(cur); cur='';
-      } else { cur+=c; }
+      if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+      else if(c===','&&!inQ){row.push(cur);cur='';}
+      else{cur+=c;}
     }
-    row.push(cur);
-    rows.push(row);
+    row.push(cur);rows.push(row);
   }
   return rows;
 }
 
 function processCSVText(text){
-  // guard: ถ้าได้ HTML (CORS error) ให้แสดง error
   if(text.trim().startsWith('<')){
     document.getElementById('results').innerHTML='<div class="empty-state">โหลดไม่สำเร็จ: ได้รับ HTML แทน CSV<br><small>กรุณาตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว</small></div>';
     return;
@@ -1001,74 +944,61 @@ function processCSVText(text){
   document.getElementById('dashboard').style.display='none';
   document.getElementById('filter-bar').style.display='none';
   geoMarker=null;
-
   setTimeout(()=>{
-    try {
-      const data=parseCSV(text);
-      buildOrdersFromRows(data);
-    } catch(e){
-      document.getElementById('loading').style.display='none';
-      document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${e.message}</div>`;
-    }
+    try{const data=parseCSV(text);buildOrdersFromRows(data);}
+    catch(e){document.getElementById('loading').style.display='none';
+    document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${e.message}</div>`;}
   },50);
 }
 
-// ── SHARED PARSER (ใช้ทั้ง Excel และ CSV) ───────────────────
 function buildOrdersFromRows(data){
   const orders=[],seen={};
   for(let i=0;i<data.length;i++){
     const row=data[i];
-    const orderNum=row[2]; if(!orderNum||!String(orderNum).trim()) continue;
-    if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain')) continue;
+    const orderNum=row[2];if(!orderNum||!String(orderNum).trim())continue;
+    if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain'))continue;
     const status=row[0];
-    if(String(status||'').includes('คำสั่งซื้อผิด')) continue;
-    const sc=classifyStatus(String(status||''));
-    // ไม่ skip delivered ที่นี่ — ให้ filter เอา
-    const district=row[55], province=row[54], address=row[52];
-    const customer=row[49], phone=row[50], note=row[51];
+    if(String(status||'').includes('คำสั่งซื้อผิด'))continue;
+    const district=row[55],province=row[54],address=row[52];
+    const customer=row[49],phone=row[50],note=row[51];
     const zipcode=row[56]?String(row[56]).replace(/\.0$/,''):'';
-    const qty_plain=row[57], qty_choc=row[58], qty_honey=row[59];
-    if(!customer&&!address) continue;
-    if(!district&&!province) continue;
+    const qty_plain=row[57],qty_choc=row[58],qty_honey=row[59];
+    if(!customer&&!address)continue;
+    if(!district&&!province)continue;
     const oid=String(orderNum).trim();
     if(seen[oid]){
       seen[oid].qty_plain+=(+qty_plain||0);
       seen[oid].qty_choc +=(+qty_choc ||0);
       seen[oid].qty_honey+=(+qty_honey||0);
-    } else {
+    }else{
       const o={
-        order_id:oid, customer:String(customer||'-'),
-        phone:formatPhone(phone), district:String(district||''),
-        province:String(province||''), address:String(address||'-'),
-        zipcode, zone:detectZone(String(district||''),String(province||'')),
+        order_id:oid,customer:String(customer||'-'),
+        phone:formatPhone(phone),district:String(district||''),
+        province:String(province||''),address:String(address||'-'),
+        zipcode,zone:detectZone(String(district||''),String(province||'')),
         status:String(status||''),
-        qty_plain:+qty_plain||0, qty_choc:+qty_choc||0, qty_honey:+qty_honey||0,
+        qty_plain:+qty_plain||0,qty_choc:+qty_choc||0,qty_honey:+qty_honey||0,
         note:note?String(note):'',
-        lat:null, lon:null, _distance:null, geoLevel:null,
+        lat:null,lon:null,_distance:null,geoLevel:null,
       };
-      seen[oid]=o; orders.push(o);
+      seen[oid]=o;orders.push(o);
     }
   }
-
   allOrders=orders;
   document.getElementById('loading').style.display='none';
-
   if(orders.length===0){
     document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
     return;
   }
-
   const zf=document.getElementById('zone-filter');
   zf.innerHTML='<option value="">ทั้งหมด</option>';
   [...new Set(orders.map(o=>o.zone))].sort().forEach(z=>{
     const opt=document.createElement('option');opt.value=z;opt.textContent=z;zf.appendChild(opt);
   });
-
-  // populate date filter — เรียงวันที่จากน้อยไปมาก
   const df=document.getElementById('date-filter');
   df.innerHTML='<option value="">ทั้งหมด</option>';
   const dateMap={};
-  orders.forEach(o=>{ const d=parseOrderDate(o.order_id); if(d&&!dateMap[d.key])dateMap[d.key]=d.label; });
+  orders.forEach(o=>{const d=parseOrderDate(o.order_id);if(d&&!dateMap[d.key])dateMap[d.key]=d.label;});
   Object.keys(dateMap).sort().forEach(key=>{
     const opt=document.createElement('option');opt.value=key;opt.textContent=dateMap[key];df.appendChild(opt);
   });
