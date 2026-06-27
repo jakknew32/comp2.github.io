@@ -422,9 +422,13 @@ function formatPhone(raw){
 // ── STATUS: คอลัมน์ A (index 0) ──
 function classifyStatus(s){
   const str=String(s||'').trim();
-  if(!str||str==='null'||str==='nan'||str==='NaT')return'pending';
-  if(str.includes('ค้างส่ง'))return'pending';
-  if(str.includes('ยกเลิก'))return'problem';
+  // ว่าง = ค้างส่ง
+  if(!str||str==='null'||str==='nan'||str==='NaT'||str==='0'||str==='-')return'pending';
+  // ยกเลิก
+  if(str.includes('ยกเลิก')||str.toLowerCase().includes('cancel'))return'problem';
+  // ค้างส่ง
+  if(str.includes('ค้าง'))return'pending';
+  // มีข้อความอื่นๆ = ส่งแล้ว
   return'delivered';
 }
 
@@ -620,6 +624,43 @@ function toggleCal(){
   }
 }
 
+function formatOrderDate(raw){
+  if(!raw)return'';
+  // รองรับทั้ง Date object (จาก xlsx) และ string
+  let d;
+  if(raw instanceof Date){d=raw;}
+  else{
+    // ลอง parse string: รูปแบบ DD/MM/YYYY, YYYY-MM-DD, หรือ serial number
+    const s=String(raw).trim();
+    if(/^\d{5}$/.test(s)){// Excel serial
+      d=new Date(Math.round((+s-25569)*86400*1000));
+    } else if(/\d{4}-\d{2}-\d{2}/.test(s)){
+      d=new Date(s);
+    } else if(/\d{1,2}\/\d{1,2}\/\d{4}/.test(s)){
+      const p=s.split('/');d=new Date(+p[2],+p[1]-1,+p[0]);
+    } else {d=new Date(s);}
+  }
+  if(isNaN(d))return String(raw);
+  const dd=d.getDate(),mm=d.getMonth(),yy=d.getFullYear()+543;
+  return`${dd} ${thMonths[mm]} ${yy}`;
+}
+function orderDateKey(raw){
+  if(!raw)return'';
+  let d;
+  if(raw instanceof Date){d=raw;}
+  else{
+    const s=String(raw).trim();
+    if(/^\d{5}$/.test(s)){d=new Date(Math.round((+s-25569)*86400*1000));}
+    else if(/\d{4}-\d{2}-\d{2}/.test(s)){d=new Date(s);}
+    else if(/\d{1,2}\/\d{1,2}\/\d{4}/.test(s)){const p=s.split('/');d=new Date(+p[2],+p[1]-1,+p[0]);}
+    else{d=new Date(s);}
+  }
+  if(isNaN(d))return'';
+  const yy=String(d.getFullYear()+543-2500).padStart(2,'0');
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return`${yy}${mm}${dd}`;
+}
 function parseOrderDate(order_id){
   const m=String(order_id).match(/^(\d{2})(\d{2})(\d{2})/);
   if(!m)return null;
@@ -634,7 +675,7 @@ function applyFilter(){
   filteredOrders=allOrders.filter(o=>{
     if(selectedZones.size>0&&!selectedZones.has(o.zone))return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
-    if(selectedDateKey){const d=parseOrderDate(o.order_id);if(!d||d.key!==selectedDateKey)return false;}
+    if(selectedDateKey&&o.order_date_key!==selectedDateKey)return false;
     if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
     return true;
   });
@@ -740,11 +781,10 @@ function quickFilterZone(zone){
 
 function statusBadge(s){
   const c=classifyStatus(s);
-  if(c==='pending')return`<span class="status-badge s-pending">ค้างส่ง</span>`;
-  if(c==='delivered')return`<span class="status-badge s-delivered">ส่งแล้ว</span>`;
-  if(c==='problem')return`<span class="status-badge s-problem">ยกเลิก</span>`;
-  if(!s||['null','nan','NaT'].includes(String(s)))return'';
-  return`<span class="status-badge" style="background:var(--gray-100);color:var(--gray-700)">${s}</span>`;
+  if(c==='pending')return`<span class="status-badge s-pending">🟡 ค้างส่ง</span>`;
+  if(c==='delivered')return`<span class="status-badge s-delivered">✅ ส่งแล้ว</span>`;
+  if(c==='problem')return`<span class="status-badge s-problem">❌ ยกเลิก</span>`;
+  return'';
 }
 
 function filterZoneCards(zoneId, inputEl) {
@@ -804,7 +844,7 @@ function renderResults(){
           const searchData=`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase();
           return`<div class="order-card ${cardCls}" data-search="${searchData.replace(/"/g,'&quot;')}">
             <div class="card-top">
-              <div><div class="card-order-id">🧾 ${o.order_id}</div><div class="card-name">👤 ${o.customer}</div></div>
+              <div><div class="card-order-id">🧾 ${o.order_id}${o.order_date?` &nbsp;·&nbsp; 📅 ${o.order_date}`:''}</div><div class="card-name">👤 ${o.customer}</div></div>
               ${statusBadge(o.status)}
             </div>
             <div class="card-row"><span class="card-icon">📞</span><span>${o.phone}</span></div>
@@ -896,6 +936,7 @@ function buildOrdersFromRows(data){
     if(String(statusRaw||'').includes('คำสั่งซื้อผิด'))continue;
     const district=row[55],province=row[54],address=row[52];
     const customer=row[49],phone=row[50],note=row[51];
+    const orderDateRaw=row[7];
     const zipcode=row[56]?String(row[56]).replace(/\.0$/,''):'';
     const qty_plain=row[57],qty_choc=row[58],qty_honey=row[59];
     if(!customer&&!address)continue;
@@ -907,7 +948,7 @@ function buildOrdersFromRows(data){
       seen[oid].qty_honey+=(+qty_honey||0);
     }else{
       const o={
-        order_id:oid,customer:String(customer||'-'),
+        order_id:oid,order_date:formatOrderDate(orderDateRaw),order_date_key:orderDateKey(orderDateRaw),customer:String(customer||''),
         phone:formatPhone(phone),district:String(district||''),
         province:String(province||''),address:String(address||'-'),
         zipcode,zone:detectZone(String(district||''),String(province||'')),
@@ -932,7 +973,7 @@ function buildOrdersFromRows(data){
 
   // build date set for calendar
   orderDateSet.clear();
-  orders.forEach(o=>{const d=parseOrderDate(o.order_id);if(d)orderDateSet.add(d.key);});
+  orders.forEach(o=>{if(o.order_date_key)orderDateSet.add(o.order_date_key);});
   // navigate calendar to first order date if possible
   if(orderDateSet.size>0){
     const firstKey=[...orderDateSet].sort()[0];
