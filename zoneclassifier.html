@@ -7,255 +7,191 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
-  --brand:        #1A56DB;
-  --brand-dk:     #1e40af;
-  --brand-lt:     #EBF5FF;
-  --brand-mid:    #BFDBFE;
-  --success:      #057A55;
-  --success-lt:   #D1FAE5;
-  --success-dk:   #046c4e;
-  --warning:      #D03801;
-  --warning-lt:   #FEF3C7;
-  --danger:       #DC2626;
-  --danger-lt:    #FEE2E2;
-  --gray-50:  #F9FAFB;
-  --gray-100: #F3F4F6;
-  --gray-200: #E5E7EB;
-  --gray-300: #D1D5DB;
-  --gray-500: #6B7280;
-  --gray-700: #374151;
-  --gray-900: #111827;
-  --bg-page:    #F1F5F9;
-  --bg-card:    #ffffff;
-  --bg-topbar:  #1e40af;
-  --border:     var(--gray-200);
-  --text:       var(--gray-900);
-  --muted:      var(--gray-500);
-  --text-xs:  11px;
-  --text-sm:  13px;
-  --text-md:  15px;
-  --text-lg:  17px;
-  --text-xl:  20px;
-  --text-2xl: 24px;
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
-  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-full: 9999px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
-  --shadow-topbar: 0 2px 8px rgba(30,64,175,.25);
-  --z0-bg:#EFF6FF; --z0-fg:#1E3A8A;
-  --z1-bg:#F0FDF4; --z1-fg:#14532D;
-  --z2-bg:#FFF7ED; --z2-fg:#7C2D12;
-  --z3-bg:#FDF4FF; --z3-fg:#581C87;
-  --z4-bg:#FFF1F2; --z4-fg:#881337;
-  --z5-bg:#F0FDFA; --z5-fg:#134E4A;
-  --z6-bg:#FFFBEB; --z6-fg:#713F12;
-  --z7-bg:#F5F3FF; --z7-fg:#3730A3;
-  --z8-bg:#FEF2F2; --z8-fg:#7F1D1D;
-  --z9-bg:#E0F2FE; --z9-fg:#075985;
-  --z10-bg:#ECFDF5;--z10-fg:#166534;
-  --z11-bg:#FFF0F9;--z11-fg:#831843;
-  --z12-bg:#F0F9FF;--z12-fg:#0C4A6E;
-  --z13-bg:#F3F4F6;--z13-fg:#374151;
-  --plain-color: #1A56DB;
-  --choc-color:  #7E3AF2;
-  --honey-color: #D03801;
+  --brand:#1A56DB;--brand-dk:#1e40af;--brand-lt:#EBF5FF;--brand-mid:#BFDBFE;
+  --success:#057A55;--success-lt:#D1FAE5;--success-dk:#046c4e;
+  --warning:#D03801;--warning-lt:#FEF3C7;--danger:#DC2626;--danger-lt:#FEE2E2;
+  --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-300:#D1D5DB;
+  --gray-500:#6B7280;--gray-700:#374151;--gray-900:#111827;
+  --bg-page:#F1F5F9;--bg-card:#ffffff;--bg-topbar:#1e40af;
+  --border:var(--gray-200);--text:var(--gray-900);--muted:var(--gray-500);
+  --text-xs:11px;--text-sm:13px;--text-md:15px;--text-lg:17px;--text-xl:20px;--text-2xl:24px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;
+  --r-sm:6px;--r-md:8px;--r-lg:12px;--r-xl:16px;--r-full:9999px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 12px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
+  --shadow-topbar:0 2px 8px rgba(30,64,175,.25);
+  --z0-bg:#EFF6FF;--z0-fg:#1E3A8A;--z1-bg:#F0FDF4;--z1-fg:#14532D;
+  --z2-bg:#FFF7ED;--z2-fg:#7C2D12;--z3-bg:#FDF4FF;--z3-fg:#581C87;
+  --z4-bg:#FFF1F2;--z4-fg:#881337;--z5-bg:#F0FDFA;--z5-fg:#134E4A;
+  --z6-bg:#FFFBEB;--z6-fg:#713F12;--z7-bg:#F5F3FF;--z7-fg:#3730A3;
+  --z8-bg:#FEF2F2;--z8-fg:#7F1D1D;--z9-bg:#E0F2FE;--z9-fg:#075985;
+  --z10-bg:#ECFDF5;--z10-fg:#166534;--z11-bg:#FFF0F9;--z11-fg:#831843;
+  --z12-bg:#F0F9FF;--z12-fg:#0C4A6E;--z13-bg:#F3F4F6;--z13-fg:#374151;
+  --plain-color:#1A56DB;--choc-color:#7E3AF2;--honey-color:#D03801;
 }
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme:dark) {
   :root {
-    --bg-page:   #0F172A; --bg-card:   #1E293B; --bg-topbar: #0F172A;
-    --border:    #334155; --text:      #F1F5F9; --muted:     #94A3B8;
-    --gray-50:   #1E293B; --gray-100:  #0F172A; --gray-200:  #334155;
-    --gray-500:  #94A3B8; --gray-700:  #CBD5E1; --gray-900:  #F1F5F9;
-    --brand-lt:  #1e3a6e; --brand-mid: #1e40af;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,.3); --shadow-md: 0 4px 12px rgba(0,0,0,.4);
-    --shadow-topbar: 0 2px 8px rgba(0,0,0,.4);
-    --z0-bg:#1e2d4a; --z0-fg:#93C5FD; --z1-bg:#14271e; --z1-fg:#6EE7B7;
-    --z2-bg:#2d1a0e; --z2-fg:#FBB97A; --z3-bg:#1e0f2d; --z3-fg:#D8B4FE;
-    --z4-bg:#2d0f14; --z4-fg:#FCA5A5; --z5-bg:#0e2720; --z5-fg:#5EEAD4;
-    --z6-bg:#2d2108; --z6-fg:#FDE68A; --z7-bg:#1a1640; --z7-fg:#A5B4FC;
-    --z8-bg:#2d1010; --z8-fg:#FCA5A5; --z9-bg:#0c2233; --z9-fg:#7DD3FC;
-    --z10-bg:#0f2d1e;--z10-fg:#6EE7B7;
-    --z11-bg:#2d0f22;--z11-fg:#F9A8D4;
-    --z12-bg:#0c1e2d;--z12-fg:#7DD3FC;
-    --z13-bg:#1E293B;--z13-fg:#94A3B8;
-    --success-lt: #14271e; --danger-lt:  #2d0f14; --warning-lt: #2d2108; --brand-lt:   #1e2d4a;
+    --bg-page:#0F172A;--bg-card:#1E293B;--bg-topbar:#0F172A;
+    --border:#334155;--text:#F1F5F9;--muted:#94A3B8;
+    --gray-50:#1E293B;--gray-100:#0F172A;--gray-200:#334155;
+    --gray-500:#94A3B8;--gray-700:#CBD5E1;--gray-900:#F1F5F9;
+    --brand-lt:#1e3a6e;--brand-mid:#1e40af;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);
+    --shadow-topbar:0 2px 8px rgba(0,0,0,.4);
+    --z0-bg:#1e2d4a;--z0-fg:#93C5FD;--z1-bg:#14271e;--z1-fg:#6EE7B7;
+    --z2-bg:#2d1a0e;--z2-fg:#FBB97A;--z3-bg:#1e0f2d;--z3-fg:#D8B4FE;
+    --z4-bg:#2d0f14;--z4-fg:#FCA5A5;--z5-bg:#0e2720;--z5-fg:#5EEAD4;
+    --z6-bg:#2d2108;--z6-fg:#FDE68A;--z7-bg:#1a1640;--z7-fg:#A5B4FC;
+    --z8-bg:#2d1010;--z8-fg:#FCA5A5;--z9-bg:#0c2233;--z9-fg:#7DD3FC;
+    --z10-bg:#0f2d1e;--z10-fg:#6EE7B7;--z11-bg:#2d0f22;--z11-fg:#F9A8D4;
+    --z12-bg:#0c1e2d;--z12-fg:#7DD3FC;--z13-bg:#1E293B;--z13-fg:#94A3B8;
+    --success-lt:#14271e;--danger-lt:#2d0f14;--warning-lt:#2d2108;--brand-lt:#1e2d4a;
   }
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page); color: var(--text); font-size: var(--text-md); line-height: 1.5; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color:var(--text);font-size:var(--text-md);line-height:1.5;}
 
-.topbar {
-  background: var(--bg-topbar); box-shadow: var(--shadow-topbar);
-  padding: 0 var(--sp-6); display: flex; align-items: center; gap: var(--sp-3);
-  height: 56px; position: sticky; top: 0; z-index: 200;
-}
-.logo { display: flex; align-items: center; gap: var(--sp-2); font-weight: 700; font-size: var(--text-md); color: #fff; }
-.logo svg { width: 28px; height: 28px; }
-.logo-sub { font-size: var(--text-xs); color: rgba(255,255,255,.6); font-weight: 400; margin-left: 2px; }
-.topbar-spacer { flex: 1; }
-.topbar-btn {
-  display: inline-flex; align-items: center; gap: var(--sp-1);
-  padding: 6px var(--sp-3); border-radius: var(--r-md);
-  font-size: var(--text-sm); font-weight: 600; cursor: pointer;
-  border: none; transition: background .15s, transform .1s; white-space: nowrap;
-}
-.topbar-btn:active { transform: scale(.97); }
-.btn-ghost { background: rgba(255,255,255,.12); color: #fff; }
-.btn-ghost:hover { background: rgba(255,255,255,.22); }
-.btn-export { background: var(--success); color: #fff; }
-.btn-export:hover { background: var(--success-dk); }
-.btn-print { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25); }
-.btn-print:hover { background: rgba(255,255,255,.22); }
+.topbar{background:var(--bg-topbar);box-shadow:var(--shadow-topbar);padding:0 var(--sp-6);display:flex;align-items:center;gap:var(--sp-3);height:56px;position:sticky;top:0;z-index:200;}
+.logo{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;font-size:var(--text-md);color:#fff;}
+.logo svg{width:28px;height:28px;}
+.logo-sub{font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:400;margin-left:2px;}
+.topbar-spacer{flex:1;}
+.topbar-btn{display:inline-flex;align-items:center;gap:var(--sp-1);padding:6px var(--sp-3);border-radius:var(--r-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;border:none;transition:background .15s,transform .1s;white-space:nowrap;}
+.topbar-btn:active{transform:scale(.97);}
+.btn-ghost{background:rgba(255,255,255,.12);color:#fff;}
+.btn-ghost:hover{background:rgba(255,255,255,.22);}
+.btn-export{background:var(--success);color:#fff;}
+.btn-export:hover{background:var(--success-dk);}
+.btn-print{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);}
+.btn-print:hover{background:rgba(255,255,255,.22);}
 
-.main { max-width: 1280px; margin: 0 auto; padding: var(--sp-6) var(--sp-4); }
+.main{max-width:1280px;margin:0 auto;padding:var(--sp-6) var(--sp-4);}
 
-#upload-zone {
-  background: var(--bg-card); border: 2px dashed var(--border);
-  border-radius: var(--r-xl); padding: 48px var(--sp-6);
-  text-align: center; cursor: pointer;
-  transition: border-color .2s, background .2s;
-  box-shadow: var(--shadow-sm);
-}
-#upload-zone:hover, #upload-zone.drag-over { border-color: var(--brand); background: var(--brand-lt); }
-#upload-zone svg { width: 48px; height: 48px; color: var(--gray-300); margin-bottom: var(--sp-3); }
-#upload-zone h2 { font-size: var(--text-lg); font-weight: 600; margin-bottom: var(--sp-1); color: var(--text); }
-#upload-zone p { font-size: var(--text-sm); color: var(--muted); }
-#file-input { display: none; }
-.upload-label {
-  display: inline-block; margin-top: var(--sp-4);
-  padding: var(--sp-2) var(--sp-5); background: var(--brand); color: #fff;
-  border-radius: var(--r-md); font-size: var(--text-sm); font-weight: 600; cursor: pointer;
-  transition: background .15s;
-}
-.upload-label:hover { background: var(--brand-dk); }
+#upload-zone{background:var(--bg-card);border:2px dashed var(--border);border-radius:var(--r-xl);padding:48px var(--sp-6);text-align:center;cursor:pointer;transition:border-color .2s,background .2s;box-shadow:var(--shadow-sm);}
+#upload-zone:hover,#upload-zone.drag-over{border-color:var(--brand);background:var(--brand-lt);}
+#upload-zone svg{width:48px;height:48px;color:var(--gray-300);margin-bottom:var(--sp-3);}
+#upload-zone h2{font-size:var(--text-lg);font-weight:600;margin-bottom:var(--sp-1);color:var(--text);}
+#upload-zone p{font-size:var(--text-sm);color:var(--muted);}
+#file-input{display:none;}
+.upload-label{display:inline-block;margin-top:var(--sp-4);padding:var(--sp-2) var(--sp-5);background:var(--brand);color:#fff;border-radius:var(--r-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;transition:background .15s;}
+.upload-label:hover{background:var(--brand-dk);}
 
-.dashboard { display: grid; grid-template-columns: 260px 1fr; gap: var(--sp-4); margin-bottom: var(--sp-5); }
-@media (max-width: 720px) { .dashboard { grid-template-columns: 1fr; } }
-.donut-card {
-  background: var(--bg-card); border-radius: var(--r-lg);
-  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
-  padding: var(--sp-4); display: flex; flex-direction: column; align-items: center; gap: var(--sp-3);
-}
-.donut-title { font-size: var(--text-sm); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-.donut-wrap { position: relative; width: 160px; height: 160px; }
-.donut-wrap svg { width: 160px; height: 160px; }
-.donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
-.donut-center-num { font-size: var(--text-2xl); font-weight: 700; color: var(--text); line-height: 1; }
-.donut-center-label { font-size: var(--text-xs); color: var(--muted); }
-.donut-legend { width: 100%; display: flex; flex-direction: column; gap: 4px; }
-.legend-row { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-xs); cursor: pointer; padding: 3px var(--sp-2); border-radius: var(--r-sm); transition: background .1s; }
-.legend-row:hover { background: var(--gray-100); }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.legend-name { flex: 1; color: var(--text); }
-.legend-count { font-weight: 700; color: var(--muted); }
-.stats-panel { display: flex; flex-direction: column; gap: var(--sp-3); }
-.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--sp-3); }
-.stat-card { background: var(--bg-card); border-radius: var(--r-md); padding: var(--sp-4); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-.stat-num { font-size: var(--text-2xl); font-weight: 700; color: var(--brand); line-height: 1; }
-.stat-label { font-size: var(--text-xs); color: var(--muted); margin-top: var(--sp-1); }
-.filter-info {
-  background: var(--brand-lt); border: 1px solid var(--brand-mid);
-  border-radius: var(--r-md); padding: var(--sp-2) var(--sp-4);
-  font-size: var(--text-sm); color: var(--brand-dk);
-  display: none; align-items: center; gap: var(--sp-2);
-}
-@media (prefers-color-scheme: dark) { .filter-info { color: #93C5FD; } }
+.dashboard{display:grid;grid-template-columns:260px 1fr;gap:var(--sp-4);margin-bottom:var(--sp-5);}
+@media(max-width:720px){.dashboard{grid-template-columns:1fr;}}
+.donut-card{background:var(--bg-card);border-radius:var(--r-lg);border:1px solid var(--border);box-shadow:var(--shadow-sm);padding:var(--sp-4);display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);}
+.donut-title{font-size:var(--text-sm);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.donut-wrap{position:relative;width:160px;height:160px;}
+.donut-wrap svg{width:160px;height:160px;}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.donut-center-num{font-size:var(--text-2xl);font-weight:700;color:var(--text);line-height:1;}
+.donut-center-label{font-size:var(--text-xs);color:var(--muted);}
+.donut-legend{width:100%;display:flex;flex-direction:column;gap:4px;}
+.legend-row{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--text-xs);cursor:pointer;padding:3px var(--sp-2);border-radius:var(--r-sm);transition:background .1s;}
+.legend-row:hover{background:var(--gray-100);}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-name{flex:1;color:var(--text);}
+.legend-count{font-weight:700;color:var(--muted);}
+.stats-panel{display:flex;flex-direction:column;gap:var(--sp-3);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:var(--sp-3);}
+.stat-card{background:var(--bg-card);border-radius:var(--r-md);padding:var(--sp-4);border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+.stat-num{font-size:var(--text-2xl);font-weight:700;color:var(--brand);line-height:1;}
+.stat-label{font-size:var(--text-xs);color:var(--muted);margin-top:var(--sp-1);}
+.filter-info{background:var(--brand-lt);border:1px solid var(--brand-mid);border-radius:var(--r-md);padding:var(--sp-2) var(--sp-4);font-size:var(--text-sm);color:var(--brand-dk);display:none;align-items:center;gap:var(--sp-2);}
+@media(prefers-color-scheme:dark){.filter-info{color:#93C5FD;}}
 
-.filter-bar {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4);
-  display: flex; align-items: center; gap: var(--sp-2);
-  flex-wrap: wrap; margin-bottom: var(--sp-4); box-shadow: var(--shadow-sm);
-}
-.filter-bar label { font-size: var(--text-sm); color: var(--muted); white-space: nowrap; }
-.filter-bar select, .filter-bar input[type=text], .filter-bar input[type=number] {
-  border: 1px solid var(--border); border-radius: var(--r-md);
-  padding: 6px var(--sp-2); font-size: var(--text-sm);
-  color: var(--text); background: var(--bg-card); outline: none; transition: border-color .15s;
-}
-.filter-bar select:focus, .filter-bar input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(26,86,219,.15); }
-#search-input { flex: 1; min-width: 150px; }
-#marker-input { min-width: 180px; }
-#radius-input { width: 64px; }
-.filter-btn {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 6px var(--sp-3); border-radius: var(--r-md);
-  font-size: var(--text-sm); font-weight: 600; cursor: pointer;
-  border: 1px solid var(--border); background: var(--bg-card); color: var(--gray-700);
-  transition: background .15s;
-}
-.filter-btn:hover { background: var(--gray-100); }
-.filter-btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
-.filter-btn.primary:hover { background: var(--brand-dk); }
-.badge-count { background: var(--brand-lt); color: var(--brand); font-size: var(--text-xs); font-weight: 700; padding: 2px var(--sp-2); border-radius: var(--r-full); white-space: nowrap; }
-.geo-progress-wrap { background: var(--gray-200); border-radius: var(--r-full); height: 5px; width: 100%; overflow: hidden; display: none; margin-top: 2px; }
-.geo-progress-bar { height: 5px; background: var(--brand); border-radius: var(--r-full); transition: width .3s; width: 0%; }
+/* ── FILTER BAR ── */
+.filter-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);display:flex;align-items:flex-start;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-4);box-shadow:var(--shadow-sm);}
+.filter-bar label{font-size:var(--text-sm);color:var(--muted);white-space:nowrap;padding-top:6px;}
+.filter-bar select,.filter-bar input[type=text],.filter-bar input[type=number]{border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-2);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;transition:border-color .15s;}
+.filter-bar select:focus,.filter-bar input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15);}
+#search-input{flex:1;min-width:150px;}
+#marker-input{min-width:180px;}
+#radius-input{width:64px;}
+.filter-btn{display:inline-flex;align-items:center;gap:4px;padding:6px var(--sp-3);border-radius:var(--r-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--gray-700);transition:background .15s;}
+.filter-btn:hover{background:var(--gray-100);}
+.filter-btn.primary{background:var(--brand);color:#fff;border-color:var(--brand);}
+.filter-btn.primary:hover{background:var(--brand-dk);}
+.badge-count{background:var(--brand-lt);color:var(--brand);font-size:var(--text-xs);font-weight:700;padding:2px var(--sp-2);border-radius:var(--r-full);white-space:nowrap;}
+.geo-progress-wrap{background:var(--gray-200);border-radius:var(--r-full);height:5px;width:100%;overflow:hidden;display:none;margin-top:2px;}
+.geo-progress-bar{height:5px;background:var(--brand);border-radius:var(--r-full);transition:width .3s;width:0%;}
+
+/* ── MULTI-ZONE DROPDOWN ── */
+.zone-multi-wrap{position:relative;}
+.zone-multi-btn{display:inline-flex;align-items:center;gap:var(--sp-1);padding:6px var(--sp-3);border:1px solid var(--border);border-radius:var(--r-md);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);cursor:pointer;white-space:nowrap;min-width:140px;transition:border-color .15s;}
+.zone-multi-btn:hover,.zone-multi-btn.open{border-color:var(--brand);}
+.zone-multi-btn .arrow{margin-left:auto;transition:transform .2s;color:var(--muted);}
+.zone-multi-btn.open .arrow{transform:rotate(180deg);}
+.zone-dropdown{position:absolute;top:calc(100% + 4px);left:0;min-width:200px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);z-index:100;overflow:hidden;display:none;}
+.zone-dropdown.open{display:block;}
+.zone-dd-item{display:flex;align-items:center;gap:var(--sp-2);padding:8px var(--sp-3);cursor:pointer;font-size:var(--text-sm);transition:background .1s;user-select:none;}
+.zone-dd-item:hover{background:var(--gray-100);}
+.zone-dd-item input[type=checkbox]{accent-color:var(--brand);width:14px;height:14px;cursor:pointer;}
+.zone-dd-divider{border:none;border-top:1px solid var(--border);margin:2px 0;}
+.zone-dd-actions{display:flex;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-top:1px solid var(--border);}
+.zone-dd-action{font-size:var(--text-xs);color:var(--brand);cursor:pointer;font-weight:600;padding:2px 6px;border-radius:var(--r-sm);}
+.zone-dd-action:hover{background:var(--brand-lt);}
+.zone-selected-tag{display:inline-flex;align-items:center;gap:3px;background:var(--brand);color:#fff;font-size:var(--text-xs);padding:2px 8px;border-radius:var(--r-full);font-weight:600;}
+.zone-tags-row{display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:24px;}
+
+/* ── DATE CALENDAR PICKER ── */
+.cal-wrap{position:relative;}
+.cal-trigger{display:inline-flex;align-items:center;gap:var(--sp-1);padding:6px var(--sp-3);border:1px solid var(--border);border-radius:var(--r-md);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);cursor:pointer;white-space:nowrap;min-width:150px;transition:border-color .15s;}
+.cal-trigger:hover,.cal-trigger.open{border-color:var(--brand);}
+.cal-popup{position:absolute;top:calc(100% + 4px);left:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);z-index:100;display:none;padding:var(--sp-3);min-width:280px;}
+.cal-popup.open{display:block;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);}
+.cal-nav{background:none;border:1px solid var(--border);border-radius:var(--r-sm);width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);transition:background .1s;}
+.cal-nav:hover{background:var(--gray-100);}
+.cal-month-label{font-size:var(--text-sm);font-weight:700;color:var(--text);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day-head{font-size:var(--text-xs);color:var(--muted);text-align:center;padding:4px 0;font-weight:600;}
+.cal-day{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);font-size:var(--text-sm);cursor:pointer;transition:background .1s,color .1s;user-select:none;}
+.cal-day:hover:not(.cal-empty):not(.cal-no-data){background:var(--brand-lt);color:var(--brand);}
+.cal-day.cal-empty{cursor:default;}
+.cal-day.cal-no-data{color:var(--gray-300);cursor:default;}
+.cal-day.cal-has-data{color:var(--text);font-weight:600;}
+.cal-day.cal-selected{background:var(--brand);color:#fff;}
+.cal-day.cal-today{outline:2px solid var(--brand);outline-offset:-2px;}
+.cal-footer{margin-top:var(--sp-3);display:flex;justify-content:flex-end;gap:var(--sp-2);}
+.cal-clear{font-size:var(--text-xs);color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:var(--r-sm);}
+.cal-clear:hover{background:var(--gray-100);}
+.cal-dot-row{display:flex;justify-content:center;margin-top:2px;}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:var(--brand);}
 
 /* ── ZONE CARD-SEARCH BAR ── */
-.zone-search-bar {
-  display: flex; align-items: center; gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-top: none; border-bottom: none;
-}
-.zone-search-input {
-  flex: 1; border: 1px solid var(--border); border-radius: var(--r-md);
-  padding: 5px var(--sp-3); font-size: var(--text-sm);
-  color: var(--text); background: var(--bg-card); outline: none;
-  transition: border-color .15s;
-}
-.zone-search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(26,86,219,.15); }
-.zone-search-count { font-size: var(--text-xs); color: var(--muted); white-space: nowrap; }
+.zone-search-bar{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--bg-card);border:1px solid var(--border);border-top:none;border-bottom:none;}
+.zone-search-input{flex:1;border:1px solid var(--border);border-radius:var(--r-md);padding:5px var(--sp-3);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;transition:border-color .15s;}
+.zone-search-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15);}
+.zone-search-count{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;}
 
-.zone-section { margin-bottom: var(--sp-6); }
-.zone-header {
-  display: flex; align-items: center; gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--r-md) var(--r-md) 0 0;
-  font-weight: 700; font-size: var(--text-sm);
-  position: sticky; top: 56px; z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,.08);
-}
-.zone-cards-wrap {
-  border: 1px solid var(--border); border-top: none;
-  border-radius: 0 0 var(--r-md) var(--r-md);
-  background: var(--bg-page); padding: var(--sp-3);
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--sp-3);
-}
-.order-card {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: var(--sp-4);
-  box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: var(--sp-2);
-  transition: box-shadow .15s, transform .15s;
-  position: relative; overflow: hidden;
-}
-.order-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.order-card.is-problem { border-left: 4px solid var(--danger); }
-.order-card.is-pending  { border-left: 4px solid #F59E0B; }
-.order-card.is-delivered{ border-left: 4px solid var(--success); }
-.order-card.card-hidden { display: none; }
-.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
-.card-order-id { font-family: monospace; font-size: var(--text-xs); color: var(--muted); }
-.card-name { font-size: var(--text-md); font-weight: 700; color: var(--text); margin-top: 2px; }
-.card-row { display: flex; align-items: flex-start; gap: var(--sp-2); font-size: var(--text-sm); color: var(--gray-700); line-height: 1.5; }
-.card-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-.card-products { display: flex; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--gray-50); border-radius: var(--r-md); }
-.card-qty { display: flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: 700; }
-.card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: var(--sp-1); }
-.status-badge { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-xs); padding: 4px 10px; border-radius: var(--r-full); font-weight: 700; letter-spacing: .02em; }
-.s-pending  { background: #FEF3C7; color: #78350F; border: 1.5px solid #FCD34D; }
-.s-delivered{ background: #D1FAE5; color: #064E3B; border: 1.5px solid #6EE7B7; }
-.s-problem  { background: #FEE2E2; color: #7F1D1D; border: 1.5px solid #FCA5A5; }
-.dist-badge { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-xs); padding: 3px 8px; border-radius: var(--r-full); background: #EEF2FF; color: #3730A3; font-weight: 600; }
-.maps-btn { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: 600; padding: 6px var(--sp-3); border-radius: var(--r-md); background: var(--brand); color: #fff; border: none; cursor: pointer; text-decoration: none; transition: background .15s; }
-.maps-btn:hover { background: var(--brand-dk); }
-.zone-footer { padding: var(--sp-2) var(--sp-4); background: var(--bg-card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--r-md) var(--r-md); display: flex; justify-content: flex-end; gap: var(--sp-4); font-size: var(--text-sm); }
-.zone-footer span { font-weight: 700; }
-.no-cards-msg { grid-column: 1/-1; text-align: center; padding: var(--sp-6); color: var(--muted); font-size: var(--text-sm); }
+.zone-section{margin-bottom:var(--sp-6);}
+.zone-header{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-md) var(--r-md) 0 0;font-weight:700;font-size:var(--text-sm);position:sticky;top:56px;z-index:10;box-shadow:0 2px 4px rgba(0,0,0,.08);}
+.zone-cards-wrap{border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-md) var(--r-md);background:var(--bg-page);padding:var(--sp-3);display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--sp-3);}
+.order-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-4);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:var(--sp-2);transition:box-shadow .15s,transform .15s;position:relative;overflow:hidden;}
+.order-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.order-card.is-problem{border-left:4px solid var(--danger);}
+.order-card.is-pending{border-left:4px solid #F59E0B;}
+.order-card.is-delivered{border-left:4px solid var(--success);}
+.order-card.card-hidden{display:none;}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);}
+.card-order-id{font-family:monospace;font-size:var(--text-xs);color:var(--muted);}
+.card-name{font-size:var(--text-md);font-weight:700;color:var(--text);margin-top:2px;}
+.card-row{display:flex;align-items:flex-start;gap:var(--sp-2);font-size:var(--text-sm);color:var(--gray-700);line-height:1.5;}
+.card-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.card-products{display:flex;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-radius:var(--r-md);}
+.card-qty{display:flex;align-items:center;gap:4px;font-size:var(--text-sm);font-weight:700;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:var(--sp-1);}
+.status-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);padding:4px 10px;border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;}
+.s-pending{background:#FEF3C7;color:#78350F;border:1.5px solid #FCD34D;}
+.s-delivered{background:#D1FAE5;color:#064E3B;border:1.5px solid #6EE7B7;}
+.s-problem{background:#FEE2E2;color:#7F1D1D;border:1.5px solid #FCA5A5;}
+.dist-badge{display:inline-flex;align-items:center;gap:3px;font-size:var(--text-xs);padding:3px 8px;border-radius:var(--r-full);background:#EEF2FF;color:#3730A3;font-weight:600;}
+.maps-btn{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-sm);font-weight:600;padding:6px var(--sp-3);border-radius:var(--r-md);background:var(--brand);color:#fff;border:none;cursor:pointer;text-decoration:none;transition:background .15s;}
+.maps-btn:hover{background:var(--brand-dk);}
+.zone-footer{padding:var(--sp-2) var(--sp-4);background:var(--bg-card);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-md) var(--r-md);display:flex;justify-content:flex-end;gap:var(--sp-4);font-size:var(--text-sm);}
+.zone-footer span{font-weight:700;}
+.no-cards-msg{grid-column:1/-1;text-align:center;padding:var(--sp-6);color:var(--muted);font-size:var(--text-sm);}
 
-/* Zone color classes — z11=กรุงเทพกลาง(pink), z12=ต่างจังหวัด(sky), z13=อื่นๆ(gray) */
 .z0{background:var(--z0-bg);color:var(--z0-fg);}
 .z1{background:var(--z1-bg);color:var(--z1-fg);}
 .z2{background:var(--z2-bg);color:var(--z2-fg);}
@@ -271,32 +207,32 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 .z12{background:var(--z12-bg);color:var(--z12-fg);}
 .z13{background:var(--z13-bg);color:var(--z13-fg);}
 
-.empty-state { text-align: center; padding: 48px var(--sp-6); color: var(--muted); font-size: var(--text-md); }
-#loading { display: none; text-align: center; padding: 32px; color: var(--muted); font-size: var(--text-md); }
-.spinner { display: inline-block; width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: var(--sp-2); }
-@keyframes spin { to { transform: rotate(360deg); } }
+.empty-state{text-align:center;padding:48px var(--sp-6);color:var(--muted);font-size:var(--text-md);}
+#loading{display:none;text-align:center;padding:32px;color:var(--muted);font-size:var(--text-md);}
+.spinner{display:inline-block;width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:var(--sp-2);}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-@media print {
-  .topbar, .filter-bar, #upload-section, #dashboard, .no-print, .zone-search-bar { display: none !important; }
-  body { background: #fff; font-size: 12px; color: #000; }
-  .main { padding: 0; max-width: 100%; }
-  .zone-section { break-inside: avoid; }
-  .zone-header { position: static; box-shadow: none; }
-  .zone-cards-wrap { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
-  .order-card { box-shadow: none; border: 1px solid #ccc; }
-  .order-card.card-hidden { display: flex !important; }
-  .print-title { display: block !important; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+@media print{
+  .topbar,.filter-bar,#upload-section,#dashboard,.no-print,.zone-search-bar{display:none !important;}
+  body{background:#fff;font-size:12px;color:#000;}
+  .main{padding:0;max-width:100%;}
+  .zone-section{break-inside:avoid;}
+  .zone-header{position:static;box-shadow:none;}
+  .zone-cards-wrap{grid-template-columns:repeat(2,1fr);gap:8px;padding:8px;}
+  .order-card{box-shadow:none;border:1px solid #ccc;}
+  .order-card.card-hidden{display:flex !important;}
+  .print-title{display:block !important;font-size:16px;font-weight:700;margin-bottom:12px;}
 }
-.print-title { display: none; }
+.print-title{display:none;}
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
-.modal-overlay.show{display:flex}
-.modal{background:var(--bg-card);border-radius:var(--r-xl);padding:var(--sp-6);width:100%;max-width:480px;box-shadow:var(--shadow-md)}
-.modal h3{font-size:var(--text-lg);font-weight:700;margin-bottom:var(--sp-2);color:var(--text)}
-.modal p{font-size:var(--text-sm);color:var(--muted);margin-bottom:var(--sp-4);line-height:1.6}
-.modal input[type=text]{width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px var(--sp-3);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;margin-bottom:var(--sp-3)}
-.modal input[type=text]:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15)}
-.modal-btns{display:flex;gap:var(--sp-2);justify-content:flex-end}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--bg-card);border-radius:var(--r-xl);padding:var(--sp-6);width:100%;max-width:480px;box-shadow:var(--shadow-md);}
+.modal h3{font-size:var(--text-lg);font-weight:700;margin-bottom:var(--sp-2);color:var(--text);}
+.modal p{font-size:var(--text-sm);color:var(--muted);margin-bottom:var(--sp-4);line-height:1.6;}
+.modal input[type=text]{width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px var(--sp-3);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;margin-bottom:var(--sp-3);}
+.modal input[type=text]:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15);}
+.modal-btns{display:flex;gap:var(--sp-2);justify-content:flex-end;}
 </style>
 </head>
 <body>
@@ -336,7 +272,7 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
         <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
       </svg>
       <h2>ลากวางหรือเลือกไฟล์ Excel</h2>
-      <p>รองรับ .xlsx / .xls &nbsp;·&nbsp; BC=จังหวัด &nbsp;·&nbsp; BD=เขต &nbsp;·&nbsp; AX=ชื่อ &nbsp;·&nbsp; AY=เบอร์ &nbsp;·&nbsp; BA=ที่อยู่ &nbsp;·&nbsp; BG=ไปรษณีย์</p>
+      <p>รองรับ .xlsx / .xls &nbsp;·&nbsp; BC=จังหวัด &nbsp;·&nbsp; BD=เขต &nbsp;·&nbsp; AX=ชื่อ &nbsp;·&nbsp; AY=เบอร์ &nbsp;·&nbsp; BA=ที่อยู่ &nbsp;·&nbsp; BG=ไปรษณีย์ &nbsp;·&nbsp; A=สถานะ</p>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">
         <label class="upload-label" onclick="event.stopPropagation();document.getElementById('file-input').click()">📂 เลือกไฟล์ Excel</label>
         <button class="upload-label" style="background:#0F9D58;cursor:pointer;border:none" onclick="event.stopPropagation();showSheetsDialog()">
@@ -372,18 +308,54 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
     </div>
   </div>
 
+  <!-- FILTER BAR -->
   <div id="filter-bar" class="filter-bar no-print" style="display:none">
     <label>โซน:</label>
-    <select id="zone-filter" onchange="applyFilter()"><option value="">ทั้งหมด</option></select>
+    <!-- Multi-zone dropdown -->
+    <div class="zone-multi-wrap" id="zone-multi-wrap">
+      <div class="zone-multi-btn" id="zone-multi-btn" onclick="toggleZoneDropdown()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span id="zone-btn-label">ทั้งหมด</span>
+        <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="zone-dropdown" id="zone-dropdown">
+        <div id="zone-dd-list"></div>
+        <div class="zone-dd-actions">
+          <span class="zone-dd-action" onclick="selectAllZones()">เลือกทั้งหมด</span>
+          <span class="zone-dd-action" onclick="clearAllZones()">ล้างทั้งหมด</span>
+        </div>
+      </div>
+    </div>
+
     <label>สถานะ:</label>
     <select id="status-filter" onchange="applyFilter()">
       <option value="">ทั้งหมด</option>
       <option value="pending">🟡 ค้างส่ง</option>
       <option value="delivered">🟢 ส่งแล้ว</option>
-      <option value="problem">🔴 มีปัญหา</option>
+      <option value="problem">🔴 ยกเลิก</option>
     </select>
+
     <label>วันที่:</label>
-    <select id="date-filter" onchange="applyFilter()"><option value="">ทั้งหมด</option></select>
+    <!-- Calendar picker -->
+    <div class="cal-wrap" id="cal-wrap">
+      <div class="cal-trigger" id="cal-trigger" onclick="toggleCal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="cal-label">ทั้งหมด</span>
+        <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="cal-popup" id="cal-popup">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="calNav(-1)">&#8249;</button>
+          <span class="cal-month-label" id="cal-month-label"></span>
+          <button class="cal-nav" onclick="calNav(1)">&#8250;</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-footer">
+          <span class="cal-clear" onclick="clearDate()">ล้างวันที่</span>
+        </div>
+      </div>
+    </div>
+
     <label>ค้นหา:</label>
     <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
     <label>📍 หมุด:</label>
@@ -403,23 +375,11 @@ body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: var(--bg-page
 </div>
 
 <script>
-// ── ZONE CONFIG ──────────────────────────────────────────────
-// เพิ่ม กรุงเทพกลาง (index 4) และ ต่างจังหวัด (index 12), อื่นๆ (index 13)
+// ── ZONE CONFIG ──
 const ZONE_LIST = [
-  'กรุงเทพเหนือ',     // z0
-  'กรุงเทพกลาง',     // z1  ← ใหม่
-  'กรุงเทพตะวันออก', // z2
-  'กรุงเทพตะวันตก',  // z3
-  'กรุงเทพฝั่งธน',   // z4
-  'นนทบุรี',          // z5
-  'ปทุมธานี',         // z6
-  'สมุทรสาคร',        // z7
-  'สมุทรสงคราม',      // z8
-  'นครปฐม',           // z9
-  'ชลบุรี',           // z10
-  'สมุทรปราการ',      // z11
-  'ต่างจังหวัด',      // z12 ← ใหม่
-  'อื่นๆ',            // z13
+  'กรุงเทพเหนือ','กรุงเทพกลาง','กรุงเทพตะวันออก','กรุงเทพตะวันตก',
+  'กรุงเทพฝั่งธน','นนทบุรี','ปทุมธานี','สมุทรสาคร','สมุทรสงคราม',
+  'นครปฐม','ชลบุรี','สมุทรปราการ','ต่างจังหวัด','อื่นๆ',
 ];
 const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11','z12','z13'];
 const ZONE_DONUT = [
@@ -428,63 +388,26 @@ const ZONE_DONUT = [
   '#22C55E','#F43F5E','#8B5CF6','#94A3B8'
 ];
 
-// ── DISTRICT → ZONE MAP (ใช้ forEach หลีกเลี่ยง duplicate key) ──
 const DZ = {};
-
-// กรุงเทพเหนือ
-['เขตบางเขน','เขตดอนเมือง','เขตสายไหม','เขตหลักสี่','เขตลาดพร้าว',
- 'เขตจตุจักร','เขตบางซื่อ','เขตห้วยขวาง','เขตดินแดง','เขตวังทองหลาง',
- 'เขตรามอินทรา','เขตบางกะปิ'].forEach(d=>DZ[d]='กรุงเทพเหนือ');
-
-// กรุงเทพกลาง ← ใหม่
+['เขตบางเขน','เขตดอนเมือง','เขตสายไหม','เขตหลักสี่','เขตลาดพร้าว','เขตจตุจักร','เขตบางซื่อ','เขตห้วยขวาง','เขตดินแดง','เขตวังทองหลาง','เขตรามอินทรา','เขตบางกะปิ'].forEach(d=>DZ[d]='กรุงเทพเหนือ');
 ['เขตสาทร','เขตคลองสามวา','เขตทุ่งครุ','เขตราชเทวี'].forEach(d=>DZ[d]='กรุงเทพกลาง');
+['เขตมีนบุรี','เขตลาดกระบัง','เขตสะพานสูง','เขตประเวศ','เขตบางนา','เขตสวนหลวง','เขตพระโขนง','เขตคลองเตย','เขตหนองจอก','เขตคันนายาว','เขตบึงกุ่ม'].forEach(d=>DZ[d]='กรุงเทพตะวันออก');
+['เขตพระนคร','เขตดุสิต','เขตพญาไท','เขตปทุมวัน','เขตบางรัก','เขตยานนาวา','เขตบางคอแหลม','เขตบางพลัด','เขตราษฎร์บูรณะ','เขตวัฒนา','เขตสัมพันธวงศ์','เขตป้อมปราบศัตรูพ่าย','เขตจักรวรรดิ','เขตบางกอกน้อย','เขตบางกอกใหญ่'].forEach(d=>DZ[d]='กรุงเทพตะวันตก');
+['เขตธนบุรี','เขตคลองสาน','เขตจอมทอง','เขตบางแค','เขตหนองแขม','เขตภาษีเจริญ','เขตบางบอน','เขตทวีวัฒนา','เขตตลิ่งชัน','เขตบางขุนเทียน'].forEach(d=>DZ[d]='กรุงเทพฝั่งธน');
 
-// กรุงเทพตะวันออก
-['เขตมีนบุรี','เขตลาดกระบัง','เขตสะพานสูง','เขตประเวศ','เขตบางนา',
- 'เขตสวนหลวง','เขตพระโขนง','เขตคลองเตย','เขตหนองจอก','เขตคันนายาว',
- 'เขตบึงกุ่ม'].forEach(d=>DZ[d]='กรุงเทพตะวันออก');
-
-// กรุงเทพตะวันตก
-['เขตพระนคร','เขตดุสิต','เขตพญาไท','เขตปทุมวัน','เขตบางรัก',
- 'เขตยานนาวา','เขตบางคอแหลม','เขตบางพลัด','เขตราษฎร์บูรณะ','เขตวัฒนา',
- 'เขตสัมพันธวงศ์','เขตป้อมปราบศัตรูพ่าย','เขตจักรวรรดิ',
- 'เขตบางกอกน้อย','เขตบางกอกใหญ่'].forEach(d=>DZ[d]='กรุงเทพตะวันตก');
-
-// กรุงเทพฝั่งธน
-['เขตธนบุรี','เขตคลองสาน','เขตจอมทอง','เขตบางแค','เขตหนองแขม',
- 'เขตภาษีเจริญ','เขตบางบอน','เขตทวีวัฒนา','เขตตลิ่งชัน',
- 'เขตบางขุนเทียน'].forEach(d=>DZ[d]='กรุงเทพฝั่งธน');
-
-// จังหวัดปริมณฑลที่กำหนด
 const PROVINCE_ZONE = {
   'นนทบุรี':'นนทบุรี','ปทุมธานี':'ปทุมธานี','สมุทรสาคร':'สมุทรสาคร',
   'สมุทรสงคราม':'สมุทรสงคราม','สมุทรปราการ':'สมุทรปราการ',
   'นครปฐม':'นครปฐม','ชลบุรี':'ชลบุรี',
 };
-
-// จังหวัดที่ถือว่าเป็น "กรุงเทพ"
 const BKK_ALIASES = ['กรุงเทพ','กทม','bangkok'];
 
 function detectZone(d, p) {
-  const dStr = String(d||'').trim();
-  const pStr = String(p||'').trim();
-
-  // 1. เช็คจังหวัดปริมณฑลก่อน
-  for (const [k, v] of Object.entries(PROVINCE_ZONE)) {
-    if (pStr.includes(k)) return v;
-  }
-
-  // 2. เช็คเขตใน map
+  const dStr = String(d||'').trim(), pStr = String(p||'').trim();
+  for (const [k, v] of Object.entries(PROVINCE_ZONE)) { if (pStr.includes(k)) return v; }
   if (dStr && DZ[dStr]) return DZ[dStr];
-
-  // 3. กรุงเทพแต่เขตไม่อยู่ใน map → อื่นๆ
-  if (BKK_ALIASES.some(a => pStr.toLowerCase().includes(a) || dStr.toLowerCase().includes(a))) {
-    return 'อื่นๆ';
-  }
-
-  // 4. มีจังหวัด แต่ไม่ใช่ปริมณฑล/กรุงเทพ → ต่างจังหวัด
+  if (BKK_ALIASES.some(a => pStr.toLowerCase().includes(a) || dStr.toLowerCase().includes(a))) return 'อื่นๆ';
   if (pStr && pStr.length > 0) return 'ต่างจังหวัด';
-
   return 'อื่นๆ';
 }
 
@@ -495,12 +418,14 @@ function formatPhone(raw){
   if(s.startsWith('660')&&s.length===12)s='0'+s.slice(3);
   return s||'-';
 }
+
+// ── STATUS: คอลัมน์ A (index 0) ──
 function classifyStatus(s){
-  if(!s||['null','nan','NaT'].includes(s))return'other';
-  if(s.includes('ค้าง'))return'pending';
-  if(s.includes('ส่งแล้ว')||s.includes('จัดส่งแล้ว')||s.includes('ส่งสำเร็จ'))return'delivered';
-  if(s.includes('ปัญหา')||s.includes('ผิดพลาด'))return'problem';
-  return'other';
+  const str=String(s||'').trim();
+  if(!str||str==='null'||str==='nan'||str==='NaT')return'pending';
+  if(str.includes('ค้างส่ง'))return'pending';
+  if(str.includes('ยกเลิก'))return'problem';
+  return'delivered';
 }
 
 function parseThaiAddress(raw,district,province,zipcode){
@@ -518,9 +443,9 @@ function buildNominatimQueries(p){
   const{streetPart:sp,distClean:dc,provClean:pc,zipcode:z}=p;
   return[
     sp&&dc&&pc&&z?`${sp} ${dc} ${pc} ${z} Thailand`:null,
-    sp&&dc&&pc  ?`${sp} ${dc} ${pc} Thailand`:null,
-    dc&&pc&&z   ?`${dc} ${pc} ${z} Thailand`:null,
-    dc&&pc      ?`${dc} ${pc} Thailand`:null,
+    sp&&dc&&pc?`${sp} ${dc} ${pc} Thailand`:null,
+    dc&&pc&&z?`${dc} ${pc} ${z} Thailand`:null,
+    dc&&pc?`${dc} ${pc} Thailand`:null,
   ].filter(Boolean);
 }
 
@@ -566,32 +491,133 @@ function mapsUrl(o){
 }
 
 let allOrders=[],filteredOrders=[],geoMarker=null;
+let selectedZones=new Set(); // multi-zone state
+let availableZones=[]; // zones that actually exist in data
 
-function onDragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag-over')}
-function onDragLeave(){document.getElementById('upload-zone').classList.remove('drag-over')}
-function onDrop(e){e.preventDefault();onDragLeave();const f=e.dataTransfer.files[0];if(f)processFile(f)}
-function handleFile(e){const f=e.target.files[0];if(f)processFile(f)}
+// ── MULTI-ZONE DROPDOWN ──
+function buildZoneDropdown(){
+  const list=document.getElementById('zone-dd-list');
+  list.innerHTML='';
+  availableZones.forEach(zone=>{
+    const item=document.createElement('div');
+    item.className='zone-dd-item';
+    const cb=document.createElement('input');
+    cb.type='checkbox';
+    cb.id='zdz_'+zone;
+    cb.checked=selectedZones.has(zone);
+    cb.onchange=()=>{
+      if(cb.checked)selectedZones.add(zone);else selectedZones.delete(zone);
+      updateZoneBtnLabel();applyFilter();
+    };
+    const lbl=document.createElement('label');
+    lbl.htmlFor='zdz_'+zone;
+    lbl.textContent=zone;
+    lbl.style.cursor='pointer';lbl.style.flex='1';lbl.style.fontSize='var(--text-sm)';
+    item.appendChild(cb);item.appendChild(lbl);
+    list.appendChild(item);
+  });
+}
+function updateZoneBtnLabel(){
+  const btn=document.getElementById('zone-btn-label');
+  if(selectedZones.size===0)btn.textContent='ทั้งหมด';
+  else if(selectedZones.size===1)btn.textContent=[...selectedZones][0];
+  else btn.textContent=`${selectedZones.size} โซน`;
+}
+function toggleZoneDropdown(){
+  const dd=document.getElementById('zone-dropdown');
+  const btn=document.getElementById('zone-multi-btn');
+  const isOpen=dd.classList.contains('open');
+  dd.classList.toggle('open');btn.classList.toggle('open');
+  if(!isOpen){
+    setTimeout(()=>{
+      const close=e=>{if(!document.getElementById('zone-multi-wrap').contains(e.target)){dd.classList.remove('open');btn.classList.remove('open');document.removeEventListener('click',close);}};
+      document.addEventListener('click',close);
+    },10);
+  }
+}
+function selectAllZones(){selectedZones=new Set(availableZones);buildZoneDropdown();updateZoneBtnLabel();applyFilter();}
+function clearAllZones(){selectedZones.clear();buildZoneDropdown();updateZoneBtnLabel();applyFilter();}
 
-function processFile(file){
-  document.getElementById('loading').style.display='block';
-  document.getElementById('loading-text').textContent='กำลังอ่านไฟล์...';
-  document.getElementById('results').innerHTML='';
-  document.getElementById('dashboard').style.display='none';
-  document.getElementById('filter-bar').style.display='none';
-  geoMarker=null;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
-      buildOrdersFromRows(data);
-    }catch(err){
-      document.getElementById('loading').style.display='none';
-      document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${err.message}</div>`;
+// ── CALENDAR PICKER ──
+const thMonths=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const thDays=['อา','จ','อ','พ','พฤ','ศ','ส'];
+let calViewYear=0, calViewMonth=0, selectedDateKey='';
+let orderDateSet=new Set(); // date keys that have orders
+
+function initCalendar(){
+  const now=new Date();
+  calViewYear=now.getFullYear();
+  calViewMonth=now.getMonth(); // 0-indexed
+  renderCal();
+}
+function calNav(dir){
+  calViewMonth+=dir;
+  if(calViewMonth>11){calViewMonth=0;calViewYear++;}
+  if(calViewMonth<0){calViewMonth=11;calViewYear--;}
+  renderCal();
+}
+function renderCal(){
+  const label=document.getElementById('cal-month-label');
+  const buddhistYear=calViewYear+543;
+  label.textContent=`${thMonths[calViewMonth]} ${buddhistYear}`;
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  // day headers
+  thDays.forEach(d=>{
+    const h=document.createElement('div');h.className='cal-day-head';h.textContent=d;grid.appendChild(h);
+  });
+  // first day of month
+  const first=new Date(calViewYear,calViewMonth,1).getDay(); // 0=Sun
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cal-day cal-empty';grid.appendChild(e);}
+  const daysInMonth=new Date(calViewYear,calViewMonth+1,0).getDate();
+  const now=new Date();
+  for(let d=1;d<=daysInMonth;d++){
+    const cell=document.createElement('div');
+    cell.className='cal-day';
+    // build date key matching parseOrderDate format: YYMMDD in buddhist
+    const buddhistYY=String((buddhistYear)-2500).padStart(2,'0');
+    const mm=String(calViewMonth+1).padStart(2,'0');
+    const dd=String(d).padStart(2,'0');
+    const dateKey=`${buddhistYY}${mm}${dd}`;
+    const hasData=orderDateSet.has(dateKey);
+    if(!hasData)cell.classList.add('cal-no-data');
+    else cell.classList.add('cal-has-data');
+    if(dateKey===selectedDateKey)cell.classList.add('cal-selected');
+    // today highlight
+    if(now.getFullYear()===calViewYear&&now.getMonth()===calViewMonth&&now.getDate()===d)cell.classList.add('cal-today');
+    cell.innerHTML=`<div>${d}</div>${hasData?'<div class="cal-dot-row"><div class="cal-dot"></div></div>':''}`;
+    if(hasData){
+      cell.onclick=()=>selectDate(dateKey,d);
     }
-  };
-  reader.readAsArrayBuffer(file);
+    grid.appendChild(cell);
+  }
+}
+function selectDate(key,day){
+  selectedDateKey=key;
+  const buddhistYear=calViewYear+543;
+  document.getElementById('cal-label').textContent=`${day} ${thMonths[calViewMonth]} ${buddhistYear}`;
+  document.getElementById('cal-popup').classList.remove('open');
+  document.getElementById('cal-trigger').classList.remove('open');
+  renderCal();
+  applyFilter();
+}
+function clearDate(){
+  selectedDateKey='';
+  document.getElementById('cal-label').textContent='ทั้งหมด';
+  renderCal();
+  applyFilter();
+}
+function toggleCal(){
+  const popup=document.getElementById('cal-popup');
+  const trigger=document.getElementById('cal-trigger');
+  const isOpen=popup.classList.contains('open');
+  popup.classList.toggle('open');trigger.classList.toggle('open');
+  if(!isOpen){
+    setTimeout(()=>{
+      const close=e=>{if(!document.getElementById('cal-wrap').contains(e.target)){popup.classList.remove('open');trigger.classList.remove('open');document.removeEventListener('click',close);}};
+      document.addEventListener('click',close);
+    },10);
+  }
 }
 
 function parseOrderDate(order_id){
@@ -599,19 +625,16 @@ function parseOrderDate(order_id){
   if(!m)return null;
   const yy=+m[1],mm=+m[2],dd=+m[3];
   const buddhistYear=2500+yy;
-  const thMonths=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  return{key:`${yy}${String(mm).padStart(2,'0')}${String(dd).padStart(2,'0')}`,label:`${dd} ${thMonths[mm]} ${buddhistYear}`};
+  return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
 }
 
 function applyFilter(){
-  const zf=document.getElementById('zone-filter').value;
   const sf=document.getElementById('status-filter').value;
-  const df=document.getElementById('date-filter').value;
   const q=document.getElementById('search-input').value.toLowerCase();
   filteredOrders=allOrders.filter(o=>{
-    if(zf&&o.zone!==zf)return false;
+    if(selectedZones.size>0&&!selectedZones.has(o.zone))return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
-    if(df){const d=parseOrderDate(o.order_id);if(!d||d.key!==df)return false;}
+    if(selectedDateKey){const d=parseOrderDate(o.order_id);if(!d||d.key!==selectedDateKey)return false;}
     if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
     return true;
   });
@@ -621,26 +644,28 @@ function applyFilter(){
   if(hidden>0){
     fi.style.display='flex';
     const parts=[];
-    if(zf)parts.push(`โซน "${zf}"`);
+    if(selectedZones.size>0)parts.push(`โซน (${selectedZones.size} โซน)`);
     if(sf){const lbl={pending:'ค้างส่ง',delivered:'ส่งแล้ว',problem:'มีปัญหา'};parts.push(`สถานะ "${lbl[sf]||sf}"`);}
+    if(selectedDateKey)parts.push(`วันที่ "${document.getElementById('cal-label').textContent}"`);
     if(q)parts.push(`ค้นหา "${q}"`);
     ft.textContent=`ซ่อน ${hidden} รายการ (filter: ${parts.join(', ')})`;
   }else{fi.style.display='none';}
   document.getElementById('result-count').textContent=`${filteredOrders.length} รายการ`;
-  renderDashboard();
-  renderResults();
+  renderDashboard();renderResults();
 }
 
 function resetFilter(){
   geoMarker=null;
   allOrders.forEach(o=>o._distance=null);
   ['search-input','marker-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('zone-filter').value='';
+  selectedZones.clear();buildZoneDropdown();updateZoneBtnLabel();
   document.getElementById('status-filter').value='';
-  document.getElementById('date-filter').value='';
+  selectedDateKey='';
+  document.getElementById('cal-label').textContent='ทั้งหมด';
   document.getElementById('radius-input').value='15';
   document.getElementById('geo-status').textContent='';
   document.getElementById('geo-progress-wrap').style.display='none';
+  renderCal();
   applyFilter();
 }
 
@@ -693,40 +718,35 @@ function renderDashboard(){
   const total=filteredOrders.length;
   document.getElementById('donut-total').textContent=total;
   const R=70,cx=80,cy=80,stroke=22,circumference=2*Math.PI*R;
-  let offset=0,svgParts='';
-  const legendParts=[];
+  let offset=0,svgParts='';const legendParts=[];
   entries.forEach(([zone,count])=>{
     const zi=ZONE_LIST.indexOf(zone);
     const color=ZONE_DONUT[zi>=0?zi:ZONE_DONUT.length-1];
     const pct=count/total,dash=pct*circumference,gap=circumference-dash;
     svgParts+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" style="cursor:pointer" onclick="quickFilterZone('${zone}')" title="${zone}: ${count} ออเดอร์"/>`;
     offset+=dash;
-    legendParts.push(`<div class="legend-row" onclick="quickFilterZone('${zone}')">
-      <div class="legend-dot" style="background:${color}"></div>
-      <div class="legend-name">${zone}</div>
-      <div class="legend-count">${count}</div>
-    </div>`);
+    legendParts.push(`<div class="legend-row" onclick="quickFilterZone('${zone}')"><div class="legend-dot" style="background:${color}"></div><div class="legend-name">${zone}</div><div class="legend-count">${count}</div></div>`);
   });
   document.getElementById('donut-svg').innerHTML=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--gray-200)" stroke-width="${stroke}"/>${svgParts}`;
   document.getElementById('donut-legend').innerHTML=legendParts.join('');
 }
 
 function quickFilterZone(zone){
-  document.getElementById('zone-filter').value=zone;
+  selectedZones=new Set([zone]);
+  buildZoneDropdown();updateZoneBtnLabel();
   applyFilter();
   document.getElementById('filter-bar').scrollIntoView({behavior:'smooth'});
 }
 
 function statusBadge(s){
   const c=classifyStatus(s);
-  if(c==='pending')  return`<span class="status-badge s-pending">ค้างส่ง</span>`;
+  if(c==='pending')return`<span class="status-badge s-pending">ค้างส่ง</span>`;
   if(c==='delivered')return`<span class="status-badge s-delivered">ส่งแล้ว</span>`;
-  if(c==='problem')  return`<span class="status-badge s-problem">มีปัญหา</span>`;
-  if(!s||['null','nan','NaT'].includes(s))return'';
+  if(c==='problem')return`<span class="status-badge s-problem">ยกเลิก</span>`;
+  if(!s||['null','nan','NaT'].includes(String(s)))return'';
   return`<span class="status-badge" style="background:var(--gray-100);color:var(--gray-700)">${s}</span>`;
 }
 
-// ── CARD SEARCH (per-zone) ────────────────────────────────────
 function filterZoneCards(zoneId, inputEl) {
   const q = inputEl.value.trim().toLowerCase();
   const wrap = document.getElementById('cards-' + zoneId);
@@ -740,18 +760,13 @@ function filterZoneCards(zoneId, inputEl) {
     if (match) visible++;
   });
   const countEl = document.getElementById('zone-search-count-' + zoneId);
-  if (countEl) {
-    countEl.textContent = q ? `${visible} / ${cards.length} การ์ด` : `${cards.length} การ์ด`;
-  }
-  // แสดงข้อความเมื่อไม่พบ
+  if (countEl) countEl.textContent = q ? `${visible} / ${cards.length} การ์ด` : `${cards.length} การ์ด`;
   let noMsg = wrap.querySelector('.no-cards-msg');
   if (visible === 0 && q) {
     if (!noMsg) { noMsg = document.createElement('div'); noMsg.className='no-cards-msg'; wrap.appendChild(noMsg); }
     noMsg.textContent = `ไม่พบการ์ดที่ตรงกับ "${inputEl.value.trim()}"`;
     noMsg.style.display='';
-  } else if (noMsg) {
-    noMsg.style.display='none';
-  }
+  } else if (noMsg) { noMsg.style.display='none'; }
 }
 
 function renderResults(){
@@ -773,9 +788,7 @@ function renderResults(){
       <div class="zone-header ${cls}">
         ${zone}
         <span class="badge-count">${orders.length} ออเดอร์</span>
-        <span style="margin-left:auto;font-size:var(--text-xs);opacity:.75">
-          Plain ${tP} &nbsp;·&nbsp; Choc ${tC} &nbsp;·&nbsp; Honey ${tH}
-        </span>
+        <span style="margin-left:auto;font-size:var(--text-xs);opacity:.75">Plain ${tP} &nbsp;·&nbsp; Choc ${tC} &nbsp;·&nbsp; Honey ${tH}</span>
       </div>
       <div class="zone-search-bar no-print">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -787,16 +800,11 @@ function renderResults(){
         ${orders.map(o=>{
           const sc=classifyStatus(o.status);
           const cardCls=sc==='problem'?'is-problem':sc==='pending'?'is-pending':sc==='delivered'?'is-delivered':'';
-          const distHtml=showDist&&o._distance!==null&&isFinite(o._distance)
-            ?`<span class="dist-badge">📍 ${o._distance.toFixed(1)} กม.</span>`:'';
-          // data-search ใช้สำหรับ card search
+          const distHtml=showDist&&o._distance!==null&&isFinite(o._distance)?`<span class="dist-badge">📍 ${o._distance.toFixed(1)} กม.</span>`:'';
           const searchData=`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase();
           return`<div class="order-card ${cardCls}" data-search="${searchData.replace(/"/g,'&quot;')}">
             <div class="card-top">
-              <div>
-                <div class="card-order-id">🧾 ${o.order_id}</div>
-                <div class="card-name">👤 ${o.customer}</div>
-              </div>
+              <div><div class="card-order-id">🧾 ${o.order_id}</div><div class="card-name">👤 ${o.customer}</div></div>
               ${statusBadge(o.status)}
             </div>
             <div class="card-row"><span class="card-icon">📞</span><span>${o.phone}</span></div>
@@ -835,10 +843,7 @@ function exportExcel(){
   const sumRows=[['โซน','จำนวนออเดอร์','HP-Plain','HP-Choc','HP-Honey']];
   ZONE_LIST.forEach(zone=>{
     const orders=byZone[zone];if(!orders||orders.length===0)return;
-    sumRows.push([zone,orders.length,
-      orders.reduce((s,o)=>s+o.qty_plain,0),
-      orders.reduce((s,o)=>s+o.qty_choc,0),
-      orders.reduce((s,o)=>s+o.qty_honey,0)]);
+    sumRows.push([zone,orders.length,orders.reduce((s,o)=>s+o.qty_plain,0),orders.reduce((s,o)=>s+o.qty_choc,0),orders.reduce((s,o)=>s+o.qty_honey,0)]);
   });
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows),'สรุปโซน');
   ZONE_LIST.forEach(zone=>{
@@ -851,6 +856,101 @@ function exportExcel(){
   });
   const d=new Date().toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
   XLSX.writeFile(wb,`CFM_Zone_${d}.xlsx`);
+}
+
+function onDragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag-over');}
+function onDragLeave(){document.getElementById('upload-zone').classList.remove('drag-over');}
+function onDrop(e){e.preventDefault();onDragLeave();const f=e.dataTransfer.files[0];if(f)processFile(f);}
+function handleFile(e){const f=e.target.files[0];if(f)processFile(f);}
+
+function processFile(file){
+  document.getElementById('loading').style.display='block';
+  document.getElementById('loading-text').textContent='กำลังอ่านไฟล์...';
+  document.getElementById('results').innerHTML='';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('filter-bar').style.display='none';
+  geoMarker=null;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      buildOrdersFromRows(data);
+    }catch(err){
+      document.getElementById('loading').style.display='none';
+      document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${err.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function buildOrdersFromRows(data){
+  const orders=[],seen={};
+  for(let i=0;i<data.length;i++){
+    const row=data[i];
+    const orderNum=row[2];if(!orderNum||!String(orderNum).trim())continue;
+    if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain'))continue;
+    // ── สถานะมาจากคอลัมน์ A (index 0) ──
+    const statusRaw=row[0];
+    if(String(statusRaw||'').includes('คำสั่งซื้อผิด'))continue;
+    const district=row[55],province=row[54],address=row[52];
+    const customer=row[49],phone=row[50],note=row[51];
+    const zipcode=row[56]?String(row[56]).replace(/\.0$/,''):'';
+    const qty_plain=row[57],qty_choc=row[58],qty_honey=row[59];
+    if(!customer&&!address)continue;
+    if(!district&&!province)continue;
+    const oid=String(orderNum).trim();
+    if(seen[oid]){
+      seen[oid].qty_plain+=(+qty_plain||0);
+      seen[oid].qty_choc +=(+qty_choc ||0);
+      seen[oid].qty_honey+=(+qty_honey||0);
+    }else{
+      const o={
+        order_id:oid,customer:String(customer||'-'),
+        phone:formatPhone(phone),district:String(district||''),
+        province:String(province||''),address:String(address||'-'),
+        zipcode,zone:detectZone(String(district||''),String(province||'')),
+        status:String(statusRaw||''),
+        qty_plain:+qty_plain||0,qty_choc:+qty_choc||0,qty_honey:+qty_honey||0,
+        note:note?String(note):'',
+        lat:null,lon:null,_distance:null,geoLevel:null,
+      };
+      seen[oid]=o;orders.push(o);
+    }
+  }
+  allOrders=orders;
+  document.getElementById('loading').style.display='none';
+  if(orders.length===0){
+    document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
+    return;
+  }
+  // build available zones for dropdown
+  availableZones=[...new Set(orders.map(o=>o.zone))].sort((a,b)=>ZONE_LIST.indexOf(a)-ZONE_LIST.indexOf(b));
+  selectedZones.clear();
+  buildZoneDropdown();updateZoneBtnLabel();
+
+  // build date set for calendar
+  orderDateSet.clear();
+  orders.forEach(o=>{const d=parseOrderDate(o.order_id);if(d)orderDateSet.add(d.key);});
+  // navigate calendar to first order date if possible
+  if(orderDateSet.size>0){
+    const firstKey=[...orderDateSet].sort()[0];
+    // key format YYMMDD buddhist
+    const yy=parseInt(firstKey.substring(0,2));
+    const mm=parseInt(firstKey.substring(2,4));
+    calViewYear=2500+yy-543+2000; // convert buddhist to christian
+    // actually: buddhist year = christian + 543, so christian = buddhist - 543
+    // yy is offset from 2500: buddhist = 2500+yy
+    calViewYear=(2500+yy)-543;
+    calViewMonth=mm-1;
+  }
+  initCalendar();
+
+  document.getElementById('filter-bar').style.display='flex';
+  document.getElementById('btn-export').style.display='';
+  document.getElementById('btn-print').style.display='';
+  applyFilter();
 }
 </script>
 
@@ -873,11 +973,7 @@ function exportExcel(){
 </div>
 
 <script>
-function showSheetsDialog(){
-  document.getElementById('sheets-modal').classList.add('show');
-  document.getElementById('sheets-error').style.display='none';
-  setTimeout(()=>document.getElementById('sheets-url').focus(),100);
-}
+function showSheetsDialog(){document.getElementById('sheets-modal').classList.add('show');document.getElementById('sheets-error').style.display='none';setTimeout(()=>document.getElementById('sheets-url').focus(),100);}
 function closeModal(){document.getElementById('sheets-modal').classList.remove('show');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 function extractSheetId(url){const m=url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:null;}
@@ -885,8 +981,7 @@ function extractGid(url){const m=url.match(/[#&?]gid=(\d+)/);return m?m[1]:'0';}
 
 async function loadFromSheets(){
   const url=document.getElementById('sheets-url').value.trim();
-  const errEl=document.getElementById('sheets-error');
-  errEl.style.display='none';
+  const errEl=document.getElementById('sheets-error');errEl.style.display='none';
   const sheetId=extractSheetId(url);
   if(!sheetId){errEl.textContent='ลิงก์ไม่ถูกต้อง';errEl.style.display='block';return;}
   const gid=extractGid(url);
@@ -917,8 +1012,7 @@ async function loadFromSheets(){
 }
 
 function parseCSV(text){
-  const rows=[];
-  const lines=text.split('\n');
+  const rows=[];const lines=text.split('\n');
   for(const line of lines){
     if(!line.trim())continue;
     const row=[];let cur='',inQ=false;
@@ -935,8 +1029,7 @@ function parseCSV(text){
 
 function processCSVText(text){
   if(text.trim().startsWith('<')){
-    document.getElementById('results').innerHTML='<div class="empty-state">โหลดไม่สำเร็จ: ได้รับ HTML แทน CSV<br><small>กรุณาตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว</small></div>';
-    return;
+    document.getElementById('results').innerHTML='<div class="empty-state">โหลดไม่สำเร็จ: ได้รับ HTML แทน CSV<br><small>กรุณาตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว</small></div>';return;
   }
   document.getElementById('loading').style.display='block';
   document.getElementById('loading-text').textContent='กำลังประมวลผลข้อมูล...';
@@ -949,63 +1042,6 @@ function processCSVText(text){
     catch(e){document.getElementById('loading').style.display='none';
     document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${e.message}</div>`;}
   },50);
-}
-
-function buildOrdersFromRows(data){
-  const orders=[],seen={};
-  for(let i=0;i<data.length;i++){
-    const row=data[i];
-    const orderNum=row[2];if(!orderNum||!String(orderNum).trim())continue;
-    if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain'))continue;
-    const status=row[0];
-    if(String(status||'').includes('คำสั่งซื้อผิด'))continue;
-    const district=row[55],province=row[54],address=row[52];
-    const customer=row[49],phone=row[50],note=row[51];
-    const zipcode=row[56]?String(row[56]).replace(/\.0$/,''):'';
-    const qty_plain=row[57],qty_choc=row[58],qty_honey=row[59];
-    if(!customer&&!address)continue;
-    if(!district&&!province)continue;
-    const oid=String(orderNum).trim();
-    if(seen[oid]){
-      seen[oid].qty_plain+=(+qty_plain||0);
-      seen[oid].qty_choc +=(+qty_choc ||0);
-      seen[oid].qty_honey+=(+qty_honey||0);
-    }else{
-      const o={
-        order_id:oid,customer:String(customer||'-'),
-        phone:formatPhone(phone),district:String(district||''),
-        province:String(province||''),address:String(address||'-'),
-        zipcode,zone:detectZone(String(district||''),String(province||'')),
-        status:String(status||''),
-        qty_plain:+qty_plain||0,qty_choc:+qty_choc||0,qty_honey:+qty_honey||0,
-        note:note?String(note):'',
-        lat:null,lon:null,_distance:null,geoLevel:null,
-      };
-      seen[oid]=o;orders.push(o);
-    }
-  }
-  allOrders=orders;
-  document.getElementById('loading').style.display='none';
-  if(orders.length===0){
-    document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
-    return;
-  }
-  const zf=document.getElementById('zone-filter');
-  zf.innerHTML='<option value="">ทั้งหมด</option>';
-  [...new Set(orders.map(o=>o.zone))].sort().forEach(z=>{
-    const opt=document.createElement('option');opt.value=z;opt.textContent=z;zf.appendChild(opt);
-  });
-  const df=document.getElementById('date-filter');
-  df.innerHTML='<option value="">ทั้งหมด</option>';
-  const dateMap={};
-  orders.forEach(o=>{const d=parseOrderDate(o.order_id);if(d&&!dateMap[d.key])dateMap[d.key]=d.label;});
-  Object.keys(dateMap).sort().forEach(key=>{
-    const opt=document.createElement('option');opt.value=key;opt.textContent=dateMap[key];df.appendChild(opt);
-  });
-  document.getElementById('filter-bar').style.display='flex';
-  document.getElementById('btn-export').style.display='';
-  document.getElementById('btn-print').style.display='';
-  applyFilter();
 }
 </script>
 </body>
