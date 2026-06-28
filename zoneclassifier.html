@@ -342,6 +342,14 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .modal input[type=text]{width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px var(--sp-3);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;margin-bottom:var(--sp-3);}
 .modal input[type=text]:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15);}
 .modal-btns{display:flex;gap:var(--sp-2);justify-content:flex-end;}
+.geo-settings-row{display:flex;flex-direction:column;gap:4px;margin-bottom:var(--sp-3);}
+.geo-settings-label{font-size:var(--text-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.geo-settings-hint{font-size:var(--text-xs);color:var(--muted);line-height:1.5;margin-top:2px;}
+.geo-settings-hint code{background:var(--gray-100);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:11px;}
+.geo-status-bar{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--success-lt);border:1px solid #6EE7B7;border-radius:var(--r-md);font-size:var(--text-xs);color:var(--success);margin-top:var(--sp-2);}
+.geo-status-bar.warn{background:var(--warning-lt);border-color:#FCD34D;color:var(--warning);}
+.geo-status-bar.info{background:var(--brand-lt);border-color:var(--brand-mid);color:var(--brand-dk);}
+.script-code-wrap{background:var(--gray-900);color:#86efac;border-radius:var(--r-md);padding:var(--sp-3);font-family:monospace;font-size:11px;line-height:1.6;overflow-x:auto;margin:var(--sp-2) 0;white-space:pre;}
 </style>
 </head>
 <body>
@@ -366,6 +374,10 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     ภาพรวม
   </button>
   <div class="topbar-spacer"></div>
+  <button class="topbar-btn btn-ghost no-print" onclick="showGeoSettings()" id="btn-geo-settings" title="ตั้งค่า Geocache">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M14.83 9.17a4 4 0 0 1 0 5.66M9.17 9.17a4 4 0 0 0 0 5.66"/></svg>
+    Geocache
+  </button>
   <button class="topbar-btn btn-ghost no-print" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'})">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     อัปโหลด
@@ -630,14 +642,69 @@ function buildNominatimQueries(p){
   ].filter(Boolean);
 }
 
-const CACHE_KEY='cfm_geo_v4';
-let geoCache={};
-try{geoCache=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');}catch(e){}
-function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify(geoCache));}catch(e){}}
+// ── GEO CACHE SYSTEM ──
+// Layer 1: memory (เร็วที่สุด)
+// Layer 2: localStorage (fallback เมื่อไม่มี Sheets)
+// Layer 3: Google Sheets (shared cache ทุกคนใช้ร่วมกัน)
+// Layer 4: Nominatim geocode (ใช้เมื่อไม่มี cache)
+
+const LS_KEY='cfm_geo_v5';
+let geoCache={}; // memory cache: address_key -> {lat,lon}
+let geoCacheDirty=new Set(); // keys ที่ geocode ใหม่ รอ sync ขึ้น Sheets
+let geoSheetId='', geoScriptUrl=''; // ตั้งค่าจาก UI
+
+// โหลด localStorage เข้า memory
+try{Object.assign(geoCache,JSON.parse(localStorage.getItem(LS_KEY)||'{}'));}catch(e){}
+function saveCacheLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(geoCache));}catch(e){}}
+
+// ── โหลด GeoCache จาก Google Sheets ──
+async function loadGeoCacheFromSheets(sheetId){
+  if(!sheetId)return 0;
+  try{
+    // Sheet ชื่อ GeoCache, คอลัมน์: A=key, B=lat, C=lon
+    const url=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=GeoCache`;
+    const res=await fetch(url);
+    if(!res.ok)return 0;
+    const text=await res.text();
+    if(text.trim().startsWith('<'))return 0;
+    const rows=parseCSV(text);
+    let count=0;
+    rows.forEach(row=>{
+      const key=String(row[0]||'').replace(/^"|"$/g,'').trim();
+      const lat=parseFloat(String(row[1]||'').replace(/"/g,''));
+      const lon=parseFloat(String(row[2]||'').replace(/"/g,''));
+      if(key&&!isNaN(lat)&&!isNaN(lon)){
+        geoCache[key]={lat,lon};count++;
+      }
+    });
+    saveCacheLocal();
+    return count;
+  }catch(e){return 0;}
+}
+
+// ── บันทึก geocode ใหม่ขึ้น Google Sheets ผ่าน Apps Script ──
+async function syncNewCacheToSheets(){
+  if(!geoScriptUrl||geoCacheDirty.size===0)return;
+  const rows=[...geoCacheDirty].map(key=>{
+    const v=geoCache[key];
+    return v?[key,v.lat,v.lon]:null;
+  }).filter(Boolean);
+  if(rows.length===0)return;
+  try{
+    await fetch(geoScriptUrl,{
+      method:'POST',
+      mode:'no-cors', // Apps Script ไม่ต้อง CORS preflight
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'appendGeoCache',rows})
+    });
+    geoCacheDirty.clear();
+  }catch(e){}
+}
+
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 let lastReq=0;
 async function geocodeNominatim(q){
-  const ck='N4:'+q;
+  const ck=q; // key = query string
   if(geoCache[ck])return geoCache[ck];
   const wait=1100-(Date.now()-lastReq);
   if(wait>0)await sleep(wait);
@@ -646,7 +713,13 @@ async function geocodeNominatim(q){
     const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&accept-language=th&countrycodes=th`,{headers:{'User-Agent':'CFM-Zone/4.0'}});
     if(!res.ok)return null;
     const j=await res.json();
-    if(j&&j.length>0){const r={lat:parseFloat(j[0].lat),lon:parseFloat(j[0].lon)};geoCache[ck]=r;saveCache();return r;}
+    if(j&&j.length>0){
+      const r={lat:parseFloat(j[0].lat),lon:parseFloat(j[0].lon)};
+      geoCache[ck]=r;
+      geoCacheDirty.add(ck);
+      saveCacheLocal();
+      return r;
+    }
   }catch(e){}
   return null;
 }
@@ -656,7 +729,13 @@ async function ensureGeocoded(o){
   if(!p)return;
   for(const q of buildNominatimQueries(p)){
     const g=await geocodeNominatim(q);
-    if(g){o.lat=g.lat;o.lon=g.lon;o.geoLevel=buildNominatimQueries(p).indexOf(q)+1;return;}
+    if(g){
+      o.lat=g.lat;o.lon=g.lon;
+      o.geoLevel=buildNominatimQueries(p).indexOf(q)+1;
+      // schedule sync ขึ้น Sheets หลัง geocode ใหม่
+      if(typeof scheduleSync==='function') scheduleSync();
+      return;
+    }
   }
 }
 function haversineKm(a,b,c,d){
@@ -1313,7 +1392,7 @@ function buildOrdersFromRows(data){
     <h3>📊 โหลดจาก Google Sheets</h3>
     <p>วางลิงก์ Google Sheets ได้เลย<br><b>ต้องแชร์ Sheet ก่อน:</b> แชร์ → ทุกคนที่มีลิงก์ → ผู้ดู</p>
     <input type="text" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/.../edit"
-      value="https://docs.google.com/spreadsheets/d/1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ/edit?gid=1081529901#gid=1081529901">
+      value="https://docs.google.com/spreadsheets/d/1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ/edit">
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">💡 ระบบจะดึงข้อมูล Sheet แรกอัตโนมัติ ไม่ต้อง export</div>
     <div id="sheets-error" style="display:none;font-size:13px;color:#DC2626;background:#FEE2E2;border-radius:6px;padding:8px 12px;margin-bottom:12px"></div>
     <div class="modal-btns">
@@ -1574,6 +1653,101 @@ function openRouteMaps(){
   window.open(url,'_blank','noopener');
 }
 
+// ── GEO SETTINGS UI ──
+const GEO_LS='cfm_geo_settings';
+function loadGeoSettings(){
+  try{
+    const s=JSON.parse(localStorage.getItem(GEO_LS)||'{}');
+    if(s.sheetId)geoSheetId=s.sheetId;
+    if(s.scriptUrl)geoScriptUrl=s.scriptUrl;
+  }catch(e){}
+}
+loadGeoSettings();
+// โหลด cache จาก Sheets อัตโนมัติถ้าตั้งค่าไว้แล้ว
+if(geoSheetId){
+  loadGeoCacheFromSheets(geoSheetId).then(n=>{
+    if(n>0){const btn=document.getElementById('btn-geo-settings');if(btn)btn.title=`Geocache: ${Object.keys(geoCache).length} พิกัด`;}
+  });
+}
+
+function showGeoSettings(){
+  document.getElementById('geo-sheet-id-input').value=geoSheetId||'';
+  document.getElementById('geo-script-url-input').value=geoScriptUrl||'';
+  updateGeoStatusDisplay();
+  document.getElementById('geo-modal').classList.add('show');
+}
+function closeGeoModal(){document.getElementById('geo-modal').classList.remove('show');}
+
+function updateGeoStatusDisplay(){
+  const el=document.getElementById('geo-status-display');
+  if(!el)return;
+  const total=Object.keys(geoCache).length;
+  const dirty=geoCacheDirty.size;
+  if(!geoSheetId){
+    el.innerHTML=`<div class="geo-status-bar warn">⚠️ ยังไม่ได้ตั้งค่า Sheet — ใช้ localStorage เท่านั้น (${total} พิกัดใน cache)</div>`;
+  } else {
+    el.innerHTML=`<div class="geo-status-bar">✅ เชื่อมต่อ Sheets แล้ว — cache ${total} พิกัด${dirty>0?` &nbsp;·&nbsp; รอ sync ${dirty} รายการ`:''}</div>`;
+  }
+}
+
+async function saveGeoSettings(){
+  const sheetId=document.getElementById('geo-sheet-id-input').value.trim();
+  const scriptUrl=document.getElementById('geo-script-url-input').value.trim();
+  // extract sheetId จาก URL ถ้าวาง URL เต็ม
+  const m=sheetId.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  geoSheetId=m?m[1]:sheetId;
+  geoScriptUrl=scriptUrl;
+  localStorage.setItem(GEO_LS,JSON.stringify({sheetId:geoSheetId,scriptUrl:geoScriptUrl}));
+  // โหลด cache จาก Sheets
+  const btn=document.querySelector('#geo-modal .primary');
+  const orig=btn.innerHTML; btn.disabled=true;
+  btn.innerHTML='<span class="spinner" style="width:13px;height:13px;border-width:2px;margin-right:4px"></span>กำลังโหลด...';
+  const count=await loadGeoCacheFromSheets(geoSheetId);
+  btn.innerHTML=orig; btn.disabled=false;
+  updateGeoStatusDisplay();
+  const el=document.getElementById('geo-status-display');
+  if(count>0) el.innerHTML=`<div class="geo-status-bar">✅ โหลด cache สำเร็จ — ${count} พิกัดจาก Sheets (รวม localStorage: ${Object.keys(geoCache).length} พิกัด)</div>`;
+  else if(geoSheetId) el.innerHTML=`<div class="geo-status-bar info">ℹ️ ยังไม่มี Sheet "GeoCache" — จะสร้างอัตโนมัติเมื่อ geocode ครั้งแรก</div>`;
+}
+
+async function testGeoCacheLoad(){
+  const sheetId=document.getElementById('geo-sheet-id-input').value.trim();
+  const m=sheetId.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  const sid=m?m[1]:sheetId;
+  if(!sid){document.getElementById('geo-status-display').innerHTML='<div class="geo-status-bar warn">⚠️ กรุณาใส่ Sheet ID ก่อน</div>';return;}
+  document.getElementById('geo-status-display').innerHTML='<div class="geo-status-bar info"><span class="spinner" style="width:12px;height:12px;border-width:2px"></span> กำลังทดสอบ...</div>';
+  const count=await loadGeoCacheFromSheets(sid);
+  const el=document.getElementById('geo-status-display');
+  if(count>0) el.innerHTML=`<div class="geo-status-bar">✅ เชื่อมต่อสำเร็จ — พบ ${count} พิกัดใน GeoCache Sheet</div>`;
+  else el.innerHTML=`<div class="geo-status-bar info">ℹ️ เชื่อมต่อได้ แต่ยังไม่มี Sheet "GeoCache" หรือยังว่างอยู่</div>`;
+}
+
+function copyScriptCode(){
+  const code=document.getElementById('apps-script-code').textContent;
+  navigator.clipboard.writeText(code).then(()=>{
+    const btn=event.target;
+    btn.textContent='✅ คัดลอกแล้ว!';
+    setTimeout(()=>btn.textContent='📋 คัดลอก Code',2000);
+  });
+}
+
+// sync cache ขึ้น Sheets อัตโนมัติหลัง geocode เสร็จ (debounce 3 วิ)
+let syncTimer=null;
+const origSaveCache=saveCacheLocal;
+function scheduleSync(){
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(()=>syncNewCacheToSheets(),3000);
+}
+
+// patch geocodeNominatim ให้เรียก scheduleSync หลัง geocode ใหม่
+const _origGeocode=geocodeNominatim;
+// (ใช้ geoCacheDirty.add แล้ว → scheduleSync ใน ensureGeocoded)
+const _origEnsure=ensureGeocoded;
+async function ensureGeocodedPatched(o){
+  await _origEnsure(o);
+  if(o.lat&&o.lon) scheduleSync();
+}
+
 function showSheetsDialog(){document.getElementById('sheets-modal').classList.add('show');document.getElementById('sheets-error').style.display='none';setTimeout(()=>document.getElementById('sheets-url').focus(),100);}
 function closeModal(){document.getElementById('sheets-modal').classList.remove('show');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
@@ -1651,6 +1825,75 @@ function processCSVText(text){
   },50);
 }
 </script>
+<!-- GEO SETTINGS MODAL -->
+<div class="modal-overlay" id="geo-modal" onclick="if(event.target===this)closeGeoModal()">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto;">
+    <h3>📡 ตั้งค่า Geocache (Google Sheets)</h3>
+    <p>บันทึกพิกัดลง Google Sheets ให้ทุกคนใช้ cache ร่วมกัน — ไม่ต้อง geocode ซ้ำ ลด API call</p>
+
+    <div id="geo-status-display"></div>
+
+    <div class="geo-settings-row">
+      <div class="geo-settings-label">Sheet ID (ไฟล์ข้อมูลหลัก)</div>
+      <input type="text" id="geo-sheet-id-input" placeholder="1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ">
+      <div class="geo-settings-hint">ใช้ Sheet เดียวกับข้อมูล Order — ระบบจะสร้าง Sheet ชื่อ <code>GeoCache</code> ให้อัตโนมัติ</div>
+    </div>
+
+    <div class="geo-settings-row">
+      <div class="geo-settings-label">Apps Script Web App URL (สำหรับเขียนข้อมูล)</div>
+      <input type="text" id="geo-script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App</div>
+    </div>
+
+    <details style="margin-bottom:var(--sp-3)">
+      <summary style="cursor:pointer;font-size:var(--text-sm);font-weight:600;color:var(--brand);padding:var(--sp-2) 0">📋 วิธีสร้าง Apps Script (คลิกเพื่อดู)</summary>
+      <div style="margin-top:var(--sp-2)">
+        <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:6px">1. เปิด Google Sheets → Extensions → Apps Script → วาง code นี้ → Deploy → New deployment → Web App → Execute as: Me → Anyone can access</div>
+        <div class="script-code-wrap" id="apps-script-code">function doPost(e){
+  try{
+    const d=JSON.parse(e.postData.contents);
+    if(d.action==='appendGeoCache'){
+      const ss=SpreadsheetApp.getActiveSpreadsheet();
+      let sh=ss.getSheetByName('GeoCache');
+      if(!sh){
+        sh=ss.insertSheet('GeoCache');
+        sh.appendRow(['address_key','lat','lon','updated']);
+      }
+      // อ่าน keys ที่มีอยู่แล้ว
+      const existing=new Set();
+      const vals=sh.getDataRange().getValues();
+      vals.forEach(r=>existing.add(String(r[0])));
+      // เพิ่มเฉพาะ rows ใหม่
+      d.rows.forEach(r=>{
+        if(!existing.has(String(r[0]))){
+          sh.appendRow([r[0],r[1],r[2],new Date().toISOString()]);
+          existing.add(String(r[0]));
+        }
+      });
+      return ContentService.createTextOutput(JSON.stringify({ok:true,added:d.rows.length})).setMimeType(ContentService.MimeType.JSON);
+    }
+  }catch(err){
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message})).setMimeType(ContentService.MimeType.JSON);
+  }
+}</div>
+        <button class="filter-btn" style="margin-top:6px;font-size:var(--text-xs)" onclick="copyScriptCode()">📋 คัดลอก Code</button>
+      </div>
+    </details>
+
+    <div class="modal-btns" style="flex-wrap:wrap;gap:var(--sp-2)">
+      <button class="filter-btn" onclick="closeGeoModal()">ปิด</button>
+      <button class="filter-btn" onclick="testGeoCacheLoad()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.83"/></svg>
+        ทดสอบโหลด Cache
+      </button>
+      <button class="filter-btn primary" onclick="saveGeoSettings()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        บันทึกและโหลด Cache
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ROUTE PLANNER MODAL -->
 <div class="route-modal-overlay" id="route-modal-overlay" onclick="if(event.target===this)closeRoutePlanner()">
   <div class="route-modal">
