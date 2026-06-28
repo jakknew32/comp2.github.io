@@ -1069,30 +1069,36 @@ async function loadFromSheets(){
   const sheetId=extractSheetId(url);
   if(!sheetId){errEl.textContent='ลิงก์ไม่ถูกต้อง';errEl.style.display='block';return;}
   const gid=extractGid(url);
-  const csvUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  const proxies=[
-    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
-    u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    u=>`https://cors-anywhere.herokuapp.com/${u}`,
-  ];
   const btn=document.querySelector('#sheets-modal .primary');
   const origText=btn.innerHTML;
   btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:6px"></span>กำลังโหลด...';
   btn.disabled=true;
-  let lastErr='';
-  for(const proxy of proxies){
+
+  // ใช้ Google Visualization API (gviz) — เปิด CORS ให้โดย Google เอง, ไม่ต้อง proxy, ไม่ต้อง API key
+  const tqUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
+  try{
+    const res=await fetch(tqUrl);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text=await res.text();
+    if(!text||text.trim().length===0) throw new Error('ไม่พบข้อมูลใน Sheet');
+    if(text.trim().startsWith('<')) throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
+    closeModal();btn.innerHTML=origText;btn.disabled=false;
+    processCSVText(text);return;
+  }catch(e){
+    // fallback: export CSV ตรง
     try{
-      const res=await fetch(proxy(csvUrl),{headers:{'X-Requested-With':'XMLHttpRequest'}});
-      if(!res.ok){lastErr=`HTTP ${res.status}`;continue;}
-      const text=await res.text();
-      if(text.trim().startsWith('<')){lastErr='ได้รับ HTML แทน CSV';continue;}
-      if(!text||text.trim().length===0){lastErr='ไม่พบข้อมูลใน Sheet';continue;}
+      const csvUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+      const res2=await fetch(csvUrl);
+      if(!res2.ok) throw new Error(`HTTP ${res2.status}`);
+      const text2=await res2.text();
+      if(!text2||text2.trim().startsWith('<')) throw new Error('ได้รับ HTML แทน CSV');
       closeModal();btn.innerHTML=origText;btn.disabled=false;
-      processCSVText(text);return;
-    }catch(e){lastErr=e.message;continue;}
+      processCSVText(text2);return;
+    }catch(e2){
+      errEl.textContent=`โหลดไม่สำเร็จ: ${e2.message} — ตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
+      errEl.style.display='block';btn.innerHTML=origText;btn.disabled=false;
+    }
   }
-  errEl.textContent=`โหลดไม่สำเร็จ: ${lastErr} — กรุณาตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
-  errEl.style.display='block';btn.innerHTML=origText;btn.disabled=false;
 }
 
 function parseCSV(text){
