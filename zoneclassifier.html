@@ -146,11 +146,15 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
 .cal-day-head{font-size:var(--text-xs);color:var(--muted);text-align:center;padding:4px 0;font-weight:600;}
 .cal-day{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);font-size:var(--text-sm);cursor:pointer;transition:background .1s,color .1s;user-select:none;}
-.cal-day:hover:not(.cal-empty):not(.cal-no-data){background:var(--brand-lt);color:var(--brand);}
-.cal-day.cal-empty{cursor:default;}
-.cal-day.cal-no-data{color:var(--gray-300);cursor:default;}
+.cal-day:hover:not(.cal-empty){background:var(--brand-lt);color:var(--brand);}
+.cal-day.cal-empty{cursor:default;pointer-events:none;}
+.cal-day.cal-no-data{color:var(--gray-300);}
 .cal-day.cal-has-data{color:var(--text);font-weight:600;}
-.cal-day.cal-selected{background:var(--brand);color:#fff;}
+.cal-day.cal-selected{background:var(--brand);color:#fff;border-radius:var(--r-sm);}
+.cal-day.cal-range-start{background:var(--brand);color:#fff;border-radius:var(--r-sm) 0 0 var(--r-sm);}
+.cal-day.cal-range-end{background:var(--brand);color:#fff;border-radius:0 var(--r-sm) var(--r-sm) 0;}
+.cal-day.cal-in-range{background:var(--brand-lt);color:var(--brand);border-radius:0;}
+.cal-day.cal-range-start.cal-range-end{border-radius:var(--r-sm);}
 .cal-day.cal-today{outline:2px solid var(--brand);outline-offset:-2px;}
 .cal-footer{margin-top:var(--sp-3);display:flex;justify-content:flex-end;gap:var(--sp-2);}
 .cal-clear{font-size:var(--text-xs);color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:var(--r-sm);}
@@ -545,13 +549,38 @@ function clearAllZones(){selectedZones.clear();buildZoneDropdown();updateZoneBtn
 // ── CALENDAR PICKER ──
 const thMonths=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const thDays=['อา','จ','อ','พ','พฤ','ศ','ส'];
-let calViewYear=0, calViewMonth=0, selectedDateKey='';
-let orderDateSet=new Set(); // date keys that have orders
+let calViewYear=0, calViewMonth=0;
+let orderDateSet=new Set();
+// Range selection state
+let calRangeStart='', calRangeEnd='', calHover='';
+
+function calKeyToDate(key){ // YYMMDD buddhist → JS Date
+  if(!key)return null;
+  const yy=+key.slice(0,2),mm=+key.slice(2,4),dd=+key.slice(4,6);
+  return new Date(2500+yy-543, mm-1, dd);
+}
+function dateToCalKey(d){ // JS Date → YYMMDD buddhist
+  const yy=String(d.getFullYear()+543-2500).padStart(2,'0');
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return yy+mm+dd;
+}
+function calKeyLabel(key){
+  if(!key)return'';
+  const yy=+key.slice(0,2),mm=+key.slice(2,4),dd=+key.slice(4,6);
+  return`${dd} ${thMonths[mm-1]} ${2500+yy}`;
+}
+function updateCalLabel(){
+  const lbl=document.getElementById('cal-label');
+  if(!calRangeStart){lbl.textContent='ทั้งหมด';return;}
+  if(!calRangeEnd||calRangeStart===calRangeEnd){lbl.textContent=calKeyLabel(calRangeStart);return;}
+  lbl.textContent=`${calKeyLabel(calRangeStart)} – ${calKeyLabel(calRangeEnd)}`;
+}
 
 function initCalendar(){
   const now=new Date();
   calViewYear=now.getFullYear();
-  calViewMonth=now.getMonth(); // 0-indexed
+  calViewMonth=now.getMonth();
   renderCal();
 }
 function calNav(dir){
@@ -561,53 +590,67 @@ function calNav(dir){
   renderCal();
 }
 function renderCal(){
-  const label=document.getElementById('cal-month-label');
   const buddhistYear=calViewYear+543;
-  label.textContent=`${thMonths[calViewMonth]} ${buddhistYear}`;
+  document.getElementById('cal-month-label').textContent=`${thMonths[calViewMonth]} ${buddhistYear}`;
   const grid=document.getElementById('cal-grid');
   grid.innerHTML='';
-  // day headers
-  thDays.forEach(d=>{
-    const h=document.createElement('div');h.className='cal-day-head';h.textContent=d;grid.appendChild(h);
-  });
-  // first day of month
-  const first=new Date(calViewYear,calViewMonth,1).getDay(); // 0=Sun
+  thDays.forEach(d=>{const h=document.createElement('div');h.className='cal-day-head';h.textContent=d;grid.appendChild(h);});
+  const first=new Date(calViewYear,calViewMonth,1).getDay();
   for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cal-day cal-empty';grid.appendChild(e);}
   const daysInMonth=new Date(calViewYear,calViewMonth+1,0).getDate();
   const now=new Date();
+  const effectiveEnd=calRangeEnd||(calHover&&calRangeStart&&calHover>calRangeStart?calHover:'');
   for(let d=1;d<=daysInMonth;d++){
     const cell=document.createElement('div');
     cell.className='cal-day';
-    // build date key matching parseOrderDate format: YYMMDD in buddhist
-    const buddhistYY=String((buddhistYear)-2500).padStart(2,'0');
+    const buddhistYY=String(buddhistYear-2500).padStart(2,'0');
     const mm=String(calViewMonth+1).padStart(2,'0');
     const dd=String(d).padStart(2,'0');
-    const dateKey=`${buddhistYY}${mm}${dd}`;
-    const hasData=orderDateSet.has(dateKey);
-    if(!hasData)cell.classList.add('cal-no-data');
-    else cell.classList.add('cal-has-data');
-    if(dateKey===selectedDateKey)cell.classList.add('cal-selected');
-    // today highlight
+    const key=buddhistYY+mm+dd;
+    const hasData=orderDateSet.has(key);
+    if(hasData)cell.classList.add('cal-has-data');
+    // range highlight
+    const isStart=key===calRangeStart;
+    const effectiveEndKey=effectiveEnd||calRangeStart;
+    const inRange=calRangeStart&&key>=calRangeStart&&key<=effectiveEndKey;
+    if(isStart&&key===(calRangeEnd||calRangeStart))cell.classList.add('cal-selected');
+    else if(isStart)cell.classList.add('cal-range-start');
+    else if(calRangeEnd&&key===calRangeEnd)cell.classList.add('cal-range-end');
+    else if(!calRangeEnd&&calHover&&key===effectiveEndKey&&key!==calRangeStart)cell.classList.add('cal-range-end');
+    else if(inRange)cell.classList.add('cal-in-range');
+    else if(!hasData)cell.classList.add('cal-no-data');
     if(now.getFullYear()===calViewYear&&now.getMonth()===calViewMonth&&now.getDate()===d)cell.classList.add('cal-today');
     cell.innerHTML=`<div>${d}</div>${hasData?'<div class="cal-dot-row"><div class="cal-dot"></div></div>':''}`;
-    if(hasData){
-      cell.onclick=()=>selectDate(dateKey,d);
-    }
+    cell.onclick=()=>handleDayClick(key);
+    cell.onmouseenter=()=>{if(key!==calHover){calHover=key;renderCal();}};
     grid.appendChild(cell);
   }
+  // hint text
+  let hint=document.getElementById('cal-hint');
+  if(!hint){hint=document.createElement('div');hint.id='cal-hint';hint.style.cssText='font-size:11px;color:var(--muted);text-align:center;margin-top:6px;';grid.parentElement.insertBefore(hint,grid.nextSibling);}
+  hint.textContent=!calRangeStart?'คลิกเลือกวันเริ่มต้น':(!calRangeEnd?'คลิกเลือกวันสิ้นสุด':'');
 }
-function selectDate(key,day){
-  selectedDateKey=key;
-  const buddhistYear=calViewYear+543;
-  document.getElementById('cal-label').textContent=`${day} ${thMonths[calViewMonth]} ${buddhistYear}`;
-  document.getElementById('cal-popup').classList.remove('open');
-  document.getElementById('cal-trigger').classList.remove('open');
+function handleDayClick(key){
+  if(!calRangeStart||calRangeEnd){
+    // เริ่มใหม่
+    calRangeStart=key;calRangeEnd='';calHover='';
+  } else {
+    // ครั้งที่สอง = สิ้นสุด
+    if(key<calRangeStart){calRangeEnd=calRangeStart;calRangeStart=key;}
+    else{calRangeEnd=key;}
+    calHover='';
+    // ปิด popup
+    document.getElementById('cal-popup').classList.remove('open');
+    document.getElementById('cal-trigger').classList.remove('open');
+    updateCalLabel();
+    applyFilter();
+  }
+  updateCalLabel();
   renderCal();
-  applyFilter();
 }
 function clearDate(){
-  selectedDateKey='';
-  document.getElementById('cal-label').textContent='ทั้งหมด';
+  calRangeStart='';calRangeEnd='';calHover='';
+  updateCalLabel();
   renderCal();
   applyFilter();
 }
@@ -675,7 +718,7 @@ function applyFilter(){
   filteredOrders=allOrders.filter(o=>{
     if(selectedZones.size>0&&!selectedZones.has(o.zone))return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
-    if(selectedDateKey&&o.order_date_key!==selectedDateKey)return false;
+    if(calRangeStart&&o.order_date_key){if(o.order_date_key<calRangeStart||o.order_date_key>(calRangeEnd||calRangeStart))return false;}else if(calRangeStart&&!o.order_date_key)return false;
     if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
     return true;
   });
@@ -687,7 +730,7 @@ function applyFilter(){
     const parts=[];
     if(selectedZones.size>0)parts.push(`โซน (${selectedZones.size} โซน)`);
     if(sf){const lbl={pending:'ค้างส่ง',delivered:'ส่งแล้ว',problem:'มีปัญหา'};parts.push(`สถานะ "${lbl[sf]||sf}"`);}
-    if(selectedDateKey)parts.push(`วันที่ "${document.getElementById('cal-label').textContent}"`);
+    if(calRangeStart)parts.push(`วันที่ "${document.getElementById('cal-label').textContent}"`);
     if(q)parts.push(`ค้นหา "${q}"`);
     ft.textContent=`ซ่อน ${hidden} รายการ (filter: ${parts.join(', ')})`;
   }else{fi.style.display='none';}
@@ -701,7 +744,7 @@ function resetFilter(){
   ['search-input','marker-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   selectedZones.clear();buildZoneDropdown();updateZoneBtnLabel();
   document.getElementById('status-filter').value='';
-  selectedDateKey='';
+  calRangeStart='';calRangeEnd='';calHover='';
   document.getElementById('cal-label').textContent='ทั้งหมด';
   document.getElementById('radius-input').value='15';
   document.getElementById('geo-status').textContent='';
