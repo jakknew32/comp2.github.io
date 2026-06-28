@@ -212,6 +212,63 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .z13{background:var(--z13-bg);color:var(--z13-fg);}
 
 .empty-state{text-align:center;padding:48px var(--sp-6);color:var(--muted);font-size:var(--text-md);}
+
+/* ── SUMMARY TABLE ── */
+.summary-wrap{margin-bottom:var(--sp-5);}
+.summary-toggle{display:inline-flex;align-items:center;gap:var(--sp-2);padding:10px var(--sp-5);border:none;border-radius:var(--r-md);font-size:var(--text-md);font-weight:700;cursor:pointer;background:var(--brand);color:#fff;transition:background .15s,transform .1s,box-shadow .15s;margin-bottom:var(--sp-3);box-shadow:0 2px 8px rgba(26,86,219,.35);letter-spacing:.01em;}
+.summary-toggle:hover{background:var(--brand-dk);box-shadow:0 4px 14px rgba(26,86,219,.45);}
+.summary-toggle:active{transform:scale(.97);}
+.summary-toggle .arrow{transition:transform .2s;}
+.summary-toggle.open{background:var(--brand-dk);}
+.summary-toggle.open .arrow{transform:rotate(180deg);}
+.summary-panel{display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;}
+.summary-panel.open{display:block;}
+.summary-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;}
+.summary-tab{padding:10px var(--sp-4);font-size:var(--text-sm);font-weight:600;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
+.summary-tab:hover{color:var(--text);}
+.summary-tab.active{color:var(--brand);border-bottom-color:var(--brand);}
+.summary-table-wrap{overflow-x:auto;}
+.summary-table{width:100%;border-collapse:collapse;font-size:var(--text-sm);}
+.summary-table th{padding:10px var(--sp-3);text-align:right;font-size:var(--text-xs);font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;background:var(--bg-card);z-index:1;}
+.summary-table th:first-child{text-align:left;}
+.summary-table td{padding:9px var(--sp-3);text-align:right;border-bottom:1px solid var(--border);color:var(--text);}
+.summary-table td:first-child{text-align:left;font-weight:600;color:var(--text);white-space:nowrap;}
+.summary-table tr:last-child td{border-bottom:none;}
+.summary-table tr:hover td{background:var(--gray-50);}
+.summary-table .total-row td{font-weight:700;background:var(--brand-lt);color:var(--brand-dk);border-top:2px solid var(--brand-mid);}
+.summary-table .total-row td:first-child{color:var(--brand-dk);}
+.cell-plain{color:var(--plain-color);font-weight:700;}
+.cell-choc{color:var(--choc-color);font-weight:700;}
+.cell-honey{color:var(--honey-color);font-weight:700;}
+.cell-total{color:var(--gray-700);font-weight:700;}
+.cell-zero{color:var(--gray-300);}
+
+/* ── ROUTE PLANNER ── */
+.route-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--r-md);font-size:var(--text-xs);font-weight:700;cursor:pointer;border:none;background:#10B981;color:#fff;transition:background .15s,transform .1s;white-space:nowrap;}
+.route-btn:hover{background:#059669;}
+.route-btn:active{transform:scale(.97);}
+.route-btn.loading{background:var(--gray-300);cursor:wait;}
+.route-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;display:none;align-items:center;justify-content:center;padding:16px;}
+.route-modal-overlay.show{display:flex;}
+.route-modal{background:var(--bg-card);border-radius:var(--r-xl);width:100%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.route-modal-head{padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.route-modal-title{font-size:var(--text-md);font-weight:700;color:var(--text);}
+.route-modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;padding:4px;}
+.route-modal-close:hover{color:var(--text);}
+.route-modal-body{overflow-y:auto;flex:1;padding:var(--sp-4) var(--sp-5);}
+.route-modal-foot{padding:var(--sp-3) var(--sp-5);border-top:1px solid var(--border);display:flex;gap:var(--sp-2);justify-content:flex-end;flex-shrink:0;flex-wrap:wrap;}
+.route-status{font-size:var(--text-xs);color:var(--muted);padding:var(--sp-2) 0;display:flex;align-items:center;gap:var(--sp-2);}
+.route-list{display:flex;flex-direction:column;gap:var(--sp-2);}
+.route-item{display:flex;align-items:flex-start;gap:var(--sp-3);padding:var(--sp-3);background:var(--gray-50);border-radius:var(--r-md);border:1px solid var(--border);}
+.route-item.no-geo{opacity:.55;border-style:dashed;}
+.route-num{width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:800;flex-shrink:0;}
+.route-item.no-geo .route-num{background:var(--gray-300);}
+.route-info{flex:1;min-width:0;}
+.route-name{font-size:var(--text-sm);font-weight:700;color:var(--text);}
+.route-addr{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.route-dist{font-size:var(--text-xs);color:var(--brand);font-weight:700;white-space:nowrap;}
+.route-open-btn{font-size:var(--text-xs);padding:4px 8px;border-radius:var(--r-sm);background:var(--brand);color:#fff;text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.route-total-bar{background:var(--brand-lt);border:1px solid var(--brand-mid);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);font-size:var(--text-sm);color:var(--brand-dk);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-3);}
 #loading{display:none;text-align:center;padding:32px;color:var(--muted);font-size:var(--text-md);}
 .spinner{display:inline-block;width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:var(--sp-2);}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -228,6 +285,54 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   .print-title{display:block !important;font-size:16px;font-weight:700;margin-bottom:12px;}
 }
 .print-title{display:none;}
+
+/* ── DASHBOARD PAGE ── */
+.page{display:none;}.page.active{display:block;}
+.topbar-tab{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;border:none;color:rgba(255,255,255,.7);background:transparent;transition:background .15s,color .15s;}
+.topbar-tab:hover{background:rgba(255,255,255,.12);color:#fff;}
+.topbar-tab.active{background:rgba(255,255,255,.2);color:#fff;}
+.topbar-divider{width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 4px;}
+.db-page{padding:var(--sp-6) var(--sp-4);max-width:1280px;margin:0 auto;}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--sp-4);margin-bottom:var(--sp-5);}
+.db-kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:var(--sp-2);}
+.db-kpi-label{font-size:var(--text-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.db-kpi-value{font-size:32px;font-weight:800;line-height:1;color:var(--text);}
+.db-kpi-sub{font-size:var(--text-xs);color:var(--muted);}
+.db-kpi-bar{height:4px;border-radius:var(--r-full);margin-top:var(--sp-2);}
+.db-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);margin-bottom:var(--sp-5);}
+@media(max-width:800px){.db-row{grid-template-columns:1fr;}}
+.db-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;}
+.db-card-head{padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border);font-size:var(--text-sm);font-weight:700;color:var(--text);display:flex;align-items:center;gap:var(--sp-2);}
+.db-card-body{padding:var(--sp-3) var(--sp-4);}
+.rank-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--border);}
+.rank-row:last-child{border-bottom:none;}
+.rank-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:800;flex-shrink:0;}
+.rank-1{background:#FEF08A;color:#713F12;}
+.rank-2{background:#E5E7EB;color:#374151;}
+.rank-3{background:#FED7AA;color:#7C2D12;}
+.rank-n{background:var(--gray-100);color:var(--muted);}
+.rank-name{flex:1;font-size:var(--text-sm);font-weight:600;color:var(--text);}
+.rank-bar-wrap{width:100px;height:6px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;}
+.rank-bar{height:6px;border-radius:var(--r-full);transition:width .6s;}
+.rank-val{font-size:var(--text-sm);font-weight:700;min-width:40px;text-align:right;}
+.week-chart{display:flex;align-items:flex-end;gap:6px;height:120px;padding:var(--sp-2) 0;}
+.week-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.week-bar-wrap{flex:1;width:100%;display:flex;align-items:flex-end;}
+.week-bar{width:100%;border-radius:var(--r-sm) var(--r-sm) 0 0;min-height:3px;transition:height .5s;}
+.week-label{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;}
+.week-val{font-size:var(--text-xs);font-weight:700;color:var(--text);}
+.product-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) 0;border-bottom:1px solid var(--border);}
+.product-row:last-child{border-bottom:none;}
+.product-icon{font-size:22px;width:36px;text-align:center;}
+.product-info{flex:1;}
+.product-name{font-size:var(--text-sm);font-weight:700;color:var(--text);}
+.product-pct{font-size:var(--text-xs);color:var(--muted);}
+.product-bar-wrap{width:120px;height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;}
+.product-bar{height:8px;border-radius:var(--r-full);}
+.product-val{font-size:var(--text-md);font-weight:800;min-width:50px;text-align:right;}
+.status-donut-row{display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-2) 0;}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.db-empty{text-align:center;padding:48px;color:var(--muted);font-size:var(--text-md);}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
@@ -251,6 +356,15 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     CFM Zone Classifier
     <span class="logo-sub">Chiangmai Freshmilk</span>
   </div>
+  <div class="topbar-divider" id="tab-divider" style="display:none"></div>
+  <button class="topbar-tab active" id="tab-orders" onclick="switchPage('orders')" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+    ออเดอร์
+  </button>
+  <button class="topbar-tab" id="tab-dashboard" onclick="switchPage('dashboard-page')" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="9" rx="1"/><rect x="2" y="14" width="9" height="9" rx="1"/><rect x="13" y="14" width="9" height="9" rx="1"/></svg>
+    ภาพรวม
+  </button>
   <div class="topbar-spacer"></div>
   <button class="topbar-btn btn-ghost no-print" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'})">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -267,6 +381,50 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 </div>
 
 <div class="main">
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard-page" class="page">
+    <div class="db-page">
+      <div id="db-empty" class="db-empty">โหลดข้อมูลก่อนเพื่อดูภาพรวม</div>
+      <div id="db-content" style="display:none">
+        <div class="db-grid" id="db-kpis"></div>
+        <div class="db-row">
+          <div class="db-card">
+            <div class="db-card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              ยอดออเดอร์รายวัน (7 วันล่าสุด)
+            </div>
+            <div class="db-card-body"><div class="week-chart" id="db-week-chart"></div></div>
+          </div>
+          <div class="db-card">
+            <div class="db-card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              สินค้าขายดี
+            </div>
+            <div class="db-card-body" id="db-products"></div>
+          </div>
+        </div>
+        <div class="db-row">
+          <div class="db-card">
+            <div class="db-card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+              โซนที่ยุ่งที่สุด (Top 8)
+            </div>
+            <div class="db-card-body" id="db-zones"></div>
+          </div>
+          <div class="db-card">
+            <div class="db-card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              สถานะออเดอร์
+            </div>
+            <div class="db-card-body" id="db-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDERS PAGE -->
+  <div id="page-orders" class="page active">
   <div id="upload-section" class="no-print" style="margin-bottom:var(--sp-5)">
     <div id="upload-zone" onclick="document.getElementById('file-input').click()"
          ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
@@ -309,6 +467,20 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <span id="filter-info-text"></span>
       </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY TABLE -->
+  <div class="summary-wrap no-print" id="summary-wrap" style="display:none">
+    <button class="summary-toggle" id="summary-toggle" onclick="toggleSummary()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+      ตารางสรุปยอด
+      <span id="summary-badge" style="background:rgba(255,255,255,.25);color:#fff;font-size:var(--text-xs);padding:2px 8px;border-radius:var(--r-full);font-weight:700;"></span>
+      <svg class="arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="summary-panel" id="summary-panel">
+      <div class="summary-tabs" id="summary-tabs"></div>
+      <div class="summary-table-wrap"><table class="summary-table" id="summary-table"></table></div>
     </div>
   </div>
 
@@ -376,6 +548,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   </div>
 
   <div id="results"></div>
+  </div><!-- end page-orders -->
 </div>
 
 <script>
@@ -735,7 +908,7 @@ function applyFilter(){
     ft.textContent=`ซ่อน ${hidden} รายการ (filter: ${parts.join(', ')})`;
   }else{fi.style.display='none';}
   document.getElementById('result-count').textContent=`${filteredOrders.length} รายการ`;
-  renderDashboard();renderResults();
+  renderDashboard();renderSummary();renderResults();
 }
 
 function resetFilter(){
@@ -777,7 +950,7 @@ async function startGeoSearch(){
   }
   filteredOrders=list.filter(o=>isFinite(o._distance)&&o._distance<=radiusKm).sort((a,b)=>a._distance-b._distance);
   document.getElementById('result-count').textContent=`${filteredOrders.length} รายการ`;
-  renderDashboard();renderResults();
+  renderDashboard();renderSummary();renderResults();
   progBar.style.width='100%';
   statusEl.textContent=`✓ พบ ${filteredOrders.length} รายการภายใน ${radiusKm} กม.`;
 }
@@ -852,6 +1025,96 @@ function filterZoneCards(zoneId, inputEl) {
   } else if (noMsg) { noMsg.style.display='none'; }
 }
 
+function toggleSummary(){
+  const panel=document.getElementById('summary-panel');
+  const btn=document.getElementById('summary-toggle');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+function renderSummary(){
+  const wrap=document.getElementById('summary-wrap');
+  if(filteredOrders.length===0){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  // อัปเดต badge ยอดรวมกล่องทั้งหมด
+  const totalBoxes=filteredOrders.reduce((s,o)=>s+o.qty_plain+o.qty_choc+o.qty_honey,0);
+  const badge=document.getElementById('summary-badge');
+  if(badge)badge.textContent=`${totalBoxes} กล่อง`;
+
+  // รวบรวมวันที่ทั้งหมดที่มีใน filteredOrders (เรียงตาม key)
+  const dateMap={}; // key -> label
+  filteredOrders.forEach(o=>{
+    if(o.order_date_key&&o.order_date){
+      dateMap[o.order_date_key]=o.order_date;
+    }
+  });
+  const sortedDates=Object.keys(dateMap).sort();
+
+  // โซนที่มีออเดอร์
+  const activeZones=ZONE_LIST.filter(z=>filteredOrders.some(o=>o.zone===z));
+
+  // tabs: "ทุกวัน" + แต่ละวัน
+  const tabsEl=document.getElementById('summary-tabs');
+  tabsEl.innerHTML='';
+  const tabs=['all',...sortedDates];
+  const tabLabels={'all':'ทุกวัน'};
+  sortedDates.forEach(k=>tabLabels[k]=dateMap[k]);
+  let activeTab='all';
+
+  function buildTable(tab){
+    const tableEl=document.getElementById('summary-table');
+    // กรองออเดอร์ตาม tab
+    const orders=tab==='all'?filteredOrders:filteredOrders.filter(o=>o.order_date_key===tab);
+
+    // header
+    let html='<thead><tr><th>โซน</th><th style="color:var(--plain-color)">Plain</th><th style="color:var(--choc-color)">Choc</th><th style="color:var(--honey-color)">Honey</th><th>รวม</th><th>ออเดอร์</th></tr></thead><tbody>';
+
+    let totalP=0,totalC=0,totalH=0,totalOrders=0;
+    activeZones.forEach(zone=>{
+      const zOrders=orders.filter(o=>o.zone===zone);
+      if(zOrders.length===0)return;
+      const p=zOrders.reduce((s,o)=>s+o.qty_plain,0);
+      const c=zOrders.reduce((s,o)=>s+o.qty_choc,0);
+      const h=zOrders.reduce((s,o)=>s+o.qty_honey,0);
+      const t=p+c+h;
+      totalP+=p;totalC+=c;totalH+=h;totalOrders+=zOrders.length;
+      html+=`<tr>
+        <td>${zone}</td>
+        <td class="${p>0?'cell-plain':'cell-zero'}">${p||'-'}</td>
+        <td class="${c>0?'cell-choc':'cell-zero'}">${c||'-'}</td>
+        <td class="${h>0?'cell-honey':'cell-zero'}">${h||'-'}</td>
+        <td class="cell-total">${t}</td>
+        <td style="color:var(--muted)">${zOrders.length}</td>
+      </tr>`;
+    });
+    const totalAll=totalP+totalC+totalH;
+    html+=`</tbody><tfoot><tr class="total-row">
+      <td>รวมทั้งหมด</td>
+      <td>${totalP}</td><td>${totalC}</td><td>${totalH}</td>
+      <td>${totalAll}</td><td>${totalOrders}</td>
+    </tr></tfoot>`;
+    tableEl.innerHTML=html;
+  }
+
+  function setTab(tab){
+    activeTab=tab;
+    tabsEl.querySelectorAll('.summary-tab').forEach(el=>{
+      el.classList.toggle('active',el.dataset.tab===tab);
+    });
+    buildTable(tab);
+  }
+
+  tabs.forEach(tab=>{
+    const el=document.createElement('div');
+    el.className='summary-tab'+(tab==='all'?' active':'');
+    el.dataset.tab=tab;
+    el.textContent=tabLabels[tab];
+    el.onclick=()=>setTab(tab);
+    tabsEl.appendChild(el);
+  });
+  buildTable('all');
+}
+
 function renderResults(){
   const el=document.getElementById('results');
   if(filteredOrders.length===0){el.innerHTML='<div class="empty-state">ไม่พบรายการที่ตรงกัน</div>';return;}
@@ -872,6 +1135,10 @@ function renderResults(){
         ${zone}
         <span class="badge-count">${orders.length} ออเดอร์</span>
         <span style="margin-left:auto;font-size:var(--text-xs);opacity:.75">Plain ${tP} &nbsp;·&nbsp; Choc ${tC} &nbsp;·&nbsp; Honey ${tH}</span>
+        <button class="route-btn no-print" onclick="openRoutePlanner('${zoneId}','${zone}',event)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>
+          เส้นทาง
+        </button>
       </div>
       <div class="zone-search-bar no-print">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1032,6 +1299,9 @@ function buildOrdersFromRows(data){
   initCalendar();
 
   document.getElementById('filter-bar').style.display='flex';
+  document.getElementById('tab-orders').style.display='';
+  document.getElementById('tab-dashboard').style.display='';
+  document.getElementById('tab-divider').style.display='';
   document.getElementById('btn-export').style.display='';
   document.getElementById('btn-print').style.display='';
   applyFilter();
@@ -1057,6 +1327,253 @@ function buildOrdersFromRows(data){
 </div>
 
 <script>
+function switchPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pageEl=document.getElementById('page-'+page);
+  if(pageEl) pageEl.classList.add('active');
+  document.querySelectorAll('.topbar-tab').forEach(t=>t.classList.remove('active'));
+  // tab id mapping: dashboard-page -> tab-dashboard, orders -> tab-orders
+  const tabId=page==='dashboard-page'?'tab-dashboard':'tab-'+page;
+  const tabEl=document.getElementById(tabId);
+  if(tabEl) tabEl.classList.add('active');
+  if(page==='dashboard-page') renderDashboardPage();
+}
+
+function renderDashboardPage(){
+  if(allOrders.length===0){
+    document.getElementById('db-empty').style.display='block';
+    document.getElementById('db-content').style.display='none';
+    return;
+  }
+  document.getElementById('db-empty').style.display='none';
+  document.getElementById('db-content').style.display='block';
+  const orders=allOrders;
+
+  // ── KPIs ──
+  const totalOrders=orders.length;
+  const totalBoxes=orders.reduce((s,o)=>s+o.qty_plain+o.qty_choc+o.qty_honey,0);
+  const totalPlain=orders.reduce((s,o)=>s+o.qty_plain,0);
+  const totalChoc=orders.reduce((s,o)=>s+o.qty_choc,0);
+  const totalHoney=orders.reduce((s,o)=>s+o.qty_honey,0);
+  const deliveredCount=orders.filter(o=>classifyStatus(o.status)==='delivered').length;
+  const pendingCount=orders.filter(o=>classifyStatus(o.status)==='pending').length;
+  const cancelCount=orders.filter(o=>classifyStatus(o.status)==='problem').length;
+  const deliverRate=totalOrders>0?Math.round(deliveredCount/totalOrders*100):0;
+
+  document.getElementById('db-kpis').innerHTML=`
+    <div class="db-kpi">
+      <div class="db-kpi-label">ออเดอร์ทั้งหมด</div>
+      <div class="db-kpi-value">${totalOrders.toLocaleString()}</div>
+      <div class="db-kpi-sub">✅ ส่งแล้ว ${deliveredCount} &nbsp;·&nbsp; 🟡 ค้าง ${pendingCount} &nbsp;·&nbsp; ❌ ยกเลิก ${cancelCount}</div>
+      <div class="db-kpi-bar" style="background:linear-gradient(to right,#057A55 ${deliverRate}%,#F59E0B ${deliverRate}% ${deliverRate+(pendingCount/totalOrders*100)}%,#DC2626 ${deliverRate+(pendingCount/totalOrders*100)}%)"></div>
+    </div>
+    <div class="db-kpi">
+      <div class="db-kpi-label">กล่องทั้งหมด</div>
+      <div class="db-kpi-value" style="color:var(--brand)">${totalBoxes.toLocaleString()}</div>
+      <div class="db-kpi-sub">Plain ${totalPlain} &nbsp;·&nbsp; Choc ${totalChoc} &nbsp;·&nbsp; Honey ${totalHoney}</div>
+      <div class="db-kpi-bar" style="background:linear-gradient(to right,var(--plain-color) ${Math.round(totalPlain/totalBoxes*100)}%,var(--choc-color) ${Math.round(totalPlain/totalBoxes*100)}% ${Math.round((totalPlain+totalChoc)/totalBoxes*100)}%,var(--honey-color) ${Math.round((totalPlain+totalChoc)/totalBoxes*100)}%)"></div>
+    </div>
+    <div class="db-kpi">
+      <div class="db-kpi-label">อัตราส่งสำเร็จ</div>
+      <div class="db-kpi-value" style="color:var(--success)">${deliverRate}%</div>
+      <div class="db-kpi-sub">${deliveredCount} จาก ${totalOrders} ออเดอร์</div>
+      <div class="db-kpi-bar" style="background:var(--success);width:${deliverRate}%;height:4px;border-radius:var(--r-full)"></div>
+    </div>
+    <div class="db-kpi">
+      <div class="db-kpi-label">จำนวนโซน</div>
+      <div class="db-kpi-value" style="color:var(--choc-color)">${new Set(orders.map(o=>o.zone)).size}</div>
+      <div class="db-kpi-sub">จาก ${ZONE_LIST.length} โซนทั้งหมด</div>
+    </div>`;
+
+  // ── 7 วันล่าสุด (chart) ──
+  const dateCount={};
+  orders.forEach(o=>{if(o.order_date_key&&o.order_date)dateCount[o.order_date_key]=(dateCount[o.order_date_key]||{count:0,label:o.order_date,p:0,c:0,h:0});
+    if(o.order_date_key){dateCount[o.order_date_key].count++;dateCount[o.order_date_key].p+=o.qty_plain;dateCount[o.order_date_key].c+=o.qty_choc;dateCount[o.order_date_key].h+=o.qty_honey;}});
+  const sortedD=Object.entries(dateCount).sort((a,b)=>a[0].localeCompare(b[0])).slice(-7);
+  const maxCount=Math.max(...sortedD.map(d=>d[1].count),1);
+  const chartEl=document.getElementById('db-week-chart');
+  chartEl.innerHTML=sortedD.map(([key,d])=>{
+    const h=Math.max(Math.round(d.count/maxCount*100),4);
+    const shortDate=d.label.split(' ').slice(0,2).join(' ');
+    return`<div class="week-col">
+      <div class="week-val">${d.count}</div>
+      <div class="week-bar-wrap"><div class="week-bar" style="height:${h}%;background:var(--brand);opacity:.85"></div></div>
+      <div class="week-label">${shortDate}</div>
+    </div>`;
+  }).join('');
+  if(sortedD.length===0)chartEl.innerHTML='<div style="color:var(--muted);font-size:var(--text-sm);padding:var(--sp-4)">ไม่มีข้อมูลวันที่</div>';
+
+  // ── สินค้าขายดี ──
+  document.getElementById('db-products').innerHTML=`
+    <div class="product-row">
+      <div class="product-icon">🥛</div>
+      <div class="product-info"><div class="product-name">HP-Plain</div><div class="product-pct">${Math.round(totalPlain/totalBoxes*100)}% ของทั้งหมด</div></div>
+      <div class="product-bar-wrap"><div class="product-bar" style="width:${Math.round(totalPlain/totalBoxes*100)}%;background:var(--plain-color)"></div></div>
+      <div class="product-val" style="color:var(--plain-color)">${totalPlain}</div>
+    </div>
+    <div class="product-row">
+      <div class="product-icon">🍫</div>
+      <div class="product-info"><div class="product-name">HP-Choc</div><div class="product-pct">${Math.round(totalChoc/totalBoxes*100)}% ของทั้งหมด</div></div>
+      <div class="product-bar-wrap"><div class="product-bar" style="width:${Math.round(totalChoc/totalBoxes*100)}%;background:var(--choc-color)"></div></div>
+      <div class="product-val" style="color:var(--choc-color)">${totalChoc}</div>
+    </div>
+    <div class="product-row">
+      <div class="product-icon">🍯</div>
+      <div class="product-info"><div class="product-name">HP-Honey</div><div class="product-pct">${Math.round(totalHoney/totalBoxes*100)}% ของทั้งหมด</div></div>
+      <div class="product-bar-wrap"><div class="product-bar" style="width:${Math.round(totalHoney/totalBoxes*100)}%;background:var(--honey-color)"></div></div>
+      <div class="product-val" style="color:var(--honey-color)">${totalHoney}</div>
+    </div>`;
+
+  // ── โซนที่ยุ่งที่สุด ──
+  const byZone={};
+  orders.forEach(o=>{if(!byZone[o.zone])byZone[o.zone]={count:0,boxes:0};byZone[o.zone].count++;byZone[o.zone].boxes+=o.qty_plain+o.qty_choc+o.qty_honey;});
+  const topZones=Object.entries(byZone).sort((a,b)=>b[1].count-a[1].count).slice(0,8);
+  const maxZ=topZones[0]?topZones[0][1].count:1;
+  document.getElementById('db-zones').innerHTML=topZones.map(([zone,d],i)=>{
+    const cls=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+    const pct=Math.round(d.count/maxZ*100);
+    const zi=ZONE_LIST.indexOf(zone);
+    const color=ZONE_DONUT[zi>=0?zi:ZONE_DONUT.length-1];
+    return`<div class="rank-row">
+      <div class="rank-num ${cls}">${i+1}</div>
+      <div class="rank-name">${zone}</div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%;background:${color}"></div></div>
+      <div class="rank-val">${d.count}<span style="font-size:var(--text-xs);color:var(--muted);font-weight:400"> ออเดอร์</span></div>
+    </div>`;
+  }).join('');
+
+  // ── สถานะ ──
+  const sPending=orders.filter(o=>classifyStatus(o.status)==='pending').length;
+  const sDelivered=orders.filter(o=>classifyStatus(o.status)==='delivered').length;
+  const sProblem=orders.filter(o=>classifyStatus(o.status)==='problem').length;
+  const total3=sPending+sDelivered+sProblem||1;
+  document.getElementById('db-status').innerHTML=`
+    <div class="status-donut-row"><div class="status-dot" style="background:#057A55"></div><div style="flex:1;font-size:var(--text-sm);font-weight:600">ส่งแล้ว</div><div style="font-size:var(--text-sm);color:var(--muted)">${Math.round(sDelivered/total3*100)}%</div><div style="font-size:var(--text-md);font-weight:800;min-width:48px;text-align:right;color:var(--success)">${sDelivered}</div></div>
+    <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0 12px">
+      <div style="height:8px;background:var(--success);width:${Math.round(sDelivered/total3*100)}%;border-radius:var(--r-full)"></div>
+    </div>
+    <div class="status-donut-row"><div class="status-dot" style="background:#F59E0B"></div><div style="flex:1;font-size:var(--text-sm);font-weight:600">ค้างส่ง</div><div style="font-size:var(--text-sm);color:var(--muted)">${Math.round(sPending/total3*100)}%</div><div style="font-size:var(--text-md);font-weight:800;min-width:48px;text-align:right;color:#D97706">${sPending}</div></div>
+    <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0 12px">
+      <div style="height:8px;background:#F59E0B;width:${Math.round(sPending/total3*100)}%;border-radius:var(--r-full)"></div>
+    </div>
+    <div class="status-donut-row"><div class="status-dot" style="background:var(--danger)"></div><div style="flex:1;font-size:var(--text-sm);font-weight:600">ยกเลิก</div><div style="font-size:var(--text-sm);color:var(--muted)">${Math.round(sProblem/total3*100)}%</div><div style="font-size:var(--text-md);font-weight:800;min-width:48px;text-align:right;color:var(--danger)">${sProblem}</div></div>
+    <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0">
+      <div style="height:8px;background:var(--danger);width:${Math.round(sProblem/total3*100)}%;border-radius:var(--r-full)"></div>
+    </div>`;
+}
+
+// ── ROUTE PLANNER ──
+let routeOrders=[], routeSorted=[];
+
+function openRoutePlanner(zoneId, zoneName, e){
+  if(e&&typeof e.stopPropagation==='function') e.stopPropagation();
+  routeOrders=filteredOrders.filter(o=>o.zone===zoneName);
+  if(routeOrders.length===0)return;
+  document.getElementById('route-modal-title').textContent=`เส้นทางส่ง — ${zoneName} (${routeOrders.length} ออเดอร์)`;
+  document.getElementById('route-modal-overlay').classList.add('show');
+  document.getElementById('route-total-bar').style.display='none';
+  document.getElementById('route-maps-btn').style.display='none';
+  document.getElementById('route-list').innerHTML='';
+  document.getElementById('route-status').innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> กำลัง geocode ที่อยู่...';
+  runRoutePlanner();
+}
+
+function closeRoutePlanner(){
+  document.getElementById('route-modal-overlay').classList.remove('show');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRoutePlanner();});
+
+async function runRoutePlanner(){
+  const statusEl=document.getElementById('route-status');
+  let geocoded=0;
+  // geocode ทุกออเดอร์ที่ยังไม่มี lat/lon
+  for(const o of routeOrders){
+    if(!o.lat||!o.lon){
+      await ensureGeocoded(o);
+    }
+    geocoded++;
+    statusEl.innerHTML=`<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> geocode ${geocoded}/${routeOrders.length}...`;
+  }
+  // แยกออเดอร์ที่มี/ไม่มี geocode
+  const withGeo=routeOrders.filter(o=>o.lat&&o.lon);
+  const noGeo=routeOrders.filter(o=>!o.lat||!o.lon);
+  if(withGeo.length===0){
+    statusEl.textContent='❌ ไม่สามารถหาพิกัดได้เลย ลองใส่ที่อยู่ให้ครบกว่านี้';
+    return;
+  }
+  // Nearest Neighbor TSP
+  routeSorted=nearestNeighborTSP(withGeo);
+  // คำนวณระยะทางรวม
+  let totalKm=0;
+  for(let i=1;i<routeSorted.length;i++){
+    totalKm+=haversineKm(routeSorted[i-1].lat,routeSorted[i-1].lon,routeSorted[i].lat,routeSorted[i].lon);
+  }
+  statusEl.textContent=withGeo.length===routeOrders.length
+    ?`✅ เรียงเส้นทางเสร็จแล้ว (${withGeo.length} จุด)`
+    :`⚠️ geocode สำเร็จ ${withGeo.length}/${routeOrders.length} จุด (${noGeo.length} จุดไม่พบพิกัด)`;
+  document.getElementById('route-stop-count').textContent=routeSorted.length;
+  document.getElementById('route-total-dist').textContent=totalKm.toFixed(1);
+  document.getElementById('route-total-bar').style.display='flex';
+  document.getElementById('route-maps-btn').style.display='';
+  // render list
+  const listEl=document.getElementById('route-list');
+  const allItems=[...routeSorted.map((o,i)=>({o,i,hasGeo:true})),...noGeo.map(o=>({o,i:-1,hasGeo:false}))];
+  listEl.innerHTML=allItems.map(({o,i,hasGeo})=>{
+    const distHtml=hasGeo&&i>0?`<span class="route-dist">+${haversineKm(routeSorted[i-1].lat,routeSorted[i-1].lon,o.lat,o.lon).toFixed(1)} กม.</span>`:'';
+    return`<div class="route-item${hasGeo?'':' no-geo'}">
+      <div class="route-num">${hasGeo?i+1:'?'}</div>
+      <div class="route-info">
+        <div class="route-name">${o.customer}</div>
+        <div class="route-addr">${o.address} ${o.district}</div>
+        <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
+          ${distHtml}
+          <span style="font-size:var(--text-xs);color:var(--muted)">📞 ${o.phone}</span>
+        </div>
+      </div>
+      <a href="${mapsUrl(o)}" target="_blank" rel="noopener" class="route-open-btn">แผนที่</a>
+    </div>`;
+  }).join('');
+}
+
+function nearestNeighborTSP(orders){
+  if(orders.length===0)return[];
+  if(orders.length===1)return[...orders];
+  const remaining=new Set(orders.map((_,i)=>i));
+  const route=[];
+  // เริ่มจากออเดอร์แรก (หรืออาจใช้จุดที่เหนือสุด)
+  let current=0;
+  remaining.delete(0);
+  route.push(orders[0]);
+  while(remaining.size>0){
+    let nearest=-1,minDist=Infinity;
+    for(const idx of remaining){
+      const d=haversineKm(orders[current].lat,orders[current].lon,orders[idx].lat,orders[idx].lon);
+      if(d<minDist){minDist=d;nearest=idx;}
+    }
+    route.push(orders[nearest]);
+    remaining.delete(nearest);
+    current=nearest;
+  }
+  return route;
+}
+
+function openRouteMaps(){
+  if(routeSorted.length===0)return;
+  // Google Maps Directions สูงสุด 10 waypoints (ต้น + ปลาย + 8 กลาง)
+  const MAX=10;
+  const pts=routeSorted.slice(0,MAX);
+  const origin=`${pts[0].lat},${pts[0].lon}`;
+  const destination=`${pts[pts.length-1].lat},${pts[pts.length-1].lon}`;
+  const waypoints=pts.slice(1,-1).map(o=>`${o.lat},${o.lon}`).join('|');
+  let url=`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+  if(waypoints)url+=`&waypoints=${encodeURIComponent(waypoints)}`;
+  url+='&travelmode=driving';
+  if(routeSorted.length>MAX){
+    alert(`Google Maps รองรับสูงสุด 10 จุด\nแสดง ${MAX} จุดแรกจาก ${routeSorted.length} จุดทั้งหมด`);
+  }
+  window.open(url,'_blank','noopener');
+}
+
 function showSheetsDialog(){document.getElementById('sheets-modal').classList.add('show');document.getElementById('sheets-error').style.display='none';setTimeout(()=>document.getElementById('sheets-url').focus(),100);}
 function closeModal(){document.getElementById('sheets-modal').classList.remove('show');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
@@ -1134,5 +1651,29 @@ function processCSVText(text){
   },50);
 }
 </script>
+<!-- ROUTE PLANNER MODAL -->
+<div class="route-modal-overlay" id="route-modal-overlay" onclick="if(event.target===this)closeRoutePlanner()">
+  <div class="route-modal">
+    <div class="route-modal-head">
+      <div class="route-modal-title" id="route-modal-title">เส้นทางส่งสินค้า</div>
+      <button class="route-modal-close" onclick="closeRoutePlanner()">✕</button>
+    </div>
+    <div class="route-modal-body">
+      <div class="route-status" id="route-status"></div>
+      <div id="route-total-bar" style="display:none" class="route-total-bar">
+        <span>📍 <span id="route-stop-count"></span> จุดส่ง</span>
+        <span>ระยะทางรวมประมาณ <span id="route-total-dist"></span> กม.</span>
+      </div>
+      <div class="route-list" id="route-list"></div>
+    </div>
+    <div class="route-modal-foot">
+      <button class="filter-btn" onclick="closeRoutePlanner()">ปิด</button>
+      <button class="filter-btn primary" id="route-maps-btn" style="display:none" onclick="openRouteMaps()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        เปิด Google Maps (Multi-stop)
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
