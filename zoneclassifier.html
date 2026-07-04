@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CFM Zone Classifier — Chiangmai Freshmilk</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root {
   --brand:#1A56DB;--brand-dk:#1e40af;--brand-lt:#EBF5FF;--brand-mid:#BFDBFE;
@@ -273,6 +275,92 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .spinner{display:inline-block;width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:var(--sp-2);}
 @keyframes spin{to{transform:rotate(360deg);}}
 
+/* ── MOBILE-FIRST ── */
+@media(max-width:640px){
+  .topbar{padding:0 var(--sp-3);height:52px;gap:var(--sp-2);}
+  .logo-sub{display:none;}
+  .topbar-btn span,.topbar-btn svg+*{display:none;}
+  .topbar-btn{padding:6px 8px;}
+  .main{padding:var(--sp-3) var(--sp-2);}
+  .filter-bar{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);}
+  .filter-bar label{display:none;}
+  #search-input{min-width:0;width:100%;}
+  #marker-input{min-width:0;width:100%;}
+  .zone-cards-wrap{grid-template-columns:1fr;padding:var(--sp-2);}
+  .order-card{padding:var(--sp-3);}
+  .card-products{flex-wrap:wrap;gap:var(--sp-2);}
+  .dashboard{grid-template-columns:1fr;}
+  .db-row{grid-template-columns:1fr;}
+  .summary-toggle{font-size:var(--text-sm);padding:8px var(--sp-4);}
+  /* bottom nav bar สำหรับ mobile */
+  .mobile-nav{display:flex;}
+  .topbar-tab{display:none !important;}
+  #tab-divider{display:none !important;}
+}
+@media(min-width:641px){
+  .mobile-nav{display:none !important;}
+}
+/* mobile bottom nav */
+.mobile-nav{position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg-topbar);
+  box-shadow:0 -2px 8px rgba(0,0,0,.2);z-index:200;align-items:stretch;justify-content:space-around;}
+.mobile-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;color:rgba(255,255,255,.6);border:none;background:transparent;cursor:pointer;
+  font-size:10px;font-weight:600;transition:color .15s;padding:0;}
+.mobile-nav-btn.active{color:#fff;}
+.mobile-nav-btn svg{width:20px;height:20px;}
+/* padding ล่างเพื่อไม่ให้ bottom nav บัง content บน mobile */
+@media(max-width:640px){
+  .main{padding-bottom:72px;}
+  #results{padding-bottom:8px;}
+}
+
+/* ── MAP PAGE ── */
+#page-map{height:calc(100vh - 56px);display:none;flex-direction:column;}
+#page-map.active{display:flex;}
+#map-container{flex:1;position:relative;}
+#leaflet-map{width:100%;height:100%;}
+/* ไม่ใช้ position:fixed — Leaflet ต้องการ height ที่กำหนดชัดเจน */
+.map-info-panel{position:absolute;top:12px;right:12px;z-index:400;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:var(--sp-3) var(--sp-4);box-shadow:var(--shadow-md);min-width:200px;max-width:280px;}
+.map-info-title{font-size:var(--text-xs);font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.05em;margin-bottom:var(--sp-2);}
+.map-stat-row{display:flex;justify-content:space-between;align-items:center;
+  font-size:var(--text-sm);padding:3px 0;border-bottom:1px solid var(--border);}
+.map-stat-row:last-child{border-bottom:none;}
+.map-stat-label{color:var(--muted);}
+.map-stat-val{font-weight:700;color:var(--text);}
+.map-geocode-bar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  z-index:400;background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-full);padding:8px 20px;box-shadow:var(--shadow-md);
+  font-size:var(--text-sm);display:none;align-items:center;gap:var(--sp-2);white-space:nowrap;}
+.map-geocode-bar.show{display:flex;}
+/* Leaflet popup override */
+.leaflet-popup-content-wrapper{border-radius:var(--r-lg) !important;
+  box-shadow:var(--shadow-md) !important;border:1px solid var(--border);
+  background:var(--bg-card) !important;color:var(--text) !important;}
+.leaflet-popup-tip{background:var(--bg-card) !important;}
+.leaflet-popup-content{margin:12px 16px !important;font-family:'Sarabun','Segoe UI',sans-serif;
+  font-size:13px;line-height:1.6;color:var(--text);}
+.popup-name{font-weight:700;font-size:15px;margin-bottom:4px;}
+.popup-row{color:var(--muted);font-size:12px;}
+.popup-products{display:flex;gap:12px;margin-top:6px;padding-top:6px;
+  border-top:1px solid var(--border);font-size:12px;font-weight:700;}
+.popup-maps-btn{display:inline-flex;align-items:center;gap:4px;margin-top:8px;
+  padding:5px 12px;border-radius:var(--r-md);background:var(--brand);
+  color:#fff;font-size:12px;font-weight:600;text-decoration:none;}
+.map-legend{position:absolute;bottom:12px;left:12px;z-index:400;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:var(--sp-2) var(--sp-3);box-shadow:var(--shadow-sm);font-size:11px;
+  display:flex;flex-direction:column;gap:3px;max-width:160px;}
+.map-legend-row{display:flex;align-items:center;gap:6px;color:var(--muted);}
+.map-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+@media(max-width:640px){
+  .map-info-panel{top:8px;right:8px;min-width:160px;padding:var(--sp-2) var(--sp-3);}
+  .map-legend{bottom:68px;}
+  .map-geocode-bar{bottom:68px;}
+}
+
 @media print{
   .topbar,.filter-bar,#upload-section,#dashboard,.no-print,.zone-search-bar{display:none !important;}
   body{background:#fff;font-size:12px;color:#000;}
@@ -333,6 +421,21 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .status-donut-row{display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-2) 0;}
 .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .db-empty{text-align:center;padding:48px;color:var(--muted);font-size:var(--text-md);}
+.zs-table{width:100%;border-collapse:collapse;font-size:var(--text-sm);}
+.zs-table th{text-align:left;padding:var(--sp-2) var(--sp-4);color:var(--muted);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);}
+.zs-table td{padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--border);vertical-align:middle;}
+.zs-table tr:last-child td{border-bottom:none;}
+.zs-table tr.zs-row-hot{background:var(--danger-lt);}
+@media (prefers-color-scheme:dark){.zs-table tr.zs-row-hot{background:rgba(220,38,38,.15);}}
+.zs-zone-name{font-weight:700;color:var(--text);}
+.zs-num{font-weight:700;text-align:right;min-width:32px;}
+.zs-bar-wrap{display:flex;height:8px;border-radius:var(--r-full);overflow:hidden;background:var(--gray-100);min-width:90px;}
+.zs-bar-seg{height:8px;}
+.zs-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:var(--r-full);font-size:var(--text-xs);font-weight:700;white-space:nowrap;}
+.zs-badge-ok{background:var(--success-lt);color:var(--success-dk);}
+.zs-badge-warn{background:#FEF3C7;color:#92400E;}
+.zs-badge-danger{background:var(--danger-lt);color:var(--danger);}
+@media(max-width:720px){.zs-table th:nth-child(2),.zs-table td:nth-child(2),.zs-table th:nth-child(6),.zs-table td:nth-child(6){display:none;}}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
@@ -372,6 +475,10 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   <button class="topbar-tab" id="tab-dashboard" onclick="switchPage('dashboard-page')" style="display:none">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="9" rx="1"/><rect x="2" y="14" width="9" height="9" rx="1"/><rect x="13" y="14" width="9" height="9" rx="1"/></svg>
     ภาพรวม
+  </button>
+  <button class="topbar-tab" id="tab-map" onclick="switchPage('map')" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+    แผนที่
   </button>
   <div class="topbar-spacer"></div>
   <button class="topbar-btn btn-ghost no-print" onclick="showGeoSettings()" id="btn-geo-settings" title="ตั้งค่า Geocache">
@@ -431,6 +538,46 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
             <div class="db-card-body" id="db-status"></div>
           </div>
         </div>
+        <div class="db-row" style="grid-template-columns:1fr">
+          <div class="db-card">
+            <div class="db-card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              โซน × สถานะ — เรียงตามความเร่งด่วน
+            </div>
+            <div class="db-card-body" style="padding:0;overflow-x:auto">
+              <table class="zs-table">
+                <thead><tr>
+                  <th>โซน</th><th>ทั้งหมด</th><th>ส่งแล้ว</th><th>ค้างส่ง</th><th>ยกเลิก</th><th>สัดส่วน</th><th></th>
+                </tr></thead>
+                <tbody id="db-zone-status-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAP PAGE -->
+  <div id="page-map" class="page">
+    <div id="map-container">
+      <div id="leaflet-map"></div>
+      <!-- info panel: สถิติ + geocode progress -->
+      <div class="map-info-panel" id="map-info-panel">
+        <div class="map-info-title">สถิติออเดอร์บนแผนที่</div>
+        <div id="map-stats-rows"><div style="color:var(--muted);font-size:12px">โหลดข้อมูลก่อน</div></div>
+      </div>
+      <!-- geocode progress bar -->
+      <div class="map-geocode-bar" id="map-geocode-bar">
+        <span class="spinner" style="width:14px;height:14px;border-width:2px"></span>
+        <span id="map-geocode-text">กำลัง geocode...</span>
+      </div>
+      <!-- legend -->
+      <div class="map-legend" id="map-legend" style="display:none">
+        <div class="map-legend-row"><div class="map-legend-dot" style="background:#10B981"></div>ส่งแล้ว</div>
+        <div class="map-legend-row"><div class="map-legend-dot" style="background:#F59E0B"></div>ค้างส่ง</div>
+        <div class="map-legend-row"><div class="map-legend-dot" style="background:#EF4444"></div>ยกเลิก</div>
+        <div class="map-legend-row"><div class="map-legend-dot" style="background:#94A3B8"></div>ไม่มีพิกัด</div>
       </div>
     </div>
   </div>
@@ -562,6 +709,22 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   <div id="results"></div>
   </div><!-- end page-orders -->
 </div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav no-print" id="mobile-nav" style="display:none">
+  <button class="mobile-nav-btn active" id="mob-tab-orders" onclick="switchPage('orders')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+    ออเดอร์
+  </button>
+  <button class="mobile-nav-btn" id="mob-tab-map" onclick="switchPage('map')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+    แผนที่
+  </button>
+  <button class="mobile-nav-btn" id="mob-tab-dashboard" onclick="switchPage('dashboard-page')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="9" rx="1"/><rect x="2" y="14" width="9" height="9" rx="1"/><rect x="13" y="14" width="9" height="9" rx="1"/></svg>
+    ภาพรวม
+  </button>
+</nav>
 
 <script>
 // ── ZONE CONFIG ──
@@ -1380,9 +1543,12 @@ function buildOrdersFromRows(data){
   document.getElementById('filter-bar').style.display='flex';
   document.getElementById('tab-orders').style.display='';
   document.getElementById('tab-dashboard').style.display='';
+  document.getElementById('tab-map').style.display='';
   document.getElementById('tab-divider').style.display='';
   document.getElementById('btn-export').style.display='';
   document.getElementById('btn-print').style.display='';
+  // mobile bottom nav
+  document.getElementById('mobile-nav').style.display='';
   applyFilter();
 }
 </script>
@@ -1406,16 +1572,144 @@ function buildOrdersFromRows(data){
 </div>
 
 <script>
+// ── MAP PAGE ──
+let leafletMap=null, mapMarkers=[], mapGeocoding=false;
+
+const MAP_STATUS_COLOR={delivered:'#10B981',pending:'#F59E0B',problem:'#EF4444'};
+
+async function renderMapPage(){
+  // init map ครั้งแรก
+  if(!leafletMap){
+    leafletMap=L.map('leaflet-map',{zoomControl:true}).setView([13.75,100.52],10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© OpenStreetMap',maxZoom:19,
+    }).addTo(leafletMap);
+  }
+  document.getElementById('map-legend').style.display='flex';
+  updateMapStats();
+  await plotMapMarkers();
+}
+
+function updateMapStats(){
+  const orders=filteredOrders.length>0?filteredOrders:allOrders;
+  if(orders.length===0){
+    document.getElementById('map-stats-rows').innerHTML='<div style="color:var(--muted);font-size:12px">ยังไม่มีข้อมูล</div>';
+    return;
+  }
+  const withGeo=orders.filter(o=>o.lat&&o.lon).length;
+  const delivered=orders.filter(o=>classifyStatus(o.status)==='delivered').length;
+  const pending=orders.filter(o=>classifyStatus(o.status)==='pending').length;
+  const zones=new Set(orders.map(o=>o.zone)).size;
+  document.getElementById('map-stats-rows').innerHTML=`
+    <div class="map-stat-row"><span class="map-stat-label">ออเดอร์</span><span class="map-stat-val">${orders.length}</span></div>
+    <div class="map-stat-row"><span class="map-stat-label">มีพิกัด</span><span class="map-stat-val">${withGeo} / ${orders.length}</span></div>
+    <div class="map-stat-row"><span class="map-stat-label">ส่งแล้ว</span><span class="map-stat-val" style="color:#10B981">${delivered}</span></div>
+    <div class="map-stat-row"><span class="map-stat-label">ค้างส่ง</span><span class="map-stat-val" style="color:#F59E0B">${pending}</span></div>
+    <div class="map-stat-row"><span class="map-stat-label">โซน</span><span class="map-stat-val">${zones}</span></div>`;
+}
+
+async function plotMapMarkers(){
+  if(mapGeocoding)return;
+  // clear markers เก่า
+  mapMarkers.forEach(m=>m.remove());
+  mapMarkers=[];
+  const orders=filteredOrders.length>0?filteredOrders:allOrders;
+  if(orders.length===0)return;
+
+  // แยก: มีพิกัดแล้ว vs ยังไม่มี
+  const withGeo=orders.filter(o=>o.lat&&o.lon);
+  const noGeo=orders.filter(o=>!o.lat||!o.lon);
+
+  // plot ออเดอร์ที่มีพิกัดแล้วทันที
+  withGeo.forEach(o=>addMarker(o));
+
+  // fit bounds ถ้ามี markers
+  if(withGeo.length>0){
+    const bounds=L.latLngBounds(withGeo.map(o=>[o.lat,o.lon]));
+    leafletMap.fitBounds(bounds,{padding:[40,40],maxZoom:13});
+  }
+
+  // geocode ออเดอร์ที่ยังไม่มีพิกัด (background)
+  if(noGeo.length>0){
+    mapGeocoding=true;
+    const bar=document.getElementById('map-geocode-bar');
+    const txt=document.getElementById('map-geocode-text');
+    bar.classList.add('show');
+    let done=0;
+    for(const o of noGeo){
+      await ensureGeocodedPatched(o);
+      if(o.lat&&o.lon) addMarker(o);
+      done++;
+      txt.textContent=`geocode ${done}/${noGeo.length} ที่อยู่...`;
+      // yield ทุก 5 ออเดอร์เพื่อไม่ให้ UI freeze
+      if(done%5===0) await new Promise(r=>setTimeout(r,0));
+    }
+    bar.classList.remove('show');
+    mapGeocoding=false;
+    updateMapStats();
+    // refit bounds
+    const all=orders.filter(o=>o.lat&&o.lon);
+    if(all.length>0){
+      const bounds=L.latLngBounds(all.map(o=>[o.lat,o.lon]));
+      leafletMap.fitBounds(bounds,{padding:[40,40],maxZoom:13});
+    }
+  }
+}
+
+function addMarker(o){
+  const sc=classifyStatus(o.status);
+  const color=MAP_STATUS_COLOR[sc]||'#94A3B8';
+  const zi=ZONE_LIST.indexOf(o.zone);
+  // circle marker สีตาม status
+  const marker=L.circleMarker([o.lat,o.lon],{
+    radius:7,fillColor:color,color:'#fff',
+    weight:1.5,opacity:1,fillOpacity:0.9,
+  });
+  // popup
+  const tP=o.qty_plain||0,tC=o.qty_choc||0,tH=o.qty_honey||0;
+  const statusLabel=sc==='delivered'?'✅ ส่งแล้ว':sc==='pending'?'🟡 ค้างส่ง':'❌ ยกเลิก';
+  marker.bindPopup(`
+    <div class="popup-name">👤 ${o.customer}</div>
+    <div class="popup-row">🧾 ${o.order_id}</div>
+    <div class="popup-row">📞 ${o.phone}</div>
+    <div class="popup-row">📍 ${o.address} ${o.district}</div>
+    <div class="popup-row">${statusLabel} &nbsp;·&nbsp; ${o.zone}</div>
+    <div class="popup-products">
+      <span style="color:var(--plain-color)">🥛 ${tP}</span>
+      <span style="color:var(--choc-color)">🍫 ${tC}</span>
+      <span style="color:var(--honey-color)">🍯 ${tH}</span>
+    </div>
+    <a href="${mapsUrl(o)}" target="_blank" rel="noopener" class="popup-maps-btn">
+      เปิด Google Maps
+    </a>`,{maxWidth:260});
+  marker.addTo(leafletMap);
+  mapMarkers.push(marker);
+}
+
+// re-plot เมื่อ filter เปลี่ยน (ถ้าอยู่หน้า map)
+const _origApplyFilter=applyFilter;
+function applyFilter(){
+  _origApplyFilter();
+  const mapPage=document.getElementById('page-map');
+  if(mapPage&&mapPage.classList.contains('active')) plotMapMarkers();
+}
+
 function switchPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const pageEl=document.getElementById('page-'+page);
   if(pageEl) pageEl.classList.add('active');
+  // desktop tabs
   document.querySelectorAll('.topbar-tab').forEach(t=>t.classList.remove('active'));
-  // tab id mapping: dashboard-page -> tab-dashboard, orders -> tab-orders
   const tabId=page==='dashboard-page'?'tab-dashboard':'tab-'+page;
   const tabEl=document.getElementById(tabId);
   if(tabEl) tabEl.classList.add('active');
+  // mobile bottom nav
+  document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
+  const mobId=page==='dashboard-page'?'mob-tab-dashboard':'mob-tab-'+page;
+  const mobEl=document.getElementById(mobId);
+  if(mobEl) mobEl.classList.add('active');
   if(page==='dashboard-page') renderDashboardPage();
+  if(page==='map') renderMapPage();
 }
 
 function renderDashboardPage(){
@@ -1539,6 +1833,35 @@ function renderDashboardPage(){
     <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0">
       <div style="height:8px;background:var(--danger);width:${Math.round(sProblem/total3*100)}%;border-radius:var(--r-full)"></div>
     </div>`;
+
+  // ── โซน × สถานะ (เรียงตามความเร่งด่วน) ──
+  const zsMap={};
+  orders.forEach(o=>{
+    if(!zsMap[o.zone])zsMap[o.zone]={delivered:0,pending:0,problem:0,total:0};
+    const st=classifyStatus(o.status);
+    zsMap[o.zone][st]++;
+    zsMap[o.zone].total++;
+  });
+  const zsRows=Object.entries(zsMap)
+    .map(([zone,d])=>({zone,...d,needsAttention:d.pending+d.problem}))
+    .sort((a,b)=>b.needsAttention-a.needsAttention||b.total-a.total);
+  document.getElementById('db-zone-status-body').innerHTML=zsRows.map(r=>{
+    const pctD=Math.round(r.delivered/r.total*100),pctP=Math.round(r.pending/r.total*100),pctX=100-pctD-pctP;
+    const hot=r.problem>0||(r.pending/r.total)>0.4;
+    let badge;
+    if(r.problem>0)badge=`<span class="zs-badge zs-badge-danger">⚠️ มีปัญหา ${r.problem}</span>`;
+    else if(r.pending/r.total>0.4)badge=`<span class="zs-badge zs-badge-warn">🟡 ค้างเยอะ</span>`;
+    else badge=`<span class="zs-badge zs-badge-ok">✅ ปกติ</span>`;
+    return`<tr class="${hot?'zs-row-hot':''}">
+      <td class="zs-zone-name">${r.zone}</td>
+      <td class="zs-num">${r.total}</td>
+      <td class="zs-num" style="color:var(--success)">${r.delivered}</td>
+      <td class="zs-num" style="color:#D97706">${r.pending}</td>
+      <td class="zs-num" style="color:var(--danger)">${r.problem}</td>
+      <td><div class="zs-bar-wrap"><div class="zs-bar-seg" style="width:${pctD}%;background:var(--success)"></div><div class="zs-bar-seg" style="width:${pctP}%;background:#F59E0B"></div><div class="zs-bar-seg" style="width:${pctX}%;background:var(--danger)"></div></div></td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:var(--sp-5)">ไม่มีข้อมูล</td></tr>';
 }
 
 // ── ROUTE PLANNER ──
