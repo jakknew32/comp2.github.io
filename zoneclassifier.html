@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFM Zone Classifier — Chiangmai Freshmilk</title>
+<title>CFM Zone Classifier — Chiangmai Freshmilk V.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1127,7 +1127,7 @@ function parseOrderDate(order_id){
   return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
 }
 
-function applyFilter(){
+function applyFilterCore(){
   const sf=document.getElementById('status-filter').value;
   const q=document.getElementById('search-input').value.toLowerCase();
   filteredOrders=allOrders.filter(o=>{
@@ -1687,9 +1687,8 @@ function addMarker(o){
 }
 
 // re-plot เมื่อ filter เปลี่ยน (ถ้าอยู่หน้า map)
-const _origApplyFilter=applyFilter;
 function applyFilter(){
-  _origApplyFilter();
+  applyFilterCore();
   const mapPage=document.getElementById('page-map');
   if(mapPage&&mapPage.classList.contains('active')) plotMapMarkers();
 }
