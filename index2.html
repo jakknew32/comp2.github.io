@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFM Zone Classifier — Chiangmai Freshmilk</title>
+<title>CFM Zone Classifier — Chiangmai Freshmilk V.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -421,6 +421,21 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .status-donut-row{display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-2) 0;}
 .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .db-empty{text-align:center;padding:48px;color:var(--muted);font-size:var(--text-md);}
+.zs-table{width:100%;border-collapse:collapse;font-size:var(--text-sm);}
+.zs-table th{text-align:left;padding:var(--sp-2) var(--sp-4);color:var(--muted);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);}
+.zs-table td{padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--border);vertical-align:middle;}
+.zs-table tr:last-child td{border-bottom:none;}
+.zs-table tr.zs-row-hot{background:var(--danger-lt);}
+@media (prefers-color-scheme:dark){.zs-table tr.zs-row-hot{background:rgba(220,38,38,.15);}}
+.zs-zone-name{font-weight:700;color:var(--text);}
+.zs-num{font-weight:700;text-align:right;min-width:32px;}
+.zs-bar-wrap{display:flex;height:8px;border-radius:var(--r-full);overflow:hidden;background:var(--gray-100);min-width:90px;}
+.zs-bar-seg{height:8px;}
+.zs-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:var(--r-full);font-size:var(--text-xs);font-weight:700;white-space:nowrap;}
+.zs-badge-ok{background:var(--success-lt);color:var(--success-dk);}
+.zs-badge-warn{background:#FEF3C7;color:#92400E;}
+.zs-badge-danger{background:var(--danger-lt);color:var(--danger);}
+@media(max-width:720px){.zs-table th:nth-child(2),.zs-table td:nth-child(2),.zs-table th:nth-child(6),.zs-table td:nth-child(6){display:none;}}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
@@ -436,6 +451,11 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .geo-settings-hint code{background:var(--gray-100);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:11px;}
 .geo-status-bar{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--success-lt);border:1px solid #6EE7B7;border-radius:var(--r-md);font-size:var(--text-xs);color:var(--success);margin-top:var(--sp-2);}
 .geo-status-bar.warn{background:var(--warning-lt);border-color:#FCD34D;color:var(--warning);}
+.fb-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#94A3B8;flex-shrink:0;transition:background .2s;}
+.fb-dot.syncing{background:#FBBF24;animation:fbpulse 1s infinite;}
+.fb-dot.synced{background:#34D399;}
+.fb-dot.error{background:#F87171;}
+@keyframes fbpulse{0%,100%{opacity:1}50%{opacity:.35}}
 .geo-status-bar.info{background:var(--brand-lt);border-color:var(--brand-mid);color:var(--brand-dk);}
 .script-code-wrap{background:var(--gray-900);color:#86efac;border-radius:var(--r-md);padding:var(--sp-3);font-family:monospace;font-size:11px;line-height:1.6;overflow-x:auto;margin:var(--sp-2) 0;white-space:pre;}
 </style>
@@ -466,6 +486,10 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     แผนที่
   </button>
   <div class="topbar-spacer"></div>
+  <button class="topbar-btn btn-ghost no-print" onclick="alert(window.FB?window.FB.statusMessage():'กำลังเตรียม Firebase...')" id="btn-fb-status" title="สถานะ Firebase (คลิกดูรายละเอียด)">
+    <span class="fb-dot" id="fb-dot"></span>
+    <span id="fb-status-text">Firebase</span>
+  </button>
   <button class="topbar-btn btn-ghost no-print" onclick="showGeoSettings()" id="btn-geo-settings" title="ตั้งค่า Geocache">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M14.83 9.17a4 4 0 0 1 0 5.66M9.17 9.17a4 4 0 0 0 0 5.66"/></svg>
     Geocache
@@ -483,6 +507,97 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     พิมพ์
   </button>
 </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, writeBatch, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCXxQyeK6B5y1h7bnyUSCB9AW6lPnomCDc",
+  authDomain: "scgxcfm.firebaseapp.com",
+  projectId: "scgxcfm",
+  storageBucket: "scgxcfm.firebasestorage.app",
+  messagingSenderId: "813136020502",
+  appId: "1:813136020502:web:29d73d8aca0046842b2137",
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const ORDERS_COL = 'orders';
+
+function sanitizeId(id){
+  const s = String(id).replace(/[\/\.#\$\[\]]/g,'_').trim();
+  return s || ('_'+Math.random().toString(36).slice(2));
+}
+
+function updateBadge(){
+  const dot = document.getElementById('fb-dot');
+  const txt = document.getElementById('fb-status-text');
+  if(!dot||!txt) return;
+  dot.className = 'fb-dot ' + (window.FB.status||'');
+  const labels = {idle:'Firebase', syncing:'กำลังซิงค์...', synced:`ซิงค์แล้ว (${window.FB.lastSyncCount})`, error:'Firebase ผิดพลาด', listening:'เชื่อมต่อแล้ว'};
+  txt.textContent = labels[window.FB.status] || 'Firebase';
+}
+
+window.FB = {
+  status: 'idle',
+  lastSyncCount: 0,
+  unsub: null,
+  suppressNextApply: false,
+
+  statusMessage(){
+    const s = window.FB.status;
+    if(s==='syncing') return 'กำลังส่งข้อมูล order ขึ้น Firebase...';
+    if(s==='synced') return `ซิงค์ไป Firebase สำเร็จ — ${window.FB.lastSyncCount} รายการ\nข้อมูลจะแชร์ real-time ให้ทุกคนที่เปิดแอปนี้อยู่`;
+    if(s==='listening') return 'เชื่อมต่อ Firebase แล้ว — รอข้อมูลจาก Sheets หรือรับข้อมูลที่คนอื่น sync ไว้';
+    if(s==='error') return 'เชื่อมต่อ/ซิงค์ Firebase ไม่สำเร็จ — ตรวจสอบ internet หรือ Firestore Rules (ดู console สำหรับรายละเอียด)';
+    return 'กำลังเตรียมการเชื่อมต่อ Firebase...';
+  },
+
+  // เรียกหลังโหลด/ประมวลผลข้อมูล order ในเครื่อง (จาก Sheets หรือ Excel) เพื่อ push ขึ้น Firestore
+  async syncOrders(orders){
+    if(!orders || orders.length===0) return;
+    window.FB.status='syncing'; updateBadge();
+    try{
+      const CHUNK=450; // จำกัด batch write ของ Firestore ที่ 500
+      for(let i=0;i<orders.length;i+=CHUNK){
+        const batch=writeBatch(db);
+        orders.slice(i,i+CHUNK).forEach(o=>{
+          const ref=doc(db, ORDERS_COL, sanitizeId(o.order_id));
+          const clean={...o,_updatedAt:serverTimestamp()};
+          delete clean._distance; // ค่า runtime ไม่ต้องเก็บ
+          batch.set(ref, clean, {merge:true});
+        });
+        await batch.commit();
+      }
+      window.FB.status='synced'; window.FB.lastSyncCount=orders.length;
+      window.FB.suppressNextApply=true; // กัน loop จาก snapshot ของตัวเอง
+    }catch(e){
+      console.error('Firebase sync error:', e);
+      window.FB.status='error';
+    }
+    updateBadge();
+  },
+
+  // เริ่มฟังข้อมูล real-time จาก Firestore — เรียกครั้งเดียวตอนโหลดหน้า
+  startListening(onOrders){
+    if(window.FB.unsub) return;
+    window.FB.unsub = onSnapshot(collection(db, ORDERS_COL), snap=>{
+      if(window.FB.suppressNextApply){ window.FB.suppressNextApply=false; return; }
+      const orders = snap.docs.map(d=>d.data());
+      if(orders.length>0) onOrders(orders);
+      if(window.FB.status!=='syncing') { window.FB.status='listening'; updateBadge(); }
+    }, err=>{
+      console.error('Firebase listen error:', err);
+      window.FB.status='error'; updateBadge();
+    });
+  }
+};
+
+updateBadge();
+</script>
 
 <div class="main">
   <!-- DASHBOARD PAGE -->
@@ -521,6 +636,22 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
               สถานะออเดอร์
             </div>
             <div class="db-card-body" id="db-status"></div>
+          </div>
+        </div>
+        <div class="db-row" style="grid-template-columns:1fr">
+          <div class="db-card">
+            <div class="db-card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              โซน × สถานะ — เรียงตามความเร่งด่วน
+            </div>
+            <div class="db-card-body" style="padding:0;overflow-x:auto">
+              <table class="zs-table">
+                <thead><tr>
+                  <th>โซน</th><th>ทั้งหมด</th><th>ส่งแล้ว</th><th>ค้างส่ง</th><th>ยกเลิก</th><th>สัดส่วน</th><th></th>
+                </tr></thead>
+                <tbody id="db-zone-status-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -1096,7 +1227,7 @@ function parseOrderDate(order_id){
   return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
 }
 
-function applyFilter(){
+function applyFilterCore(){
   const sf=document.getElementById('status-filter').value;
   const q=document.getElementById('search-input').value.toLowerCase();
   filteredOrders=allOrders.filter(o=>{
@@ -1481,12 +1612,19 @@ function buildOrdersFromRows(data){
       seen[oid]=o;orders.push(o);
     }
   }
-  allOrders=orders;
   document.getElementById('loading').style.display='none';
   if(orders.length===0){
     document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
     return;
   }
+  finalizeOrders(orders,{fromFirebase:false});
+}
+
+// ── ใช้ร่วมกันทั้งตอนโหลดจากไฟล์/Sheets ในเครื่อง และตอนรับข้อมูล real-time จาก Firebase ──
+// fromFirebase=true หมายถึงข้อมูลนี้มาจาก Firestore listener อยู่แล้ว จะไม่ sync ย้อนกลับขึ้นไปอีก (กัน loop)
+function finalizeOrders(orders, opts){
+  opts = opts||{};
+  allOrders=orders;
   // build available zones for dropdown
   availableZones=[...new Set(orders.map(o=>o.zone))].sort((a,b)=>ZONE_LIST.indexOf(a)-ZONE_LIST.indexOf(b));
   selectedZones.clear();
@@ -1519,6 +1657,25 @@ function buildOrdersFromRows(data){
   // mobile bottom nav
   document.getElementById('mobile-nav').style.display='';
   applyFilter();
+
+  if(!opts.fromFirebase && window.FB){
+    window.FB.syncOrders(orders);
+  }
+}
+
+// ── รับข้อมูล real-time จาก Firestore (เช่น คนอื่น sync ข้อมูลใหม่ขึ้นมา) ──
+function applyOrdersFromFirebase(rawOrders){
+  // เติม field runtime ที่ไม่ได้เก็บใน Firestore กลับมา (เช่น _distance ที่ลบก่อน sync)
+  const orders = rawOrders.map(o=>({..._o_defaults(),...o}));
+  finalizeOrders(orders,{fromFirebase:true});
+}
+function _o_defaults(){ return {_distance:null}; }
+
+window.addEventListener('DOMContentLoaded',()=>{
+  if(window.FB) window.FB.startListening(applyOrdersFromFirebase);
+});
+if(document.readyState==='complete'||document.readyState==='interactive'){
+  if(window.FB) window.FB.startListening(applyOrdersFromFirebase);
 }
 </script>
 
@@ -1656,9 +1813,8 @@ function addMarker(o){
 }
 
 // re-plot เมื่อ filter เปลี่ยน (ถ้าอยู่หน้า map)
-const _origApplyFilter=applyFilter;
 function applyFilter(){
-  _origApplyFilter();
+  applyFilterCore();
   const mapPage=document.getElementById('page-map');
   if(mapPage&&mapPage.classList.contains('active')) plotMapMarkers();
 }
@@ -1802,6 +1958,35 @@ function renderDashboardPage(){
     <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0">
       <div style="height:8px;background:var(--danger);width:${Math.round(sProblem/total3*100)}%;border-radius:var(--r-full)"></div>
     </div>`;
+
+  // ── โซน × สถานะ (เรียงตามความเร่งด่วน) ──
+  const zsMap={};
+  orders.forEach(o=>{
+    if(!zsMap[o.zone])zsMap[o.zone]={delivered:0,pending:0,problem:0,total:0};
+    const st=classifyStatus(o.status);
+    zsMap[o.zone][st]++;
+    zsMap[o.zone].total++;
+  });
+  const zsRows=Object.entries(zsMap)
+    .map(([zone,d])=>({zone,...d,needsAttention:d.pending+d.problem}))
+    .sort((a,b)=>b.needsAttention-a.needsAttention||b.total-a.total);
+  document.getElementById('db-zone-status-body').innerHTML=zsRows.map(r=>{
+    const pctD=Math.round(r.delivered/r.total*100),pctP=Math.round(r.pending/r.total*100),pctX=100-pctD-pctP;
+    const hot=r.problem>0||(r.pending/r.total)>0.4;
+    let badge;
+    if(r.problem>0)badge=`<span class="zs-badge zs-badge-danger">⚠️ มีปัญหา ${r.problem}</span>`;
+    else if(r.pending/r.total>0.4)badge=`<span class="zs-badge zs-badge-warn">🟡 ค้างเยอะ</span>`;
+    else badge=`<span class="zs-badge zs-badge-ok">✅ ปกติ</span>`;
+    return`<tr class="${hot?'zs-row-hot':''}">
+      <td class="zs-zone-name">${r.zone}</td>
+      <td class="zs-num">${r.total}</td>
+      <td class="zs-num" style="color:var(--success)">${r.delivered}</td>
+      <td class="zs-num" style="color:#D97706">${r.pending}</td>
+      <td class="zs-num" style="color:var(--danger)">${r.problem}</td>
+      <td><div class="zs-bar-wrap"><div class="zs-bar-seg" style="width:${pctD}%;background:var(--success)"></div><div class="zs-bar-seg" style="width:${pctP}%;background:#F59E0B"></div><div class="zs-bar-seg" style="width:${pctX}%;background:var(--danger)"></div></div></td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:var(--sp-5)">ไม่มีข้อมูล</td></tr>';
 }
 
 // ── ROUTE PLANNER ──
