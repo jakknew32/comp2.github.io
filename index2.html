@@ -451,11 +451,6 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .geo-settings-hint code{background:var(--gray-100);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:11px;}
 .geo-status-bar{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--success-lt);border:1px solid #6EE7B7;border-radius:var(--r-md);font-size:var(--text-xs);color:var(--success);margin-top:var(--sp-2);}
 .geo-status-bar.warn{background:var(--warning-lt);border-color:#FCD34D;color:var(--warning);}
-.fb-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#94A3B8;flex-shrink:0;transition:background .2s;}
-.fb-dot.syncing{background:#FBBF24;animation:fbpulse 1s infinite;}
-.fb-dot.synced{background:#34D399;}
-.fb-dot.error{background:#F87171;}
-@keyframes fbpulse{0%,100%{opacity:1}50%{opacity:.35}}
 .geo-status-bar.info{background:var(--brand-lt);border-color:var(--brand-mid);color:var(--brand-dk);}
 .script-code-wrap{background:var(--gray-900);color:#86efac;border-radius:var(--r-md);padding:var(--sp-3);font-family:monospace;font-size:11px;line-height:1.6;overflow-x:auto;margin:var(--sp-2) 0;white-space:pre;}
 </style>
@@ -486,10 +481,6 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     แผนที่
   </button>
   <div class="topbar-spacer"></div>
-  <button class="topbar-btn btn-ghost no-print" onclick="alert(window.FB?window.FB.statusMessage():'กำลังเตรียม Firebase...')" id="btn-fb-status" title="สถานะ Firebase (คลิกดูรายละเอียด)">
-    <span class="fb-dot" id="fb-dot"></span>
-    <span id="fb-status-text">Firebase</span>
-  </button>
   <button class="topbar-btn btn-ghost no-print" onclick="showGeoSettings()" id="btn-geo-settings" title="ตั้งค่า Geocache">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M14.83 9.17a4 4 0 0 1 0 5.66M9.17 9.17a4 4 0 0 0 0 5.66"/></svg>
     Geocache
@@ -507,97 +498,6 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     พิมพ์
   </button>
 </div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-import {
-  getFirestore, collection, doc, writeBatch, onSnapshot, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCXxQyeK6B5y1h7bnyUSCB9AW6lPnomCDc",
-  authDomain: "scgxcfm.firebaseapp.com",
-  projectId: "scgxcfm",
-  storageBucket: "scgxcfm.firebasestorage.app",
-  messagingSenderId: "813136020502",
-  appId: "1:813136020502:web:29d73d8aca0046842b2137",
-};
-
-const fbApp = initializeApp(firebaseConfig);
-const db = getFirestore(fbApp);
-const ORDERS_COL = 'orders';
-
-function sanitizeId(id){
-  const s = String(id).replace(/[\/\.#\$\[\]]/g,'_').trim();
-  return s || ('_'+Math.random().toString(36).slice(2));
-}
-
-function updateBadge(){
-  const dot = document.getElementById('fb-dot');
-  const txt = document.getElementById('fb-status-text');
-  if(!dot||!txt) return;
-  dot.className = 'fb-dot ' + (window.FB.status||'');
-  const labels = {idle:'Firebase', syncing:'กำลังซิงค์...', synced:`ซิงค์แล้ว (${window.FB.lastSyncCount})`, error:'Firebase ผิดพลาด', listening:'เชื่อมต่อแล้ว'};
-  txt.textContent = labels[window.FB.status] || 'Firebase';
-}
-
-window.FB = {
-  status: 'idle',
-  lastSyncCount: 0,
-  unsub: null,
-  suppressNextApply: false,
-
-  statusMessage(){
-    const s = window.FB.status;
-    if(s==='syncing') return 'กำลังส่งข้อมูล order ขึ้น Firebase...';
-    if(s==='synced') return `ซิงค์ไป Firebase สำเร็จ — ${window.FB.lastSyncCount} รายการ\nข้อมูลจะแชร์ real-time ให้ทุกคนที่เปิดแอปนี้อยู่`;
-    if(s==='listening') return 'เชื่อมต่อ Firebase แล้ว — รอข้อมูลจาก Sheets หรือรับข้อมูลที่คนอื่น sync ไว้';
-    if(s==='error') return 'เชื่อมต่อ/ซิงค์ Firebase ไม่สำเร็จ — ตรวจสอบ internet หรือ Firestore Rules (ดู console สำหรับรายละเอียด)';
-    return 'กำลังเตรียมการเชื่อมต่อ Firebase...';
-  },
-
-  // เรียกหลังโหลด/ประมวลผลข้อมูล order ในเครื่อง (จาก Sheets หรือ Excel) เพื่อ push ขึ้น Firestore
-  async syncOrders(orders){
-    if(!orders || orders.length===0) return;
-    window.FB.status='syncing'; updateBadge();
-    try{
-      const CHUNK=450; // จำกัด batch write ของ Firestore ที่ 500
-      for(let i=0;i<orders.length;i+=CHUNK){
-        const batch=writeBatch(db);
-        orders.slice(i,i+CHUNK).forEach(o=>{
-          const ref=doc(db, ORDERS_COL, sanitizeId(o.order_id));
-          const clean={...o,_updatedAt:serverTimestamp()};
-          delete clean._distance; // ค่า runtime ไม่ต้องเก็บ
-          batch.set(ref, clean, {merge:true});
-        });
-        await batch.commit();
-      }
-      window.FB.status='synced'; window.FB.lastSyncCount=orders.length;
-      window.FB.suppressNextApply=true; // กัน loop จาก snapshot ของตัวเอง
-    }catch(e){
-      console.error('Firebase sync error:', e);
-      window.FB.status='error';
-    }
-    updateBadge();
-  },
-
-  // เริ่มฟังข้อมูล real-time จาก Firestore — เรียกครั้งเดียวตอนโหลดหน้า
-  startListening(onOrders){
-    if(window.FB.unsub) return;
-    window.FB.unsub = onSnapshot(collection(db, ORDERS_COL), snap=>{
-      if(window.FB.suppressNextApply){ window.FB.suppressNextApply=false; return; }
-      const orders = snap.docs.map(d=>d.data());
-      if(orders.length>0) onOrders(orders);
-      if(window.FB.status!=='syncing') { window.FB.status='listening'; updateBadge(); }
-    }, err=>{
-      console.error('Firebase listen error:', err);
-      window.FB.status='error'; updateBadge();
-    });
-  }
-};
-
-updateBadge();
-</script>
 
 <div class="main">
   <!-- DASHBOARD PAGE -->
@@ -1612,19 +1512,12 @@ function buildOrdersFromRows(data){
       seen[oid]=o;orders.push(o);
     }
   }
+  allOrders=orders;
   document.getElementById('loading').style.display='none';
   if(orders.length===0){
     document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
     return;
   }
-  finalizeOrders(orders,{fromFirebase:false});
-}
-
-// ── ใช้ร่วมกันทั้งตอนโหลดจากไฟล์/Sheets ในเครื่อง และตอนรับข้อมูล real-time จาก Firebase ──
-// fromFirebase=true หมายถึงข้อมูลนี้มาจาก Firestore listener อยู่แล้ว จะไม่ sync ย้อนกลับขึ้นไปอีก (กัน loop)
-function finalizeOrders(orders, opts){
-  opts = opts||{};
-  allOrders=orders;
   // build available zones for dropdown
   availableZones=[...new Set(orders.map(o=>o.zone))].sort((a,b)=>ZONE_LIST.indexOf(a)-ZONE_LIST.indexOf(b));
   selectedZones.clear();
@@ -1657,25 +1550,6 @@ function finalizeOrders(orders, opts){
   // mobile bottom nav
   document.getElementById('mobile-nav').style.display='';
   applyFilter();
-
-  if(!opts.fromFirebase && window.FB){
-    window.FB.syncOrders(orders);
-  }
-}
-
-// ── รับข้อมูล real-time จาก Firestore (เช่น คนอื่น sync ข้อมูลใหม่ขึ้นมา) ──
-function applyOrdersFromFirebase(rawOrders){
-  // เติม field runtime ที่ไม่ได้เก็บใน Firestore กลับมา (เช่น _distance ที่ลบก่อน sync)
-  const orders = rawOrders.map(o=>({..._o_defaults(),...o}));
-  finalizeOrders(orders,{fromFirebase:true});
-}
-function _o_defaults(){ return {_distance:null}; }
-
-window.addEventListener('DOMContentLoaded',()=>{
-  if(window.FB) window.FB.startListening(applyOrdersFromFirebase);
-});
-if(document.readyState==='complete'||document.readyState==='interactive'){
-  if(window.FB) window.FB.startListening(applyOrdersFromFirebase);
 }
 </script>
 
@@ -1693,6 +1567,13 @@ if(document.readyState==='complete'||document.readyState==='interactive'){
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.83"/></svg>
         โหลดข้อมูล
       </button>
+    </div>
+    <div style="border-top:1px solid var(--border,#e5e7eb);margin-top:14px;padding-top:12px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⚡ โหลดด่วนจากแท็บ (ใช้ลิงก์ Sheet ด้านบน แค่สลับแท็บ)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="filter-btn" onclick="loadFromSheetsByName('SCG',this)">SCG</button>
+        <button class="filter-btn" onclick="loadFromSheetsByName('ระยอง',this)">ระยอง</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2237,6 +2118,32 @@ async function loadFromSheets(){
       errEl.textContent=`โหลดไม่สำเร็จ: ${e2.message} — ตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
       errEl.style.display='block';btn.innerHTML=origText;btn.disabled=false;
     }
+  }
+}
+
+// ── โหลดด่วนจากแท็บ (sheet tab) ตามชื่อ เช่น "SCG", "ระยอง" ──
+async function loadFromSheetsByName(sheetName,btnEl){
+  const url=document.getElementById('sheets-url').value.trim();
+  const errEl=document.getElementById('sheets-error');errEl.style.display='none';
+  const sheetId=extractSheetId(url);
+  if(!sheetId){errEl.textContent='กรุณาวางลิงก์ Google Sheets ในช่องด้านบนก่อน';errEl.style.display='block';return;}
+  const origText=btnEl?btnEl.innerHTML:'';
+  if(btnEl){btnEl.innerHTML='<span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:4px"></span>กำลังโหลด...';btnEl.disabled=true;}
+
+  const tqUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  try{
+    const res=await fetch(tqUrl);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text=await res.text();
+    if(!text||text.trim().length===0) throw new Error(`ไม่พบข้อมูลในแท็บ "${sheetName}"`);
+    if(text.trim().startsWith('<')) throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
+    closeModal();
+    if(btnEl){btnEl.innerHTML=origText;btnEl.disabled=false;}
+    processCSVText(text);
+  }catch(e){
+    errEl.textContent=`โหลดแท็บ "${sheetName}" ไม่สำเร็จ: ${e.message} — ตรวจสอบว่ามีแท็บชื่อนี้จริง และแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
+    errEl.style.display='block';
+    if(btnEl){btnEl.innerHTML=origText;btnEl.disabled=false;}
   }
 }
 
