@@ -138,6 +138,10 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .zone-dd-item{display:flex;align-items:center;gap:var(--sp-2);padding:8px var(--sp-3);cursor:pointer;font-size:var(--text-sm);transition:background .1s;user-select:none;}
 .zone-dd-item:hover{background:var(--gray-100);}
 .zone-dd-item input[type=checkbox]{accent-color:var(--brand);width:14px;height:14px;cursor:pointer;}
+.zone-dd-group{background:var(--gray-50);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.zone-dd-group:first-child{border-top:none;}
+.zone-dd-group label{font-weight:700!important;}
+.zone-dd-subitem{padding-left:calc(var(--sp-3) + 18px);}
 .zone-dd-divider{border:none;border-top:1px solid var(--border);margin:2px 0;}
 .zone-dd-actions{display:flex;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-top:1px solid var(--border);}
 .zone-dd-action{font-size:var(--text-xs);color:var(--brand);cursor:pointer;font-weight:600;padding:2px 6px;border-radius:var(--r-sm);}
@@ -756,6 +760,10 @@ const ZONE_LIST = [
   'นครปฐม','ชลบุรี','สมุทรปราการ','ต่างจังหวัด','อื่นๆ',
 ];
 const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11','z12','z13'];
+// ── กลุ่มโซน: ให้เลือก "ทั้งกลุ่ม" ได้ทีเดียว แต่ยังกรองแยกเขตย่อยได้ ──
+const ZONE_GROUPS = [
+  {label:'กรุงเทพฯ (รวมทุกเขต)', zones:['กรุงเทพเหนือ','กรุงเทพกลาง','กรุงเทพตะวันออก','กรุงเทพตะวันตก','กรุงเทพฝั่งธน']},
+];
 const ZONE_DONUT = [
   '#3B82F6','#EC4899','#10B981','#F97316','#A855F7',
   '#06B6D4','#EAB308','#6366F1','#84CC16','#0EA5E9',
@@ -943,30 +951,69 @@ let availableZones=[]; // zones that actually exist in data
 function buildZoneDropdown(){
   const list=document.getElementById('zone-dd-list');
   list.innerHTML='';
-  availableZones.forEach(zone=>{
+  const groupedZones=new Set();
+
+  function makeZoneRow(zone,isSub){
     const item=document.createElement('div');
-    item.className='zone-dd-item';
+    item.className='zone-dd-item'+(isSub?' zone-dd-subitem':'');
     const cb=document.createElement('input');
     cb.type='checkbox';
     cb.id='zdz_'+zone;
     cb.checked=selectedZones.has(zone);
     cb.onchange=()=>{
       if(cb.checked)selectedZones.add(zone);else selectedZones.delete(zone);
-      updateZoneBtnLabel();applyFilter();
+      buildZoneDropdown();updateZoneBtnLabel();applyFilter();
     };
     const lbl=document.createElement('label');
     lbl.htmlFor='zdz_'+zone;
     lbl.textContent=zone;
     lbl.style.cursor='pointer';lbl.style.flex='1';lbl.style.fontSize='var(--text-sm)';
     item.appendChild(cb);item.appendChild(lbl);
-    list.appendChild(item);
+    return item;
+  }
+
+  // 1) กลุ่มโซน (เช่น กรุงเทพฯ รวมทุกเขต) — เลือกทั้งกลุ่ม หรือแยกเขตย่อยได้
+  ZONE_GROUPS.forEach(group=>{
+    const memberZones=group.zones.filter(z=>availableZones.includes(z));
+    if(memberZones.length===0)return;
+    memberZones.forEach(z=>groupedZones.add(z));
+
+    const groupItem=document.createElement('div');
+    groupItem.className='zone-dd-item zone-dd-group';
+    const gcb=document.createElement('input');
+    gcb.type='checkbox';
+    gcb.id='zdz_group_'+group.label;
+    const selectedCount=memberZones.filter(z=>selectedZones.has(z)).length;
+    gcb.checked=selectedCount>0&&selectedCount===memberZones.length;
+    gcb.indeterminate=selectedCount>0&&selectedCount<memberZones.length;
+    gcb.onchange=()=>{
+      if(gcb.checked)memberZones.forEach(z=>selectedZones.add(z));
+      else memberZones.forEach(z=>selectedZones.delete(z));
+      buildZoneDropdown();updateZoneBtnLabel();applyFilter();
+    };
+    const glbl=document.createElement('label');
+    glbl.htmlFor=gcb.id;
+    glbl.textContent=group.label;
+    glbl.style.cursor='pointer';glbl.style.flex='1';glbl.style.fontSize='var(--text-sm)';
+    groupItem.appendChild(gcb);groupItem.appendChild(glbl);
+    list.appendChild(groupItem);
+
+    memberZones.forEach(zone=>list.appendChild(makeZoneRow(zone,true)));
   });
+
+  // 2) โซนที่เหลือ (ไม่อยู่ในกลุ่มไหน) — แสดงแบบปกติเหมือนเดิม
+  availableZones.filter(z=>!groupedZones.has(z)).forEach(zone=>list.appendChild(makeZoneRow(zone,false)));
 }
 function updateZoneBtnLabel(){
   const btn=document.getElementById('zone-btn-label');
-  if(selectedZones.size===0)btn.textContent='ทั้งหมด';
-  else if(selectedZones.size===1)btn.textContent=[...selectedZones][0];
-  else btn.textContent=`${selectedZones.size} โซน`;
+  if(selectedZones.size===0){btn.textContent='ทั้งหมด';return;}
+  if(selectedZones.size===1){btn.textContent=[...selectedZones][0];return;}
+  // ถ้าที่เลือกไว้ตรงกับกลุ่มโซนพอดี (เช่น กรุงเทพฯ ทุกเขต) ให้โชว์ชื่อกลุ่มแทนตัวเลข
+  const matchedGroup=ZONE_GROUPS.find(g=>{
+    const mz=g.zones.filter(z=>availableZones.includes(z));
+    return mz.length===selectedZones.size&&mz.every(z=>selectedZones.has(z));
+  });
+  btn.textContent=matchedGroup?matchedGroup.label:`${selectedZones.size} โซน`;
 }
 function toggleZoneDropdown(){
   const dd=document.getElementById('zone-dropdown');
