@@ -188,6 +188,11 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .card-qty{display:flex;align-items:center;gap:4px;font-size:var(--text-sm);font-weight:700;}
 .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:var(--sp-1);}
 .status-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);padding:4px 10px;border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;}
+.status-select{display:inline-flex;align-items:center;font-size:var(--text-xs);padding:4px 22px 4px 10px;border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;font-family:inherit;outline:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 6px center;background-size:11px;transition:opacity .15s;}
+.status-select.status-saving{opacity:.55;pointer-events:none;}
 .s-pending{background:#FEF3C7;color:#78350F;border:1.5px solid #FCD34D;}
 .s-delivered{background:#D1FAE5;color:#064E3B;border:1.5px solid #6EE7B7;}
 .s-problem{background:#FEE2E2;color:#7F1D1D;border:1.5px solid #FCA5A5;}
@@ -1245,6 +1250,61 @@ function statusBadge(s){
   return'';
 }
 
+// ── สถานะแบบแก้ไขได้ในการ์ด (คลิกเปลี่ยน แล้ว sync กลับ Google Sheets ผ่าน Apps Script) ──
+function statusSelectHtml(o){
+  const c=classifyStatus(o.status);
+  const oidAttr=String(o.order_id).replace(/"/g,'&quot;');
+  return`<select class="status-select s-${c}" data-oid="${oidAttr}" onclick="event.stopPropagation()" onchange="updateOrderStatus(this)">
+    <option value="ค้างส่ง"${c==='pending'?' selected':''}>🟡 ค้างส่ง</option>
+    <option value="ส่งแล้ว"${c==='delivered'?' selected':''}>✅ ส่งแล้ว</option>
+    <option value="ยกเลิก"${c==='problem'?' selected':''}>❌ ยกเลิก</option>
+  </select>`;
+}
+
+// เก็บ reference ของ Sheet/แท็บที่กำลังใช้งานอยู่ตอนนี้ (ตั้งค่าตอนโหลดข้อมูลสำเร็จ)
+let currentSheetRef={sheetId:null,gid:null,sheetName:null};
+
+async function updateOrderStatus(selectEl){
+  const oid=selectEl.dataset.oid;
+  const newStatus=selectEl.value;
+  const order=allOrders.find(o=>String(o.order_id)===oid);
+  if(!order)return;
+
+  // อัปเดตหน้าจอทันที (optimistic UI)
+  order.status=newStatus;
+  const c=classifyStatus(newStatus);
+  selectEl.className=`status-select s-${c} status-saving`;
+  const card=selectEl.closest('.order-card');
+  if(card){
+    card.classList.remove('is-problem','is-pending','is-delivered');
+    if(c==='problem')card.classList.add('is-problem');
+    else if(c==='pending')card.classList.add('is-pending');
+    else if(c==='delivered')card.classList.add('is-delivered');
+  }
+
+  if(!geoScriptUrl||!currentSheetRef.sheetId){
+    selectEl.classList.remove('status-saving');
+    alert('ยังไม่ได้ตั้งค่า Apps Script URL สำหรับ sync กลับ Sheets\nตั้งค่าได้ที่ปุ่ม ⚙️ (ตั้งค่า Geocode/Sheets)\n\nตอนนี้เปลี่ยนสถานะแบบชั่วคราวในแอปแล้ว แต่ยังไม่ได้บันทึกกลับ Sheet');
+    return;
+  }
+  try{
+    await fetch(geoScriptUrl,{
+      method:'POST',
+      mode:'no-cors', // Apps Script ไม่ต้อง CORS preflight, อ่าน response ไม่ได้
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'updateOrderStatus',
+        sheetId:currentSheetRef.sheetId,
+        gid:currentSheetRef.gid,
+        sheetName:currentSheetRef.sheetName,
+        orderId:oid,
+        status:newStatus
+      })
+    });
+  }catch(e){/* ignore — no-cors ไม่รู้ผลลัพธ์อยู่แล้ว */}
+  setTimeout(()=>selectEl.classList.remove('status-saving'),700);
+}
+
 function filterZoneCards(zoneId, inputEl) {
   const q = inputEl.value.trim().toLowerCase();
   const wrap = document.getElementById('cards-' + zoneId);
@@ -1397,7 +1457,7 @@ function renderResults(){
           return`<div class="order-card ${cardCls}" data-search="${searchData.replace(/"/g,'&quot;')}">
             <div class="card-top">
               <div><div class="card-order-id">🧾 ${o.order_id}${o.order_date?` &nbsp;·&nbsp; 📅 ${o.order_date}`:''}</div><div class="card-name">👤 ${o.customer}</div></div>
-              ${statusBadge(o.status)}
+              ${statusSelectHtml(o)}
             </div>
             <div class="card-row"><span class="card-icon">📞</span><span>${o.phone}</span></div>
             <div class="card-row"><span class="card-icon">📍</span><span>${o.address}${o.zipcode?` <span style="color:var(--muted);font-size:var(--text-xs)">${o.zipcode}</span>`:''} ${o.district}</span></div>
@@ -1477,11 +1537,24 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 
+// ── แปลงเลข scientific notation (เช่น "5.84898509704235E+17") กลับเป็นเลขเต็มรูปแบบ
+// หมายเหตุ: ถ้าคอลัมน์ในชีตเป็น Number แล้วเลขเกิน ~15-17 หลัก ความแม่นยำอาจสูญเสียไปแล้วตั้งแต่ในชีต
+// ฟังก์ชันนี้ช่วยได้แค่ระดับ "โชว์เลขเต็ม แทนที่จะโชว์ E+17" ไม่ได้กู้คืนหลักที่หายไปจริงๆ
+function expandSciNotation(raw){
+  const str=String(raw==null?'':raw).trim();
+  const m=str.match(/^(-?)(\d+)(?:\.(\d+))?[eE]\+?(\d+)$/);
+  if(!m)return str;
+  const sign=m[1],intPart=m[2],fracPart=m[3]||'',exp=parseInt(m[4],10);
+  let digits=intPart+fracPart;
+  const pointPos=intPart.length+exp;
+  while(digits.length<pointPos)digits+='0';
+  return sign+digits.slice(0,pointPos);
+}
 function buildOrdersFromRows(data){
   const orders=[],seen={};
   for(let i=0;i<data.length;i++){
     const row=data[i];
-    const orderNum=row[2];if(!orderNum||!String(orderNum).trim())continue;
+    const orderNum=expandSciNotation(row[2]);if(!orderNum||!String(orderNum).trim())continue;
     if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain'))continue;
     // ── สถานะมาจากคอลัมน์ A (index 0) ──
     const statusRaw=row[0];
@@ -2103,6 +2176,7 @@ async function loadFromSheets(){
     if(!text||text.trim().length===0) throw new Error('ไม่พบข้อมูลใน Sheet');
     if(text.trim().startsWith('<')) throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
     closeModal();btn.innerHTML=origText;btn.disabled=false;
+    currentSheetRef={sheetId,gid,sheetName:null};
     processCSVText(text);return;
   }catch(e){
     // fallback: export CSV ตรง
@@ -2113,6 +2187,7 @@ async function loadFromSheets(){
       const text2=await res2.text();
       if(!text2||text2.trim().startsWith('<')) throw new Error('ได้รับ HTML แทน CSV');
       closeModal();btn.innerHTML=origText;btn.disabled=false;
+      currentSheetRef={sheetId,gid,sheetName:null};
       processCSVText(text2);return;
     }catch(e2){
       errEl.textContent=`โหลดไม่สำเร็จ: ${e2.message} — ตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
@@ -2139,6 +2214,7 @@ async function loadFromSheetsByName(sheetName,btnEl){
     if(text.trim().startsWith('<')) throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
     closeModal();
     if(btnEl){btnEl.innerHTML=origText;btnEl.disabled=false;}
+    currentSheetRef={sheetId,gid:null,sheetName};
     processCSVText(text);
   }catch(e){
     errEl.textContent=`โหลดแท็บ "${sheetName}" ไม่สำเร็จ: ${e.message} — ตรวจสอบว่ามีแท็บชื่อนี้จริง และแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
@@ -2197,7 +2273,7 @@ function processCSVText(text){
     <div class="geo-settings-row">
       <div class="geo-settings-label">Apps Script Web App URL (สำหรับเขียนข้อมูล)</div>
       <input type="text" id="geo-script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
-      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App</div>
+      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App (ใช้ทั้ง sync geocode และ sync สถานะออเดอร์จากการ์ด)</div>
     </div>
 
     <details style="margin-bottom:var(--sp-3)">
@@ -2207,8 +2283,9 @@ function processCSVText(text){
         <div class="script-code-wrap" id="apps-script-code">function doPost(e){
   try{
     const d=JSON.parse(e.postData.contents);
+    const ss=d.sheetId?SpreadsheetApp.openById(d.sheetId):SpreadsheetApp.getActiveSpreadsheet();
+
     if(d.action==='appendGeoCache'){
-      const ss=SpreadsheetApp.getActiveSpreadsheet();
       let sh=ss.getSheetByName('GeoCache');
       if(!sh){
         sh=ss.insertSheet('GeoCache');
@@ -2227,6 +2304,29 @@ function processCSVText(text){
       });
       return ContentService.createTextOutput(JSON.stringify({ok:true,added:d.rows.length})).setMimeType(ContentService.MimeType.JSON);
     }
+
+    if(d.action==='updateOrderStatus'){
+      // หาแท็บที่ต้องการ: ระบุชื่อแท็บมา > ระบุ gid มา > แท็บแรกของสเปรดชีต
+      let sh=null;
+      if(d.sheetName)sh=ss.getSheetByName(d.sheetName);
+      if(!sh&&d.gid!=null){
+        sh=ss.getSheets().find(s=>String(s.getSheetId())===String(d.gid))||null;
+      }
+      if(!sh)sh=ss.getSheets()[0];
+
+      // คอลัมน์: A=สถานะ(1), C=เลขออเดอร์(3) — ตามโครงสร้างที่แอปใช้
+      const values=sh.getDataRange().getValues();
+      let updated=0;
+      for(let i=0;i<values.length;i++){
+        if(String(values[i][2]).trim()===String(d.orderId).trim()){
+          sh.getRange(i+1,1).setValue(d.status); // คอลัมน์ A
+          updated++;
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ok:true,updated})).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:'unknown action'})).setMimeType(ContentService.MimeType.JSON);
   }catch(err){
     return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message})).setMimeType(ContentService.MimeType.JSON);
   }
