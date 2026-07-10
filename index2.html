@@ -107,6 +107,16 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .filter-bar select,.filter-bar input[type=text],.filter-bar input[type=number]{border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-2);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;transition:border-color .15s;}
 .filter-bar select:focus,.filter-bar input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15);}
 #search-input{flex:1;min-width:150px;}
+.global-search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:2px solid var(--brand);border-radius:var(--r-full);padding:7px 14px;flex:1 1 280px;min-width:220px;box-shadow:0 1px 4px rgba(26,86,219,.12);transition:box-shadow .15s,border-color .15s;}
+.global-search-wrap:focus-within{box-shadow:0 0 0 4px rgba(26,86,219,.18);border-color:var(--brand-dk);}
+.global-search-icon{flex-shrink:0;color:var(--brand);}
+.global-search-wrap #search-input{flex:1;min-width:0;border:none!important;background:transparent!important;padding:2px 0!important;font-size:var(--text-md);box-shadow:none!important;color:var(--text);}
+.global-search-wrap #search-input:focus{box-shadow:none!important;}
+.global-search-wrap #search-input::placeholder{color:var(--muted);}
+.global-search-clear{cursor:pointer;color:var(--muted);flex-shrink:0;display:none;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;transition:background .15s,color .15s;}
+.global-search-clear.show{display:flex;}
+.global-search-clear:hover{background:var(--bg-page);color:var(--text);}
+@media(max-width:720px){.global-search-wrap{flex:1 1 100%;order:-1;}}
 #marker-input{min-width:180px;}
 #radius-input{width:64px;}
 .filter-btn{display:inline-flex;align-items:center;gap:4px;padding:6px var(--sp-3);border-radius:var(--r-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--gray-700);transition:background .15s;}
@@ -290,6 +300,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   .filter-bar{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);}
   .filter-bar label{display:none;}
   #search-input{min-width:0;width:100%;}
+  .global-search-wrap{width:100%;}
   #marker-input{min-width:0;width:100%;}
   .zone-cards-wrap{grid-template-columns:1fr;padding:var(--sp-2);}
   .order-card{padding:var(--sp-3);}
@@ -697,7 +708,13 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     </div>
 
     <label>ค้นหา:</label>
-    <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
+    <div class="global-search-wrap">
+      <svg class="global-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="ชื่อ / เบอร์ / เลขออเดอร์ / ที่อยู่ (ค้นทุกเขต)" oninput="applyFilter();toggleSearchClear();" autocomplete="off">
+      <span class="global-search-clear" id="global-search-clear" onclick="clearGlobalSearch()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </span>
+    </div>
     <label>📍 หมุด:</label>
     <input type="text" id="marker-input" placeholder="ที่อยู่ หรือ lat,lng">
     <label>รัศมี (กม.):</label>
@@ -1132,6 +1149,20 @@ function parseOrderDate(order_id){
   return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
 }
 
+function toggleSearchClear(){
+  const el=document.getElementById('search-input');
+  const clearBtn=document.getElementById('global-search-clear');
+  if(!el||!clearBtn)return;
+  clearBtn.classList.toggle('show',el.value.length>0);
+}
+function clearGlobalSearch(){
+  const el=document.getElementById('search-input');
+  if(!el)return;
+  el.value='';
+  toggleSearchClear();
+  applyFilter();
+  el.focus();
+}
 function applyFilterCore(){
   const sf=document.getElementById('status-filter').value;
   const q=document.getElementById('search-input').value.toLowerCase();
@@ -1139,7 +1170,7 @@ function applyFilterCore(){
     if(selectedZones.size>0&&!selectedZones.has(o.zone))return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
     if(calRangeStart&&o.order_date_key){if(o.order_date_key<calRangeStart||o.order_date_key>(calRangeEnd||calRangeStart))return false;}else if(calRangeStart&&!o.order_date_key)return false;
-    if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
+    if(q&&!`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase().includes(q))return false;
     return true;
   });
   const hidden=allOrders.length-filteredOrders.length;
@@ -1162,6 +1193,7 @@ function resetFilter(){
   geoMarker=null;
   allOrders.forEach(o=>o._distance=null);
   ['search-input','marker-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  toggleSearchClear();
   selectedZones.clear();buildZoneDropdown();updateZoneBtnLabel();
   document.getElementById('status-filter').value='';
   calRangeStart='';calRangeEnd='';calHover='';
