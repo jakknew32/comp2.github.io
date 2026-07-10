@@ -107,6 +107,16 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .filter-bar select,.filter-bar input[type=text],.filter-bar input[type=number]{border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-2);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;transition:border-color .15s;}
 .filter-bar select:focus,.filter-bar input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15);}
 #search-input{flex:1;min-width:150px;}
+.global-search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:2px solid var(--brand);border-radius:var(--r-full);padding:7px 14px;flex:1 1 280px;min-width:220px;box-shadow:0 1px 4px rgba(26,86,219,.12);transition:box-shadow .15s,border-color .15s;}
+.global-search-wrap:focus-within{box-shadow:0 0 0 4px rgba(26,86,219,.18);border-color:var(--brand-dk);}
+.global-search-icon{flex-shrink:0;color:var(--brand);}
+.global-search-wrap #search-input{flex:1;min-width:0;border:none!important;background:transparent!important;padding:2px 0!important;font-size:var(--text-md);box-shadow:none!important;color:var(--text);}
+.global-search-wrap #search-input:focus{box-shadow:none!important;}
+.global-search-wrap #search-input::placeholder{color:var(--muted);}
+.global-search-clear{cursor:pointer;color:var(--muted);flex-shrink:0;display:none;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;transition:background .15s,color .15s;}
+.global-search-clear.show{display:flex;}
+.global-search-clear:hover{background:var(--bg-page);color:var(--text);}
+@media(max-width:720px){.global-search-wrap{flex:1 1 100%;order:-1;}}
 #marker-input{min-width:180px;}
 #radius-input{width:64px;}
 .filter-btn{display:inline-flex;align-items:center;gap:4px;padding:6px var(--sp-3);border-radius:var(--r-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--gray-700);transition:background .15s;}
@@ -128,6 +138,10 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .zone-dd-item{display:flex;align-items:center;gap:var(--sp-2);padding:8px var(--sp-3);cursor:pointer;font-size:var(--text-sm);transition:background .1s;user-select:none;}
 .zone-dd-item:hover{background:var(--gray-100);}
 .zone-dd-item input[type=checkbox]{accent-color:var(--brand);width:14px;height:14px;cursor:pointer;}
+.zone-dd-group{background:var(--gray-50);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.zone-dd-group:first-child{border-top:none;}
+.zone-dd-group label{font-weight:700!important;}
+.zone-dd-subitem{padding-left:calc(var(--sp-3) + 18px);}
 .zone-dd-divider{border:none;border-top:1px solid var(--border);margin:2px 0;}
 .zone-dd-actions{display:flex;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-top:1px solid var(--border);}
 .zone-dd-action{font-size:var(--text-xs);color:var(--brand);cursor:pointer;font-weight:600;padding:2px 6px;border-radius:var(--r-sm);}
@@ -188,6 +202,11 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .card-qty{display:flex;align-items:center;gap:4px;font-size:var(--text-sm);font-weight:700;}
 .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:var(--sp-1);}
 .status-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);padding:4px 10px;border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;}
+.status-select{display:inline-flex;align-items:center;font-size:var(--text-xs);padding:4px 22px 4px 10px;border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;font-family:inherit;outline:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 6px center;background-size:11px;transition:opacity .15s;}
+.status-select.status-saving{opacity:.55;pointer-events:none;}
 .s-pending{background:#FEF3C7;color:#78350F;border:1.5px solid #FCD34D;}
 .s-delivered{background:#D1FAE5;color:#064E3B;border:1.5px solid #6EE7B7;}
 .s-problem{background:#FEE2E2;color:#7F1D1D;border:1.5px solid #FCA5A5;}
@@ -285,6 +304,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   .filter-bar{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);}
   .filter-bar label{display:none;}
   #search-input{min-width:0;width:100%;}
+  .global-search-wrap{width:100%;}
   #marker-input{min-width:0;width:100%;}
   .zone-cards-wrap{grid-template-columns:1fr;padding:var(--sp-2);}
   .order-card{padding:var(--sp-3);}
@@ -692,7 +712,13 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     </div>
 
     <label>ค้นหา:</label>
-    <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
+    <div class="global-search-wrap">
+      <svg class="global-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="ชื่อ / เบอร์ / เลขออเดอร์ / ที่อยู่ (ค้นทุกเขต)" oninput="applyFilter();toggleSearchClear();" autocomplete="off">
+      <span class="global-search-clear" id="global-search-clear" onclick="clearGlobalSearch()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </span>
+    </div>
     <label>📍 หมุด:</label>
     <input type="text" id="marker-input" placeholder="ที่อยู่ หรือ lat,lng">
     <label>รัศมี (กม.):</label>
@@ -734,6 +760,10 @@ const ZONE_LIST = [
   'นครปฐม','ชลบุรี','สมุทรปราการ','ต่างจังหวัด','อื่นๆ',
 ];
 const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11','z12','z13'];
+// ── กลุ่มโซน: ให้เลือก "ทั้งกลุ่ม" ได้ทีเดียว แต่ยังกรองแยกเขตย่อยได้ ──
+const ZONE_GROUPS = [
+  {label:'กรุงเทพฯ (รวมทุกเขต)', zones:['กรุงเทพเหนือ','กรุงเทพกลาง','กรุงเทพตะวันออก','กรุงเทพตะวันตก','กรุงเทพฝั่งธน']},
+];
 const ZONE_DONUT = [
   '#3B82F6','#EC4899','#10B981','#F97316','#A855F7',
   '#06B6D4','#EAB308','#6366F1','#84CC16','#0EA5E9',
@@ -921,30 +951,69 @@ let availableZones=[]; // zones that actually exist in data
 function buildZoneDropdown(){
   const list=document.getElementById('zone-dd-list');
   list.innerHTML='';
-  availableZones.forEach(zone=>{
+  const groupedZones=new Set();
+
+  function makeZoneRow(zone,isSub){
     const item=document.createElement('div');
-    item.className='zone-dd-item';
+    item.className='zone-dd-item'+(isSub?' zone-dd-subitem':'');
     const cb=document.createElement('input');
     cb.type='checkbox';
     cb.id='zdz_'+zone;
     cb.checked=selectedZones.has(zone);
     cb.onchange=()=>{
       if(cb.checked)selectedZones.add(zone);else selectedZones.delete(zone);
-      updateZoneBtnLabel();applyFilter();
+      buildZoneDropdown();updateZoneBtnLabel();applyFilter();
     };
     const lbl=document.createElement('label');
     lbl.htmlFor='zdz_'+zone;
     lbl.textContent=zone;
     lbl.style.cursor='pointer';lbl.style.flex='1';lbl.style.fontSize='var(--text-sm)';
     item.appendChild(cb);item.appendChild(lbl);
-    list.appendChild(item);
+    return item;
+  }
+
+  // 1) กลุ่มโซน (เช่น กรุงเทพฯ รวมทุกเขต) — เลือกทั้งกลุ่ม หรือแยกเขตย่อยได้
+  ZONE_GROUPS.forEach(group=>{
+    const memberZones=group.zones.filter(z=>availableZones.includes(z));
+    if(memberZones.length===0)return;
+    memberZones.forEach(z=>groupedZones.add(z));
+
+    const groupItem=document.createElement('div');
+    groupItem.className='zone-dd-item zone-dd-group';
+    const gcb=document.createElement('input');
+    gcb.type='checkbox';
+    gcb.id='zdz_group_'+group.label;
+    const selectedCount=memberZones.filter(z=>selectedZones.has(z)).length;
+    gcb.checked=selectedCount>0&&selectedCount===memberZones.length;
+    gcb.indeterminate=selectedCount>0&&selectedCount<memberZones.length;
+    gcb.onchange=()=>{
+      if(gcb.checked)memberZones.forEach(z=>selectedZones.add(z));
+      else memberZones.forEach(z=>selectedZones.delete(z));
+      buildZoneDropdown();updateZoneBtnLabel();applyFilter();
+    };
+    const glbl=document.createElement('label');
+    glbl.htmlFor=gcb.id;
+    glbl.textContent=group.label;
+    glbl.style.cursor='pointer';glbl.style.flex='1';glbl.style.fontSize='var(--text-sm)';
+    groupItem.appendChild(gcb);groupItem.appendChild(glbl);
+    list.appendChild(groupItem);
+
+    memberZones.forEach(zone=>list.appendChild(makeZoneRow(zone,true)));
   });
+
+  // 2) โซนที่เหลือ (ไม่อยู่ในกลุ่มไหน) — แสดงแบบปกติเหมือนเดิม
+  availableZones.filter(z=>!groupedZones.has(z)).forEach(zone=>list.appendChild(makeZoneRow(zone,false)));
 }
 function updateZoneBtnLabel(){
   const btn=document.getElementById('zone-btn-label');
-  if(selectedZones.size===0)btn.textContent='ทั้งหมด';
-  else if(selectedZones.size===1)btn.textContent=[...selectedZones][0];
-  else btn.textContent=`${selectedZones.size} โซน`;
+  if(selectedZones.size===0){btn.textContent='ทั้งหมด';return;}
+  if(selectedZones.size===1){btn.textContent=[...selectedZones][0];return;}
+  // ถ้าที่เลือกไว้ตรงกับกลุ่มโซนพอดี (เช่น กรุงเทพฯ ทุกเขต) ให้โชว์ชื่อกลุ่มแทนตัวเลข
+  const matchedGroup=ZONE_GROUPS.find(g=>{
+    const mz=g.zones.filter(z=>availableZones.includes(z));
+    return mz.length===selectedZones.size&&mz.every(z=>selectedZones.has(z));
+  });
+  btn.textContent=matchedGroup?matchedGroup.label:`${selectedZones.size} โซน`;
 }
 function toggleZoneDropdown(){
   const dd=document.getElementById('zone-dropdown');
@@ -1127,6 +1196,20 @@ function parseOrderDate(order_id){
   return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
 }
 
+function toggleSearchClear(){
+  const el=document.getElementById('search-input');
+  const clearBtn=document.getElementById('global-search-clear');
+  if(!el||!clearBtn)return;
+  clearBtn.classList.toggle('show',el.value.length>0);
+}
+function clearGlobalSearch(){
+  const el=document.getElementById('search-input');
+  if(!el)return;
+  el.value='';
+  toggleSearchClear();
+  applyFilter();
+  el.focus();
+}
 function applyFilterCore(){
   const sf=document.getElementById('status-filter').value;
   const q=document.getElementById('search-input').value.toLowerCase();
@@ -1134,7 +1217,7 @@ function applyFilterCore(){
     if(selectedZones.size>0&&!selectedZones.has(o.zone))return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
     if(calRangeStart&&o.order_date_key){if(o.order_date_key<calRangeStart||o.order_date_key>(calRangeEnd||calRangeStart))return false;}else if(calRangeStart&&!o.order_date_key)return false;
-    if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
+    if(q&&!`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase().includes(q))return false;
     return true;
   });
   const hidden=allOrders.length-filteredOrders.length;
@@ -1157,6 +1240,7 @@ function resetFilter(){
   geoMarker=null;
   allOrders.forEach(o=>o._distance=null);
   ['search-input','marker-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  toggleSearchClear();
   selectedZones.clear();buildZoneDropdown();updateZoneBtnLabel();
   document.getElementById('status-filter').value='';
   calRangeStart='';calRangeEnd='';calHover='';
@@ -1243,6 +1327,61 @@ function statusBadge(s){
   if(c==='delivered')return`<span class="status-badge s-delivered">✅ ส่งแล้ว</span>`;
   if(c==='problem')return`<span class="status-badge s-problem">❌ ยกเลิก</span>`;
   return'';
+}
+
+// ── สถานะแบบแก้ไขได้ในการ์ด (คลิกเปลี่ยน แล้ว sync กลับ Google Sheets ผ่าน Apps Script) ──
+function statusSelectHtml(o){
+  const c=classifyStatus(o.status);
+  const oidAttr=String(o.order_id).replace(/"/g,'&quot;');
+  return`<select class="status-select s-${c}" data-oid="${oidAttr}" onclick="event.stopPropagation()" onchange="updateOrderStatus(this)">
+    <option value="ค้างส่ง"${c==='pending'?' selected':''}>🟡 ค้างส่ง</option>
+    <option value="ส่งแล้ว"${c==='delivered'?' selected':''}>✅ ส่งแล้ว</option>
+    <option value="ยกเลิก"${c==='problem'?' selected':''}>❌ ยกเลิก</option>
+  </select>`;
+}
+
+// เก็บ reference ของ Sheet/แท็บที่กำลังใช้งานอยู่ตอนนี้ (ตั้งค่าตอนโหลดข้อมูลสำเร็จ)
+let currentSheetRef={sheetId:null,gid:null,sheetName:null};
+
+async function updateOrderStatus(selectEl){
+  const oid=selectEl.dataset.oid;
+  const newStatus=selectEl.value;
+  const order=allOrders.find(o=>String(o.order_id)===oid);
+  if(!order)return;
+
+  // อัปเดตหน้าจอทันที (optimistic UI)
+  order.status=newStatus;
+  const c=classifyStatus(newStatus);
+  selectEl.className=`status-select s-${c} status-saving`;
+  const card=selectEl.closest('.order-card');
+  if(card){
+    card.classList.remove('is-problem','is-pending','is-delivered');
+    if(c==='problem')card.classList.add('is-problem');
+    else if(c==='pending')card.classList.add('is-pending');
+    else if(c==='delivered')card.classList.add('is-delivered');
+  }
+
+  if(!geoScriptUrl||!currentSheetRef.sheetId){
+    selectEl.classList.remove('status-saving');
+    alert('ยังไม่ได้ตั้งค่า Apps Script URL สำหรับ sync กลับ Sheets\nตั้งค่าได้ที่ปุ่ม ⚙️ (ตั้งค่า Geocode/Sheets)\n\nตอนนี้เปลี่ยนสถานะแบบชั่วคราวในแอปแล้ว แต่ยังไม่ได้บันทึกกลับ Sheet');
+    return;
+  }
+  try{
+    await fetch(geoScriptUrl,{
+      method:'POST',
+      mode:'no-cors', // Apps Script ไม่ต้อง CORS preflight, อ่าน response ไม่ได้
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'updateOrderStatus',
+        sheetId:currentSheetRef.sheetId,
+        gid:currentSheetRef.gid,
+        sheetName:currentSheetRef.sheetName,
+        orderId:oid,
+        status:newStatus
+      })
+    });
+  }catch(e){/* ignore — no-cors ไม่รู้ผลลัพธ์อยู่แล้ว */}
+  setTimeout(()=>selectEl.classList.remove('status-saving'),700);
 }
 
 function filterZoneCards(zoneId, inputEl) {
@@ -1397,7 +1536,7 @@ function renderResults(){
           return`<div class="order-card ${cardCls}" data-search="${searchData.replace(/"/g,'&quot;')}">
             <div class="card-top">
               <div><div class="card-order-id">🧾 ${o.order_id}${o.order_date?` &nbsp;·&nbsp; 📅 ${o.order_date}`:''}</div><div class="card-name">👤 ${o.customer}</div></div>
-              ${statusBadge(o.status)}
+              ${statusSelectHtml(o)}
             </div>
             <div class="card-row"><span class="card-icon">📞</span><span>${o.phone}</span></div>
             <div class="card-row"><span class="card-icon">📍</span><span>${o.address}${o.zipcode?` <span style="color:var(--muted);font-size:var(--text-xs)">${o.zipcode}</span>`:''} ${o.district}</span></div>
@@ -1477,11 +1616,24 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 
+// ── แปลงเลข scientific notation (เช่น "5.84898509704235E+17") กลับเป็นเลขเต็มรูปแบบ
+// หมายเหตุ: ถ้าคอลัมน์ในชีตเป็น Number แล้วเลขเกิน ~15-17 หลัก ความแม่นยำอาจสูญเสียไปแล้วตั้งแต่ในชีต
+// ฟังก์ชันนี้ช่วยได้แค่ระดับ "โชว์เลขเต็ม แทนที่จะโชว์ E+17" ไม่ได้กู้คืนหลักที่หายไปจริงๆ
+function expandSciNotation(raw){
+  const str=String(raw==null?'':raw).trim();
+  const m=str.match(/^(-?)(\d+)(?:\.(\d+))?[eE]\+?(\d+)$/);
+  if(!m)return str;
+  const sign=m[1],intPart=m[2],fracPart=m[3]||'',exp=parseInt(m[4],10);
+  let digits=intPart+fracPart;
+  const pointPos=intPart.length+exp;
+  while(digits.length<pointPos)digits+='0';
+  return sign+digits.slice(0,pointPos);
+}
 function buildOrdersFromRows(data){
   const orders=[],seen={};
   for(let i=0;i<data.length;i++){
     const row=data[i];
-    const orderNum=row[2];if(!orderNum||!String(orderNum).trim())continue;
+    const orderNum=expandSciNotation(row[2]);if(!orderNum||!String(orderNum).trim())continue;
     if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain'))continue;
     // ── สถานะมาจากคอลัมน์ A (index 0) ──
     const statusRaw=row[0];
@@ -1567,6 +1719,13 @@ function buildOrdersFromRows(data){
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.83"/></svg>
         โหลดข้อมูล
       </button>
+    </div>
+    <div style="border-top:1px solid var(--border,#e5e7eb);margin-top:14px;padding-top:12px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⚡ โหลดด่วนจากแท็บ (ใช้ลิงก์ Sheet ด้านบน แค่สลับแท็บ)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="filter-btn" onclick="loadFromSheetsByName('SCG',this)">SCG</button>
+        <button class="filter-btn" onclick="loadFromSheetsByName('ระยอง',this)">ระยอง</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2096,6 +2255,7 @@ async function loadFromSheets(){
     if(!text||text.trim().length===0) throw new Error('ไม่พบข้อมูลใน Sheet');
     if(text.trim().startsWith('<')) throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
     closeModal();btn.innerHTML=origText;btn.disabled=false;
+    currentSheetRef={sheetId,gid,sheetName:null};
     processCSVText(text);return;
   }catch(e){
     // fallback: export CSV ตรง
@@ -2106,11 +2266,39 @@ async function loadFromSheets(){
       const text2=await res2.text();
       if(!text2||text2.trim().startsWith('<')) throw new Error('ได้รับ HTML แทน CSV');
       closeModal();btn.innerHTML=origText;btn.disabled=false;
+      currentSheetRef={sheetId,gid,sheetName:null};
       processCSVText(text2);return;
     }catch(e2){
       errEl.textContent=`โหลดไม่สำเร็จ: ${e2.message} — ตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
       errEl.style.display='block';btn.innerHTML=origText;btn.disabled=false;
     }
+  }
+}
+
+// ── โหลดด่วนจากแท็บ (sheet tab) ตามชื่อ เช่น "SCG", "ระยอง" ──
+async function loadFromSheetsByName(sheetName,btnEl){
+  const url=document.getElementById('sheets-url').value.trim();
+  const errEl=document.getElementById('sheets-error');errEl.style.display='none';
+  const sheetId=extractSheetId(url);
+  if(!sheetId){errEl.textContent='กรุณาวางลิงก์ Google Sheets ในช่องด้านบนก่อน';errEl.style.display='block';return;}
+  const origText=btnEl?btnEl.innerHTML:'';
+  if(btnEl){btnEl.innerHTML='<span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:4px"></span>กำลังโหลด...';btnEl.disabled=true;}
+
+  const tqUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  try{
+    const res=await fetch(tqUrl);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text=await res.text();
+    if(!text||text.trim().length===0) throw new Error(`ไม่พบข้อมูลในแท็บ "${sheetName}"`);
+    if(text.trim().startsWith('<')) throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
+    closeModal();
+    if(btnEl){btnEl.innerHTML=origText;btnEl.disabled=false;}
+    currentSheetRef={sheetId,gid:null,sheetName};
+    processCSVText(text);
+  }catch(e){
+    errEl.textContent=`โหลดแท็บ "${sheetName}" ไม่สำเร็จ: ${e.message} — ตรวจสอบว่ามีแท็บชื่อนี้จริง และแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
+    errEl.style.display='block';
+    if(btnEl){btnEl.innerHTML=origText;btnEl.disabled=false;}
   }
 }
 
@@ -2164,7 +2352,7 @@ function processCSVText(text){
     <div class="geo-settings-row">
       <div class="geo-settings-label">Apps Script Web App URL (สำหรับเขียนข้อมูล)</div>
       <input type="text" id="geo-script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
-      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App</div>
+      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App (ใช้ทั้ง sync geocode และ sync สถานะออเดอร์จากการ์ด)</div>
     </div>
 
     <details style="margin-bottom:var(--sp-3)">
@@ -2174,8 +2362,9 @@ function processCSVText(text){
         <div class="script-code-wrap" id="apps-script-code">function doPost(e){
   try{
     const d=JSON.parse(e.postData.contents);
+    const ss=d.sheetId?SpreadsheetApp.openById(d.sheetId):SpreadsheetApp.getActiveSpreadsheet();
+
     if(d.action==='appendGeoCache'){
-      const ss=SpreadsheetApp.getActiveSpreadsheet();
       let sh=ss.getSheetByName('GeoCache');
       if(!sh){
         sh=ss.insertSheet('GeoCache');
@@ -2194,6 +2383,29 @@ function processCSVText(text){
       });
       return ContentService.createTextOutput(JSON.stringify({ok:true,added:d.rows.length})).setMimeType(ContentService.MimeType.JSON);
     }
+
+    if(d.action==='updateOrderStatus'){
+      // หาแท็บที่ต้องการ: ระบุชื่อแท็บมา > ระบุ gid มา > แท็บแรกของสเปรดชีต
+      let sh=null;
+      if(d.sheetName)sh=ss.getSheetByName(d.sheetName);
+      if(!sh&&d.gid!=null){
+        sh=ss.getSheets().find(s=>String(s.getSheetId())===String(d.gid))||null;
+      }
+      if(!sh)sh=ss.getSheets()[0];
+
+      // คอลัมน์: A=สถานะ(1), C=เลขออเดอร์(3) — ตามโครงสร้างที่แอปใช้
+      const values=sh.getDataRange().getValues();
+      let updated=0;
+      for(let i=0;i<values.length;i++){
+        if(String(values[i][2]).trim()===String(d.orderId).trim()){
+          sh.getRange(i+1,1).setValue(d.status); // คอลัมน์ A
+          updated++;
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ok:true,updated})).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:'unknown action'})).setMimeType(ContentService.MimeType.JSON);
   }catch(err){
     return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message})).setMimeType(ContentService.MimeType.JSON);
   }
