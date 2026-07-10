@@ -1038,17 +1038,6 @@ let orderDateSet=new Set();
 // Range selection state
 let calRangeStart='', calRangeEnd='', calHover='';
 
-function calKeyToDate(key){ // YYMMDD buddhist → JS Date
-  if(!key)return null;
-  const yy=+key.slice(0,2),mm=+key.slice(2,4),dd=+key.slice(4,6);
-  return new Date(2500+yy-543, mm-1, dd);
-}
-function dateToCalKey(d){ // JS Date → YYMMDD buddhist
-  const yy=String(d.getFullYear()+543-2500).padStart(2,'0');
-  const mm=String(d.getMonth()+1).padStart(2,'0');
-  const dd=String(d.getDate()).padStart(2,'0');
-  return yy+mm+dd;
-}
 function calKeyLabel(key){
   if(!key)return'';
   const yy=+key.slice(0,2),mm=+key.slice(2,4),dd=+key.slice(4,6);
@@ -1188,13 +1177,6 @@ function orderDateKey(raw){
   const dd=String(d.getDate()).padStart(2,'0');
   return`${yy}${mm}${dd}`;
 }
-function parseOrderDate(order_id){
-  const m=String(order_id).match(/^(\d{2})(\d{2})(\d{2})/);
-  if(!m)return null;
-  const yy=+m[1],mm=+m[2],dd=+m[3];
-  const buddhistYear=2500+yy;
-  return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
-}
 
 function toggleSearchClear(){
   const el=document.getElementById('search-input');
@@ -1319,14 +1301,6 @@ function quickFilterZone(zone){
   buildZoneDropdown();updateZoneBtnLabel();
   applyFilter();
   document.getElementById('filter-bar').scrollIntoView({behavior:'smooth'});
-}
-
-function statusBadge(s){
-  const c=classifyStatus(s);
-  if(c==='pending')return`<span class="status-badge s-pending">🟡 ค้างส่ง</span>`;
-  if(c==='delivered')return`<span class="status-badge s-delivered">✅ ส่งแล้ว</span>`;
-  if(c==='problem')return`<span class="status-badge s-problem">❌ ยกเลิก</span>`;
-  return'';
 }
 
 // ── สถานะแบบแก้ไขได้ในการ์ด (คลิกเปลี่ยน แล้ว sync กลับ Google Sheets ผ่าน Apps Script) ──
@@ -1796,7 +1770,7 @@ async function plotMapMarkers(){
     bar.classList.add('show');
     let done=0;
     for(const o of noGeo){
-      await ensureGeocodedPatched(o);
+      await ensureGeocoded(o);
       if(o.lat&&o.lon) addMarker(o);
       done++;
       txt.textContent=`geocode ${done}/${noGeo.length} ที่อยู่...`;
@@ -2214,19 +2188,9 @@ function copyScriptCode(){
 
 // sync cache ขึ้น Sheets อัตโนมัติหลัง geocode เสร็จ (debounce 3 วิ)
 let syncTimer=null;
-const origSaveCache=saveCacheLocal;
 function scheduleSync(){
   clearTimeout(syncTimer);
   syncTimer=setTimeout(()=>syncNewCacheToSheets(),3000);
-}
-
-// patch geocodeNominatim ให้เรียก scheduleSync หลัง geocode ใหม่
-const _origGeocode=geocodeNominatim;
-// (ใช้ geoCacheDirty.add แล้ว → scheduleSync ใน ensureGeocoded)
-const _origEnsure=ensureGeocoded;
-async function ensureGeocodedPatched(o){
-  await _origEnsure(o);
-  if(o.lat&&o.lon) scheduleSync();
 }
 
 function showSheetsDialog(){document.getElementById('sheets-modal').classList.add('show');document.getElementById('sheets-error').style.display='none';setTimeout(()=>document.getElementById('sheets-url').focus(),100);}
