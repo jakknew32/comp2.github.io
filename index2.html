@@ -1097,7 +1097,7 @@ function parseOrderDate(order_id){
   return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
 }
 
-function applyFilter(){
+function _baseApplyFilter(){
   const sf=document.getElementById('status-filter').value;
   const q=document.getElementById('search-input').value.toLowerCase();
   filteredOrders=allOrders.filter(o=>{
@@ -1657,9 +1657,8 @@ function addMarker(o){
 }
 
 // re-plot เมื่อ filter เปลี่ยน (ถ้าอยู่หน้า map)
-const _origApplyFilter=applyFilter;
 function applyFilter(){
-  _origApplyFilter();
+  _baseApplyFilter();
   const mapPage=document.getElementById('page-map');
   if(mapPage&&mapPage.classList.contains('active')) plotMapMarkers();
 }
