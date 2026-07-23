@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFM Zone Classifier — Chiangmai Freshmilk</title>
+<title>CFM Zone Classifier — Chiangmai Freshmilk V.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -69,6 +69,17 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 
 .main{max-width:1280px;margin:0 auto;padding:var(--sp-6) var(--sp-4);}
 
+/* ── ORDER AGENTS ── */
+.agent-page{display:grid;gap:var(--sp-4);}
+.agent-intro{background:var(--brand-lt);border:1px solid var(--brand-mid);border-radius:var(--r-lg);padding:var(--sp-4);color:var(--brand-dk);}
+.agent-intro h2{font-size:var(--text-xl);margin-bottom:4px;}.agent-intro p{font-size:var(--text-sm);}
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--sp-3);}
+.agent-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:var(--sp-4);display:grid;gap:var(--sp-2);}
+.agent-card.active-agent{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-mid);}.agent-card.problem-agent{border-left:4px solid var(--danger);}
+.agent-card-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);font-weight:700;}.agent-card p{font-size:var(--text-sm);color:var(--muted);}
+.agent-count{font-size:var(--text-2xl);font-weight:700;color:var(--brand);}.agent-handoff{font-size:var(--text-xs);color:var(--muted);padding-top:var(--sp-2);border-top:1px solid var(--border);}
+.agent-queue{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;}.agent-queue h3{font-size:var(--text-md);padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border);}.agent-queue-item{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border);font-size:var(--text-sm);}.agent-queue-item:last-child{border-bottom:0;}.agent-queue-item small{color:var(--muted);display:block;}
+
 #upload-zone{background:var(--bg-card);border:2px dashed var(--border);border-radius:var(--r-xl);padding:48px var(--sp-6);text-align:center;cursor:pointer;transition:border-color .2s,background .2s;box-shadow:var(--shadow-sm);}
 #upload-zone:hover,#upload-zone.drag-over{border-color:var(--brand);background:var(--brand-lt);}
 #upload-zone svg{width:48px;height:48px;color:var(--gray-300);margin-bottom:var(--sp-3);}
@@ -107,6 +118,16 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .filter-bar select,.filter-bar input[type=text],.filter-bar input[type=number]{border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-2);font-size:var(--text-sm);color:var(--text);background:var(--bg-card);outline:none;transition:border-color .15s;}
 .filter-bar select:focus,.filter-bar input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,86,219,.15);}
 #search-input{flex:1;min-width:150px;}
+.global-search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:2px solid var(--brand);border-radius:var(--r-full);padding:7px 14px;flex:1 1 280px;min-width:220px;box-shadow:0 1px 4px rgba(26,86,219,.12);transition:box-shadow .15s,border-color .15s;}
+.global-search-wrap:focus-within{box-shadow:0 0 0 4px rgba(26,86,219,.18);border-color:var(--brand-dk);}
+.global-search-icon{flex-shrink:0;color:var(--brand);}
+.global-search-wrap #search-input{flex:1;min-width:0;border:none!important;background:transparent!important;padding:2px 0!important;font-size:var(--text-md);box-shadow:none!important;color:var(--text);}
+.global-search-wrap #search-input:focus{box-shadow:none!important;}
+.global-search-wrap #search-input::placeholder{color:var(--muted);}
+.global-search-clear{cursor:pointer;color:var(--muted);flex-shrink:0;display:none;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;transition:background .15s,color .15s;}
+.global-search-clear.show{display:flex;}
+.global-search-clear:hover{background:var(--bg-page);color:var(--text);}
+@media(max-width:720px){.global-search-wrap{flex:1 1 100%;order:-1;}}
 #marker-input{min-width:180px;}
 #radius-input{width:64px;}
 .filter-btn{display:inline-flex;align-items:center;gap:4px;padding:6px var(--sp-3);border-radius:var(--r-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--gray-700);transition:background .15s;}
@@ -128,6 +149,10 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .zone-dd-item{display:flex;align-items:center;gap:var(--sp-2);padding:8px var(--sp-3);cursor:pointer;font-size:var(--text-sm);transition:background .1s;user-select:none;}
 .zone-dd-item:hover{background:var(--gray-100);}
 .zone-dd-item input[type=checkbox]{accent-color:var(--brand);width:14px;height:14px;cursor:pointer;}
+.zone-dd-group{background:var(--gray-50);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.zone-dd-group:first-child{border-top:none;}
+.zone-dd-group label{font-weight:700!important;}
+.zone-dd-subitem{padding-left:calc(var(--sp-3) + 18px);}
 .zone-dd-divider{border:none;border-top:1px solid var(--border);margin:2px 0;}
 .zone-dd-actions{display:flex;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-top:1px solid var(--border);}
 .zone-dd-action{font-size:var(--text-xs);color:var(--brand);cursor:pointer;font-weight:600;padding:2px 6px;border-radius:var(--r-sm);}
@@ -188,6 +213,11 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .card-qty{display:flex;align-items:center;gap:4px;font-size:var(--text-sm);font-weight:700;}
 .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:var(--sp-1);}
 .status-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);padding:4px 10px;border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;}
+.status-select{display:inline-flex;align-items:center;font-size:var(--text-xs);padding:4px 22px 4px 10px;border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;font-family:inherit;outline:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 6px center;background-size:11px;transition:opacity .15s;}
+.status-select.status-saving{opacity:.55;pointer-events:none;}
 .s-pending{background:#FEF3C7;color:#78350F;border:1.5px solid #FCD34D;}
 .s-delivered{background:#D1FAE5;color:#064E3B;border:1.5px solid #6EE7B7;}
 .s-problem{background:#FEE2E2;color:#7F1D1D;border:1.5px solid #FCA5A5;}
@@ -285,6 +315,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   .filter-bar{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);}
   .filter-bar label{display:none;}
   #search-input{min-width:0;width:100%;}
+  .global-search-wrap{width:100%;}
   #marker-input{min-width:0;width:100%;}
   .zone-cards-wrap{grid-template-columns:1fr;padding:var(--sp-2);}
   .order-card{padding:var(--sp-3);}
@@ -421,6 +452,21 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .status-donut-row{display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-2) 0;}
 .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .db-empty{text-align:center;padding:48px;color:var(--muted);font-size:var(--text-md);}
+.zs-table{width:100%;border-collapse:collapse;font-size:var(--text-sm);}
+.zs-table th{text-align:left;padding:var(--sp-2) var(--sp-4);color:var(--muted);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);}
+.zs-table td{padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--border);vertical-align:middle;}
+.zs-table tr:last-child td{border-bottom:none;}
+.zs-table tr.zs-row-hot{background:var(--danger-lt);}
+@media (prefers-color-scheme:dark){.zs-table tr.zs-row-hot{background:rgba(220,38,38,.15);}}
+.zs-zone-name{font-weight:700;color:var(--text);}
+.zs-num{font-weight:700;text-align:right;min-width:32px;}
+.zs-bar-wrap{display:flex;height:8px;border-radius:var(--r-full);overflow:hidden;background:var(--gray-100);min-width:90px;}
+.zs-bar-seg{height:8px;}
+.zs-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:var(--r-full);font-size:var(--text-xs);font-weight:700;white-space:nowrap;}
+.zs-badge-ok{background:var(--success-lt);color:var(--success-dk);}
+.zs-badge-warn{background:#FEF3C7;color:#92400E;}
+.zs-badge-danger{background:var(--danger-lt);color:var(--danger);}
+@media(max-width:720px){.zs-table th:nth-child(2),.zs-table td:nth-child(2),.zs-table th:nth-child(6),.zs-table td:nth-child(6){display:none;}}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
@@ -465,8 +511,11 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
     แผนที่
   </button>
+  <button class="topbar-tab" id="tab-agents" onclick="switchPage('agents')" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="10" r="2"/><path d="M3 21a6 6 0 0 1 12 0"/><path d="M15 16a5 5 0 0 1 6 5"/></svg>
+    Agents
+  </button>
   <div class="topbar-spacer"></div>
-  <button class="topbar-btn" onclick="loadFromN8N()">🔄 รีเฟรชข้อมูล</button>
   <button class="topbar-btn btn-ghost no-print" onclick="showGeoSettings()" id="btn-geo-settings" title="ตั้งค่า Geocache">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M14.83 9.17a4 4 0 0 1 0 5.66M9.17 9.17a4 4 0 0 0 0 5.66"/></svg>
     Geocache
@@ -486,6 +535,14 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 </div>
 
 <div class="main">
+  <!-- AGENTS PAGE -->
+  <div id="page-agents" class="page">
+    <div class="agent-page">
+      <div class="agent-intro"><h2>ศูนย์ควบคุมเอเจนต์จัดส่ง</h2><p>เอเจนต์แบ่งงานตามสถานะออเดอร์ และส่งต่อกรณีผิดปกติให้ทีมจัดการ</p></div>
+      <div class="agent-grid" id="agent-grid"></div>
+      <section class="agent-queue"><h3>รายการที่ต้องจัดการก่อน</h3><div id="agent-exception-list"></div></section>
+    </div>
+  </div>
   <!-- DASHBOARD PAGE -->
   <div id="page-dashboard-page" class="page">
     <div class="db-page">
@@ -522,6 +579,22 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
               สถานะออเดอร์
             </div>
             <div class="db-card-body" id="db-status"></div>
+          </div>
+        </div>
+        <div class="db-row" style="grid-template-columns:1fr">
+          <div class="db-card">
+            <div class="db-card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              โซน × สถานะ — เรียงตามความเร่งด่วน
+            </div>
+            <div class="db-card-body" style="padding:0;overflow-x:auto">
+              <table class="zs-table">
+                <thead><tr>
+                  <th>โซน</th><th>ทั้งหมด</th><th>ส่งแล้ว</th><th>ค้างส่ง</th><th>ยกเลิก</th><th>สัดส่วน</th><th></th>
+                </tr></thead>
+                <tbody id="db-zone-status-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -662,7 +735,13 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     </div>
 
     <label>ค้นหา:</label>
-    <input type="text" id="search-input" placeholder="ชื่อ / เลขออเดอร์ / ที่อยู่" oninput="applyFilter()">
+    <div class="global-search-wrap">
+      <svg class="global-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="ชื่อ / เบอร์ / เลขออเดอร์ / ที่อยู่ (ค้นทุกเขต)" oninput="applyFilter();toggleSearchClear();" autocomplete="off">
+      <span class="global-search-clear" id="global-search-clear" onclick="clearGlobalSearch()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </span>
+    </div>
     <label>📍 หมุด:</label>
     <input type="text" id="marker-input" placeholder="ที่อยู่ หรือ lat,lng">
     <label>รัศมี (กม.):</label>
@@ -694,6 +773,10 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="9" rx="1"/><rect x="2" y="14" width="9" height="9" rx="1"/><rect x="13" y="14" width="9" height="9" rx="1"/></svg>
     ภาพรวม
   </button>
+  <button class="mobile-nav-btn" id="mob-tab-agents" onclick="switchPage('agents')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="10" r="2"/><path d="M3 21a6 6 0 0 1 12 0"/></svg>
+    <span>Agents</span>
+  </button>
 </nav>
 
 <script>
@@ -704,6 +787,10 @@ const ZONE_LIST = [
   'นครปฐม','ชลบุรี','สมุทรปราการ','ต่างจังหวัด','อื่นๆ',
 ];
 const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11','z12','z13'];
+// ── กลุ่มโซน: ให้เลือก "ทั้งกลุ่ม" ได้ทีเดียว แต่ยังกรองแยกเขตย่อยได้ ──
+const ZONE_GROUPS = [
+  {label:'กรุงเทพฯ (รวมทุกเขต)', zones:['กรุงเทพเหนือ','กรุงเทพกลาง','กรุงเทพตะวันออก','กรุงเทพตะวันตก','กรุงเทพฝั่งธน']},
+];
 const ZONE_DONUT = [
   '#3B82F6','#EC4899','#10B981','#F97316','#A855F7',
   '#06B6D4','#EAB308','#6366F1','#84CC16','#0EA5E9',
@@ -891,30 +978,69 @@ let availableZones=[]; // zones that actually exist in data
 function buildZoneDropdown(){
   const list=document.getElementById('zone-dd-list');
   list.innerHTML='';
-  availableZones.forEach(zone=>{
+  const groupedZones=new Set();
+
+  function makeZoneRow(zone,isSub){
     const item=document.createElement('div');
-    item.className='zone-dd-item';
+    item.className='zone-dd-item'+(isSub?' zone-dd-subitem':'');
     const cb=document.createElement('input');
     cb.type='checkbox';
     cb.id='zdz_'+zone;
     cb.checked=selectedZones.has(zone);
     cb.onchange=()=>{
       if(cb.checked)selectedZones.add(zone);else selectedZones.delete(zone);
-      updateZoneBtnLabel();applyFilter();
+      buildZoneDropdown();updateZoneBtnLabel();applyFilter();
     };
     const lbl=document.createElement('label');
     lbl.htmlFor='zdz_'+zone;
     lbl.textContent=zone;
     lbl.style.cursor='pointer';lbl.style.flex='1';lbl.style.fontSize='var(--text-sm)';
     item.appendChild(cb);item.appendChild(lbl);
-    list.appendChild(item);
+    return item;
+  }
+
+  // 1) กลุ่มโซน (เช่น กรุงเทพฯ รวมทุกเขต) — เลือกทั้งกลุ่ม หรือแยกเขตย่อยได้
+  ZONE_GROUPS.forEach(group=>{
+    const memberZones=group.zones.filter(z=>availableZones.includes(z));
+    if(memberZones.length===0)return;
+    memberZones.forEach(z=>groupedZones.add(z));
+
+    const groupItem=document.createElement('div');
+    groupItem.className='zone-dd-item zone-dd-group';
+    const gcb=document.createElement('input');
+    gcb.type='checkbox';
+    gcb.id='zdz_group_'+group.label;
+    const selectedCount=memberZones.filter(z=>selectedZones.has(z)).length;
+    gcb.checked=selectedCount>0&&selectedCount===memberZones.length;
+    gcb.indeterminate=selectedCount>0&&selectedCount<memberZones.length;
+    gcb.onchange=()=>{
+      if(gcb.checked)memberZones.forEach(z=>selectedZones.add(z));
+      else memberZones.forEach(z=>selectedZones.delete(z));
+      buildZoneDropdown();updateZoneBtnLabel();applyFilter();
+    };
+    const glbl=document.createElement('label');
+    glbl.htmlFor=gcb.id;
+    glbl.textContent=group.label;
+    glbl.style.cursor='pointer';glbl.style.flex='1';glbl.style.fontSize='var(--text-sm)';
+    groupItem.appendChild(gcb);groupItem.appendChild(glbl);
+    list.appendChild(groupItem);
+
+    memberZones.forEach(zone=>list.appendChild(makeZoneRow(zone,true)));
   });
+
+  // 2) โซนที่เหลือ (ไม่อยู่ในกลุ่มไหน) — แสดงแบบปกติเหมือนเดิม
+  availableZones.filter(z=>!groupedZones.has(z)).forEach(zone=>list.appendChild(makeZoneRow(zone,false)));
 }
 function updateZoneBtnLabel(){
   const btn=document.getElementById('zone-btn-label');
-  if(selectedZones.size===0)btn.textContent='ทั้งหมด';
-  else if(selectedZones.size===1)btn.textContent=[...selectedZones][0];
-  else btn.textContent=`${selectedZones.size} โซน`;
+  if(selectedZones.size===0){btn.textContent='ทั้งหมด';return;}
+  if(selectedZones.size===1){btn.textContent=[...selectedZones][0];return;}
+  // ถ้าที่เลือกไว้ตรงกับกลุ่มโซนพอดี (เช่น กรุงเทพฯ ทุกเขต) ให้โชว์ชื่อกลุ่มแทนตัวเลข
+  const matchedGroup=ZONE_GROUPS.find(g=>{
+    const mz=g.zones.filter(z=>availableZones.includes(z));
+    return mz.length===selectedZones.size&&mz.every(z=>selectedZones.has(z));
+  });
+  btn.textContent=matchedGroup?matchedGroup.label:`${selectedZones.size} โซน`;
 }
 function toggleZoneDropdown(){
   const dd=document.getElementById('zone-dropdown');
@@ -1097,14 +1223,28 @@ function parseOrderDate(order_id){
   return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
 }
 
-function _baseApplyFilter(){
+function toggleSearchClear(){
+  const el=document.getElementById('search-input');
+  const clearBtn=document.getElementById('global-search-clear');
+  if(!el||!clearBtn)return;
+  clearBtn.classList.toggle('show',el.value.length>0);
+}
+function clearGlobalSearch(){
+  const el=document.getElementById('search-input');
+  if(!el)return;
+  el.value='';
+  toggleSearchClear();
+  applyFilter();
+  el.focus();
+}
+function applyFilterCore(){
   const sf=document.getElementById('status-filter').value;
   const q=document.getElementById('search-input').value.toLowerCase();
   filteredOrders=allOrders.filter(o=>{
     if(selectedZones.size>0&&!selectedZones.has(o.zone))return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
     if(calRangeStart&&o.order_date_key){if(o.order_date_key<calRangeStart||o.order_date_key>(calRangeEnd||calRangeStart))return false;}else if(calRangeStart&&!o.order_date_key)return false;
-    if(q&&!`${o.order_id} ${o.customer} ${o.address} ${o.district}`.toLowerCase().includes(q))return false;
+    if(q&&!`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase().includes(q))return false;
     return true;
   });
   const hidden=allOrders.length-filteredOrders.length;
@@ -1127,6 +1267,7 @@ function resetFilter(){
   geoMarker=null;
   allOrders.forEach(o=>o._distance=null);
   ['search-input','marker-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  toggleSearchClear();
   selectedZones.clear();buildZoneDropdown();updateZoneBtnLabel();
   document.getElementById('status-filter').value='';
   calRangeStart='';calRangeEnd='';calHover='';
@@ -1213,6 +1354,61 @@ function statusBadge(s){
   if(c==='delivered')return`<span class="status-badge s-delivered">✅ ส่งแล้ว</span>`;
   if(c==='problem')return`<span class="status-badge s-problem">❌ ยกเลิก</span>`;
   return'';
+}
+
+// ── สถานะแบบแก้ไขได้ในการ์ด (คลิกเปลี่ยน แล้ว sync กลับ Google Sheets ผ่าน Apps Script) ──
+function statusSelectHtml(o){
+  const c=classifyStatus(o.status);
+  const oidAttr=String(o.order_id).replace(/"/g,'&quot;');
+  return`<select class="status-select s-${c}" data-oid="${oidAttr}" onclick="event.stopPropagation()" onchange="updateOrderStatus(this)">
+    <option value="ค้างส่ง"${c==='pending'?' selected':''}>🟡 ค้างส่ง</option>
+    <option value="ส่งแล้ว"${c==='delivered'?' selected':''}>✅ ส่งแล้ว</option>
+    <option value="ยกเลิก"${c==='problem'?' selected':''}>❌ ยกเลิก</option>
+  </select>`;
+}
+
+// เก็บ reference ของ Sheet/แท็บที่กำลังใช้งานอยู่ตอนนี้ (ตั้งค่าตอนโหลดข้อมูลสำเร็จ)
+let currentSheetRef={sheetId:null,gid:null,sheetName:null};
+
+async function updateOrderStatus(selectEl){
+  const oid=selectEl.dataset.oid;
+  const newStatus=selectEl.value;
+  const order=allOrders.find(o=>String(o.order_id)===oid);
+  if(!order)return;
+
+  // อัปเดตหน้าจอทันที (optimistic UI)
+  order.status=newStatus;
+  const c=classifyStatus(newStatus);
+  selectEl.className=`status-select s-${c} status-saving`;
+  const card=selectEl.closest('.order-card');
+  if(card){
+    card.classList.remove('is-problem','is-pending','is-delivered');
+    if(c==='problem')card.classList.add('is-problem');
+    else if(c==='pending')card.classList.add('is-pending');
+    else if(c==='delivered')card.classList.add('is-delivered');
+  }
+
+  if(!geoScriptUrl||!currentSheetRef.sheetId){
+    selectEl.classList.remove('status-saving');
+    alert('ยังไม่ได้ตั้งค่า Apps Script URL สำหรับ sync กลับ Sheets\nตั้งค่าได้ที่ปุ่ม ⚙️ (ตั้งค่า Geocode/Sheets)\n\nตอนนี้เปลี่ยนสถานะแบบชั่วคราวในแอปแล้ว แต่ยังไม่ได้บันทึกกลับ Sheet');
+    return;
+  }
+  try{
+    await fetch(geoScriptUrl,{
+      method:'POST',
+      mode:'no-cors', // Apps Script ไม่ต้อง CORS preflight, อ่าน response ไม่ได้
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'updateOrderStatus',
+        sheetId:currentSheetRef.sheetId,
+        gid:currentSheetRef.gid,
+        sheetName:currentSheetRef.sheetName,
+        orderId:oid,
+        status:newStatus
+      })
+    });
+  }catch(e){/* ignore — no-cors ไม่รู้ผลลัพธ์อยู่แล้ว */}
+  setTimeout(()=>selectEl.classList.remove('status-saving'),700);
 }
 
 function filterZoneCards(zoneId, inputEl) {
@@ -1367,7 +1563,7 @@ function renderResults(){
           return`<div class="order-card ${cardCls}" data-search="${searchData.replace(/"/g,'&quot;')}">
             <div class="card-top">
               <div><div class="card-order-id">🧾 ${o.order_id}${o.order_date?` &nbsp;·&nbsp; 📅 ${o.order_date}`:''}</div><div class="card-name">👤 ${o.customer}</div></div>
-              ${statusBadge(o.status)}
+              ${statusSelectHtml(o)}
             </div>
             <div class="card-row"><span class="card-icon">📞</span><span>${o.phone}</span></div>
             <div class="card-row"><span class="card-icon">📍</span><span>${o.address}${o.zipcode?` <span style="color:var(--muted);font-size:var(--text-xs)">${o.zipcode}</span>`:''} ${o.district}</span></div>
@@ -1447,11 +1643,24 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 
+// ── แปลงเลข scientific notation (เช่น "5.84898509704235E+17") กลับเป็นเลขเต็มรูปแบบ
+// หมายเหตุ: ถ้าคอลัมน์ในชีตเป็น Number แล้วเลขเกิน ~15-17 หลัก ความแม่นยำอาจสูญเสียไปแล้วตั้งแต่ในชีต
+// ฟังก์ชันนี้ช่วยได้แค่ระดับ "โชว์เลขเต็ม แทนที่จะโชว์ E+17" ไม่ได้กู้คืนหลักที่หายไปจริงๆ
+function expandSciNotation(raw){
+  const str=String(raw==null?'':raw).trim();
+  const m=str.match(/^(-?)(\d+)(?:\.(\d+))?[eE]\+?(\d+)$/);
+  if(!m)return str;
+  const sign=m[1],intPart=m[2],fracPart=m[3]||'',exp=parseInt(m[4],10);
+  let digits=intPart+fracPart;
+  const pointPos=intPart.length+exp;
+  while(digits.length<pointPos)digits+='0';
+  return sign+digits.slice(0,pointPos);
+}
 function buildOrdersFromRows(data){
   const orders=[],seen={};
   for(let i=0;i<data.length;i++){
     const row=data[i];
-    const orderNum=row[2];if(!orderNum||!String(orderNum).trim())continue;
+    const orderNum=expandSciNotation(row[2]);if(!orderNum||!String(orderNum).trim())continue;
     if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain'))continue;
     // ── สถานะมาจากคอลัมน์ A (index 0) ──
     const statusRaw=row[0];
@@ -1514,6 +1723,7 @@ function buildOrdersFromRows(data){
   document.getElementById('tab-orders').style.display='';
   document.getElementById('tab-dashboard').style.display='';
   document.getElementById('tab-map').style.display='';
+  document.getElementById('tab-agents').style.display='';
   document.getElementById('tab-divider').style.display='';
   document.getElementById('btn-export').style.display='';
   document.getElementById('btn-print').style.display='';
@@ -1537,6 +1747,13 @@ function buildOrdersFromRows(data){
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.83"/></svg>
         โหลดข้อมูล
       </button>
+    </div>
+    <div style="border-top:1px solid var(--border,#e5e7eb);margin-top:14px;padding-top:12px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⚡ โหลดด่วนจากแท็บ (ใช้ลิงก์ Sheet ด้านบน แค่สลับแท็บ)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="filter-btn" onclick="loadFromSheetsByName('SCG',this)">SCG</button>
+        <button class="filter-btn" onclick="loadFromSheetsByName('ระยอง',this)">ระยอง</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1658,7 +1875,7 @@ function addMarker(o){
 
 // re-plot เมื่อ filter เปลี่ยน (ถ้าอยู่หน้า map)
 function applyFilter(){
-  _baseApplyFilter();
+  applyFilterCore();
   const mapPage=document.getElementById('page-map');
   if(mapPage&&mapPage.classList.contains('active')) plotMapMarkers();
 }
@@ -1679,6 +1896,28 @@ function switchPage(page){
   if(mobEl) mobEl.classList.add('active');
   if(page==='dashboard-page') renderDashboardPage();
   if(page==='map') renderMapPage();
+  if(page==='agents') renderAgentsPage();
+}
+
+function renderAgentsPage(){
+  const grid=document.getElementById('agent-grid');
+  const exceptions=document.getElementById('agent-exception-list');
+  if(!grid||!exceptions)return;
+  const total=allOrders.length;
+  const delivered=allOrders.filter(o=>classifyStatus(o.status)==='delivered');
+  const pending=allOrders.filter(o=>classifyStatus(o.status)==='pending');
+  const problem=allOrders.filter(o=>classifyStatus(o.status)==='problem');
+  const agents=[
+    {name:'Order Intake Agent',count:total,desc:'รับออเดอร์และตรวจความครบถ้วนของข้อมูล',handoff:'ส่งต่อ → Stock & Allocation Agent',active:total>0},
+    {name:'Stock & Allocation Agent',count:pending.length,desc:'จัดคิวออเดอร์ที่ยังรอจัดส่งตามโซน',handoff:'ส่งต่อ → Fulfillment Agent',active:pending.length>0},
+    {name:'Fulfillment Agent',count:pending.length,desc:'เตรียมสินค้า วางแผนเส้นทาง และมอบหมายการส่ง',handoff:'ส่งต่อ → Carrier Tracking Agent',active:pending.length>0},
+    {name:'Carrier Tracking Agent',count:pending.length,desc:'ติดตามออเดอร์ระหว่างทางและตรวจความล่าช้า',handoff:'ส่งต่อ → Customer Care / Exception Agent',active:pending.length>0},
+    {name:'Customer Care Agent',count:problem.length,desc:'ดูแลกรณีส่งไม่สำเร็จ ยกเลิก หรือมีข้อร้องเรียน',handoff:'วนกลับ → ทีมจัดส่งหรือรับออเดอร์',problem:problem.length>0},
+    {name:'Exception & Escalation Agent',count:problem.length,desc:'เฝ้า SLA และส่งเรื่องที่ผิดปกติให้ทีมคนตัดสินใจ',handoff:'แจ้งเตือน → ผู้ดูแลระบบ',problem:problem.length>0}
+  ];
+  grid.innerHTML=agents.map(a=>`<article class="agent-card ${a.active?'active-agent':''} ${a.problem?'problem-agent':''}"><div class="agent-card-head"><span>${a.name}</span><span class="status-badge ${a.problem?'s-problem':a.active?'s-pending':'s-delivered'}">${a.problem?'ต้องจัดการ':a.active?'กำลังทำงาน':'พร้อม'}</span></div><div class="agent-count">${a.count.toLocaleString()}</div><p>${a.desc}</p><div class="agent-handoff">${a.handoff}</div></article>`).join('');
+  const queue=[...problem,...pending].slice(0,10);
+  exceptions.innerHTML=queue.length?queue.map(o=>{const issue=classifyStatus(o.status)==='problem'?'ต้องตรวจสอบ / ยกเลิก':'รอจัดส่ง';return `<div class="agent-queue-item"><div><strong>${o.order_id}</strong><small>${o.customer} · ${o.zone||'-'}</small></div><span class="status-badge ${classifyStatus(o.status)==='problem'?'s-problem':'s-pending'}">${issue}</span></div>`;}).join(''):'<div class="agent-queue-item"><div><strong>ไม่มีงานค้าง</strong><small>อัปโหลดข้อมูลออเดอร์เพื่อเริ่มติดตาม</small></div></div>';
 }
 
 function renderDashboardPage(){
@@ -1802,6 +2041,35 @@ function renderDashboardPage(){
     <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0">
       <div style="height:8px;background:var(--danger);width:${Math.round(sProblem/total3*100)}%;border-radius:var(--r-full)"></div>
     </div>`;
+
+  // ── โซน × สถานะ (เรียงตามความเร่งด่วน) ──
+  const zsMap={};
+  orders.forEach(o=>{
+    if(!zsMap[o.zone])zsMap[o.zone]={delivered:0,pending:0,problem:0,total:0};
+    const st=classifyStatus(o.status);
+    zsMap[o.zone][st]++;
+    zsMap[o.zone].total++;
+  });
+  const zsRows=Object.entries(zsMap)
+    .map(([zone,d])=>({zone,...d,needsAttention:d.pending+d.problem}))
+    .sort((a,b)=>b.needsAttention-a.needsAttention||b.total-a.total);
+  document.getElementById('db-zone-status-body').innerHTML=zsRows.map(r=>{
+    const pctD=Math.round(r.delivered/r.total*100),pctP=Math.round(r.pending/r.total*100),pctX=100-pctD-pctP;
+    const hot=r.problem>0||(r.pending/r.total)>0.4;
+    let badge;
+    if(r.problem>0)badge=`<span class="zs-badge zs-badge-danger">⚠️ มีปัญหา ${r.problem}</span>`;
+    else if(r.pending/r.total>0.4)badge=`<span class="zs-badge zs-badge-warn">🟡 ค้างเยอะ</span>`;
+    else badge=`<span class="zs-badge zs-badge-ok">✅ ปกติ</span>`;
+    return`<tr class="${hot?'zs-row-hot':''}">
+      <td class="zs-zone-name">${r.zone}</td>
+      <td class="zs-num">${r.total}</td>
+      <td class="zs-num" style="color:var(--success)">${r.delivered}</td>
+      <td class="zs-num" style="color:#D97706">${r.pending}</td>
+      <td class="zs-num" style="color:var(--danger)">${r.problem}</td>
+      <td><div class="zs-bar-wrap"><div class="zs-bar-seg" style="width:${pctD}%;background:var(--success)"></div><div class="zs-bar-seg" style="width:${pctP}%;background:#F59E0B"></div><div class="zs-bar-seg" style="width:${pctX}%;background:var(--danger)"></div></div></td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:var(--sp-5)">ไม่มีข้อมูล</td></tr>';
 }
 
 // ── ROUTE PLANNER ──
@@ -2037,6 +2305,7 @@ async function loadFromSheets(){
     if(!text||text.trim().length===0) throw new Error('ไม่พบข้อมูลใน Sheet');
     if(text.trim().startsWith('<')) throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
     closeModal();btn.innerHTML=origText;btn.disabled=false;
+    currentSheetRef={sheetId,gid,sheetName:null};
     processCSVText(text);return;
   }catch(e){
     // fallback: export CSV ตรง
@@ -2047,11 +2316,39 @@ async function loadFromSheets(){
       const text2=await res2.text();
       if(!text2||text2.trim().startsWith('<')) throw new Error('ได้รับ HTML แทน CSV');
       closeModal();btn.innerHTML=origText;btn.disabled=false;
+      currentSheetRef={sheetId,gid,sheetName:null};
       processCSVText(text2);return;
     }catch(e2){
       errEl.textContent=`โหลดไม่สำเร็จ: ${e2.message} — ตรวจสอบว่าแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
       errEl.style.display='block';btn.innerHTML=origText;btn.disabled=false;
     }
+  }
+}
+
+// ── โหลดด่วนจากแท็บ (sheet tab) ตามชื่อ เช่น "SCG", "ระยอง" ──
+async function loadFromSheetsByName(sheetName,btnEl){
+  const url=document.getElementById('sheets-url').value.trim();
+  const errEl=document.getElementById('sheets-error');errEl.style.display='none';
+  const sheetId=extractSheetId(url);
+  if(!sheetId){errEl.textContent='กรุณาวางลิงก์ Google Sheets ในช่องด้านบนก่อน';errEl.style.display='block';return;}
+  const origText=btnEl?btnEl.innerHTML:'';
+  if(btnEl){btnEl.innerHTML='<span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:4px"></span>กำลังโหลด...';btnEl.disabled=true;}
+
+  const tqUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  try{
+    const res=await fetch(tqUrl);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text=await res.text();
+    if(!text||text.trim().length===0) throw new Error(`ไม่พบข้อมูลในแท็บ "${sheetName}"`);
+    if(text.trim().startsWith('<')) throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
+    closeModal();
+    if(btnEl){btnEl.innerHTML=origText;btnEl.disabled=false;}
+    currentSheetRef={sheetId,gid:null,sheetName};
+    processCSVText(text);
+  }catch(e){
+    errEl.textContent=`โหลดแท็บ "${sheetName}" ไม่สำเร็จ: ${e.message} — ตรวจสอบว่ามีแท็บชื่อนี้จริง และแชร์ Sheet เป็น "ทุกคนที่มีลิงก์ → ผู้ดู" แล้ว`;
+    errEl.style.display='block';
+    if(btnEl){btnEl.innerHTML=origText;btnEl.disabled=false;}
   }
 }
 
@@ -2087,56 +2384,6 @@ function processCSVText(text){
     document.getElementById('results').innerHTML=`<div class="empty-state">เกิดข้อผิดพลาด: ${e.message}</div>`;}
   },50);
 }
-
-// ================== โหลดจาก n8n API อัตโนมัติ ==================
-const N8N_API_URL = 'https://jakknew32.app.n8n.cloud/webhook/cfm-orders';
-
-// map ชื่อคอลัมน์ไทย → ตำแหน่ง index (0-based) ตามโครงสร้างชีต
-// (ใช้เมื่อหัวตารางเป็นชื่อไทย ไม่ใช่ col_N)
-const N8N_NAME_TO_IDX = {
-  'ลำดับ':1, 'เลขออเดอร์':2, 'ชนิดนม':18, 'จำนวน':24,
-  'ชื่อลูกค้า':49, 'โทร':50, 'หมายเหตุ':51, 'ที่อยู่':52,
-  'HP จืด':57, 'HP ช็อก':58, 'HP น้ำผึ้ง':59
-};
-
-// แปลง object 1 แถวจาก API → array ตามตำแหน่งคอลัมน์ (เหมือน XLSX header:1)
-function n8nRowToArray(obj){
-  const arr = new Array(60).fill('');
-  for (const key in obj){
-    if (key === 'row_number') continue;
-    let idx = -1;
-    const m = key.match(/^col_(\d+)$/);
-    if (m) idx = parseInt(m[1], 10) - 1;          // col_1 → index 0
-    else if (N8N_NAME_TO_IDX[key] != null) idx = N8N_NAME_TO_IDX[key];
-    if (idx >= 0 && idx < 60) arr[idx] = obj[key];
-  }
-  return arr;
-}
-
-async function loadFromN8N(){
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('loading-text').textContent = 'กำลังโหลดข้อมูลจาก n8n...';
-  document.getElementById('results').innerHTML = '';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('filter-bar').style.display = 'none';
-  geoMarker = null;
-  try {
-    const res = await fetch(N8N_API_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const rows = (data && data.rows) ? data.rows : [];
-    const aoa = rows.map(n8nRowToArray);   // แปลงเป็นอาเรย์ตามตำแหน่งคอลัมน์
-    buildOrdersFromRows(aoa);              // ส่งให้ฟังก์ชันเดิมของแอปจัดการต่อ
-  } catch (err) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('results').innerHTML =
-      `<div class="empty-state">โหลดจาก n8n ไม่สำเร็จ: ${err.message}</div>`;
-  }
-}
-
-// โหลดอัตโนมัติทันทีที่เปิดหน้า
-window.addEventListener('DOMContentLoaded', loadFromN8N);
-// ================================================================
 </script>
 <!-- GEO SETTINGS MODAL -->
 <div class="modal-overlay" id="geo-modal" onclick="if(event.target===this)closeGeoModal()">
@@ -2155,7 +2402,7 @@ window.addEventListener('DOMContentLoaded', loadFromN8N);
     <div class="geo-settings-row">
       <div class="geo-settings-label">Apps Script Web App URL (สำหรับเขียนข้อมูล)</div>
       <input type="text" id="geo-script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
-      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App</div>
+      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App (ใช้ทั้ง sync geocode และ sync สถานะออเดอร์จากการ์ด)</div>
     </div>
 
     <details style="margin-bottom:var(--sp-3)">
@@ -2165,8 +2412,9 @@ window.addEventListener('DOMContentLoaded', loadFromN8N);
         <div class="script-code-wrap" id="apps-script-code">function doPost(e){
   try{
     const d=JSON.parse(e.postData.contents);
+    const ss=d.sheetId?SpreadsheetApp.openById(d.sheetId):SpreadsheetApp.getActiveSpreadsheet();
+
     if(d.action==='appendGeoCache'){
-      const ss=SpreadsheetApp.getActiveSpreadsheet();
       let sh=ss.getSheetByName('GeoCache');
       if(!sh){
         sh=ss.insertSheet('GeoCache');
@@ -2185,6 +2433,29 @@ window.addEventListener('DOMContentLoaded', loadFromN8N);
       });
       return ContentService.createTextOutput(JSON.stringify({ok:true,added:d.rows.length})).setMimeType(ContentService.MimeType.JSON);
     }
+
+    if(d.action==='updateOrderStatus'){
+      // หาแท็บที่ต้องการ: ระบุชื่อแท็บมา > ระบุ gid มา > แท็บแรกของสเปรดชีต
+      let sh=null;
+      if(d.sheetName)sh=ss.getSheetByName(d.sheetName);
+      if(!sh&&d.gid!=null){
+        sh=ss.getSheets().find(s=>String(s.getSheetId())===String(d.gid))||null;
+      }
+      if(!sh)sh=ss.getSheets()[0];
+
+      // คอลัมน์: A=สถานะ(1), C=เลขออเดอร์(3) — ตามโครงสร้างที่แอปใช้
+      const values=sh.getDataRange().getValues();
+      let updated=0;
+      for(let i=0;i<values.length;i++){
+        if(String(values[i][2]).trim()===String(d.orderId).trim()){
+          sh.getRange(i+1,1).setValue(d.status); // คอลัมน์ A
+          updated++;
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ok:true,updated})).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:'unknown action'})).setMimeType(ContentService.MimeType.JSON);
   }catch(err){
     return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message})).setMimeType(ContentService.MimeType.JSON);
   }
