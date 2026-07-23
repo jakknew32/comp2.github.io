@@ -1164,6 +1164,8 @@ function clearDate(){
   updateCalLabel();
   renderCal();
   applyFilter();
+  // เริ่มงานจากรายการค้างส่งทุกครั้งหลังโหลดข้อมูล
+  switchPage('agents');
 }
 function toggleCal(){
   const popup=document.getElementById('cal-popup');
@@ -1916,7 +1918,7 @@ function renderAgentsPage(){
     {name:'Exception & Escalation Agent',count:problem.length,desc:'เฝ้า SLA และส่งเรื่องที่ผิดปกติให้ทีมคนตัดสินใจ',handoff:'แจ้งเตือน → ผู้ดูแลระบบ',problem:problem.length>0}
   ];
   grid.innerHTML=agents.map(a=>`<article class="agent-card ${a.active?'active-agent':''} ${a.problem?'problem-agent':''}"><div class="agent-card-head"><span>${a.name}</span><span class="status-badge ${a.problem?'s-problem':a.active?'s-pending':'s-delivered'}">${a.problem?'ต้องจัดการ':a.active?'กำลังทำงาน':'พร้อม'}</span></div><div class="agent-count">${a.count.toLocaleString()}</div><p>${a.desc}</p><div class="agent-handoff">${a.handoff}</div></article>`).join('');
-  const queue=[...problem,...pending].slice(0,10);
+  const queue=[...pending,...problem].slice(0,10);
   exceptions.innerHTML=queue.length?queue.map(o=>{const issue=classifyStatus(o.status)==='problem'?'ต้องตรวจสอบ / ยกเลิก':'รอจัดส่ง';return `<div class="agent-queue-item"><div><strong>${o.order_id}</strong><small>${o.customer} · ${o.zone||'-'}</small></div><span class="status-badge ${classifyStatus(o.status)==='problem'?'s-problem':'s-pending'}">${issue}</span></div>`;}).join(''):'<div class="agent-queue-item"><div><strong>ไม่มีงานค้าง</strong><small>อัปโหลดข้อมูลออเดอร์เพื่อเริ่มติดตาม</small></div></div>';
 }
 
