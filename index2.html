@@ -202,6 +202,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .order-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
 .order-card.is-problem{border-left:4px solid var(--danger);}
 .order-card.is-pending{border-left:4px solid #F59E0B;}
+.order-card.is-packed{border-left:4px solid #2563EB;}
 .order-card.is-delivered{border-left:4px solid var(--success);}
 .order-card.card-hidden{display:none;}
 .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);}
@@ -219,6 +220,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   background-repeat:no-repeat;background-position:right 6px center;background-size:11px;transition:opacity .15s;}
 .status-select.status-saving{opacity:.55;pointer-events:none;}
 .s-pending{background:#FEF3C7;color:#78350F;border:1.5px solid #FCD34D;}
+.s-packed{background:#DBEAFE;color:#1E3A8A;border:1.5px solid #93C5FD;}
 .s-delivered{background:#D1FAE5;color:#064E3B;border:1.5px solid #6EE7B7;}
 .s-problem{background:#FEE2E2;color:#7F1D1D;border:1.5px solid #FCA5A5;}
 .dist-badge{display:inline-flex;align-items:center;gap:3px;font-size:var(--text-xs);padding:3px 8px;border-radius:var(--r-full);background:#EEF2FF;color:#3730A3;font-weight:600;}
@@ -709,6 +711,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     <select id="status-filter" onchange="applyFilter()">
       <option value="">ทั้งหมด</option>
       <option value="pending">🟡 ค้างส่ง</option>
+      <option value="packed">📦 แพ็คสินค้าแล้ว</option>
       <option value="delivered">🟢 ส่งแล้ว</option>
       <option value="problem">🔴 ยกเลิก</option>
     </select>
@@ -782,15 +785,12 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 <script>
 // ── ZONE CONFIG ──
 const ZONE_LIST = [
-  'กรุงเทพเหนือ','กรุงเทพกลาง','กรุงเทพตะวันออก','กรุงเทพตะวันตก',
-  'กรุงเทพฝั่งธน','นนทบุรี','ปทุมธานี','สมุทรสาคร','สมุทรสงคราม',
+  'กรุงเทพฯ','นนทบุรี','ปทุมธานี','สมุทรสาคร','สมุทรสงคราม',
   'นครปฐม','ชลบุรี','สมุทรปราการ','ต่างจังหวัด','อื่นๆ',
 ];
 const ZONE_CLASSES = ['z0','z1','z2','z3','z4','z5','z6','z7','z8','z9','z10','z11','z12','z13'];
 // ── กลุ่มโซน: ให้เลือก "ทั้งกลุ่ม" ได้ทีเดียว แต่ยังกรองแยกเขตย่อยได้ ──
-const ZONE_GROUPS = [
-  {label:'กรุงเทพฯ (รวมทุกเขต)', zones:['กรุงเทพเหนือ','กรุงเทพกลาง','กรุงเทพตะวันออก','กรุงเทพตะวันตก','กรุงเทพฝั่งธน']},
-];
+const ZONE_GROUPS = [];
 const ZONE_DONUT = [
   '#3B82F6','#EC4899','#10B981','#F97316','#A855F7',
   '#06B6D4','#EAB308','#6366F1','#84CC16','#0EA5E9',
@@ -813,9 +813,10 @@ const BKK_ALIASES = ['กรุงเทพ','กทม','bangkok'];
 
 function detectZone(d, p) {
   const dStr = String(d||'').trim(), pStr = String(p||'').trim();
+  // Bangkok is one delivery zone; district is retained only as address detail.
+  if (BKK_ALIASES.some(a => pStr.toLowerCase().includes(a) || dStr.toLowerCase().includes(a)) || /^เขต/.test(dStr)) return 'กรุงเทพฯ';
   for (const [k, v] of Object.entries(PROVINCE_ZONE)) { if (pStr.includes(k)) return v; }
   if (dStr && DZ[dStr]) return DZ[dStr];
-  if (BKK_ALIASES.some(a => pStr.toLowerCase().includes(a) || dStr.toLowerCase().includes(a))) return 'อื่นๆ';
   if (pStr && pStr.length > 0) return 'ต่างจังหวัด';
   return 'อื่นๆ';
 }
@@ -837,6 +838,7 @@ function classifyStatus(s){
   if(str.includes('ยกเลิก')||str.toLowerCase().includes('cancel'))return'problem';
   // ค้างส่ง
   if(str.includes('ค้าง'))return'pending';
+  if(str.includes('แพ็คสินค้าแล้ว'))return'packed';
   // มีข้อความอื่นๆ = ส่งแล้ว
   return'delivered';
 }
@@ -1249,6 +1251,9 @@ function applyFilterCore(){
     if(q&&!`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase().includes(q))return false;
     return true;
   });
+  // Keep outstanding deliveries at the top, followed by packed orders.
+  const statusRank={pending:0,packed:1,problem:2,delivered:3};
+  filteredOrders.sort((a,b)=>(statusRank[classifyStatus(a.status)]??9)-(statusRank[classifyStatus(b.status)]??9));
   const hidden=allOrders.length-filteredOrders.length;
   const fi=document.getElementById('filter-info');
   const ft=document.getElementById('filter-info-text');
@@ -1256,7 +1261,7 @@ function applyFilterCore(){
     fi.style.display='flex';
     const parts=[];
     if(selectedZones.size>0)parts.push(`โซน (${selectedZones.size} โซน)`);
-    if(sf){const lbl={pending:'ค้างส่ง',delivered:'ส่งแล้ว',problem:'มีปัญหา'};parts.push(`สถานะ "${lbl[sf]||sf}"`);}
+    if(sf){const lbl={pending:'ค้างส่ง',packed:'แพ็คสินค้าแล้ว',delivered:'ส่งแล้ว',problem:'มีปัญหา'};parts.push(`สถานะ "${lbl[sf]||sf}"`);}
     if(calRangeStart)parts.push(`วันที่ "${document.getElementById('cal-label').textContent}"`);
     if(q)parts.push(`ค้นหา "${q}"`);
     ft.textContent=`ซ่อน ${hidden} รายการ (filter: ${parts.join(', ')})`;
@@ -1353,6 +1358,7 @@ function quickFilterZone(zone){
 function statusBadge(s){
   const c=classifyStatus(s);
   if(c==='pending')return`<span class="status-badge s-pending">🟡 ค้างส่ง</span>`;
+  if(c==='packed')return`<span class="status-badge s-packed">📦 แพ็คสินค้าแล้ว</span>`;
   if(c==='delivered')return`<span class="status-badge s-delivered">✅ ส่งแล้ว</span>`;
   if(c==='problem')return`<span class="status-badge s-problem">❌ ยกเลิก</span>`;
   return'';
@@ -1364,6 +1370,7 @@ function statusSelectHtml(o){
   const oidAttr=String(o.order_id).replace(/"/g,'&quot;');
   return`<select class="status-select s-${c}" data-oid="${oidAttr}" onclick="event.stopPropagation()" onchange="updateOrderStatus(this)">
     <option value="ค้างส่ง"${c==='pending'?' selected':''}>🟡 ค้างส่ง</option>
+    <option value="แพ็คสินค้าแล้ว"${c==='packed'?' selected':''}>📦 แพ็คสินค้าแล้ว</option>
     <option value="ส่งแล้ว"${c==='delivered'?' selected':''}>✅ ส่งแล้ว</option>
     <option value="ยกเลิก"${c==='problem'?' selected':''}>❌ ยกเลิก</option>
   </select>`;
@@ -1384,9 +1391,10 @@ async function updateOrderStatus(selectEl){
   selectEl.className=`status-select s-${c} status-saving`;
   const card=selectEl.closest('.order-card');
   if(card){
-    card.classList.remove('is-problem','is-pending','is-delivered');
+    card.classList.remove('is-problem','is-pending','is-packed','is-delivered');
     if(c==='problem')card.classList.add('is-problem');
     else if(c==='pending')card.classList.add('is-pending');
+    else if(c==='packed')card.classList.add('is-packed');
     else if(c==='delivered')card.classList.add('is-delivered');
   }
 
@@ -1559,7 +1567,7 @@ function renderResults(){
       <div class="zone-cards-wrap" id="cards-${zoneId}">
         ${orders.map(o=>{
           const sc=classifyStatus(o.status);
-          const cardCls=sc==='problem'?'is-problem':sc==='pending'?'is-pending':sc==='delivered'?'is-delivered':'';
+          const cardCls=sc==='problem'?'is-problem':sc==='pending'?'is-pending':sc==='packed'?'is-packed':sc==='delivered'?'is-delivered':'';
           const distHtml=showDist&&o._distance!==null&&isFinite(o._distance)?`<span class="dist-badge">📍 ${o._distance.toFixed(1)} กม.</span>`:'';
           const searchData=`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase();
           return`<div class="order-card ${cardCls}" data-search="${searchData.replace(/"/g,'&quot;')}">
@@ -1660,7 +1668,8 @@ function expandSciNotation(raw){
 }
 function buildOrdersFromRows(data){
   const orders=[],seen={};
-  for(let i=0;i<data.length;i++){
+  // Row 1 is the sheet header / control row and must never become an order.
+  for(let i=1;i<data.length;i++){
     const row=data[i];
     const orderNum=expandSciNotation(row[2]);if(!orderNum||!String(orderNum).trim())continue;
     if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain'))continue;
@@ -1763,7 +1772,7 @@ function buildOrdersFromRows(data){
 // ── MAP PAGE ──
 let leafletMap=null, mapMarkers=[], mapGeocoding=false;
 
-const MAP_STATUS_COLOR={delivered:'#10B981',pending:'#F59E0B',problem:'#EF4444'};
+const MAP_STATUS_COLOR={delivered:'#10B981',pending:'#F59E0B',packed:'#2563EB',problem:'#EF4444'};
 
 async function renderMapPage(){
   // init map ครั้งแรก
@@ -1787,12 +1796,14 @@ function updateMapStats(){
   const withGeo=orders.filter(o=>o.lat&&o.lon).length;
   const delivered=orders.filter(o=>classifyStatus(o.status)==='delivered').length;
   const pending=orders.filter(o=>classifyStatus(o.status)==='pending').length;
+  const packed=orders.filter(o=>classifyStatus(o.status)==='packed').length;
   const zones=new Set(orders.map(o=>o.zone)).size;
   document.getElementById('map-stats-rows').innerHTML=`
     <div class="map-stat-row"><span class="map-stat-label">ออเดอร์</span><span class="map-stat-val">${orders.length}</span></div>
     <div class="map-stat-row"><span class="map-stat-label">มีพิกัด</span><span class="map-stat-val">${withGeo} / ${orders.length}</span></div>
     <div class="map-stat-row"><span class="map-stat-label">ส่งแล้ว</span><span class="map-stat-val" style="color:#10B981">${delivered}</span></div>
     <div class="map-stat-row"><span class="map-stat-label">ค้างส่ง</span><span class="map-stat-val" style="color:#F59E0B">${pending}</span></div>
+    <div class="map-stat-row"><span class="map-stat-label">แพ็คสินค้าแล้ว</span><span class="map-stat-val" style="color:#2563EB">${packed}</span></div>
     <div class="map-stat-row"><span class="map-stat-label">โซน</span><span class="map-stat-val">${zones}</span></div>`;
 }
 
@@ -1855,7 +1866,7 @@ function addMarker(o){
   });
   // popup
   const tP=o.qty_plain||0,tC=o.qty_choc||0,tH=o.qty_honey||0;
-  const statusLabel=sc==='delivered'?'✅ ส่งแล้ว':sc==='pending'?'🟡 ค้างส่ง':'❌ ยกเลิก';
+  const statusLabel=sc==='delivered'?'✅ ส่งแล้ว':sc==='pending'?'🟡 ค้างส่ง':sc==='packed'?'📦 แพ็คสินค้าแล้ว':'❌ ยกเลิก';
   marker.bindPopup(`
     <div class="popup-name">👤 ${o.customer}</div>
     <div class="popup-row">🧾 ${o.order_id}</div>
@@ -2026,9 +2037,10 @@ function renderDashboardPage(){
 
   // ── สถานะ ──
   const sPending=orders.filter(o=>classifyStatus(o.status)==='pending').length;
+  const sPacked=orders.filter(o=>classifyStatus(o.status)==='packed').length;
   const sDelivered=orders.filter(o=>classifyStatus(o.status)==='delivered').length;
   const sProblem=orders.filter(o=>classifyStatus(o.status)==='problem').length;
-  const total3=sPending+sDelivered+sProblem||1;
+  const total3=sPending+sPacked+sDelivered+sProblem||1;
   document.getElementById('db-status').innerHTML=`
     <div class="status-donut-row"><div class="status-dot" style="background:#057A55"></div><div style="flex:1;font-size:var(--text-sm);font-weight:600">ส่งแล้ว</div><div style="font-size:var(--text-sm);color:var(--muted)">${Math.round(sDelivered/total3*100)}%</div><div style="font-size:var(--text-md);font-weight:800;min-width:48px;text-align:right;color:var(--success)">${sDelivered}</div></div>
     <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0 12px">
@@ -2038,6 +2050,10 @@ function renderDashboardPage(){
     <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0 12px">
       <div style="height:8px;background:#F59E0B;width:${Math.round(sPending/total3*100)}%;border-radius:var(--r-full)"></div>
     </div>
+    <div class="status-donut-row"><div class="status-dot" style="background:#2563EB"></div><div style="flex:1;font-size:var(--text-sm);font-weight:600">แพ็คสินค้าแล้ว</div><div style="font-size:var(--text-sm);color:var(--muted)">${Math.round(sPacked/total3*100)}%</div><div style="font-size:var(--text-md);font-weight:800;min-width:48px;text-align:right;color:#1D4ED8">${sPacked}</div></div>
+    <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0 12px">
+      <div style="height:8px;background:#2563EB;width:${Math.round(sPacked/total3*100)}%;border-radius:var(--r-full)"></div>
+    </div>
     <div class="status-donut-row"><div class="status-dot" style="background:var(--danger)"></div><div style="flex:1;font-size:var(--text-sm);font-weight:600">ยกเลิก</div><div style="font-size:var(--text-sm);color:var(--muted)">${Math.round(sProblem/total3*100)}%</div><div style="font-size:var(--text-md);font-weight:800;min-width:48px;text-align:right;color:var(--danger)">${sProblem}</div></div>
     <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin:4px 0">
       <div style="height:8px;background:var(--danger);width:${Math.round(sProblem/total3*100)}%;border-radius:var(--r-full)"></div>
@@ -2046,9 +2062,9 @@ function renderDashboardPage(){
   // ── โซน × สถานะ (เรียงตามความเร่งด่วน) ──
   const zsMap={};
   orders.forEach(o=>{
-    if(!zsMap[o.zone])zsMap[o.zone]={delivered:0,pending:0,problem:0,total:0};
+    if(!zsMap[o.zone])zsMap[o.zone]={delivered:0,pending:0,packed:0,problem:0,total:0};
     const st=classifyStatus(o.status);
-    zsMap[o.zone][st]++;
+    zsMap[o.zone][st]=(zsMap[o.zone][st]||0)+1;
     zsMap[o.zone].total++;
   });
   const zsRows=Object.entries(zsMap)
