@@ -1740,12 +1740,12 @@ function buildOrdersFromRows(data){
     <h3>📊 โหลดจาก Google Sheets</h3>
     <p>วางลิงก์ Google Sheets ได้เลย<br><b>ต้องแชร์ Sheet ก่อน:</b> แชร์ → ทุกคนที่มีลิงก์ → ผู้ดู</p>
     <input type="text" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/.../edit"
-      value="https://docs.google.com/spreadsheets/d/1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ/edit?gid=1081529901#gid=1081529901">
+      value="https://docs.google.com/spreadsheets/d/1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44/edit?gid=1694042044#gid=1694042044" readonly>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">💡 ระบบจะดึงข้อมูล Sheet แรกอัตโนมัติ ไม่ต้อง export</div>
     <div id="sheets-error" style="display:none;font-size:13px;color:#DC2626;background:#FEE2E2;border-radius:6px;padding:8px 12px;margin-bottom:12px"></div>
     <div class="modal-btns">
       <button class="filter-btn" onclick="closeModal()">ยกเลิก</button>
-      <button class="filter-btn primary" onclick="loadFromSheets()">
+      <button class="filter-btn primary" onclick="loadConfiguredSCG(this)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.83"/></svg>
         โหลดข้อมูล
       </button>
@@ -1753,8 +1753,7 @@ function buildOrdersFromRows(data){
     <div style="border-top:1px solid var(--border,#e5e7eb);margin-top:14px;padding-top:12px">
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⚡ โหลดด่วนจากแท็บ (ใช้ลิงก์ Sheet ด้านบน แค่สลับแท็บ)</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="filter-btn" onclick="loadFromSheetsByName('SCG',this)">SCG</button>
-        <button class="filter-btn" onclick="loadFromSheetsByName('ระยอง',this)">ระยอง</button>
+        <button class="filter-btn" onclick="loadConfiguredSCG(this)">SCG</button>
       </div>
     </div>
   </div>
@@ -2353,6 +2352,17 @@ async function loadFromSheetsByName(sheetName,btnEl){
     if(btnEl){btnEl.innerHTML=origText;btnEl.disabled=false;}
   }
 }
+
+// This app is intentionally locked to the SCG tab in the configured workbook.
+const SCG_SHEET_URL='https://docs.google.com/spreadsheets/d/1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44/edit?gid=1694042044#gid=1694042044';
+function loadConfiguredSCG(btnEl){
+  document.getElementById('sheets-url').value=SCG_SHEET_URL;
+  return loadFromSheetsByName('SCG',btnEl);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>loadConfiguredSCG(),0);
+});
 
 function parseCSV(text){
   const rows=[];const lines=text.split('\n');
