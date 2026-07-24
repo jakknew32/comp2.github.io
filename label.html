@@ -775,7 +775,6 @@ function makeLabelHTML(lb, num){
 
   return `<div class="shipping-label">
     <div class="sl-wm"></div>
-    <div class="sl-z" style="position:absolute;top:3mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;">ใบที่ ${num}</div>
     <div class="sl-z sl-hdr"><h2>Chiangmai Freshmilk</h2></div>
     <div class="sl-z sl-line"></div>
     <div class="sl-z sl-sender">${esc(SENDER)}</div>
@@ -826,7 +825,6 @@ function buildPrintDoc(list){
     const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / ชนิดนม: '+esc(noteWithQty(lb)):''}`:(lb.note||lb.qty)?`ชนิดนม: ${esc(noteWithQty(lb))}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
-      <div style="position:absolute;top:2mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit','Sarabun',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
       <div style="position:relative;z-index:1;text-align:center;padding:5px 4mm 3px;background:#0D1B2A;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><h2 style="font-size:18px;font-weight:700;margin:0;color:#F59E0B;letter-spacing:.3px;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
       <div style="position:relative;z-index:1;border-top:1.5px solid #333;margin:0"></div>
       <div style="position:relative;z-index:1;text-align:center;font-size:10px;line-height:1.3;color:#444;padding:3px 4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(SENDER)}</div>
