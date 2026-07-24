@@ -448,7 +448,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
         <div class="import-zone-icon">📁</div>
         <strong>คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่</strong>
         <p>รองรับ .xlsx, .xls, .csv</p>
-        <p style="margin-top:6px;font-size:11px">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=หมายเหตุ, AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
+        <p style="margin-top:6px;font-size:11px">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=หมายเหตุ, Y=จำนวน, AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
         <p style="margin-top:4px;font-size:11px;color:var(--amber);font-weight:600">📑 ไฟล์ .xlsx/.xls จะอ่านเฉพาะ Sheet "ออเดอร์ต่างจังหวัด" เท่านั้น</p>
         <p style="margin-top:4px;font-size:11px;color:var(--amber);font-weight:600">🔎 ดึงเฉพาะแถวที่คอลัมน์ A ว่าง หรือมีค่า "ค้างจัดส่ง" เท่านั้น</p>
       </div>
@@ -456,9 +456,9 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
       <div style="background:var(--ground);border-radius:var(--r-md);padding:14px;margin-top:14px">
         <p style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">คอลัมน์ที่อ่าน</p>
         <table class="import-table">
-          <thead><tr><th>C - เลขออเดอร์</th><th>S - หมายเหตุ</th><th>AX - ชื่อ</th><th>AY - เบอร์</th><th>BA - ที่อยู่</th></tr></thead>
+          <thead><tr><th>C - เลขออเดอร์</th><th>S - หมายเหตุ</th><th>Y - จำนวน</th><th>AX - ชื่อ</th><th>AY - เบอร์</th><th>BA - ที่อยู่</th></tr></thead>
           <tbody>
-            <tr><td>ORD001</td><td>ด่วน</td><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 สารภี เชียงใหม่</td></tr>
+            <tr><td>ORD001</td><td>ด่วน</td><td>2</td><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 สารภี เชียงใหม่</td></tr>
           </tbody>
         </table>
       </div>
@@ -751,7 +751,7 @@ function renderList(){
         </div>
         ${lb.phone?`<div class="lcard-phone">📞 ${esc(lb.phone)}</div>`:''}
         <div class="lcard-addr">${esc(lb.addr||'ไม่มีที่อยู่')}</div>
-        ${lb.note?`<div class="lcard-note">📝 ${esc(lb.note)}</div>`:''}
+        ${lb.note||lb.qty?`<div class="lcard-note">📝 ${esc(noteWithQty(lb))}</div>`:''}
       </div>
       <div class="lcard-actions">
         <button class="btn btn-outline btn-xs" onclick="openEdit('${lb.id}');event.stopPropagation()">✏️</button>
@@ -770,7 +770,7 @@ function makeLabelHTML(lb, num){
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
   const fullAddr = lb.addr || '';
   const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}` : fullAddr;
-  const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}` : (lb.note?`หมายเหตุ: ${esc(lb.note)}`:'');
+  const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / หมายเหตุ: '+esc(noteWithQty(lb)):''}` : ((lb.note||lb.qty)?`หมายเหตุ: ${esc(noteWithQty(lb))}`:'');
   const noteHTML = orderLine ? `<div class="sl-z sl-note-box">📝 ${orderLine}</div>` : '';
 
   return `<div class="shipping-label">
@@ -823,7 +823,7 @@ function buildPrintDoc(list){
   const labels_html = list.map((lb,i)=>{
     const fullAddr = lb.addr||'';
     const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}`:fullAddr;
-    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}`:lb.note?`หมายเหตุ: ${esc(lb.note)}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
+    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / หมายเหตุ: '+esc(noteWithQty(lb)):''}`:(lb.note||lb.qty)?`หมายเหตุ: ${esc(noteWithQty(lb))}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
       <div style="position:absolute;top:2mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit','Sarabun',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
@@ -1051,7 +1051,7 @@ async function fetchFromGoogleSheet(){
 }
 
 // คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, AX=49, AY=50, BA=52
-const COL_ORDER=2, COL_NOTE=18, COL_NAME=49, COL_PHONE=50, COL_ADDR=52, COL_STATUS=0;
+const COL_ORDER=2, COL_NOTE=18, COL_NAME=49, COL_PHONE=50, COL_ADDR=52, COL_STATUS=0, COL_QTY=24;
 const STATUS_PENDING='ค้างจัดส่ง';
 const GSHEET_ID='1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44';
 const GSHEET_TAB='ออเดอร์ต่างจังหวัด';
@@ -1061,6 +1061,13 @@ function normalizePhone(p){
   if(p.startsWith('66')) p='0'+p.slice(2);
   if(p.startsWith('+66')) p='0'+p.slice(3);
   return p;
+}
+
+function noteWithQty(lb){
+  const n=String(lb.note||'').trim();
+  const q=String(lb.qty||'').trim();
+  if(!q) return n;
+  return n ? `${n} X${q}` : `X${q}`;
 }
 
 function processFile(file){
@@ -1119,6 +1126,7 @@ function parseRowsFixed(rows){
       addr:String(r[COL_ADDR]||'').trim(),
       order:String(r[COL_ORDER]||'').trim(),
       note:String(r[COL_NOTE]||'').trim(),
+      qty:String(r[COL_QTY]||'').trim(),
       selected:true,
       createdAt:new Date().toISOString()
     }));
@@ -1136,8 +1144,8 @@ function parseRowsFixed(rows){
     </div>
     <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table class="import-table">
-        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>หมายเหตุ</th></tr></thead>
-        <tbody>${importData.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td>${esc(r.note)}</td></tr>`).join('')}</tbody>
+        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>หมายเหตุ</th><th>จำนวน (Y)</th></tr></thead>
+        <tbody>${importData.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td>${esc(r.note)}</td><td>${esc(r.qty)}</td></tr>`).join('')}</tbody>
       </table>
     </div>`;
 }
