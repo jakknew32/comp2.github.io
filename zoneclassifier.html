@@ -69,17 +69,6 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 
 .main{max-width:1280px;margin:0 auto;padding:var(--sp-6) var(--sp-4);}
 
-/* ── ORDER AGENTS ── */
-.agent-page{display:grid;gap:var(--sp-4);}
-.agent-intro{background:var(--brand-lt);border:1px solid var(--brand-mid);border-radius:var(--r-lg);padding:var(--sp-4);color:var(--brand-dk);}
-.agent-intro h2{font-size:var(--text-xl);margin-bottom:4px;}.agent-intro p{font-size:var(--text-sm);}
-.agent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--sp-3);}
-.agent-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:var(--sp-4);display:grid;gap:var(--sp-2);}
-.agent-card.active-agent{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-mid);}.agent-card.problem-agent{border-left:4px solid var(--danger);}
-.agent-card-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);font-weight:700;}.agent-card p{font-size:var(--text-sm);color:var(--muted);}
-.agent-count{font-size:var(--text-2xl);font-weight:700;color:var(--brand);}.agent-handoff{font-size:var(--text-xs);color:var(--muted);padding-top:var(--sp-2);border-top:1px solid var(--border);}
-.agent-queue{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;}.agent-queue h3{font-size:var(--text-md);padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border);}.agent-queue-item{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border);font-size:var(--text-sm);}.agent-queue-item:last-child{border-bottom:0;}.agent-queue-item small{color:var(--muted);display:block;}
-
 #upload-zone{background:var(--bg-card);border:2px dashed var(--border);border-radius:var(--r-xl);padding:48px var(--sp-6);text-align:center;cursor:pointer;transition:border-color .2s,background .2s;box-shadow:var(--shadow-sm);}
 #upload-zone:hover,#upload-zone.drag-over{border-color:var(--brand);background:var(--brand-lt);}
 #upload-zone svg{width:48px;height:48px;color:var(--gray-300);margin-bottom:var(--sp-3);}
@@ -518,9 +507,9 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     ป้ายส่งของ
   </button>
   <div class="topbar-spacer"></div>
-  <button class="topbar-btn btn-ghost no-print" onclick="showGeoSettings()" id="btn-geo-settings" title="ตั้งค่า Geocache">
+  <button class="topbar-btn btn-ghost no-print" onclick="showGeoSettings()" id="btn-geo-settings" title="ตั้งค่า Sheets (Sync สถานะ)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M14.83 9.17a4 4 0 0 1 0 5.66M9.17 9.17a4 4 0 0 0 0 5.66"/></svg>
-    Geocache
+    Sheets
   </button>
   <button class="topbar-btn btn-ghost no-print" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'})">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1904,29 +1893,8 @@ function switchPage(page){
   if(mobEl) mobEl.classList.add('active');
   if(page==='dashboard-page') renderDashboardPage();
   if(page==='map') renderMapPage();
-  if(page==='agents') renderAgentsPage();
 }
 
-function renderAgentsPage(){
-  const grid=document.getElementById('agent-grid');
-  const exceptions=document.getElementById('agent-exception-list');
-  if(!grid||!exceptions)return;
-  const total=allOrders.length;
-  const delivered=allOrders.filter(o=>classifyStatus(o.status)==='delivered');
-  const pending=allOrders.filter(o=>classifyStatus(o.status)==='pending');
-  const problem=allOrders.filter(o=>classifyStatus(o.status)==='problem');
-  const agents=[
-    {name:'Order Intake Agent',count:total,desc:'รับออเดอร์และตรวจความครบถ้วนของข้อมูล',handoff:'ส่งต่อ → Stock & Allocation Agent',active:total>0},
-    {name:'Stock & Allocation Agent',count:pending.length,desc:'จัดคิวออเดอร์ที่ยังรอจัดส่งตามโซน',handoff:'ส่งต่อ → Fulfillment Agent',active:pending.length>0},
-    {name:'Fulfillment Agent',count:pending.length,desc:'เตรียมสินค้า วางแผนเส้นทาง และมอบหมายการส่ง',handoff:'ส่งต่อ → Carrier Tracking Agent',active:pending.length>0},
-    {name:'Carrier Tracking Agent',count:pending.length,desc:'ติดตามออเดอร์ระหว่างทางและตรวจความล่าช้า',handoff:'ส่งต่อ → Customer Care / Exception Agent',active:pending.length>0},
-    {name:'Customer Care Agent',count:problem.length,desc:'ดูแลกรณีส่งไม่สำเร็จ ยกเลิก หรือมีข้อร้องเรียน',handoff:'วนกลับ → ทีมจัดส่งหรือรับออเดอร์',problem:problem.length>0},
-    {name:'Exception & Escalation Agent',count:problem.length,desc:'เฝ้า SLA และส่งเรื่องที่ผิดปกติให้ทีมคนตัดสินใจ',handoff:'แจ้งเตือน → ผู้ดูแลระบบ',problem:problem.length>0}
-  ];
-  grid.innerHTML=agents.map(a=>`<article class="agent-card ${a.active?'active-agent':''} ${a.problem?'problem-agent':''}"><div class="agent-card-head"><span>${a.name}</span><span class="status-badge ${a.problem?'s-problem':a.active?'s-pending':'s-delivered'}">${a.problem?'ต้องจัดการ':a.active?'กำลังทำงาน':'พร้อม'}</span></div><div class="agent-count">${a.count.toLocaleString()}</div><p>${a.desc}</p><div class="agent-handoff">${a.handoff}</div></article>`).join('');
-  const queue=[...pending,...problem].slice(0,10);
-  exceptions.innerHTML=queue.length?queue.map(o=>{const issue=classifyStatus(o.status)==='problem'?'ต้องตรวจสอบ / ยกเลิก':'รอจัดส่ง';return `<div class="agent-queue-item"><div><strong>${o.order_id}</strong><small>${o.customer} · ${o.zone||'-'}</small></div><span class="status-badge ${classifyStatus(o.status)==='problem'?'s-problem':'s-pending'}">${issue}</span></div>`;}).join(''):'<div class="agent-queue-item"><div><strong>ไม่มีงานค้าง</strong><small>อัปโหลดข้อมูลออเดอร์เพื่อเริ่มติดตาม</small></div></div>';
-}
 
 function renderDashboardPage(){
   if(allOrders.length===0){
@@ -2210,7 +2178,7 @@ loadGeoSettings();
 // โหลด cache จาก Sheets อัตโนมัติถ้าตั้งค่าไว้แล้ว
 if(geoSheetId){
   loadGeoCacheFromSheets(geoSheetId).then(n=>{
-    if(n>0){const btn=document.getElementById('btn-geo-settings');if(btn)btn.title=`Geocache: ${Object.keys(geoCache).length} พิกัด`;}
+    if(n>0){const btn=document.getElementById('btn-geo-settings');if(btn)btn.title=`Sheets sync — ${Object.keys(geoCache).length} พิกัดพร้อมใช้`;}
   });
 }
 
@@ -2254,17 +2222,6 @@ async function saveGeoSettings(){
   else if(geoSheetId) el.innerHTML=`<div class="geo-status-bar info">ℹ️ ยังไม่มี Sheet "GeoCache" — จะสร้างอัตโนมัติเมื่อ geocode ครั้งแรก</div>`;
 }
 
-async function testGeoCacheLoad(){
-  const sheetId=document.getElementById('geo-sheet-id-input').value.trim();
-  const m=sheetId.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-  const sid=m?m[1]:sheetId;
-  if(!sid){document.getElementById('geo-status-display').innerHTML='<div class="geo-status-bar warn">⚠️ กรุณาใส่ Sheet ID ก่อน</div>';return;}
-  document.getElementById('geo-status-display').innerHTML='<div class="geo-status-bar info"><span class="spinner" style="width:12px;height:12px;border-width:2px"></span> กำลังทดสอบ...</div>';
-  const count=await loadGeoCacheFromSheets(sid);
-  const el=document.getElementById('geo-status-display');
-  if(count>0) el.innerHTML=`<div class="geo-status-bar">✅ เชื่อมต่อสำเร็จ — พบ ${count} พิกัดใน GeoCache Sheet</div>`;
-  else el.innerHTML=`<div class="geo-status-bar info">ℹ️ เชื่อมต่อได้ แต่ยังไม่มี Sheet "GeoCache" หรือยังว่างอยู่</div>`;
-}
 
 function copyScriptCode(){
   const code=document.getElementById('apps-script-code').textContent;
@@ -2412,21 +2369,21 @@ function processCSVText(text){
 <!-- GEO SETTINGS MODAL -->
 <div class="modal-overlay" id="geo-modal" onclick="if(event.target===this)closeGeoModal()">
   <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto;">
-    <h3>📡 ตั้งค่า Geocache (Google Sheets)</h3>
-    <p>บันทึกพิกัดลง Google Sheets ให้ทุกคนใช้ cache ร่วมกัน — ไม่ต้อง geocode ซ้ำ ลด API call</p>
+    <h3>⚙️ ตั้งค่า Google Sheets Sync</h3>
+    <p>เชื่อมต่อ Sheet ข้อมูลออเดอร์ เพื่อให้การเปลี่ยนสถานะ (ค้างส่ง/ส่งแล้ว/ยกเลิก) จากแอปเขียนกลับเข้า Google Sheets ได้</p>
 
     <div id="geo-status-display"></div>
 
     <div class="geo-settings-row">
       <div class="geo-settings-label">Sheet ID (ไฟล์ข้อมูลหลัก)</div>
       <input type="text" id="geo-sheet-id-input" placeholder="1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ">
-      <div class="geo-settings-hint">ใช้ Sheet เดียวกับข้อมูล Order — ระบบจะสร้าง Sheet ชื่อ <code>GeoCache</code> ให้อัตโนมัติ</div>
+      <div class="geo-settings-hint">ใช้ Sheet เดียวกับข้อมูล Order</div>
     </div>
 
     <div class="geo-settings-row">
       <div class="geo-settings-label">Apps Script Web App URL (สำหรับเขียนข้อมูล)</div>
       <input type="text" id="geo-script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
-      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App (ใช้ทั้ง sync geocode และ sync สถานะออเดอร์จากการ์ด)</div>
+      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App (ใช้ sync สถานะออเดอร์จากการ์ด)</div>
     </div>
 
     <details style="margin-bottom:var(--sp-3)">
@@ -2490,13 +2447,9 @@ function processCSVText(text){
 
     <div class="modal-btns" style="flex-wrap:wrap;gap:var(--sp-2)">
       <button class="filter-btn" onclick="closeGeoModal()">ปิด</button>
-      <button class="filter-btn" onclick="testGeoCacheLoad()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.83"/></svg>
-        ทดสอบโหลด Cache
-      </button>
       <button class="filter-btn primary" onclick="saveGeoSettings()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-        บันทึกและโหลด Cache
+        บันทึก
       </button>
     </div>
   </div>
