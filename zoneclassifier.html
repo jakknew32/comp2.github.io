@@ -514,8 +514,8 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     แผนที่
   </button>
   <button class="topbar-tab" id="tab-agents" onclick="switchPage('agents')" style="display:none">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="10" r="2"/><path d="M3 21a6 6 0 0 1 12 0"/><path d="M15 16a5 5 0 0 1 6 5"/></svg>
-    Agents
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+    ป้ายส่งของ
   </button>
   <div class="topbar-spacer"></div>
   <button class="topbar-btn btn-ghost no-print" onclick="showGeoSettings()" id="btn-geo-settings" title="ตั้งค่า Geocache">
@@ -539,11 +539,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 <div class="main">
   <!-- AGENTS PAGE -->
   <div id="page-agents" class="page">
-    <div class="agent-page">
-      <div class="agent-intro"><h2>ศูนย์ควบคุมเอเจนต์จัดส่ง</h2><p>เอเจนต์แบ่งงานตามสถานะออเดอร์ และส่งต่อกรณีผิดปกติให้ทีมจัดการ</p></div>
-      <div class="agent-grid" id="agent-grid"></div>
-      <section class="agent-queue"><h3>รายการที่ต้องจัดการก่อน</h3><div id="agent-exception-list"></div></section>
-    </div>
+    <iframe id="label-frame" src="https://jakknew32.github.io/comp2.github.io/label.html" title="ป้ายส่งของ" style="width:100%;height:calc(100vh - 56px);border:none;display:block;background:#F4F6FA"></iframe>
   </div>
   <!-- DASHBOARD PAGE -->
   <div id="page-dashboard-page" class="page">
@@ -777,8 +773,8 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     ภาพรวม
   </button>
   <button class="mobile-nav-btn" id="mob-tab-agents" onclick="switchPage('agents')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="10" r="2"/><path d="M3 21a6 6 0 0 1 12 0"/></svg>
-    <span>Agents</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+    <span>ป้ายส่งของ</span>
   </button>
 </nav>
 
