@@ -209,6 +209,20 @@ body{
   margin-top:28px;padding:0 20px;line-height:1.6;
 }
 
+/* ── TP HISTORY ── */
+.tp-history{
+  margin:0 22px 22px;padding-top:16px;border-top:1px solid var(--border);
+}
+.tp-history-title{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:12px}
+.tp-event{display:flex;gap:10px;padding-bottom:14px;position:relative}
+.tp-event:not(:last-child)::before{
+  content:'';position:absolute;left:3px;top:14px;bottom:0;width:1.5px;background:var(--border);
+}
+.tp-event-dot{width:7px;height:7px;border-radius:50%;background:var(--accent-deep);margin-top:4px;flex-shrink:0}
+.tp-event-body{flex:1;min-width:0}
+.tp-event-desc{font-size:13px;font-weight:600;color:var(--ink);line-height:1.4}
+.tp-event-meta{font-size:11px;color:var(--muted);margin-top:2px}
+
 @media (max-width:400px){
   .tl-label{font-size:9.5px;max-width:56px}
 }
@@ -249,6 +263,8 @@ body{
 <script>
 const SHEET_ID='1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44';
 const SHEET_NAME='SCG';
+// URL ของ Apps Script Web App เดียวกับที่ใช้ sync สถานะใน Zone.html (รองรับ action: trackThailandPost)
+const APPS_SCRIPT_URL='';
 const thMonths=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
 let cachedRows=null;
@@ -299,6 +315,38 @@ function parseCSV(text){
     row.push(cur);rows.push(row);
   }
   return rows;
+}
+
+async function fetchThailandPostTracking(barcode){
+  if(!APPS_SCRIPT_URL||!barcode)return null;
+  try{
+    const res=await fetch(APPS_SCRIPT_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'trackThailandPost',barcode})
+    });
+    const json=await res.json();
+    if(!json.ok)return null;
+    return json.data;
+  }catch(e){return null;}
+}
+
+// หมายเหตุ: โครงสร้าง response ของ Thailand Post อาจต่างกันเล็กน้อยตามเวอร์ชัน API
+// ฟังก์ชันนี้พยายามอ่านจากหลาย path ที่พบได้บ่อย ถ้าไม่พบข้อมูลจะคืน [] แทนการ error
+function extractTPEvents(data){
+  try{
+    const items=data&&data.response&&data.response.items;
+    if(!items)return[];
+    const key=Object.keys(items)[0];
+    if(!key)return[];
+    const item=items[key];
+    const arr=item.iterate||item.items||item.history||[];
+    return arr.map(ev=>({
+      date:ev.status_date||ev.date||ev.datetime||'',
+      desc:ev.status_description||ev.description||ev.status||'',
+      location:ev.location||ev.postcode||''
+    })).filter(ev=>ev.desc).reverse(); // ใหม่สุดขึ้นก่อน
+  }catch(e){return[];}
 }
 
 async function loadRows(){
@@ -354,7 +402,22 @@ function renderNotFound(q){
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-function renderResult(o){
+function tpHistoryHTML(tpEvents){
+  if(!tpEvents||!tpEvents.length)return'';
+  return `
+    <div class="tp-history">
+      <div class="tp-history-title">📦 ประวัติการขนส่งจากไปรษณีย์ไทย</div>
+      ${tpEvents.map(ev=>`<div class="tp-event">
+        <div class="tp-event-dot"></div>
+        <div class="tp-event-body">
+          <div class="tp-event-desc">${esc(ev.desc)}</div>
+          <div class="tp-event-meta">${[ev.date,ev.location].filter(Boolean).map(esc).join(' · ')}</div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+}
+
+function renderResult(o,tpEvents){
   const cls=classifyStatus(o.status);
   const cancelled=cls==='problem';
   const step2done=cls==='packed'||cls==='delivered';
@@ -395,6 +458,22 @@ function renderResult(o){
       <div class="detail-list">
         ${detailRows.map(([k,v,mono])=>`<div class="detail-row"><span class="k">${k}</span><span class="v${mono?' mono':''}">${esc(v)}</span></div>`).join('')}
       </div>
+      ${tpHistoryHTML(tpEvents)}
+    </div>`;
+}
+
+function renderTPOnlyResult(barcode,tpEvents){
+  document.getElementById('result').innerHTML=`
+    <div class="result-card">
+      <div class="result-top">
+        <div class="bottle-wrap">${bottleSVG(50,false)}</div>
+        <div class="result-top-text">
+          <div class="result-order">เลขแทร็กกิ้ง ${esc(barcode)}</div>
+          <div class="result-status-label st-packed">พบข้อมูลจากไปรษณีย์ไทย</div>
+        </div>
+      </div>
+      <div class="state-msg" style="margin:16px 22px 0;border:1px solid var(--border)">ไม่พบเลขนี้ในระบบออเดอร์ของ CFM แต่พบประวัติการขนส่งจากไปรษณีย์ไทยโดยตรง</div>
+      ${tpHistoryHTML(tpEvents)}
     </div>`;
 }
 
@@ -428,7 +507,13 @@ async function doSearch(){
         break;
       }
     }
-    if(found) renderResult(found);
+
+    const barcodeForTP=(found&&found.tracking)||q;
+    const tpData=await fetchThailandPostTracking(barcodeForTP);
+    const tpEvents=tpData?extractTPEvents(tpData):[];
+
+    if(found) renderResult(found,tpEvents);
+    else if(tpEvents.length) renderTPOnlyResult(barcodeForTP,tpEvents);
     else renderNotFound(q);
   }catch(e){
     renderError('เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง');

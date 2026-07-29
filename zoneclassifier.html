@@ -2383,63 +2383,86 @@ function processCSVText(text){
     <div class="geo-settings-row">
       <div class="geo-settings-label">Apps Script Web App URL (สำหรับเขียนข้อมูล)</div>
       <input type="text" id="geo-script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
-      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App (ใช้ sync สถานะออเดอร์จากการ์ด)</div>
+      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App (ใช้ sync สถานะออเดอร์ + เช็คแทร็กกิ้งไปรษณีย์ไทย)</div>
     </div>
 
     <details style="margin-bottom:var(--sp-3)">
       <summary style="cursor:pointer;font-size:var(--text-sm);font-weight:600;color:var(--brand);padding:var(--sp-2) 0">📋 วิธีสร้าง Apps Script (คลิกเพื่อดู)</summary>
       <div style="margin-top:var(--sp-2)">
-        <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:6px">1. เปิด Google Sheets → Extensions → Apps Script → วาง code นี้ → Deploy → New deployment → Web App → Execute as: Me → Anyone can access</div>
+        <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:6px">1. เปิด Google Sheets → Extensions → Apps Script → วาง code นี้ → Deploy → New deployment → Web App → Execute as: Me → Anyone can access<br>2. ก่อน Deploy: เมนู ⚙️ Project Settings → Script Properties → เพิ่ม <code>THAILANDPOST_API_KEY</code> = API key จาก track.thailandpost.co.th/dashboard</div>
         <div class="script-code-wrap" id="apps-script-code">function doPost(e){
   try{
     const d=JSON.parse(e.postData.contents);
-    const ss=d.sheetId?SpreadsheetApp.openById(d.sheetId):SpreadsheetApp.getActiveSpreadsheet();
-
-    if(d.action==='appendGeoCache'){
-      let sh=ss.getSheetByName('GeoCache');
-      if(!sh){
-        sh=ss.insertSheet('GeoCache');
-        sh.appendRow(['address_key','lat','lon','updated']);
-      }
-      // อ่าน keys ที่มีอยู่แล้ว
-      const existing=new Set();
-      const vals=sh.getDataRange().getValues();
-      vals.forEach(r=>existing.add(String(r[0])));
-      // เพิ่มเฉพาะ rows ใหม่
-      d.rows.forEach(r=>{
-        if(!existing.has(String(r[0]))){
-          sh.appendRow([r[0],r[1],r[2],new Date().toISOString()]);
-          existing.add(String(r[0]));
-        }
-      });
-      return ContentService.createTextOutput(JSON.stringify({ok:true,added:d.rows.length})).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    if(d.action==='updateOrderStatus'){
-      // หาแท็บที่ต้องการ: ระบุชื่อแท็บมา > ระบุ gid มา > แท็บแรกของสเปรดชีต
-      let sh=null;
-      if(d.sheetName)sh=ss.getSheetByName(d.sheetName);
-      if(!sh&&d.gid!=null){
-        sh=ss.getSheets().find(s=>String(s.getSheetId())===String(d.gid))||null;
-      }
-      if(!sh)sh=ss.getSheets()[0];
-
-      // คอลัมน์: A=สถานะ(1), C=เลขออเดอร์(3) — ตามโครงสร้างที่แอปใช้
-      const values=sh.getDataRange().getValues();
-      let updated=0;
-      for(let i=0;i<values.length;i++){
-        if(String(values[i][2]).trim()===String(d.orderId).trim()){
-          sh.getRange(i+1,1).setValue(d.status); // คอลัมน์ A
-          updated++;
-        }
-      }
-      return ContentService.createTextOutput(JSON.stringify({ok:true,updated})).setMimeType(ContentService.MimeType.JSON);
-    }
-
+    if(d.action==='updateOrderStatus')return handleUpdateOrderStatus(d);
+    if(d.action==='trackThailandPost')return handleTrackThailandPost(d);
     return ContentService.createTextOutput(JSON.stringify({ok:false,error:'unknown action'})).setMimeType(ContentService.MimeType.JSON);
   }catch(err){
     return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message})).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function handleUpdateOrderStatus(d){
+  const ss=d.sheetId?SpreadsheetApp.openById(d.sheetId):SpreadsheetApp.getActiveSpreadsheet();
+  let sh=null;
+  if(d.sheetName)sh=ss.getSheetByName(d.sheetName);
+  if(!sh&&d.gid!=null){sh=ss.getSheets().find(s=>String(s.getSheetId())===String(d.gid))||null;}
+  if(!sh)sh=ss.getSheets()[0];
+  // คอลัมน์: A=สถานะ(1), C=เลขออเดอร์(3)
+  const values=sh.getDataRange().getValues();
+  let updated=0;
+  for(let i=0;i<values.length;i++){
+    if(String(values[i][2]).trim()===String(d.orderId).trim()){
+      sh.getRange(i+1,1).setValue(d.status);
+      updated++;
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:true,updated})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getThailandPostAuthToken(forceRefresh){
+  const props=PropertiesService.getScriptProperties();
+  const apiKey=props.getProperty('THAILANDPOST_API_KEY');
+  if(!apiKey)throw new Error('ยังไม่ได้ตั้งค่า THAILANDPOST_API_KEY ใน Script Properties');
+  if(!forceRefresh){
+    const cachedToken=props.getProperty('THAILANDPOST_TOKEN');
+    const cachedExp=props.getProperty('THAILANDPOST_TOKEN_EXP');
+    if(cachedToken&&cachedExp&&Date.now()<Number(cachedExp))return cachedToken;
+  }
+  const res=UrlFetchApp.fetch('https://trackapi.thailandpost.co.th/post/api/v1/authenticate/token',{
+    method:'post',contentType:'application/json',
+    headers:{'Authorization':'Token '+apiKey},muteHttpExceptions:true
+  });
+  let body;try{body=JSON.parse(res.getContentText());}catch(e){body={};}
+  if(!body.token)throw new Error('ขอ token จาก Thailand Post ไม่สำเร็จ (HTTP '+res.getResponseCode()+'): '+res.getContentText());
+  props.setProperty('THAILANDPOST_TOKEN',body.token);
+  props.setProperty('THAILANDPOST_TOKEN_EXP',String(Date.now()+23*60*60*1000));
+  return body.token;
+}
+
+function handleTrackThailandPost(d){
+  const barcodeInput=d.barcode;
+  const barcodes=Array.isArray(barcodeInput)?barcodeInput:[barcodeInput];
+  if(!barcodes.length||!barcodes[0]){
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:'ไม่พบเลขแทร็กกิ้ง'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  function callTrack(token){
+    return UrlFetchApp.fetch('https://trackapi.thailandpost.co.th/post/api/v1/track',{
+      method:'post',contentType:'application/json',
+      headers:{'Authorization':'Token '+token},
+      payload:JSON.stringify({status:'all',language:'TH',barcode:barcodes}),
+      muteHttpExceptions:true
+    });
+  }
+  let token=getThailandPostAuthToken(false);
+  let res=callTrack(token);
+  if(res.getResponseCode()===401){token=getThailandPostAuthToken(true);res=callTrack(token);}
+  if(res.getResponseCode()!==200){
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:'Thailand Post API error (HTTP '+res.getResponseCode()+')'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  let data;try{data=JSON.parse(res.getContentText());}catch(e){
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:'อ่านผลลัพธ์จาก Thailand Post ไม่ได้'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:true,data})).setMimeType(ContentService.MimeType.JSON);
 }</div>
         <button class="filter-btn" style="margin-top:6px;font-size:var(--text-xs)" onclick="copyScriptCode()">📋 คัดลอก Code</button>
       </div>
