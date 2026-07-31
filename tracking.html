@@ -162,6 +162,13 @@ body{
 .result-status-label.st-delivered{color:var(--green)}
 .result-status-label.st-problem{color:var(--red)}
 
+.src-note{
+  margin:0 22px;padding:8px 12px;
+  background:var(--accent-soft);color:var(--accent-deep);
+  border-radius:8px;font-size:11.5px;font-weight:600;
+  margin-top:14px;
+}
+
 .cancel-banner{
   margin:16px 22px 0;
   background:var(--red-soft);color:var(--red);
@@ -417,11 +424,26 @@ function tpHistoryHTML(tpEvents){
     </div>`;
 }
 
+// เดาสถานะหลักจาก event ล่าสุดของไปรษณีย์ไทย (ใช้เมื่อมีข้อมูลแทร็กกิ้งจริงแล้ว)
+function classifyTPPrimary(tpEvents){
+  if(!tpEvents||!tpEvents.length)return null;
+  const latest=tpEvents[0]; // reverse แล้ว ตัวแรกคือใหม่สุด
+  const text=String(latest.desc||'');
+  let cancelled=false,delivered=false;
+  if(/ตีกลับ|ยกเลิก|ไม่สำเร็จ|คืนต้นทาง/.test(text)) cancelled=true;
+  else if(/นำจ่ายสำเร็จ|จ่ายให้ผู้รับ|ส่งสำเร็จ|delivered/i.test(text)) delivered=true;
+  return{label:text,cancelled,delivered,latest};
+}
+
 function renderResult(o,tpEvents){
+  const tp=classifyTPPrimary(tpEvents);
   const cls=classifyStatus(o.status);
-  const cancelled=cls==='problem';
-  const step2done=cls==='packed'||cls==='delivered';
-  const step3done=cls==='delivered';
+  const usingTP=!!tp;
+
+  // ถ้ามีข้อมูลจากไปรษณีย์ไทยจริง ใช้เป็นสถานะหลัก — ถ้ายังไม่มี (ยังไม่ได้แพ็ค/ยังไม่มีเลขแทร็กกิ้งที่ระบบขนส่งรับ) ใช้สถานะภายในของ CFM แทน
+  const cancelled=usingTP?tp.cancelled:cls==='problem';
+  const step2done=usingTP?true:(cls==='packed'||cls==='delivered'); // มี event จากไปรษณีย์ = รับพัสดุ/อยู่ระหว่างขนส่งแล้ว
+  const step3done=usingTP?tp.delivered:cls==='delivered';
   const pct=cancelled?0:(step3done?100:step2done?50:5);
 
   const labelMap={
@@ -430,6 +452,8 @@ function renderResult(o,tpEvents){
     delivered:'จัดส่งสำเร็จ',
     problem:'ออเดอร์ถูกยกเลิก'
   };
+  const statusLabel=usingTP?(cancelled?'พัสดุถูกตีกลับ / ไม่สำเร็จ':tp.label):labelMap[cls];
+  const statusClass=usingTP?(cancelled?'problem':step3done?'delivered':'packed'):cls;
 
   const detailRows=[
     ['วันที่สั่งซื้อ',o.order_date||'-'],
@@ -437,8 +461,12 @@ function renderResult(o,tpEvents){
     ['ผู้รับ',o.customer||'-'],
     ['ปลายทาง',[o.district,o.province].filter(Boolean).join(', ')||'-'],
   ];
-  if(cancelled&&o.statusRaw) detailRows.push(['หมายเหตุ',o.statusRaw]);
-  else if(step3done&&o.statusRaw&&o.statusRaw!=='1') detailRows.push(['บันทึกสถานะล่าสุด',o.statusRaw]);
+  if(o.statusRaw&&o.statusRaw!=='1') detailRows.push(['สถานะที่บันทึกในระบบ CFM',o.statusRaw]);
+
+  const step2Label=usingTP?'ไปรษณีย์รับพัสดุแล้ว':'แพ็คสินค้าแล้ว';
+  const sourceNote=usingTP
+    ?'<div class="src-note">🚚 อัปเดตแบบเรียลไทม์จากไปรษณีย์ไทย</div>'
+    :'<div class="src-note">🏷️ ยังไม่มีข้อมูลจากไปรษณีย์ไทย — แสดงสถานะที่ทีมงาน CFM บันทึกไว้</div>';
 
   document.getElementById('result').innerHTML=`
     <div class="result-card">
@@ -446,13 +474,14 @@ function renderResult(o,tpEvents){
         <div class="bottle-wrap">${bottleSVG(pct,cancelled)}</div>
         <div class="result-top-text">
           <div class="result-order">เลขออเดอร์ ${esc(o.order_id)}</div>
-          <div class="result-status-label st-${cls}">${labelMap[cls]}</div>
+          <div class="result-status-label st-${statusClass}">${esc(statusLabel)}</div>
         </div>
       </div>
-      ${cancelled?`<div class="cancel-banner">✕ ออเดอร์นี้ถูกยกเลิก — หากมีข้อสงสัยกรุณาติดต่อทีมงาน</div>`:`
+      ${sourceNote}
+      ${cancelled?`<div class="cancel-banner">✕ ${usingTP?'พัสดุถูกตีกลับ/จัดส่งไม่สำเร็จ':'ออเดอร์นี้ถูกยกเลิก'} — หากมีข้อสงสัยกรุณาติดต่อทีมงาน</div>`:`
       <div class="timeline">
         <div class="tl-step done"><div class="tl-dot"><span>1</span></div><div class="tl-label">รับออเดอร์แล้ว</div></div>
-        <div class="tl-step ${step2done?'done':''}"><div class="tl-line ${step2done?'done':''}"></div><div class="tl-dot"><span>2</span></div><div class="tl-label">แพ็คสินค้าแล้ว</div></div>
+        <div class="tl-step ${step2done?'done':''}"><div class="tl-line ${step2done?'done':''}"></div><div class="tl-dot"><span>2</span></div><div class="tl-label">${step2Label}</div></div>
         <div class="tl-step ${step3done?'done':''}"><div class="tl-line ${step3done?'done':''}"></div><div class="tl-dot"><span>3</span></div><div class="tl-label">จัดส่งสำเร็จ</div></div>
       </div>`}
       <div class="detail-list">
