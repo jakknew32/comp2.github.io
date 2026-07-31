@@ -168,6 +168,17 @@ body{
   border-radius:8px;font-size:11.5px;font-weight:600;
   margin-top:14px;
 }
+.src-note.err{background:var(--red-soft);color:var(--red)}
+
+.debug-details{margin:10px 22px 0;font-size:11.5px}
+.debug-details summary{cursor:pointer;color:var(--muted);font-weight:600}
+.debug-json{
+  width:100%;margin-top:8px;
+  height:140px;resize:vertical;
+  font-family:monospace;font-size:10.5px;line-height:1.5;
+  background:#0F1A24;color:#8FE3A8;
+  border:none;border-radius:8px;padding:10px;
+}
 
 .cancel-banner{
   margin:16px 22px 0;
@@ -324,18 +335,23 @@ function parseCSV(text){
   return rows;
 }
 
+let lastTPError=null;
+
 async function fetchThailandPostTracking(barcode){
-  if(!APPS_SCRIPT_URL||!barcode)return null;
+  lastTPError=null;
+  if(!APPS_SCRIPT_URL){lastTPError='ยังไม่ได้ใส่ APPS_SCRIPT_URL ในไฟล์ tracking.html';return null;}
+  if(!barcode)return null;
   try{
     const res=await fetch(APPS_SCRIPT_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'trackThailandPost',barcode})
     });
+    if(!res.ok){lastTPError=`Apps Script ตอบกลับ HTTP ${res.status}`;return null;}
     const json=await res.json();
-    if(!json.ok)return null;
+    if(!json.ok){lastTPError=json.error||'Apps Script คืนค่า ok:false โดยไม่ระบุสาเหตุ';return null;}
     return json.data;
-  }catch(e){return null;}
+  }catch(e){lastTPError='เรียก Apps Script ไม่สำเร็จ: '+(e&&e.message?e.message:String(e));return null;}
 }
 
 // หมายเหตุ: โครงสร้าง response ของ Thailand Post อาจต่างกันเล็กน้อยตามเวอร์ชัน API
@@ -435,7 +451,7 @@ function classifyTPPrimary(tpEvents){
   return{label:text,cancelled,delivered,latest};
 }
 
-function renderResult(o,tpEvents){
+function renderResult(o,tpEvents,tpData){
   const tp=classifyTPPrimary(tpEvents);
   const cls=classifyStatus(o.status);
   const usingTP=!!tp;
@@ -466,7 +482,17 @@ function renderResult(o,tpEvents){
   const step2Label=usingTP?'ไปรษณีย์รับพัสดุแล้ว':'แพ็คสินค้าแล้ว';
   const sourceNote=usingTP
     ?'<div class="src-note">🚚 อัปเดตแบบเรียลไทม์จากไปรษณีย์ไทย</div>'
-    :'<div class="src-note">🏷️ ยังไม่มีข้อมูลจากไปรษณีย์ไทย — แสดงสถานะที่ทีมงาน CFM บันทึกไว้</div>';
+    :(lastTPError
+      ?`<div class="src-note err">⚠️ เชื่อมต่อไปรษณีย์ไทยไม่สำเร็จ: ${esc(lastTPError)} — แสดงสถานะที่ทีมงาน CFM บันทึกไว้แทน</div>`
+      :'<div class="src-note">🏷️ ยังไม่มีข้อมูลจากไปรษณีย์ไทย — แสดงสถานะที่ทีมงาน CFM บันทึกไว้</div>');
+
+  // ต่อ Apps Script สำเร็จและได้ข้อมูลกลับมา แต่แกะประวัติการขนส่งไม่ได้ (โครงสร้าง field ไม่ตรงกับที่คาดไว้)
+  // โชว์ JSON ดิบให้กดคัดลอกไปแก้ extractTPEvents() ได้โดยไม่ต้องเปิด F12
+  const debugBlock=(!usingTP&&tpData)?`
+    <details class="debug-details">
+      <summary>🐞 ต่อไปรษณีย์ไทยได้ แต่แกะประวัติไม่ได้ — ดู raw response</summary>
+      <textarea class="debug-json" readonly onclick="this.select()">${esc(JSON.stringify(tpData,null,2))}</textarea>
+    </details>`:'';
 
   document.getElementById('result').innerHTML=`
     <div class="result-card">
@@ -478,6 +504,7 @@ function renderResult(o,tpEvents){
         </div>
       </div>
       ${sourceNote}
+      ${debugBlock}
       ${cancelled?`<div class="cancel-banner">✕ ${usingTP?'พัสดุถูกตีกลับ/จัดส่งไม่สำเร็จ':'ออเดอร์นี้ถูกยกเลิก'} — หากมีข้อสงสัยกรุณาติดต่อทีมงาน</div>`:`
       <div class="timeline">
         <div class="tl-step done"><div class="tl-dot"><span>1</span></div><div class="tl-label">รับออเดอร์แล้ว</div></div>
@@ -541,7 +568,7 @@ async function doSearch(){
     const tpData=await fetchThailandPostTracking(barcodeForTP);
     const tpEvents=tpData?extractTPEvents(tpData):[];
 
-    if(found) renderResult(found,tpEvents);
+    if(found) renderResult(found,tpEvents,tpData);
     else if(tpEvents.length) renderTPOnlyResult(barcodeForTP,tpEvents);
     else renderNotFound(q);
   }catch(e){
@@ -554,4 +581,4 @@ async function doSearch(){
 document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
 </script>
 </body>
-</html>  
+</html>
