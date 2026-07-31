@@ -356,18 +356,29 @@ async function fetchThailandPostTracking(barcode){
 
 // หมายเหตุ: โครงสร้าง response ของ Thailand Post อาจต่างกันเล็กน้อยตามเวอร์ชัน API
 // ฟังก์ชันนี้พยายามอ่านจากหลาย path ที่พบได้บ่อย ถ้าไม่พบข้อมูลจะคืน [] แทนการ error
+function formatTPDate(raw){
+  const m=String(raw||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
+  if(!m)return String(raw||'');
+  const d=+m[1],mo=+m[2],y=m[3],h=m[4],mi=m[5];
+  return `${d} ${thMonths[mo-1]||mo} ${y} ${h}:${mi} น.`;
+}
+
+// โครงสร้างจริงจาก Thailand Post: response.items[barcode] เป็น array ของ event ตรงๆ (ไม่ได้ซ้อนใน .iterate)
 function extractTPEvents(data){
   try{
     const items=data&&data.response&&data.response.items;
     if(!items)return[];
     const key=Object.keys(items)[0];
     if(!key)return[];
-    const item=items[key];
-    const arr=item.iterate||item.items||item.history||[];
+    const arr=items[key];
+    if(!Array.isArray(arr))return[];
     return arr.map(ev=>({
-      date:ev.status_date||ev.date||ev.datetime||'',
-      desc:ev.status_description||ev.description||ev.status||'',
-      location:ev.location||ev.postcode||''
+      date:formatTPDate(ev.status_date),
+      desc:ev.status_description||ev.status_detail||'',
+      location:ev.location||'',
+      deliveryStatus:ev.delivery_status||null,
+      deliveryDesc:ev.delivery_description||null,
+      receiverName:ev.receiver_name||null
     })).filter(ev=>ev.desc).reverse(); // ใหม่สุดขึ้นก่อน
   }catch(e){return[];}
 }
@@ -446,9 +457,13 @@ function classifyTPPrimary(tpEvents){
   const latest=tpEvents[0]; // reverse แล้ว ตัวแรกคือใหม่สุด
   const text=String(latest.desc||'');
   let cancelled=false,delivered=false;
-  if(/ตีกลับ|ยกเลิก|ไม่สำเร็จ|คืนต้นทาง/.test(text)) cancelled=true;
-  else if(/นำจ่ายสำเร็จ|จ่ายให้ผู้รับ|ส่งสำเร็จ|delivered/i.test(text)) delivered=true;
-  return{label:text,cancelled,delivered,latest};
+  if(latest.deliveryStatus==='S') delivered=true; // ไปรษณีย์ไทยยืนยันนำจ่ายสำเร็จ
+  else if(/ตีกลับ|ไม่สำเร็จ|คืน/.test(latest.deliveryDesc||'')) cancelled=true;
+  if(!delivered&&!cancelled){
+    if(/ตีกลับ|ยกเลิก|ไม่สำเร็จ|คืนต้นทาง/.test(text)) cancelled=true;
+    else if(/นำจ่ายสำเร็จ|จ่ายให้ผู้รับ|ส่งสำเร็จ|delivered/i.test(text)) delivered=true;
+  }
+  return{label:latest.deliveryDesc||text,cancelled,delivered,latest};
 }
 
 function renderResult(o,tpEvents,tpData){
@@ -478,6 +493,7 @@ function renderResult(o,tpEvents,tpData){
     ['ปลายทาง',[o.district,o.province].filter(Boolean).join(', ')||'-'],
   ];
   if(o.statusRaw&&o.statusRaw!=='1') detailRows.push(['สถานะที่บันทึกในระบบ CFM',o.statusRaw]);
+  if(usingTP&&tp.delivered&&tp.latest.receiverName) detailRows.push(['ผู้รับ (ยืนยันจากไปรษณีย์)',tp.latest.receiverName]);
 
   const step2Label=usingTP?'ไปรษณีย์รับพัสดุแล้ว':'แพ็คสินค้าแล้ว';
   const sourceNote=usingTP
