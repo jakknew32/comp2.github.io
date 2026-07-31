@@ -344,7 +344,7 @@ async function fetchThailandPostTracking(barcode){
   try{
     const res=await fetch(APPS_SCRIPT_URL,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'trackThailandPost',barcode})
     });
     if(!res.ok){lastTPError=`Apps Script ตอบกลับ HTTP ${res.status}`;return null;}
