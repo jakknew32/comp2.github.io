@@ -1157,21 +1157,30 @@ function parseCSVFixed(text){
 }
 
 // Google Sheet export เป็น CSV จะไม่มีข้อมูล merge cell ติดมาเลย (ต่างจากไฟล์ .xlsx ที่ยังกู้ merge ได้)
-// เลยต้องเดาแทน: ถ้าแถวไหน ชื่อ/เบอร์/ที่อยู่/เลขออเดอร์ ว่าง แต่มีข้อมูลอื่น (ชนิดนม/จำนวน/สถานะ) อยู่
-// แปลว่าเป็นแถวต่อของออเดอร์เดิมที่ merge เซลล์ไว้ -> ดึงค่าจากแถวก่อนหน้าที่มีข้อมูลมาเติมให้
+// เลยต้องเดาแทน: จะเติมค่าจากแถวบนให้ก็ต่อเมื่อ "ทั้งชุด" (ออเดอร์+ชื่อ+เบอร์+ที่อยู่) ว่างพร้อมกันหมดเท่านั้น
+// (ต้องเข้มขนาดนี้ ไม่งั้นถ้าออเดอร์ใหม่มีชื่อ/ที่อยู่แล้วแต่ลูกค้าไม่ได้กรอกเบอร์ไว้ โค้ดจะไปหยิบเบอร์ของ
+//  ออเดอร์ก่อนหน้ามาใส่ให้แทน กลายเป็นเบอร์ผิดคน)
 function forwardFillMerged(rows){
   let last={};
   return rows.map(r=>{
     const row=[...r];
-    const hasOtherData=String(row[COL_NOTE]||'').trim()||String(row[COL_QTY]||'').trim()||String(row[COL_STATUS]||'').trim();
-    [COL_ORDER,COL_NAME,COL_PHONE,COL_ADDR].forEach(ci=>{
-      const val=String(row[ci]||'').trim();
-      if(val){
-        last[ci]=row[ci];
-      } else if(hasOtherData && last[ci]!==undefined){
-        row[ci]=last[ci];
-      }
-    });
+    const order=String(r[COL_ORDER]||'').trim();
+    const name=String(r[COL_NAME]||'').trim();
+    const phone=String(r[COL_PHONE]||'').trim();
+    const addr=String(r[COL_ADDR]||'').trim();
+    const allBlank=!order&&!name&&!phone&&!addr;
+    const hasOtherData=String(r[COL_NOTE]||'').trim()||String(r[COL_QTY]||'').trim()||String(r[COL_STATUS]||'').trim();
+
+    if(allBlank && hasOtherData){
+      [COL_ORDER,COL_NAME,COL_PHONE,COL_ADDR].forEach(ci=>{
+        if(last[ci]!==undefined) row[ci]=last[ci];
+      });
+    } else {
+      [COL_ORDER,COL_NAME,COL_PHONE,COL_ADDR].forEach(ci=>{
+        const v=String(r[ci]||'').trim();
+        if(v) last[ci]=r[ci];
+      });
+    }
     return row;
   });
 }
