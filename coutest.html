@@ -426,7 +426,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
     <div class="form-group"><label>เบอร์โทร</label><input type="text" id="f_phone" placeholder="089-XXXXXXX"></div>
     <div class="form-group"><label>ที่อยู่เต็ม *</label><textarea id="f_addr" rows="4" placeholder="บ้านเลขที่ / ตำบล / อำเภอ / จังหวัด รหัสไปรษณีย์"></textarea></div>
     <div class="form-group"><label>เลขออเดอร์</label><input type="text" id="f_order" placeholder="เลขออเดอร์ (ถ้ามี)"></div>
-    <div class="form-group"><label>หมายเหตุ</label><input type="text" id="f_note" placeholder="เพิ่มเติม (ถ้ามี)"></div>
+    <div class="form-group"><label>ชนิดนม</label><input type="text" id="f_note" placeholder="ระบุชนิดนม (ถ้ามี)"></div>
     <div style="display:flex;gap:10px;margin-top:6px">
       <button class="btn btn-amber" style="flex:1;justify-content:center" onclick="saveLabel()">💾 บันทึก</button>
       <button class="btn btn-outline" onclick="closeModal('editModal')">ยกเลิก</button>
@@ -448,16 +448,17 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
         <div class="import-zone-icon">📁</div>
         <strong>คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่</strong>
         <p>รองรับ .xlsx, .xls, .csv</p>
-        <p style="margin-top:6px;font-size:11px">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=หมายเหตุ, AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
+        <p style="margin-top:6px;font-size:11px">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=ชนิดนม, Y=จำนวน, AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
         <p style="margin-top:4px;font-size:11px;color:var(--amber);font-weight:600">📑 ไฟล์ .xlsx/.xls จะอ่านเฉพาะ Sheet "ออเดอร์ต่างจังหวัด" เท่านั้น</p>
+        <p style="margin-top:4px;font-size:11px;color:var(--amber);font-weight:600">🔎 ดึงเฉพาะแถวที่คอลัมน์ A ว่าง หรือมีค่า "ค้างจัดส่ง" เท่านั้น</p>
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
       <div style="background:var(--ground);border-radius:var(--r-md);padding:14px;margin-top:14px">
         <p style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">คอลัมน์ที่อ่าน</p>
         <table class="import-table">
-          <thead><tr><th>C - เลขออเดอร์</th><th>S - หมายเหตุ</th><th>AX - ชื่อ</th><th>AY - เบอร์</th><th>BA - ที่อยู่</th></tr></thead>
+          <thead><tr><th>C - เลขออเดอร์</th><th>S - ชนิดนม</th><th>Y - จำนวน</th><th>AX - ชื่อ</th><th>AY - เบอร์</th><th>BA - ที่อยู่</th></tr></thead>
           <tbody>
-            <tr><td>ORD001</td><td>ด่วน</td><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 สารภี เชียงใหม่</td></tr>
+            <tr><td>ORD001</td><td>ด่วน</td><td>2</td><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 สารภี เชียงใหม่</td></tr>
           </tbody>
         </table>
       </div>
@@ -609,7 +610,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 </div>
 
 <script>
-const SENDER = 'เชียงใหม่เฟรชมิลค์ 57/1 ม.6 ต.ท่าวังตาล สารภี จ.เชียงใหม่ โทร.089-6354687';
+const SENDER = 'เชียงใหม่เฟรชมิลค์ 57/1 ม.6 ต.ท่าวังตาล สารภี จ.เชียงใหม่ โทร.097-920-7044';
 let labels = JSON.parse(localStorage.getItem('cfm_labels') || '[]');
 let editingId = null;
 let importData = [];
@@ -750,7 +751,7 @@ function renderList(){
         </div>
         ${lb.phone?`<div class="lcard-phone">📞 ${esc(lb.phone)}</div>`:''}
         <div class="lcard-addr">${esc(lb.addr||'ไม่มีที่อยู่')}</div>
-        ${lb.note?`<div class="lcard-note">📝 ${esc(lb.note)}</div>`:''}
+        ${lb.note||lb.qty?`<div class="lcard-note">📝 ${esc(noteWithQty(lb))}</div>`:''}
       </div>
       <div class="lcard-actions">
         <button class="btn btn-outline btn-xs" onclick="openEdit('${lb.id}');event.stopPropagation()">✏️</button>
@@ -769,12 +770,11 @@ function makeLabelHTML(lb, num){
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
   const fullAddr = lb.addr || '';
   const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}` : fullAddr;
-  const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}` : (lb.note?`หมายเหตุ: ${esc(lb.note)}`:'');
+  const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / ชนิดนม: '+esc(noteWithQty(lb)):''}` : ((lb.note||lb.qty)?`ชนิดนม: ${esc(noteWithQty(lb))}`:'');
   const noteHTML = orderLine ? `<div class="sl-z sl-note-box">📝 ${orderLine}</div>` : '';
 
   return `<div class="shipping-label">
     <div class="sl-wm"></div>
-    <div class="sl-z" style="position:absolute;top:3mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit',sans-serif;">ใบที่ ${num}</div>
     <div class="sl-z sl-hdr"><h2>Chiangmai Freshmilk</h2></div>
     <div class="sl-z sl-line"></div>
     <div class="sl-z sl-sender">${esc(SENDER)}</div>
@@ -822,10 +822,9 @@ function buildPrintDoc(list){
   const labels_html = list.map((lb,i)=>{
     const fullAddr = lb.addr||'';
     const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}`:fullAddr;
-    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${lb.note?' / หมายเหตุ: '+esc(lb.note):''}`:lb.note?`หมายเหตุ: ${esc(lb.note)}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
+    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / ชนิดนม: '+esc(noteWithQty(lb)):''}`:(lb.note||lb.qty)?`ชนิดนม: ${esc(noteWithQty(lb))}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
-      <div style="position:absolute;top:2mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit','Sarabun',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
       <div style="position:relative;z-index:1;text-align:center;padding:5px 4mm 3px;background:#0D1B2A;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><h2 style="font-size:18px;font-weight:700;margin:0;color:#F59E0B;letter-spacing:.3px;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
       <div style="position:relative;z-index:1;border-top:1.5px solid #333;margin:0"></div>
       <div style="position:relative;z-index:1;text-align:center;font-size:10px;line-height:1.3;color:#444;padding:3px 4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(SENDER)}</div>
@@ -1050,15 +1049,52 @@ async function fetchFromGoogleSheet(){
 }
 
 // คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, AX=49, AY=50, BA=52
-const COL_ORDER=2, COL_NOTE=18, COL_NAME=49, COL_PHONE=50, COL_ADDR=52;
+const COL_ORDER=2, COL_NOTE=18, COL_NAME=49, COL_PHONE=50, COL_ADDR=52, COL_STATUS=0, COL_QTY=24;
+const STATUS_PENDING='ค้างจัดส่ง';
 const GSHEET_ID='1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44';
 const GSHEET_TAB='ออเดอร์ต่างจังหวัด';
 
 function normalizePhone(p){
   p=String(p||'').trim();
-  if(p.startsWith('66')) p='0'+p.slice(2);
+  if(!p) return '';
+  // Excel เก็บเบอร์เป็นตัวเลขแล้วยาวเกินจะกลายเป็น scientific notation เช่น 8.91235E+9
+  if(/e\+?\d+$/i.test(p)){
+    const num=Number(p);
+    if(!isNaN(num)) p=Math.round(num).toString();
+  }
+  // ตัดอักขระอื่นที่ไม่ใช่ตัวเลข/เครื่องหมาย + ออก (ขีด, วงเล็บ, ช่องว่าง ฯลฯ)
+  p=p.replace(/[^\d+]/g,'');
   if(p.startsWith('+66')) p='0'+p.slice(3);
+  else if(p.startsWith('66')&&p.length>=11) p='0'+p.slice(2);
+  // Excel เก็บเบอร์เป็น "ตัวเลข" จะตัดเลข 0 นำหน้าออกไปเอง (0891234567 -> 891234567)
+  // เบอร์ไทยที่ไม่มีเลข 0 นำหน้าและเหลือ 8-9 หลัก ให้เติม 0 กลับคืน
+  if(/^\d{8,9}$/.test(p)&&!p.startsWith('0')) p='0'+p;
   return p;
+}
+
+function noteWithQty(lb){
+  const n=String(lb.note||'').trim();
+  const q=String(lb.qty||'').trim();
+  if(!q) return n;
+  return n ? `${n} X${q}` : `X${q}`;
+}
+
+// เซลล์ที่ถูก merge ใน Excel จะมีค่าอยู่แค่เซลล์แรก(บนซ้าย)ของช่วงที่ merge เท่านั้น
+// แถวอื่นในช่วง merge เดียวกันจะว่างเปล่า -> ทำให้ AY (เบอร์) อ่านไม่ได้เฉพาะบางแถว
+// ฟังก์ชันนี้ก็อปปี้ค่าจากเซลล์แรกไปเติมให้ทุกเซลล์ในช่วง merge ก่อนแปลงเป็น array
+function fillMergedCells(ws){
+  if(!ws['!merges']) return;
+  ws['!merges'].forEach(range=>{
+    const startAddr=XLSX.utils.encode_cell({r:range.s.r,c:range.s.c});
+    const startCell=ws[startAddr];
+    if(!startCell) return;
+    for(let R=range.s.r;R<=range.e.r;R++){
+      for(let C=range.s.c;C<=range.e.c;C++){
+        const addr=XLSX.utils.encode_cell({r:R,c:C});
+        if(!ws[addr]) ws[addr]={...startCell};
+      }
+    }
+  });
 }
 
 function processFile(file){
@@ -1079,6 +1115,7 @@ function processFile(file){
         return;
       }
       const ws=wb.Sheets[sheetName];
+      fillMergedCells(ws); // เติมค่าที่หายไปจากเซลล์ merge ก่อนอ่าน
       // อ่านเป็น array of arrays เริ่มแถว 2 (index 1)
       const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       parseRowsFixed(data.slice(1)); // ข้ามแถว 1 (header)
@@ -1087,53 +1124,125 @@ function processFile(file){
   }
 }
 
-function parseCSVFixed(text){
-  const lines=text.split('\n');
-  if(lines.length<2) return;
-  // ข้ามแถวแรก (header) เริ่มจากแถวที่ 2
-  const rows=lines.slice(1).map(line=>{
-    const vals=[]; let cur='',inQ=false;
-    for(let c of line+','){
-      if(c==='"'){ inQ=!inQ; }
-      else if(c===','&&!inQ){ vals.push(cur.trim()); cur=''; }
+// เดิมพาร์สแบบ split('\n') ก่อนตัดคอลัมน์ทีหลัง ซึ่งพังถ้าเซลล์ไหนมีขึ้นบรรทัดใหม่ในตัวเอง
+// (เช่น ที่อยู่/หมายเหตุที่กด Alt+Enter ขึ้นบรรทัดใหม่ในเซลล์เดียว) เพราะจะตัดแถวผิดตำแหน่ง
+// ทำให้คอลัมน์ทั้งหมดเลื่อนตั้งแต่แถวนั้นเป็นต้นไป -> AY (เบอร์) หลุดไปตกคอลัมน์ที่ไม่มีข้อมูล
+// เปลี่ยนมาอ่านทีละตัวอักษรทั้งไฟล์แทน ให้เคารพเครื่องหมายคำพูดอย่างถูกต้องตามมาตรฐาน CSV
+function csvToRows(text){
+  const rows=[]; let row=[]; let cur=''; let inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){
+        if(text[i+1]==='"'){ cur+='"'; i++; } // "" ภายในเครื่องหมายคำพูด = อักขระ " ตัวเดียว
+        else inQ=false;
+      } else cur+=c;
+    } else {
+      if(c==='"') inQ=true;
+      else if(c===',') { row.push(cur); cur=''; }
+      else if(c==='\r') { /* ข้าม ไปจับที่ \n */ }
+      else if(c==='\n') { row.push(cur); cur=''; rows.push(row); row=[]; }
       else cur+=c;
     }
-    return vals;
-  });
-  parseRowsFixed(rows);
+  }
+  if(cur.length||row.length){ row.push(cur); rows.push(row); }
+  return rows;
 }
 
+function parseCSVFixed(text){
+  const rows=csvToRows(text);
+  if(rows.length<2) return;
+  // ข้ามแถวแรก (header) เริ่มจากแถวที่ 2
+  parseRowsFixed(rows.slice(1));
+}
+
+// Google Sheet export เป็น CSV จะไม่มีข้อมูล merge cell ติดมาเลย (ต่างจากไฟล์ .xlsx ที่ยังกู้ merge ได้)
+// เลยต้องเดาแทน: ถ้าแถวไหน ชื่อ/เบอร์/ที่อยู่/เลขออเดอร์ ว่าง แต่มีข้อมูลอื่น (ชนิดนม/จำนวน/สถานะ) อยู่
+// แปลว่าเป็นแถวต่อของออเดอร์เดิมที่ merge เซลล์ไว้ -> ดึงค่าจากแถวก่อนหน้าที่มีข้อมูลมาเติมให้
+function forwardFillMerged(rows){
+  let last={};
+  return rows.map(r=>{
+    const row=[...r];
+    const hasOtherData=String(row[COL_NOTE]||'').trim()||String(row[COL_QTY]||'').trim()||String(row[COL_STATUS]||'').trim();
+    [COL_ORDER,COL_NAME,COL_PHONE,COL_ADDR].forEach(ci=>{
+      const val=String(row[ci]||'').trim();
+      if(val){
+        last[ci]=row[ci];
+      } else if(hasOtherData && last[ci]!==undefined){
+        row[ci]=last[ci];
+      }
+    });
+    return row;
+  });
+}
+
+let skippedData=[];
+
 function parseRowsFixed(rows){
-  const parsed=rows
-    .filter(r=>String(r[COL_NAME]||'').trim()||String(r[COL_ADDR]||'').trim())
-    .map(r=>({
+  rows=forwardFillMerged(rows);
+  const parsed=[];
+  skippedData=[];
+
+  rows.forEach(r=>{
+    const rawStatus=r[COL_STATUS];
+    const st=String(rawStatus||'').trim();
+    const name=String(r[COL_NAME]||'').trim();
+    const addr=String(r[COL_ADDR]||'').trim();
+    const order=String(r[COL_ORDER]||'').trim();
+    const hasAnyContent=name||addr||order||String(r[COL_NOTE]||'').trim();
+    if(!hasAnyContent) return; // แถวว่างสนิทจริงๆ ข้ามเงียบๆ ไม่นับเป็นแถวที่ถูกข้าม
+
+    const statusOk=st===''||st===STATUS_PENDING;
+    if(!statusOk){
+      // แสดงค่าดิบเป็น JSON เผื่อมีช่องว่าง/อักขระที่มองไม่เห็นแฝงอยู่ (เช่น "\u00A0")
+      skippedData.push({order,name,reason:`คอลัมน์ A = ${JSON.stringify(st)} (ไม่ตรงกับค่าว่าง หรือ "${STATUS_PENDING}")`});
+      return;
+    }
+    if(!name && !addr){
+      skippedData.push({order,name,reason:'ไม่มีทั้งชื่อ (AX) และที่อยู่ (BA)'});
+      return;
+    }
+    parsed.push({
       id:uid(),
-      name:String(r[COL_NAME]||'').trim(),
+      name,
       phone:normalizePhone(r[COL_PHONE]),
-      addr:String(r[COL_ADDR]||'').trim(),
-      order:String(r[COL_ORDER]||'').trim(),
+      addr,
+      order,
       note:String(r[COL_NOTE]||'').trim(),
+      qty:String(r[COL_QTY]||'').trim(),
       selected:true,
       createdAt:new Date().toISOString()
-    }));
+    });
+  });
 
   importData=parsed;
 
-  if(!importData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
+  if(!importData.length && !skippedData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
 
   document.getElementById('importStep1').style.display='none';
   document.getElementById('importStep2').style.display='';
   document.getElementById('importPreview').innerHTML=`
-    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+    ${importData.length?`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
       <span style="font-size:20px">✅</span>
-      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้าทั้งหมด</span></div>
-    </div>
-    <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้า</span></div>
+    </div>`:`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:12px">
+      <strong style="font-size:14px;color:#991b1b">⚠️ ไม่มีแถวไหนผ่านเกณฑ์นำเข้าเลย</strong>
+    </div>`}
+    ${skippedData.length?`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;margin-bottom:12px">
+      <strong style="font-size:13px;color:#7c4a00">⏭️ ข้าม ${skippedData.length} แถว — เหตุผล:</strong>
+      <div style="max-height:180px;overflow-y:auto;margin-top:8px;border:1px solid var(--border);border-radius:6px">
+        <table class="import-table">
+          <thead><tr><th>ออเดอร์</th><th>ชื่อ</th><th>เหตุผลที่ข้าม</th></tr></thead>
+          <tbody>${skippedData.map(s=>`<tr><td>${esc(s.order)}</td><td>${esc(s.name)}</td><td style="font-family:var(--font-mono);font-size:11px">${esc(s.reason)}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>`:''}
+    ${importData.length?`<div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table class="import-table">
-        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>หมายเหตุ</th></tr></thead>
-        <tbody>${importData.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td>${esc(r.note)}</td></tr>`).join('')}</tbody>
+        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>ชนิดนม</th><th>จำนวน (Y)</th></tr></thead>
+        <tbody>${importData.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td>${esc(r.note)}</td><td>${esc(r.qty)}</td></tr>`).join('')}</tbody>
       </table>
-    </div>`;
+    </div>`:''}`;
 }
 
 function confirmImport(){
@@ -1338,7 +1447,7 @@ function doExport(){
       'ชื่อผู้รับ': r.name||'',
       'เบอร์โทร': r.phone||'',
       'ที่อยู่': r.addr||'',
-      'หมายเหตุ': r.note||''
+      'ชนิดนม': r.note||''
     };
   });
 
