@@ -1056,8 +1056,19 @@ const GSHEET_TAB='ออเดอร์ต่างจังหวัด';
 
 function normalizePhone(p){
   p=String(p||'').trim();
-  if(p.startsWith('66')) p='0'+p.slice(2);
+  if(!p) return '';
+  // Excel เก็บเบอร์เป็นตัวเลขแล้วยาวเกินจะกลายเป็น scientific notation เช่น 8.91235E+9
+  if(/e\+?\d+$/i.test(p)){
+    const num=Number(p);
+    if(!isNaN(num)) p=Math.round(num).toString();
+  }
+  // ตัดอักขระอื่นที่ไม่ใช่ตัวเลข/เครื่องหมาย + ออก (ขีด, วงเล็บ, ช่องว่าง ฯลฯ)
+  p=p.replace(/[^\d+]/g,'');
   if(p.startsWith('+66')) p='0'+p.slice(3);
+  else if(p.startsWith('66')&&p.length>=11) p='0'+p.slice(2);
+  // Excel เก็บเบอร์เป็น "ตัวเลข" จะตัดเลข 0 นำหน้าออกไปเอง (0891234567 -> 891234567)
+  // เบอร์ไทยที่ไม่มีเลข 0 นำหน้าและเหลือ 8-9 หลัก ให้เติม 0 กลับคืน
+  if(/^\d{8,9}$/.test(p)&&!p.startsWith('0')) p='0'+p;
   return p;
 }
 
@@ -1066,6 +1077,24 @@ function noteWithQty(lb){
   const q=String(lb.qty||'').trim();
   if(!q) return n;
   return n ? `${n} X${q}` : `X${q}`;
+}
+
+// เซลล์ที่ถูก merge ใน Excel จะมีค่าอยู่แค่เซลล์แรก(บนซ้าย)ของช่วงที่ merge เท่านั้น
+// แถวอื่นในช่วง merge เดียวกันจะว่างเปล่า -> ทำให้ AY (เบอร์) อ่านไม่ได้เฉพาะบางแถว
+// ฟังก์ชันนี้ก็อปปี้ค่าจากเซลล์แรกไปเติมให้ทุกเซลล์ในช่วง merge ก่อนแปลงเป็น array
+function fillMergedCells(ws){
+  if(!ws['!merges']) return;
+  ws['!merges'].forEach(range=>{
+    const startAddr=XLSX.utils.encode_cell({r:range.s.r,c:range.s.c});
+    const startCell=ws[startAddr];
+    if(!startCell) return;
+    for(let R=range.s.r;R<=range.e.r;R++){
+      for(let C=range.s.c;C<=range.e.c;C++){
+        const addr=XLSX.utils.encode_cell({r:R,c:C});
+        if(!ws[addr]) ws[addr]={...startCell};
+      }
+    }
+  });
 }
 
 function processFile(file){
@@ -1086,6 +1115,7 @@ function processFile(file){
         return;
       }
       const ws=wb.Sheets[sheetName];
+      fillMergedCells(ws); // เติมค่าที่หายไปจากเซลล์ merge ก่อนอ่าน
       // อ่านเป็น array of arrays เริ่มแถว 2 (index 1)
       const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       parseRowsFixed(data.slice(1)); // ข้ามแถว 1 (header)
