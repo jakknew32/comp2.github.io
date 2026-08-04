@@ -1030,15 +1030,25 @@ async function fetchFromGoogleSheet(){
   btn.innerHTML='⏳ กำลังดึงข้อมูล...';
   showToast('⏳ กำลังดึงข้อมูลจาก Google Sheet...','#0d9488',15000);
   try{
-    const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(GSHEET_TAB)}`;
+    // เดิมดึงเป็น CSV (gviz) ซึ่งไม่มีข้อมูล merge cell ติดมาด้วยเลย ทำให้เดาไม่ได้แน่นอนว่า
+    // เซลล์ว่างเพราะไม่มีข้อมูลจริง หรือเพราะถูก merge ไว้ -> เปลี่ยนมาดึงเป็นไฟล์ .xlsx แทน
+    // ซึ่งมีข้อมูล merge ติดมาด้วยจริง ใช้ fillMergedCells() กู้คืนค่าได้แม่นยำเหมือนไฟล์อัปโหลด
+    const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/export?format=xlsx`;
     const res=await fetch(url,{cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const text=await res.text();
-    if(!text || /^\s*<!DOCTYPE html/i.test(text) || text.includes('Temporary Redirect')){
-      throw new Error('empty or html response');
+    const buf=await res.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    let sheetName=wb.SheetNames.find(n=>n.trim()===GSHEET_TAB);
+    if(!sheetName) sheetName=wb.SheetNames.find(n=>n.includes(GSHEET_TAB));
+    if(!sheetName){
+      showToast(`❌ ไม่พบ Sheet "${GSHEET_TAB}" ในไฟล์`,'#dc2626',3500);
+      return;
     }
-    parseCSVFixed(text);
-    showToast(`✅ ดึงข้อมูลจาก Sheet "${GSHEET_TAB}" สำเร็จ`,'#059669');
+    const ws=wb.Sheets[sheetName];
+    fillMergedCells(ws);
+    const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    parseRowsFixed(data.slice(1));
+    showToast(`✅ ดึงข้อมูลจาก Sheet "${GSHEET_TAB}" สำเร็จ (รองรับ merge cell แล้ว)`,'#059669');
   }catch(err){
     console.error(err);
     showToast('❌ ดึงข้อมูลไม่สำเร็จ ตรวจสอบว่า Sheet เปิดสิทธิ์ "ทุกคนที่มีลิงก์ดูได้" แล้วหรือยัง','#dc2626',5000);
