@@ -1030,15 +1030,25 @@ async function fetchFromGoogleSheet(){
   btn.innerHTML='⏳ กำลังดึงข้อมูล...';
   showToast('⏳ กำลังดึงข้อมูลจาก Google Sheet...','#0d9488',15000);
   try{
-    const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(GSHEET_TAB)}`;
+    // เดิมดึงเป็น CSV (gviz) ซึ่งไม่มีข้อมูล merge cell ติดมาด้วยเลย ทำให้เดาไม่ได้แน่นอนว่า
+    // เซลล์ว่างเพราะไม่มีข้อมูลจริง หรือเพราะถูก merge ไว้ -> เปลี่ยนมาดึงเป็นไฟล์ .xlsx แทน
+    // ซึ่งมีข้อมูล merge ติดมาด้วยจริง ใช้ fillMergedCells() กู้คืนค่าได้แม่นยำเหมือนไฟล์อัปโหลด
+    const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/export?format=xlsx`;
     const res=await fetch(url,{cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const text=await res.text();
-    if(!text || /^\s*<!DOCTYPE html/i.test(text) || text.includes('Temporary Redirect')){
-      throw new Error('empty or html response');
+    const buf=await res.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    let sheetName=wb.SheetNames.find(n=>n.trim()===GSHEET_TAB);
+    if(!sheetName) sheetName=wb.SheetNames.find(n=>n.includes(GSHEET_TAB));
+    if(!sheetName){
+      showToast(`❌ ไม่พบ Sheet "${GSHEET_TAB}" ในไฟล์`,'#dc2626',3500);
+      return;
     }
-    parseCSVFixed(text);
-    showToast(`✅ ดึงข้อมูลจาก Sheet "${GSHEET_TAB}" สำเร็จ`,'#059669');
+    const ws=wb.Sheets[sheetName];
+    fillMergedCells(ws);
+    const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    parseRowsFixed(data.slice(1));
+    showToast(`✅ ดึงข้อมูลจาก Sheet "${GSHEET_TAB}" สำเร็จ (รองรับ merge cell แล้ว)`,'#059669');
   }catch(err){
     console.error(err);
     showToast('❌ ดึงข้อมูลไม่สำเร็จ ตรวจสอบว่า Sheet เปิดสิทธิ์ "ทุกคนที่มีลิงก์ดูได้" แล้วหรือยัง','#dc2626',5000);
@@ -1124,58 +1134,139 @@ function processFile(file){
   }
 }
 
-function parseCSVFixed(text){
-  const lines=text.split('\n');
-  if(lines.length<2) return;
-  // ข้ามแถวแรก (header) เริ่มจากแถวที่ 2
-  const rows=lines.slice(1).map(line=>{
-    const vals=[]; let cur='',inQ=false;
-    for(let c of line+','){
-      if(c==='"'){ inQ=!inQ; }
-      else if(c===','&&!inQ){ vals.push(cur.trim()); cur=''; }
+// เดิมพาร์สแบบ split('\n') ก่อนตัดคอลัมน์ทีหลัง ซึ่งพังถ้าเซลล์ไหนมีขึ้นบรรทัดใหม่ในตัวเอง
+// (เช่น ที่อยู่/หมายเหตุที่กด Alt+Enter ขึ้นบรรทัดใหม่ในเซลล์เดียว) เพราะจะตัดแถวผิดตำแหน่ง
+// ทำให้คอลัมน์ทั้งหมดเลื่อนตั้งแต่แถวนั้นเป็นต้นไป -> AY (เบอร์) หลุดไปตกคอลัมน์ที่ไม่มีข้อมูล
+// เปลี่ยนมาอ่านทีละตัวอักษรทั้งไฟล์แทน ให้เคารพเครื่องหมายคำพูดอย่างถูกต้องตามมาตรฐาน CSV
+function csvToRows(text){
+  const rows=[]; let row=[]; let cur=''; let inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){
+        if(text[i+1]==='"'){ cur+='"'; i++; } // "" ภายในเครื่องหมายคำพูด = อักขระ " ตัวเดียว
+        else inQ=false;
+      } else cur+=c;
+    } else {
+      if(c==='"') inQ=true;
+      else if(c===',') { row.push(cur); cur=''; }
+      else if(c==='\r') { /* ข้าม ไปจับที่ \n */ }
+      else if(c==='\n') { row.push(cur); cur=''; rows.push(row); row=[]; }
       else cur+=c;
     }
-    return vals;
-  });
-  parseRowsFixed(rows);
+  }
+  if(cur.length||row.length){ row.push(cur); rows.push(row); }
+  return rows;
 }
 
+function parseCSVFixed(text){
+  const rows=csvToRows(text);
+  if(rows.length<2) return;
+  // ข้ามแถวแรก (header) เริ่มจากแถวที่ 2
+  parseRowsFixed(rows.slice(1));
+}
+
+// Google Sheet export เป็น CSV จะไม่มีข้อมูล merge cell ติดมาเลย (ต่างจากไฟล์ .xlsx ที่ยังกู้ merge ได้)
+// เลยต้องเดาแทน: จะเติมค่าจากแถวบนให้ก็ต่อเมื่อ "ทั้งชุด" (ออเดอร์+ชื่อ+เบอร์+ที่อยู่) ว่างพร้อมกันหมดเท่านั้น
+// (ต้องเข้มขนาดนี้ ไม่งั้นถ้าออเดอร์ใหม่มีชื่อ/ที่อยู่แล้วแต่ลูกค้าไม่ได้กรอกเบอร์ไว้ โค้ดจะไปหยิบเบอร์ของ
+//  ออเดอร์ก่อนหน้ามาใส่ให้แทน กลายเป็นเบอร์ผิดคน)
+function forwardFillMerged(rows){
+  let last={};
+  return rows.map(r=>{
+    const row=[...r];
+    const order=String(r[COL_ORDER]||'').trim();
+    const name=String(r[COL_NAME]||'').trim();
+    const phone=String(r[COL_PHONE]||'').trim();
+    const addr=String(r[COL_ADDR]||'').trim();
+    const allBlank=!order&&!name&&!phone&&!addr;
+    const hasOtherData=String(r[COL_NOTE]||'').trim()||String(r[COL_QTY]||'').trim()||String(r[COL_STATUS]||'').trim();
+
+    if(allBlank && hasOtherData){
+      [COL_ORDER,COL_NAME,COL_PHONE,COL_ADDR].forEach(ci=>{
+        if(last[ci]!==undefined) row[ci]=last[ci];
+      });
+    } else {
+      [COL_ORDER,COL_NAME,COL_PHONE,COL_ADDR].forEach(ci=>{
+        const v=String(r[ci]||'').trim();
+        if(v) last[ci]=r[ci];
+      });
+    }
+    return row;
+  });
+}
+
+let skippedData=[];
+
 function parseRowsFixed(rows){
-  const parsed=rows
-    .filter(r=>{
-      const st=String(r[COL_STATUS]||'').trim();
-      return st===''||st===STATUS_PENDING;
-    })
-    .filter(r=>String(r[COL_NAME]||'').trim()||String(r[COL_ADDR]||'').trim())
-    .map(r=>({
+  rows=forwardFillMerged(rows);
+  const parsed=[];
+  skippedData=[];
+
+  rows.forEach(r=>{
+    const rawStatus=r[COL_STATUS];
+    const st=String(rawStatus||'').trim();
+    const name=String(r[COL_NAME]||'').trim();
+    const addr=String(r[COL_ADDR]||'').trim();
+    const order=String(r[COL_ORDER]||'').trim();
+    const hasAnyContent=name||addr||order||String(r[COL_NOTE]||'').trim();
+    if(!hasAnyContent) return; // แถวว่างสนิทจริงๆ ข้ามเงียบๆ ไม่นับเป็นแถวที่ถูกข้าม
+
+    const statusOk=st===''||st===STATUS_PENDING;
+    if(!statusOk){
+      // แสดงค่าดิบเป็น JSON เผื่อมีช่องว่าง/อักขระที่มองไม่เห็นแฝงอยู่ (เช่น "\u00A0")
+      skippedData.push({order,name,reason:`คอลัมน์ A = ${JSON.stringify(st)} (ไม่ตรงกับค่าว่าง หรือ "${STATUS_PENDING}")`});
+      return;
+    }
+    if(!name && !addr){
+      skippedData.push({order,name,reason:'ไม่มีทั้งชื่อ (AX) และที่อยู่ (BA)'});
+      return;
+    }
+    parsed.push({
       id:uid(),
-      name:String(r[COL_NAME]||'').trim(),
+      name,
       phone:normalizePhone(r[COL_PHONE]),
-      addr:String(r[COL_ADDR]||'').trim(),
-      order:String(r[COL_ORDER]||'').trim(),
+      _rawPhone:r[COL_PHONE],
+      addr,
+      order,
       note:String(r[COL_NOTE]||'').trim(),
       qty:String(r[COL_QTY]||'').trim(),
       selected:true,
       createdAt:new Date().toISOString()
-    }));
+    });
+  });
 
   importData=parsed;
 
-  if(!importData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
+  if(!importData.length && !skippedData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
 
   document.getElementById('importStep1').style.display='none';
   document.getElementById('importStep2').style.display='';
   document.getElementById('importPreview').innerHTML=`
-    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+    ${importData.length?`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
       <span style="font-size:20px">✅</span>
-      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้าทั้งหมด</span></div>
-    </div>
-    <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้า</span></div>
+    </div>`:`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:12px">
+      <strong style="font-size:14px;color:#991b1b">⚠️ ไม่มีแถวไหนผ่านเกณฑ์นำเข้าเลย</strong>
+    </div>`}
+    ${skippedData.length?`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;margin-bottom:12px">
+      <strong style="font-size:13px;color:#7c4a00">⏭️ ข้าม ${skippedData.length} แถว — เหตุผล:</strong>
+      <div style="max-height:180px;overflow-y:auto;margin-top:8px;border:1px solid var(--border);border-radius:6px">
+        <table class="import-table">
+          <thead><tr><th>ออเดอร์</th><th>ชื่อ</th><th>เหตุผลที่ข้าม</th></tr></thead>
+          <tbody>${skippedData.map(s=>`<tr><td>${esc(s.order)}</td><td>${esc(s.name)}</td><td style="font-family:var(--font-mono);font-size:11px">${esc(s.reason)}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>`:''}
+    ${importData.length?`<div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table class="import-table">
-        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>ชนิดนม</th><th>จำนวน (Y)</th></tr></thead>
-        <tbody>${importData.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td>${esc(r.note)}</td><td>${esc(r.qty)}</td></tr>`).join('')}</tbody>
+        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>เบอร์ดิบ (AY)</th><th>ชนิดนม</th><th>จำนวน (Y)</th></tr></thead>
+        <tbody>${importData.map((r,i)=>{
+          const rawStr=JSON.stringify(r._rawPhone===undefined?'':r._rawPhone);
+          const mismatch=!r.phone && r._rawPhone!==undefined && r._rawPhone!==null && String(r._rawPhone).trim()!=='';
+          return `<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td${mismatch?' style="background:#fef2f2;color:#991b1b;font-weight:700"':''}>${esc(r.phone)||'(ว่าง)'}</td><td style="font-family:var(--font-mono);font-size:11px">${esc(rawStr)}</td><td>${esc(r.note)}</td><td>${esc(r.qty)}</td></tr>`;
+        }).join('')}</tbody>
       </table>
-    </div>`;
+    </div>`:''}`;
 }
 
 function confirmImport(){
