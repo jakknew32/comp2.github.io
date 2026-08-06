@@ -508,6 +508,10 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     อัปโหลด
   </button>
+  <button class="topbar-btn btn-ghost no-print" onclick="refreshData()" id="btn-refresh" style="display:none" title="โหลดข้อมูลล่าสุดจาก Sheets">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.83"/></svg>
+    รีเฟรช
+  </button>
   <button class="topbar-btn btn-export no-print" onclick="exportExcel()" id="btn-export" style="display:none">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     Export Excel
@@ -1240,7 +1244,11 @@ async function startGeoSearch(){
     progBar.style.width=Math.round(done/list.length*100)+'%';
     if(done%3===0)statusEl.textContent=`geocode ${done}/${list.length}...`;
   }
-  filteredOrders=list.filter(o=>isFinite(o._distance)&&o._distance<=radiusKm).sort((a,b)=>a._distance-b._distance);
+  filteredOrders=list.filter(o=>isFinite(o._distance)&&o._distance<=radiusKm).sort((a,b)=>{
+    const statusRank={pending:0,packed:1,problem:2,delivered:3};
+    const rankDiff=(statusRank[classifyStatus(a.status)]??9)-(statusRank[classifyStatus(b.status)]??9);
+    return rankDiff!==0?rankDiff:a._distance-b._distance;
+  });
   document.getElementById('result-count').textContent=`${filteredOrders.length} รายการ`;
   renderDashboard();renderSummary();renderResults();
   progBar.style.width='100%';
@@ -1331,8 +1339,8 @@ async function updateOrderStatus(selectEl){
   }
 
   if(!geoScriptUrl||!currentSheetRef.sheetId){
-    selectEl.classList.remove('status-saving');
     alert('ยังไม่ได้ตั้งค่า Apps Script URL สำหรับ sync กลับ Sheets\nตั้งค่าได้ที่ปุ่ม ⚙️ (ตั้งค่า Geocode/Sheets)\n\nตอนนี้เปลี่ยนสถานะแบบชั่วคราวในแอปแล้ว แต่ยังไม่ได้บันทึกกลับ Sheet');
+    applyFilter(); // re-sort ทันทีให้ค้างส่ง/แพ็คแล้วอยู่บนสุดเสมอ แม้ยังไม่ได้ sync กลับ Sheet
     return;
   }
   try{
@@ -1350,7 +1358,9 @@ async function updateOrderStatus(selectEl){
       })
     });
   }catch(e){/* ignore — no-cors ไม่รู้ผลลัพธ์อยู่แล้ว */}
-  setTimeout(()=>selectEl.classList.remove('status-saving'),700);
+  // re-render ทั้งลิสต์หลังจากผ่านไปสักครู่ เพื่อให้เห็นสถานะใหม่ก่อน แล้วค่อยเรียงลำดับใหม่
+  // (ค้างส่ง/แพ็คแล้วต้องอยู่บนสุดเสมอ — การ์ดที่เพิ่งเปลี่ยนเป็น "ส่งแล้ว" ต้องเลื่อนลงทันที ไม่ใช่รอ filter ครั้งถัดไป)
+  setTimeout(()=>applyFilter(),700);
 }
 
 function filterZoneCards(zoneId, inputEl) {
@@ -1598,7 +1608,8 @@ function expandSciNotation(raw){
   while(digits.length<pointPos)digits+='0';
   return sign+digits.slice(0,pointPos);
 }
-function buildOrdersFromRows(data){
+function buildOrdersFromRows(data,opts){
+  opts=opts||{};
   const orders=[],seen={};
   // Row 1 is the sheet header / control row and must never become an order.
   for(let i=1;i<data.length;i++){
@@ -1642,25 +1653,35 @@ function buildOrdersFromRows(data){
   }
   // build available zones for dropdown
   availableZones=[...new Set(orders.map(o=>o.zone))].sort((a,b)=>ZONE_LIST.indexOf(a)-ZONE_LIST.indexOf(b));
-  selectedZones.clear();
+  if(opts.preserveFilters){
+    // รีเฟรช: เก็บโซนที่เลือกไว้เดิม ตัดออกแค่โซนที่ไม่มีอยู่ในข้อมูลใหม่แล้ว
+    selectedZones=new Set([...selectedZones].filter(z=>availableZones.includes(z)));
+  }else{
+    selectedZones.clear();
+  }
   buildZoneDropdown();updateZoneBtnLabel();
 
   // build date set for calendar
   orderDateSet.clear();
   orders.forEach(o=>{if(o.order_date_key)orderDateSet.add(o.order_date_key);});
-  // navigate calendar to first order date if possible
-  if(orderDateSet.size>0){
-    const firstKey=[...orderDateSet].sort()[0];
-    // key format YYMMDD buddhist
-    const yy=parseInt(firstKey.substring(0,2));
-    const mm=parseInt(firstKey.substring(2,4));
-    calViewYear=2500+yy-543+2000; // convert buddhist to christian
-    // actually: buddhist year = christian + 543, so christian = buddhist - 543
-    // yy is offset from 2500: buddhist = 2500+yy
-    calViewYear=(2500+yy)-543;
-    calViewMonth=mm-1;
+  if(opts.preserveFilters){
+    // รีเฟรช: อยู่เดือน/ช่วงวันที่เดิม แค่รีเฟรชจุด "มีข้อมูล" ในปฏิทิน
+    renderCal();
+  }else{
+    // navigate calendar to first order date if possible
+    if(orderDateSet.size>0){
+      const firstKey=[...orderDateSet].sort()[0];
+      // key format YYMMDD buddhist
+      const yy=parseInt(firstKey.substring(0,2));
+      const mm=parseInt(firstKey.substring(2,4));
+      calViewYear=2500+yy-543+2000; // convert buddhist to christian
+      // actually: buddhist year = christian + 543, so christian = buddhist - 543
+      // yy is offset from 2500: buddhist = 2500+yy
+      calViewYear=(2500+yy)-543;
+      calViewMonth=mm-1;
+    }
+    initCalendar();
   }
-  initCalendar();
 
   document.getElementById('filter-bar').style.display='flex';
   document.getElementById('tab-orders').style.display='';
@@ -1670,10 +1691,12 @@ function buildOrdersFromRows(data){
   document.getElementById('tab-divider').style.display='';
   document.getElementById('btn-export').style.display='';
   document.getElementById('btn-print').style.display='';
+  document.getElementById('btn-refresh').style.display='';
   // mobile bottom nav
   document.getElementById('mobile-nav').style.display='';
   applyFilter();
 }
+
 </script>
 
 <div class="modal-overlay" id="sheets-modal" onclick="if(event.target===this)closeModal()">
@@ -2274,6 +2297,43 @@ const SCG_SHEET_URL='https://docs.google.com/spreadsheets/d/1nwcWVrH4kHdRuCiVT4f
 function loadConfiguredSCG(btnEl){
   document.getElementById('sheets-url').value=SCG_SHEET_URL;
   return loadFromSheetsByName('SCG',btnEl);
+}
+
+// ── รีเฟรชข้อมูล: โหลดชีต/แท็บเดิมที่กำลังใช้อยู่ซ้ำ โดยไม่ล้างฟิลเตอร์ที่เลือกไว้ ──
+async function refreshData(){
+  const btn=document.getElementById('btn-refresh');
+  const origHtml=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner" style="width:13px;height:13px;border-width:2px;margin-right:4px"></span>กำลังรีเฟรช...';
+  try{
+    let text;
+    if(currentSheetRef.sheetId&&currentSheetRef.sheetName){
+      const tqUrl=`https://docs.google.com/spreadsheets/d/${currentSheetRef.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(currentSheetRef.sheetName)}`;
+      const res=await fetch(tqUrl);
+      if(!res.ok)throw new Error(`HTTP ${res.status}`);
+      text=await res.text();
+    }else if(currentSheetRef.sheetId){
+      const tqUrl=`https://docs.google.com/spreadsheets/d/${currentSheetRef.sheetId}/gviz/tq?tqx=out:csv&gid=${currentSheetRef.gid||0}`;
+      const res=await fetch(tqUrl);
+      if(!res.ok)throw new Error(`HTTP ${res.status}`);
+      text=await res.text();
+    }else{
+      // ยังไม่เคยตั้ง currentSheetRef (เผื่อกรณีโหลดผ่านไฟล์ Excel) — ใช้ค่าเริ่มต้น SCG
+      const tqUrl=`https://docs.google.com/spreadsheets/d/1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44/gviz/tq?tqx=out:csv&sheet=SCG`;
+      const res=await fetch(tqUrl);
+      if(!res.ok)throw new Error(`HTTP ${res.status}`);
+      text=await res.text();
+    }
+    if(!text||text.trim().length===0)throw new Error('ไม่พบข้อมูลใน Sheet');
+    if(text.trim().startsWith('<'))throw new Error('Sheet อาจไม่ได้แชร์เป็น public หรือไม่มีสิทธิ์เข้าถึง');
+    const data=parseCSV(text);
+    buildOrdersFromRows(data,{preserveFilters:true});
+  }catch(e){
+    alert('รีเฟรชข้อมูลไม่สำเร็จ: '+e.message);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML=origHtml;
+  }
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
