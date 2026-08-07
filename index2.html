@@ -1126,13 +1126,6 @@ function orderDateKey(raw){
   const dd=String(d.getDate()).padStart(2,'0');
   return`${yy}${mm}${dd}`;
 }
-function parseOrderDate(order_id){
-  const m=String(order_id).match(/^(\d{2})(\d{2})(\d{2})/);
-  if(!m)return null;
-  const yy=+m[1],mm=+m[2],dd=+m[3];
-  const buddhistYear=2500+yy;
-  return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
-}
 
 function toggleSearchClear(){
   const el=document.getElementById('search-input');
@@ -1285,8 +1278,12 @@ async function updateOrderStatus(selectEl){
     else if(c==='delivered')card.classList.add('is-delivered');
   }
 
-  if(!geoScriptUrl||!currentSheetRef.sheetId){
-    alert('ยังไม่ได้ตั้งค่า Apps Script URL สำหรับ sync กลับ Sheets\nตั้งค่าได้ที่ปุ่ม ⚙️\n\nตอนนี้เปลี่ยนสถานะแบบชั่วคราวแล้ว');
+  // ✅ ใช้ fallback ไปที่ Sheet ID ที่ผู้ใช้กรอกไว้ในตั้งค่า 
+  // เผื่อกรณีอัปโหลด Excel ตรงๆ จะได้ sync ได้ (ถ้ากรอกไว้)
+  const targetSheetId = currentSheetRef.sheetId || geoSheetId;
+
+  if(!geoScriptUrl || !targetSheetId){
+    alert('ยังไม่ได้ตั้งค่า Apps Script URL หรือ Sheet ID\n\nระบบเปลี่ยนสถานะชั่วคราวบนหน้าเว็บแล้ว แต่ไม่สามารถบันทึกลง Google Sheets ได้\nกรุณาไปที่ปุ่มตั้งค่า (⚙️)');
     applyFilter();
     return;
   }
@@ -1297,11 +1294,11 @@ async function updateOrderStatus(selectEl){
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({
         action:'updateOrderStatus',
-        sheetId:currentSheetRef.sheetId,
-        gid:currentSheetRef.gid,
-        sheetName:currentSheetRef.sheetName,
-        orderId:oid,
-        status:newStatus
+        sheetId: targetSheetId,
+        gid: currentSheetRef.gid,
+        sheetName: currentSheetRef.sheetName || 'SCG', // สำรองชื่อแท็บ 
+        orderId: oid,
+        status: newStatus
       })
     });
   }catch(e){}
@@ -1316,9 +1313,13 @@ async function updateTrackingNumber(inputEl){
   if(!order)return;
   
   order.tracking=newTracking;
+  
+  // ✅ ใช้ fallback ไปที่ Sheet ID ที่ผู้ใช้กรอกไว้ในตั้งค่า
+  const targetSheetId = currentSheetRef.sheetId || geoSheetId;
 
-  if(!geoScriptUrl||!currentSheetRef.sheetId){
-    return; // เปลี่ยนชั่วคราวบนหน้าเว็บ หากยังไม่ได้ใส่ URL Apps Script
+  if(!geoScriptUrl || !targetSheetId){
+    alert('ยังไม่ได้ตั้งค่า Apps Script URL หรือ Sheet ID\n\nบันทึกชั่วคราวบนหน้าเว็บแล้ว แต่ไม่สามารถส่งข้อมูลไป Google Sheets ได้\nกรุณาไปที่ปุ่มตั้งค่า (⚙️)');
+    return;
   }
   
   const origBg = inputEl.style.background;
@@ -1332,11 +1333,11 @@ async function updateTrackingNumber(inputEl){
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({
         action:'updateTracking',
-        sheetId:currentSheetRef.sheetId,
-        gid:currentSheetRef.gid,
-        sheetName:currentSheetRef.sheetName,
-        orderId:oid,
-        tracking:newTracking
+        sheetId: targetSheetId,
+        gid: currentSheetRef.gid,
+        sheetName: currentSheetRef.sheetName || 'SCG',
+        orderId: oid,
+        tracking: newTracking
       })
     });
   }catch(e){}
@@ -1591,6 +1592,7 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 
+// ✅ ฟังก์ชันขยายเลขยกกำลังเพื่อค้นหาได้เป๊ะขึ้น (เมื่อโหลดไฟล์/sheet)
 function expandSciNotation(raw){
   const str=String(raw==null?'':raw).trim();
   const m=str.match(/^(-?)(\d+)(?:\.(\d+))?[eE]\+?(\d+)$/);
@@ -2327,7 +2329,7 @@ function processCSVText(text){
     <div class="geo-settings-row">
       <div class="geo-settings-label">Sheet ID (ไฟล์ข้อมูลหลัก)</div>
       <input type="text" id="geo-sheet-id-input" placeholder="1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ">
-      <div class="geo-settings-hint">ใช้ Sheet เดียวกับข้อมูล Order</div>
+      <div class="geo-settings-hint">ใช้ Sheet เดียวกับข้อมูล Order (ตั้งไว้เผื่อกรณีที่ไฟล์โหลดจากคอมพิวเตอร์)</div>
     </div>
 
     <div class="geo-settings-row">
@@ -2337,9 +2339,9 @@ function processCSVText(text){
     </div>
 
     <details style="margin-bottom:var(--sp-3)">
-      <summary style="cursor:pointer;font-size:var(--text-sm);font-weight:600;color:var(--brand);padding:var(--sp-2) 0">📋 วิธีสร้าง Apps Script (คลิกเพื่อดู)</summary>
+      <summary style="cursor:pointer;font-size:var(--text-sm);font-weight:600;color:var(--brand);padding:var(--sp-2) 0">📋 วิธีสร้าง Apps Script <b>(สำคัญ: อย่าลืม Deploy ใหม่)</b></summary>
       <div style="margin-top:var(--sp-2)">
-        <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:6px">1. เปิด Google Sheets → Extensions → Apps Script → วาง code นี้ → Deploy → New deployment → Web App → Execute as: Me → Anyone can access<br>2. ก่อน Deploy: เมนู ⚙️ Project Settings → Script Properties → เพิ่ม <code>THAILANDPOST_API_KEY</code> = API key จาก track.thailandpost.co.th/dashboard</div>
+        <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:6px">1. เปิด Google Sheets → Extensions → Apps Script → วาง code นี้ <br>2. <b>กด Deploy → New deployment</b> (หรือ Manage Deployments -> edit -> New version) → Web App → Execute as: Me → Anyone can access<br>3. ก่อน Deploy: เมนู ⚙️ Project Settings → Script Properties → เพิ่ม <code>THAILANDPOST_API_KEY</code> = API key จาก track.thailandpost.co.th/dashboard</div>
         <div class="script-code-wrap" id="apps-script-code">function doPost(e){
   try{
     const d=JSON.parse(e.postData.contents);
@@ -2352,21 +2354,43 @@ function processCSVText(text){
   }
 }
 
+function expandSciNotation(raw){
+  const str=String(raw==null?'':raw).trim();
+  const m=str.match(/^(-?)(\d+)(?:\.(\d+))?[eE]\+?(\d+)$/);
+  if(!m)return str;
+  const sign=m[1],intPart=m[2],fracPart=m[3]||'',exp=parseInt(m[4],10);
+  let digits=intPart+fracPart;
+  const pointPos=intPart.length+exp;
+  while(digits.length<pointPos)digits+='0';
+  return sign+digits.slice(0,pointPos);
+}
+
+function getTargetSheet(d) {
+  const ss = d.sheetId ? SpreadsheetApp.openById(d.sheetId) : SpreadsheetApp.getActiveSpreadsheet();
+  let sh = null;
+  if(d.sheetName) {
+    sh = ss.getSheetByName(d.sheetName);
+  }
+  if(!sh && d.gid != null) {
+    sh = ss.getSheets().find(s => String(s.getSheetId()) === String(d.gid)) || null;
+  }
+  if(!sh) sh = ss.getSheets()[0];
+  return sh;
+}
+
 function handleUpdateOrderStatus(d){
-  const ss=d.sheetId?SpreadsheetApp.openById(d.sheetId):SpreadsheetApp.getActiveSpreadsheet();
-  let sh=null;
-  if(d.sheetName)sh=ss.getSheetByName(d.sheetName);
-  if(!sh&&d.gid!=null){sh=ss.getSheets().find(s=>String(s.getSheetId())===String(d.gid))||null;}
-  if(!sh)sh=ss.getSheets()[0];
-  // คอลัมน์: A=สถานะ(1), C=เลขออเดอร์(3)
-  const lastRow=sh.getLastRow();
-  if(lastRow<1)return ContentService.createTextOutput(JSON.stringify({ok:true,updated:0})).setMimeType(ContentService.MimeType.JSON);
-  const idCol=sh.getRange(1,3,lastRow,1).getDisplayValues();
-  const targetId=String(d.orderId).trim();
-  let updated=0;
-  for(let i=0;i<idCol.length;i++){
-    if(String(idCol[i][0]).trim()===targetId){
-      sh.getRange(i+1,1).setValue(d.status);
+  const sh = getTargetSheet(d);
+  const lastRow = sh.getLastRow();
+  if(lastRow < 1) return ContentService.createTextOutput(JSON.stringify({ok:true,updated:0})).setMimeType(ContentService.MimeType.JSON);
+  
+  const idCol = sh.getRange(1,3,lastRow,1).getDisplayValues(); // Col C
+  const targetId = String(d.orderId).trim();
+  let updated = 0;
+  
+  for(let i=0; i<idCol.length; i++){
+    let cellVal = String(idCol[i][0]).trim();
+    if(cellVal === targetId || expandSciNotation(cellVal) === targetId){
+      sh.getRange(i+1, 1).setValue(d.status); // Col A
       updated++;
     }
   }
@@ -2374,20 +2398,18 @@ function handleUpdateOrderStatus(d){
 }
 
 function handleUpdateTracking(d){
-  const ss=d.sheetId?SpreadsheetApp.openById(d.sheetId):SpreadsheetApp.getActiveSpreadsheet();
-  let sh=null;
-  if(d.sheetName)sh=ss.getSheetByName(d.sheetName);
-  if(!sh&&d.gid!=null){sh=ss.getSheets().find(s=>String(s.getSheetId())===String(d.gid))||null;}
-  if(!sh)sh=ss.getSheets()[0];
-  // คอลัมน์: C=เลขออเดอร์(3), E=แทรกกิ้ง(5)
-  const lastRow=sh.getLastRow();
-  if(lastRow<1)return ContentService.createTextOutput(JSON.stringify({ok:true,updated:0})).setMimeType(ContentService.MimeType.JSON);
-  const idCol=sh.getRange(1,3,lastRow,1).getDisplayValues();
-  const targetId=String(d.orderId).trim();
-  let updated=0;
-  for(let i=0;i<idCol.length;i++){
-    if(String(idCol[i][0]).trim()===targetId){
-      sh.getRange(i+1,5).setValue(d.tracking);
+  const sh = getTargetSheet(d);
+  const lastRow = sh.getLastRow();
+  if(lastRow < 1) return ContentService.createTextOutput(JSON.stringify({ok:true,updated:0})).setMimeType(ContentService.MimeType.JSON);
+  
+  const idCol = sh.getRange(1,3,lastRow,1).getDisplayValues(); // Col C
+  const targetId = String(d.orderId).trim();
+  let updated = 0;
+  
+  for(let i=0; i<idCol.length; i++){
+    let cellVal = String(idCol[i][0]).trim();
+    if(cellVal === targetId || expandSciNotation(cellVal) === targetId){
+      sh.getRange(i+1, 5).setValue(d.tracking); // Col E
       updated++;
     }
   }
