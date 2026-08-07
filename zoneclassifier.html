@@ -192,6 +192,12 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .card-name{font-size:var(--text-md);font-weight:700;color:var(--text);margin-top:2px;}
 .card-row{display:flex;align-items:flex-start;gap:var(--sp-2);font-size:var(--text-sm);color:var(--gray-700);line-height:1.5;}
 .card-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+
+/* ── TRACKING INPUT ── */
+.tracking-input{border:1px solid var(--border);border-radius:var(--r-md);padding:3px 8px;font-size:var(--text-xs);width:150px;outline:none;background:var(--bg-page);color:var(--text);transition:border-color .15s;}
+.tracking-input:focus{border-color:var(--brand);box-shadow:0 0 0 2px rgba(26,86,219,.15);}
+.tracking-input:disabled{opacity:0.6;cursor:wait;}
+
 .card-products{display:flex;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-radius:var(--r-md);}
 .card-qty{display:flex;align-items:center;gap:4px;font-size:var(--text-sm);font-weight:700;}
 .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:var(--sp-1);}
@@ -307,7 +313,6 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   .dashboard{grid-template-columns:1fr;}
   .db-row{grid-template-columns:1fr;}
   .summary-toggle{font-size:var(--text-sm);padding:8px var(--sp-4);}
-  /* bottom nav bar สำหรับ mobile */
   .mobile-nav{display:flex;}
   .topbar-tab{display:none !important;}
   #tab-divider{display:none !important;}
@@ -323,7 +328,6 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   font-size:10px;font-weight:600;transition:color .15s;padding:0;}
 .mobile-nav-btn.active{color:#fff;}
 .mobile-nav-btn svg{width:20px;height:20px;}
-/* padding ล่างเพื่อไม่ให้ bottom nav บัง content บน mobile */
 @media(max-width:640px){
   .main{padding-bottom:72px;}
   #results{padding-bottom:8px;}
@@ -334,7 +338,6 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 #page-map.active{display:flex;}
 #map-container{flex:1;position:relative;}
 #leaflet-map{width:100%;height:100%;}
-/* ไม่ใช้ position:fixed — Leaflet ต้องการ height ที่กำหนดชัดเจน */
 .map-info-panel{position:absolute;top:12px;right:12px;z-index:400;
   background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);
   padding:var(--sp-3) var(--sp-4);box-shadow:var(--shadow-md);min-width:200px;max-width:280px;}
@@ -350,7 +353,6 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
   border-radius:var(--r-full);padding:8px 20px;box-shadow:var(--shadow-md);
   font-size:var(--text-sm);display:none;align-items:center;gap:var(--sp-2);white-space:nowrap;}
 .map-geocode-bar.show{display:flex;}
-/* Leaflet popup override */
 .leaflet-popup-content-wrapper{border-radius:var(--r-lg) !important;
   box-shadow:var(--shadow-md) !important;border:1px solid var(--border);
   background:var(--bg-card) !important;color:var(--text) !important;}
@@ -620,7 +622,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
         <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
       </svg>
       <h2>ลากวางหรือเลือกไฟล์ Excel</h2>
-      <p>รองรับ .xlsx / .xls &nbsp;·&nbsp; BC=จังหวัด &nbsp;·&nbsp; BD=เขต &nbsp;·&nbsp; AX=ชื่อ &nbsp;·&nbsp; AY=เบอร์ &nbsp;·&nbsp; BA=ที่อยู่ &nbsp;·&nbsp; BG=ไปรษณีย์ &nbsp;·&nbsp; A=สถานะ</p>
+      <p>รองรับ .xlsx / .xls &nbsp;·&nbsp; BC=จังหวัด &nbsp;·&nbsp; BD=เขต &nbsp;·&nbsp; AX=ชื่อ &nbsp;·&nbsp; AY=เบอร์ &nbsp;·&nbsp; BA=ที่อยู่ &nbsp;·&nbsp; BG=ไปรษณีย์ &nbsp;·&nbsp; E=เลขแทรกกิ้ง &nbsp;·&nbsp; A=สถานะ</p>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">
         <label class="upload-label" onclick="event.stopPropagation();document.getElementById('file-input').click()">📂 เลือกไฟล์ Excel</label>
         <button class="upload-label" style="background:#0F9D58;cursor:pointer;border:none" onclick="event.stopPropagation();showSheetsDialog()">
@@ -786,7 +788,6 @@ const BKK_ALIASES = ['กรุงเทพ','กทม','bangkok'];
 
 function detectZone(d, p) {
   const dStr = String(d||'').trim(), pStr = String(p||'').trim();
-  // Bangkok is one delivery zone; district is retained only as address detail.
   if (BKK_ALIASES.some(a => pStr.toLowerCase().includes(a) || dStr.toLowerCase().includes(a)) || /^เขต/.test(dStr)) return 'กรุงเทพฯ';
   for (const [k, v] of Object.entries(PROVINCE_ZONE)) { if (pStr.includes(k)) return v; }
   if (pStr && pStr.length > 0) return 'ต่างจังหวัด';
@@ -801,17 +802,12 @@ function formatPhone(raw){
   return s||'-';
 }
 
-// ── STATUS: คอลัมน์ A (index 0) ──
 function classifyStatus(s){
   const str=String(s||'').trim();
-  // ว่าง = ค้างส่ง
   if(!str||str==='null'||str==='nan'||str==='NaT'||str==='0'||str==='-')return'pending';
-  // ยกเลิก
   if(str.includes('ยกเลิก')||str.toLowerCase().includes('cancel'))return'problem';
-  // ค้างส่ง
   if(str.includes('ค้าง'))return'pending';
   if(str.includes('แพ็คสินค้าแล้ว'))return'packed';
-  // มีข้อความอื่นๆ = ส่งแล้ว
   return'delivered';
 }
 
@@ -836,26 +832,16 @@ function buildNominatimQueries(p){
   ].filter(Boolean);
 }
 
-// ── GEO CACHE SYSTEM ──
-// Layer 1: memory (เร็วที่สุด)
-// Layer 2: localStorage (fallback เมื่อไม่มี Sheets)
-// Layer 3: Google Sheets (shared cache ทุกคนใช้ร่วมกัน)
-// Layer 4: Nominatim geocode (ใช้เมื่อไม่มี cache)
-
 const LS_KEY='cfm_geo_v5';
-let geoCache={}; // memory cache: address_key -> {lat,lon}
-let geoCacheDirty=new Set(); // keys ที่ geocode ใหม่ รอ sync ขึ้น Sheets
-let geoSheetId='', geoScriptUrl=''; // ตั้งค่าจาก UI
-
-// โหลด localStorage เข้า memory
+let geoCache={};
+let geoCacheDirty=new Set();
+let geoSheetId='', geoScriptUrl='';
 try{Object.assign(geoCache,JSON.parse(localStorage.getItem(LS_KEY)||'{}'));}catch(e){}
 function saveCacheLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(geoCache));}catch(e){}}
 
-// ── โหลด GeoCache จาก Google Sheets ──
 async function loadGeoCacheFromSheets(sheetId){
   if(!sheetId)return 0;
   try{
-    // Sheet ชื่อ GeoCache, คอลัมน์: A=key, B=lat, C=lon
     const url=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=GeoCache`;
     const res=await fetch(url);
     if(!res.ok)return 0;
@@ -876,7 +862,6 @@ async function loadGeoCacheFromSheets(sheetId){
   }catch(e){return 0;}
 }
 
-// ── บันทึก geocode ใหม่ขึ้น Google Sheets ผ่าน Apps Script ──
 async function syncNewCacheToSheets(){
   if(!geoScriptUrl||geoCacheDirty.size===0)return;
   const rows=[...geoCacheDirty].map(key=>{
@@ -887,7 +872,7 @@ async function syncNewCacheToSheets(){
   try{
     await fetch(geoScriptUrl,{
       method:'POST',
-      mode:'no-cors', // Apps Script ไม่ต้อง CORS preflight
+      mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'appendGeoCache',rows})
     });
@@ -898,7 +883,7 @@ async function syncNewCacheToSheets(){
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 let lastReq=0;
 async function geocodeNominatim(q){
-  const ck=q; // key = query string
+  const ck=q;
   if(geoCache[ck])return geoCache[ck];
   const wait=1100-(Date.now()-lastReq);
   if(wait>0)await sleep(wait);
@@ -926,7 +911,6 @@ async function ensureGeocoded(o){
     if(g){
       o.lat=g.lat;o.lon=g.lon;
       o.geoLevel=buildNominatimQueries(p).indexOf(q)+1;
-      // schedule sync ขึ้น Sheets หลัง geocode ใหม่
       if(typeof scheduleSync==='function') scheduleSync();
       return;
     }
@@ -945,14 +929,12 @@ function mapsUrl(o){
 }
 
 let allOrders=[],filteredOrders=[],geoMarker=null;
-let selectedZones=new Set(); // multi-zone state
-let availableZones=[]; // zones that actually exist in data
+let selectedZones=new Set();
+let availableZones=[];
 
-// ── MULTI-ZONE DROPDOWN ──
 function buildZoneDropdown(){
   const list=document.getElementById('zone-dd-list');
   list.innerHTML='';
-
   function makeZoneRow(zone){
     const item=document.createElement('div');
     item.className='zone-dd-item';
@@ -971,7 +953,6 @@ function buildZoneDropdown(){
     item.appendChild(cb);item.appendChild(lbl);
     return item;
   }
-
   availableZones.forEach(zone=>list.appendChild(makeZoneRow(zone)));
 }
 function updateZoneBtnLabel(){
@@ -995,20 +976,18 @@ function toggleZoneDropdown(){
 function selectAllZones(){selectedZones=new Set(availableZones);buildZoneDropdown();updateZoneBtnLabel();applyFilter();}
 function clearAllZones(){selectedZones.clear();buildZoneDropdown();updateZoneBtnLabel();applyFilter();}
 
-// ── CALENDAR PICKER ──
 const thMonths=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const thDays=['อา','จ','อ','พ','พฤ','ศ','ส'];
 let calViewYear=0, calViewMonth=0;
 let orderDateSet=new Set();
-// Range selection state
 let calRangeStart='', calRangeEnd='', calHover='';
 
-function calKeyToDate(key){ // YYMMDD buddhist → JS Date
+function calKeyToDate(key){
   if(!key)return null;
   const yy=+key.slice(0,2),mm=+key.slice(2,4),dd=+key.slice(4,6);
   return new Date(2500+yy-543, mm-1, dd);
 }
-function dateToCalKey(d){ // JS Date → YYMMDD buddhist
+function dateToCalKey(d){
   const yy=String(d.getFullYear()+543-2500).padStart(2,'0');
   const mm=String(d.getMonth()+1).padStart(2,'0');
   const dd=String(d.getDate()).padStart(2,'0');
@@ -1058,7 +1037,6 @@ function renderCal(){
     const key=buddhistYY+mm+dd;
     const hasData=orderDateSet.has(key);
     if(hasData)cell.classList.add('cal-has-data');
-    // range highlight
     const isStart=key===calRangeStart;
     const effectiveEndKey=effectiveEnd||calRangeStart;
     const inRange=calRangeStart&&key>=calRangeStart&&key<=effectiveEndKey;
@@ -1074,21 +1052,17 @@ function renderCal(){
     cell.onmouseenter=()=>{if(key!==calHover){calHover=key;renderCal();}};
     grid.appendChild(cell);
   }
-  // hint text
   let hint=document.getElementById('cal-hint');
   if(!hint){hint=document.createElement('div');hint.id='cal-hint';hint.style.cssText='font-size:11px;color:var(--muted);text-align:center;margin-top:6px;';grid.parentElement.insertBefore(hint,grid.nextSibling);}
   hint.textContent=!calRangeStart?'คลิกเลือกวันเริ่มต้น':(!calRangeEnd?'คลิกเลือกวันสิ้นสุด':'');
 }
 function handleDayClick(key){
   if(!calRangeStart||calRangeEnd){
-    // เริ่มใหม่
     calRangeStart=key;calRangeEnd='';calHover='';
   } else {
-    // ครั้งที่สอง = สิ้นสุด
     if(key<calRangeStart){calRangeEnd=calRangeStart;calRangeStart=key;}
     else{calRangeEnd=key;}
     calHover='';
-    // ปิด popup
     document.getElementById('cal-popup').classList.remove('open');
     document.getElementById('cal-trigger').classList.remove('open');
     updateCalLabel();
@@ -1102,7 +1076,6 @@ function clearDate(){
   updateCalLabel();
   renderCal();
   applyFilter();
-  // เริ่มงานจากรายการค้างส่งทุกครั้งหลังโหลดข้อมูล
   switchPage('agents');
 }
 function toggleCal(){
@@ -1120,13 +1093,11 @@ function toggleCal(){
 
 function formatOrderDate(raw){
   if(!raw)return'';
-  // รองรับทั้ง Date object (จาก xlsx) และ string
   let d;
   if(raw instanceof Date){d=raw;}
   else{
-    // ลอง parse string: รูปแบบ DD/MM/YYYY, YYYY-MM-DD, หรือ serial number
     const s=String(raw).trim();
-    if(/^\d{5}$/.test(s)){// Excel serial
+    if(/^\d{5}$/.test(s)){
       d=new Date(Math.round((+s-25569)*86400*1000));
     } else if(/\d{4}-\d{2}-\d{2}/.test(s)){
       d=new Date(s);
@@ -1155,13 +1126,6 @@ function orderDateKey(raw){
   const dd=String(d.getDate()).padStart(2,'0');
   return`${yy}${mm}${dd}`;
 }
-function parseOrderDate(order_id){
-  const m=String(order_id).match(/^(\d{2})(\d{2})(\d{2})/);
-  if(!m)return null;
-  const yy=+m[1],mm=+m[2],dd=+m[3];
-  const buddhistYear=2500+yy;
-  return{key:`${m[1]}${m[2]}${m[3]}`,label:`${dd} ${thMonths[mm-1]} ${buddhistYear}`};
-}
 
 function toggleSearchClear(){
   const el=document.getElementById('search-input');
@@ -1184,10 +1148,9 @@ function applyFilterCore(){
     if(selectedZones.size>0&&!selectedZones.has(o.zone))return false;
     if(sf&&classifyStatus(o.status)!==sf)return false;
     if(calRangeStart&&o.order_date_key){if(o.order_date_key<calRangeStart||o.order_date_key>(calRangeEnd||calRangeStart))return false;}else if(calRangeStart&&!o.order_date_key)return false;
-    if(q&&!`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase().includes(q))return false;
+    if(q&&!`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province} ${o.tracking}`.toLowerCase().includes(q))return false;
     return true;
   });
-  // Keep outstanding deliveries at the top, followed by packed orders.
   const statusRank={pending:0,packed:1,problem:2,delivered:3};
   filteredOrders.sort((a,b)=>(statusRank[classifyStatus(a.status)]??9)-(statusRank[classifyStatus(b.status)]??9));
   const hidden=allOrders.length-filteredOrders.length;
@@ -1295,28 +1258,6 @@ function quickFilterZone(zone){
   document.getElementById('filter-bar').scrollIntoView({behavior:'smooth'});
 }
 
-function statusBadge(s){
-  const c=classifyStatus(s);
-  if(c==='pending')return`<span class="status-badge s-pending">🟡 ค้างส่ง</span>`;
-  if(c==='packed')return`<span class="status-badge s-packed">📦 แพ็คสินค้าแล้ว</span>`;
-  if(c==='delivered')return`<span class="status-badge s-delivered">✅ ส่งแล้ว</span>`;
-  if(c==='problem')return`<span class="status-badge s-problem">❌ ยกเลิก</span>`;
-  return'';
-}
-
-// ── สถานะแบบแก้ไขได้ในการ์ด (คลิกเปลี่ยน แล้ว sync กลับ Google Sheets ผ่าน Apps Script) ──
-function statusSelectHtml(o){
-  const c=classifyStatus(o.status);
-  const oidAttr=String(o.order_id).replace(/"/g,'&quot;');
-  return`<select class="status-select s-${c}" data-oid="${oidAttr}" onclick="event.stopPropagation()" onchange="updateOrderStatus(this)">
-    <option value="ค้างส่ง"${c==='pending'?' selected':''}>🟡 ค้างส่ง</option>
-    <option value="แพ็คสินค้าแล้ว"${c==='packed'?' selected':''}>📦 แพ็คสินค้าแล้ว</option>
-    <option value="ส่งแล้ว"${c==='delivered'?' selected':''}>✅ ส่งแล้ว</option>
-    <option value="ยกเลิก"${c==='problem'?' selected':''}>❌ ยกเลิก</option>
-  </select>`;
-}
-
-// เก็บ reference ของ Sheet/แท็บที่กำลังใช้งานอยู่ตอนนี้ (ตั้งค่าตอนโหลดข้อมูลสำเร็จ)
 let currentSheetRef={sheetId:null,gid:null,sheetName:null};
 
 async function updateOrderStatus(selectEl){
@@ -1325,7 +1266,6 @@ async function updateOrderStatus(selectEl){
   const order=allOrders.find(o=>String(o.order_id)===oid);
   if(!order)return;
 
-  // อัปเดตหน้าจอทันที (optimistic UI)
   order.status=newStatus;
   const c=classifyStatus(newStatus);
   selectEl.className=`status-select s-${c} status-saving`;
@@ -1338,29 +1278,83 @@ async function updateOrderStatus(selectEl){
     else if(c==='delivered')card.classList.add('is-delivered');
   }
 
-  if(!geoScriptUrl||!currentSheetRef.sheetId){
-    alert('ยังไม่ได้ตั้งค่า Apps Script URL สำหรับ sync กลับ Sheets\nตั้งค่าได้ที่ปุ่ม ⚙️ (ตั้งค่า Geocode/Sheets)\n\nตอนนี้เปลี่ยนสถานะแบบชั่วคราวในแอปแล้ว แต่ยังไม่ได้บันทึกกลับ Sheet');
-    applyFilter(); // re-sort ทันทีให้ค้างส่ง/แพ็คแล้วอยู่บนสุดเสมอ แม้ยังไม่ได้ sync กลับ Sheet
+  // ✅ ใช้ fallback ไปที่ Sheet ID ที่ผู้ใช้กรอกไว้ในตั้งค่า 
+  // เผื่อกรณีอัปโหลด Excel ตรงๆ จะได้ sync ได้ (ถ้ากรอกไว้)
+  const targetSheetId = currentSheetRef.sheetId || geoSheetId;
+
+  if(!geoScriptUrl || !targetSheetId){
+    alert('ยังไม่ได้ตั้งค่า Apps Script URL หรือ Sheet ID\n\nระบบเปลี่ยนสถานะชั่วคราวบนหน้าเว็บแล้ว แต่ไม่สามารถบันทึกลง Google Sheets ได้\nกรุณาไปที่ปุ่มตั้งค่า (⚙️)');
+    applyFilter();
     return;
   }
   try{
     await fetch(geoScriptUrl,{
       method:'POST',
-      mode:'no-cors', // Apps Script ไม่ต้อง CORS preflight, อ่าน response ไม่ได้
-      headers:{'Content-Type':'text/plain;charset=utf-8'}, // ต้องเป็น safelisted type ตอนใช้ no-cors ไม่งั้น fetch จะ fail แบบเงียบๆ
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({
         action:'updateOrderStatus',
-        sheetId:currentSheetRef.sheetId,
-        gid:currentSheetRef.gid,
-        sheetName:currentSheetRef.sheetName,
-        orderId:oid,
-        status:newStatus
+        sheetId: targetSheetId,
+        gid: currentSheetRef.gid,
+        sheetName: currentSheetRef.sheetName || 'SCG', // สำรองชื่อแท็บ 
+        orderId: oid,
+        status: newStatus
       })
     });
-  }catch(e){/* ignore — no-cors ไม่รู้ผลลัพธ์อยู่แล้ว */}
-  // re-render ทั้งลิสต์หลังจากผ่านไปสักครู่ เพื่อให้เห็นสถานะใหม่ก่อน แล้วค่อยเรียงลำดับใหม่
-  // (ค้างส่ง/แพ็คแล้วต้องอยู่บนสุดเสมอ — การ์ดที่เพิ่งเปลี่ยนเป็น "ส่งแล้ว" ต้องเลื่อนลงทันที ไม่ใช่รอ filter ครั้งถัดไป)
+  }catch(e){}
   setTimeout(()=>applyFilter(),700);
+}
+
+// ── ฟังก์ชันอัปเดต Tracking Number แบบเชื่อมกับ Sheets ──
+async function updateTrackingNumber(inputEl){
+  const oid=inputEl.dataset.oid;
+  const newTracking=inputEl.value.trim();
+  const order=allOrders.find(o=>String(o.order_id)===oid);
+  if(!order)return;
+  
+  order.tracking=newTracking;
+  
+  // ✅ ใช้ fallback ไปที่ Sheet ID ที่ผู้ใช้กรอกไว้ในตั้งค่า
+  const targetSheetId = currentSheetRef.sheetId || geoSheetId;
+
+  if(!geoScriptUrl || !targetSheetId){
+    alert('ยังไม่ได้ตั้งค่า Apps Script URL หรือ Sheet ID\n\nบันทึกชั่วคราวบนหน้าเว็บแล้ว แต่ไม่สามารถส่งข้อมูลไป Google Sheets ได้\nกรุณาไปที่ปุ่มตั้งค่า (⚙️)');
+    return;
+  }
+  
+  const origBg = inputEl.style.background;
+  inputEl.disabled = true;
+  inputEl.style.background = 'var(--gray-100)';
+  
+  try{
+    await fetch(geoScriptUrl,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'updateTracking',
+        sheetId: targetSheetId,
+        gid: currentSheetRef.gid,
+        sheetName: currentSheetRef.sheetName || 'SCG',
+        orderId: oid,
+        tracking: newTracking
+      })
+    });
+  }catch(e){}
+  
+  inputEl.disabled = false;
+  inputEl.style.background = origBg;
+}
+
+function statusSelectHtml(o){
+  const c=classifyStatus(o.status);
+  const oidAttr=String(o.order_id).replace(/"/g,'&quot;');
+  return`<select class="status-select s-${c}" data-oid="${oidAttr}" onclick="event.stopPropagation()" onchange="updateOrderStatus(this)">
+    <option value="ค้างส่ง"${c==='pending'?' selected':''}>🟡 ค้างส่ง</option>
+    <option value="แพ็คสินค้าแล้ว"${c==='packed'?' selected':''}>📦 แพ็คสินค้าแล้ว</option>
+    <option value="ส่งแล้ว"${c==='delivered'?' selected':''}>✅ ส่งแล้ว</option>
+    <option value="ยกเลิก"${c==='problem'?' selected':''}>❌ ยกเลิก</option>
+  </select>`;
 }
 
 function filterZoneCards(zoneId, inputEl) {
@@ -1396,24 +1390,19 @@ function renderSummary(){
   const wrap=document.getElementById('summary-wrap');
   if(filteredOrders.length===0){wrap.style.display='none';return;}
   wrap.style.display='block';
-  // อัปเดต badge ยอดรวมกล่องทั้งหมด
   const totalBoxes=filteredOrders.reduce((s,o)=>s+o.qty_plain+o.qty_choc+o.qty_honey,0);
   const badge=document.getElementById('summary-badge');
   if(badge)badge.textContent=`${totalBoxes} กล่อง`;
 
-  // รวบรวมวันที่ทั้งหมดที่มีใน filteredOrders (เรียงตาม key)
-  const dateMap={}; // key -> label
+  const dateMap={};
   filteredOrders.forEach(o=>{
     if(o.order_date_key&&o.order_date){
       dateMap[o.order_date_key]=o.order_date;
     }
   });
   const sortedDates=Object.keys(dateMap).sort();
-
-  // โซนที่มีออเดอร์
   const activeZones=ZONE_LIST.filter(z=>filteredOrders.some(o=>o.zone===z));
 
-  // tabs: "ทุกวัน" + แต่ละวัน
   const tabsEl=document.getElementById('summary-tabs');
   tabsEl.innerHTML='';
   const tabs=['all',...sortedDates];
@@ -1423,10 +1412,8 @@ function renderSummary(){
 
   function buildTable(tab){
     const tableEl=document.getElementById('summary-table');
-    // กรองออเดอร์ตาม tab
     const orders=tab==='all'?filteredOrders:filteredOrders.filter(o=>o.order_date_key===tab);
 
-    // header
     let html='<thead><tr><th>โซน</th><th style="color:var(--plain-color)">Plain</th><th style="color:var(--choc-color)">Choc</th><th style="color:var(--honey-color)">Honey</th><th>รวม</th><th>ออเดอร์</th></tr></thead><tbody>';
 
     let totalP=0,totalC=0,totalH=0,totalOrders=0;
@@ -1511,7 +1498,7 @@ function renderResults(){
           const sc=classifyStatus(o.status);
           const cardCls=sc==='problem'?'is-problem':sc==='pending'?'is-pending':sc==='packed'?'is-packed':sc==='delivered'?'is-delivered':'';
           const distHtml=showDist&&o._distance!==null&&isFinite(o._distance)?`<span class="dist-badge">📍 ${o._distance.toFixed(1)} กม.</span>`:'';
-          const searchData=`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province}`.toLowerCase();
+          const searchData=`${o.order_id} ${o.customer} ${o.phone} ${o.address} ${o.district} ${o.province} ${o.tracking}`.toLowerCase();
           return`<div class="order-card ${cardCls}" data-search="${searchData.replace(/"/g,'&quot;')}">
             <div class="card-top">
               <div><div class="card-order-id">🧾 ${o.order_id}${o.order_date?` &nbsp;·&nbsp; 📅 ${o.order_date}`:''}</div><div class="card-name">👤 ${o.customer}</div></div>
@@ -1519,6 +1506,17 @@ function renderResults(){
             </div>
             <div class="card-row"><span class="card-icon">📞</span><span>${o.phone}</span></div>
             <div class="card-row"><span class="card-icon">📍</span><span>${o.address}${o.zipcode?` <span style="color:var(--muted);font-size:var(--text-xs)">${o.zipcode}</span>`:''} ${o.district}</span></div>
+            
+            <!-- เพิ่มช่องใส่เลขแทรกกิ้งในการ์ด -->
+            <div class="card-row" style="align-items:center; margin-top:2px;">
+              <span class="card-icon">📦</span>
+              <span style="font-size:var(--text-xs); font-weight:700; color:var(--gray-700); margin-right:4px;">เลข Tracking :</span>
+              <input type="text" class="tracking-input" value="${o.tracking||''}" placeholder="ใส่เลขแทรกกิ้ง..." 
+                data-oid="${o.order_id.replace(/"/g,'&quot;')}" 
+                onchange="updateTrackingNumber(this)" 
+                onclick="event.stopPropagation()">
+            </div>
+            
             <div class="card-products">
               <div class="card-qty" style="color:var(--plain-color)">🥛 Plain <span>${o.qty_plain||0}</span></div>
               <div class="card-qty" style="color:var(--choc-color)">🍫 Choc <span>${o.qty_choc||0}</span></div>
@@ -1558,10 +1556,10 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows),'สรุปโซน');
   ZONE_LIST.forEach(zone=>{
     const orders=byZone[zone];if(!orders||orders.length===0)return;
-    const rows=[['เลขออเดอร์','ชื่อลูกค้า','เบอร์โทร','เขต','จังหวัด','รหัสไปรษณีย์','ที่อยู่','HP-Plain','HP-Choc','HP-Honey','สถานะ','หมายเหตุ'],
-      ...orders.map(o=>[o.order_id,o.customer,o.phone,o.district,o.province,o.zipcode,o.address,o.qty_plain,o.qty_choc,o.qty_honey,o.status,o.note])];
+    const rows=[['เลขออเดอร์','ชื่อลูกค้า','เบอร์โทร','เขต','จังหวัด','รหัสไปรษณีย์','ที่อยู่','HP-Plain','HP-Choc','HP-Honey','สถานะ','เลขแทรกกิ้ง','หมายเหตุ'],
+      ...orders.map(o=>[o.order_id,o.customer,o.phone,o.district,o.province,o.zipcode,o.address,o.qty_plain,o.qty_choc,o.qty_honey,o.status,o.tracking,o.note])];
     const ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[14,20,14,14,16,8,36,8,8,8,14,20].map(w=>({wch:w}));
+    ws['!cols']=[14,20,14,14,16,8,36,8,8,8,14,20,20].map(w=>({wch:w}));
     XLSX.utils.book_append_sheet(wb,ws,zone.replace(/[:\\\/\?\*\[\]]/g,'_').substring(0,31));
   });
   const d=new Date().toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
@@ -1595,9 +1593,7 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-// ── แปลงเลข scientific notation (เช่น "5.84898509704235E+17") กลับเป็นเลขเต็มรูปแบบ
-// หมายเหตุ: ถ้าคอลัมน์ในชีตเป็น Number แล้วเลขเกิน ~15-17 หลัก ความแม่นยำอาจสูญเสียไปแล้วตั้งแต่ในชีต
-// ฟังก์ชันนี้ช่วยได้แค่ระดับ "โชว์เลขเต็ม แทนที่จะโชว์ E+17" ไม่ได้กู้คืนหลักที่หายไปจริงๆ
+// ✅ ฟังก์ชันขยายเลขยกกำลังเพื่อค้นหาได้เป๊ะขึ้น (เมื่อโหลดไฟล์/sheet)
 function expandSciNotation(raw){
   const str=String(raw==null?'':raw).trim();
   const m=str.match(/^(-?)(\d+)(?:\.(\d+))?[eE]\+?(\d+)$/);
@@ -1608,16 +1604,18 @@ function expandSciNotation(raw){
   while(digits.length<pointPos)digits+='0';
   return sign+digits.slice(0,pointPos);
 }
+
 function buildOrdersFromRows(data,opts){
   opts=opts||{};
   const orders=[],seen={};
-  // Row 1 is the sheet header / control row and must never become an order.
   for(let i=1;i<data.length;i++){
     const row=data[i];
     const orderNum=expandSciNotation(row[2]);if(!orderNum||!String(orderNum).trim())continue;
     if(String(orderNum).includes('สถานะ')||String(orderNum).includes('HP-Plain'))continue;
-    // ── สถานะมาจากคอลัมน์ A (index 0) ──
+    
     const statusRaw=row[0];
+    const trackingRaw=row[4]; // Column E = 4 (0-indexed)
+    
     if(String(statusRaw||'').includes('คำสั่งซื้อผิด'))continue;
     const district=row[55],province=row[54],address=row[52];
     const customer=row[49],phone=row[50],note=row[51];
@@ -1638,6 +1636,7 @@ function buildOrdersFromRows(data,opts){
         province:String(province||''),address:String(address||'-'),
         zipcode,zone:detectZone(String(district||''),String(province||'')),
         status:String(statusRaw||''),
+        tracking:String(trackingRaw||'').trim(), // เก็บ tracking
         qty_plain:+qty_plain||0,qty_choc:+qty_choc||0,qty_honey:+qty_honey||0,
         note:note?String(note):'',
         lat:null,lon:null,_distance:null,geoLevel:null,
@@ -1651,32 +1650,23 @@ function buildOrdersFromRows(data,opts){
     document.getElementById('results').innerHTML='<div class="empty-state">ไม่พบข้อมูลออเดอร์<br><small>ตรวจสอบโครงสร้างคอลัมน์ (BD=เขต, BC=จังหวัด)</small></div>';
     return;
   }
-  // build available zones for dropdown
   availableZones=[...new Set(orders.map(o=>o.zone))].sort((a,b)=>ZONE_LIST.indexOf(a)-ZONE_LIST.indexOf(b));
   if(opts.preserveFilters){
-    // รีเฟรช: เก็บโซนที่เลือกไว้เดิม ตัดออกแค่โซนที่ไม่มีอยู่ในข้อมูลใหม่แล้ว
     selectedZones=new Set([...selectedZones].filter(z=>availableZones.includes(z)));
   }else{
     selectedZones.clear();
   }
   buildZoneDropdown();updateZoneBtnLabel();
 
-  // build date set for calendar
   orderDateSet.clear();
   orders.forEach(o=>{if(o.order_date_key)orderDateSet.add(o.order_date_key);});
   if(opts.preserveFilters){
-    // รีเฟรช: อยู่เดือน/ช่วงวันที่เดิม แค่รีเฟรชจุด "มีข้อมูล" ในปฏิทิน
     renderCal();
   }else{
-    // navigate calendar to first order date if possible
     if(orderDateSet.size>0){
       const firstKey=[...orderDateSet].sort()[0];
-      // key format YYMMDD buddhist
       const yy=parseInt(firstKey.substring(0,2));
       const mm=parseInt(firstKey.substring(2,4));
-      calViewYear=2500+yy-543+2000; // convert buddhist to christian
-      // actually: buddhist year = christian + 543, so christian = buddhist - 543
-      // yy is offset from 2500: buddhist = 2500+yy
       calViewYear=(2500+yy)-543;
       calViewMonth=mm-1;
     }
@@ -1692,7 +1682,6 @@ function buildOrdersFromRows(data,opts){
   document.getElementById('btn-export').style.display='';
   document.getElementById('btn-print').style.display='';
   document.getElementById('btn-refresh').style.display='';
-  // mobile bottom nav
   document.getElementById('mobile-nav').style.display='';
   applyFilter();
 }
@@ -1730,7 +1719,6 @@ let leafletMap=null, mapMarkers=[], mapGeocoding=false;
 const MAP_STATUS_COLOR={delivered:'#10B981',pending:'#F59E0B',packed:'#2563EB',problem:'#EF4444'};
 
 async function renderMapPage(){
-  // init map ครั้งแรก
   if(!leafletMap){
     leafletMap=L.map('leaflet-map',{zoomControl:true}).setView([13.75,100.52],10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
@@ -1764,26 +1752,21 @@ function updateMapStats(){
 
 async function plotMapMarkers(){
   if(mapGeocoding)return;
-  // clear markers เก่า
   mapMarkers.forEach(m=>m.remove());
   mapMarkers=[];
   const orders=filteredOrders.length>0?filteredOrders:allOrders;
   if(orders.length===0)return;
 
-  // แยก: มีพิกัดแล้ว vs ยังไม่มี
   const withGeo=orders.filter(o=>o.lat&&o.lon);
   const noGeo=orders.filter(o=>!o.lat||!o.lon);
 
-  // plot ออเดอร์ที่มีพิกัดแล้วทันที
   withGeo.forEach(o=>addMarker(o));
 
-  // fit bounds ถ้ามี markers
   if(withGeo.length>0){
     const bounds=L.latLngBounds(withGeo.map(o=>[o.lat,o.lon]));
     leafletMap.fitBounds(bounds,{padding:[40,40],maxZoom:13});
   }
 
-  // geocode ออเดอร์ที่ยังไม่มีพิกัด (background)
   if(noGeo.length>0){
     mapGeocoding=true;
     const bar=document.getElementById('map-geocode-bar');
@@ -1795,13 +1778,11 @@ async function plotMapMarkers(){
       if(o.lat&&o.lon) addMarker(o);
       done++;
       txt.textContent=`geocode ${done}/${noGeo.length} ที่อยู่...`;
-      // yield ทุก 5 ออเดอร์เพื่อไม่ให้ UI freeze
       if(done%5===0) await new Promise(r=>setTimeout(r,0));
     }
     bar.classList.remove('show');
     mapGeocoding=false;
     updateMapStats();
-    // refit bounds
     const all=orders.filter(o=>o.lat&&o.lon);
     if(all.length>0){
       const bounds=L.latLngBounds(all.map(o=>[o.lat,o.lon]));
@@ -1813,13 +1794,10 @@ async function plotMapMarkers(){
 function addMarker(o){
   const sc=classifyStatus(o.status);
   const color=MAP_STATUS_COLOR[sc]||'#94A3B8';
-  const zi=ZONE_LIST.indexOf(o.zone);
-  // circle marker สีตาม status
   const marker=L.circleMarker([o.lat,o.lon],{
     radius:7,fillColor:color,color:'#fff',
     weight:1.5,opacity:1,fillOpacity:0.9,
   });
-  // popup
   const tP=o.qty_plain||0,tC=o.qty_choc||0,tH=o.qty_honey||0;
   const statusLabel=sc==='delivered'?'✅ ส่งแล้ว':sc==='pending'?'🟡 ค้างส่ง':sc==='packed'?'📦 แพ็คสินค้าแล้ว':'❌ ยกเลิก';
   marker.bindPopup(`
@@ -1840,7 +1818,6 @@ function addMarker(o){
   mapMarkers.push(marker);
 }
 
-// re-plot เมื่อ filter เปลี่ยน (ถ้าอยู่หน้า map)
 function applyFilter(){
   applyFilterCore();
   const mapPage=document.getElementById('page-map');
@@ -1851,12 +1828,10 @@ function switchPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const pageEl=document.getElementById('page-'+page);
   if(pageEl) pageEl.classList.add('active');
-  // desktop tabs
   document.querySelectorAll('.topbar-tab').forEach(t=>t.classList.remove('active'));
   const tabId=page==='dashboard-page'?'tab-dashboard':'tab-'+page;
   const tabEl=document.getElementById(tabId);
   if(tabEl) tabEl.classList.add('active');
-  // mobile bottom nav
   document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
   const mobId=page==='dashboard-page'?'mob-tab-dashboard':'mob-tab-'+page;
   const mobEl=document.getElementById(mobId);
@@ -1864,7 +1839,6 @@ function switchPage(page){
   if(page==='dashboard-page') renderDashboardPage();
   if(page==='map') renderMapPage();
 }
-
 
 function renderDashboardPage(){
   if(allOrders.length===0){
@@ -1876,7 +1850,6 @@ function renderDashboardPage(){
   document.getElementById('db-content').style.display='block';
   const orders=allOrders;
 
-  // ── KPIs ──
   const totalOrders=orders.length;
   const totalBoxes=orders.reduce((s,o)=>s+o.qty_plain+o.qty_choc+o.qty_honey,0);
   const totalPlain=orders.reduce((s,o)=>s+o.qty_plain,0);
@@ -1912,7 +1885,6 @@ function renderDashboardPage(){
       <div class="db-kpi-sub">จาก ${ZONE_LIST.length} โซนทั้งหมด</div>
     </div>`;
 
-  // ── 7 วันล่าสุด (chart) ──
   const dateCount={};
   orders.forEach(o=>{if(o.order_date_key&&o.order_date)dateCount[o.order_date_key]=(dateCount[o.order_date_key]||{count:0,label:o.order_date,p:0,c:0,h:0});
     if(o.order_date_key){dateCount[o.order_date_key].count++;dateCount[o.order_date_key].p+=o.qty_plain;dateCount[o.order_date_key].c+=o.qty_choc;dateCount[o.order_date_key].h+=o.qty_honey;}});
@@ -1930,7 +1902,6 @@ function renderDashboardPage(){
   }).join('');
   if(sortedD.length===0)chartEl.innerHTML='<div style="color:var(--muted);font-size:var(--text-sm);padding:var(--sp-4)">ไม่มีข้อมูลวันที่</div>';
 
-  // ── สินค้าขายดี ──
   document.getElementById('db-products').innerHTML=`
     <div class="product-row">
       <div class="product-icon">🥛</div>
@@ -1951,7 +1922,6 @@ function renderDashboardPage(){
       <div class="product-val" style="color:var(--honey-color)">${totalHoney}</div>
     </div>`;
 
-  // ── โซนที่ยุ่งที่สุด ──
   const byZone={};
   orders.forEach(o=>{if(!byZone[o.zone])byZone[o.zone]={count:0,boxes:0};byZone[o.zone].count++;byZone[o.zone].boxes+=o.qty_plain+o.qty_choc+o.qty_honey;});
   const topZones=Object.entries(byZone).sort((a,b)=>b[1].count-a[1].count).slice(0,8);
@@ -1969,7 +1939,6 @@ function renderDashboardPage(){
     </div>`;
   }).join('');
 
-  // ── สถานะ ──
   const sPending=orders.filter(o=>classifyStatus(o.status)==='pending').length;
   const sPacked=orders.filter(o=>classifyStatus(o.status)==='packed').length;
   const sDelivered=orders.filter(o=>classifyStatus(o.status)==='delivered').length;
@@ -1993,7 +1962,6 @@ function renderDashboardPage(){
       <div style="height:8px;background:var(--danger);width:${Math.round(sProblem/total3*100)}%;border-radius:var(--r-full)"></div>
     </div>`;
 
-  // ── โซน × สถานะ (เรียงตามความเร่งด่วน) ──
   const zsMap={};
   orders.forEach(o=>{
     if(!zsMap[o.zone])zsMap[o.zone]={delivered:0,pending:0,packed:0,problem:0,total:0};
@@ -2023,7 +1991,6 @@ function renderDashboardPage(){
   }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:var(--sp-5)">ไม่มีข้อมูล</td></tr>';
 }
 
-// ── ROUTE PLANNER ──
 let routeOrders=[], routeSorted=[];
 
 function openRoutePlanner(zoneId, zoneName, e){
@@ -2047,7 +2014,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRoutePlanner();
 async function runRoutePlanner(){
   const statusEl=document.getElementById('route-status');
   let geocoded=0;
-  // geocode ทุกออเดอร์ที่ยังไม่มี lat/lon
   for(const o of routeOrders){
     if(!o.lat||!o.lon){
       await ensureGeocoded(o);
@@ -2055,16 +2021,13 @@ async function runRoutePlanner(){
     geocoded++;
     statusEl.innerHTML=`<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> geocode ${geocoded}/${routeOrders.length}...`;
   }
-  // แยกออเดอร์ที่มี/ไม่มี geocode
   const withGeo=routeOrders.filter(o=>o.lat&&o.lon);
   const noGeo=routeOrders.filter(o=>!o.lat||!o.lon);
   if(withGeo.length===0){
     statusEl.textContent='❌ ไม่สามารถหาพิกัดได้เลย ลองใส่ที่อยู่ให้ครบกว่านี้';
     return;
   }
-  // Nearest Neighbor TSP
   routeSorted=nearestNeighborTSP(withGeo);
-  // คำนวณระยะทางรวม
   let totalKm=0;
   for(let i=1;i<routeSorted.length;i++){
     totalKm+=haversineKm(routeSorted[i-1].lat,routeSorted[i-1].lon,routeSorted[i].lat,routeSorted[i].lon);
@@ -2076,7 +2039,6 @@ async function runRoutePlanner(){
   document.getElementById('route-total-dist').textContent=totalKm.toFixed(1);
   document.getElementById('route-total-bar').style.display='flex';
   document.getElementById('route-maps-btn').style.display='';
-  // render list
   const listEl=document.getElementById('route-list');
   const allItems=[...routeSorted.map((o,i)=>({o,i,hasGeo:true})),...noGeo.map(o=>({o,i:-1,hasGeo:false}))];
   listEl.innerHTML=allItems.map(({o,i,hasGeo})=>{
@@ -2101,7 +2063,6 @@ function nearestNeighborTSP(orders){
   if(orders.length===1)return[...orders];
   const remaining=new Set(orders.map((_,i)=>i));
   const route=[];
-  // เริ่มจากออเดอร์แรก (หรืออาจใช้จุดที่เหนือสุด)
   let current=0;
   remaining.delete(0);
   route.push(orders[0]);
@@ -2120,7 +2081,6 @@ function nearestNeighborTSP(orders){
 
 function openRouteMaps(){
   if(routeSorted.length===0)return;
-  // Google Maps Directions สูงสุด 10 waypoints (ต้น + ปลาย + 8 กลาง)
   const MAX=10;
   const pts=routeSorted.slice(0,MAX);
   const origin=`${pts[0].lat},${pts[0].lon}`;
@@ -2135,7 +2095,6 @@ function openRouteMaps(){
   window.open(url,'_blank','noopener');
 }
 
-// ── GEO SETTINGS UI ──
 const GEO_LS='cfm_geo_settings';
 function loadGeoSettings(){
   try{
@@ -2145,7 +2104,6 @@ function loadGeoSettings(){
   }catch(e){}
 }
 loadGeoSettings();
-// โหลด cache จาก Sheets อัตโนมัติถ้าตั้งค่าไว้แล้ว
 if(geoSheetId){
   loadGeoCacheFromSheets(geoSheetId).then(n=>{
     if(n>0){const btn=document.getElementById('btn-geo-settings');if(btn)btn.title=`Sheets sync — ${Object.keys(geoCache).length} พิกัดพร้อมใช้`;}
@@ -2175,12 +2133,10 @@ function updateGeoStatusDisplay(){
 async function saveGeoSettings(){
   const sheetId=document.getElementById('geo-sheet-id-input').value.trim();
   const scriptUrl=document.getElementById('geo-script-url-input').value.trim();
-  // extract sheetId จาก URL ถ้าวาง URL เต็ม
   const m=sheetId.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
   geoSheetId=m?m[1]:sheetId;
   geoScriptUrl=scriptUrl;
   localStorage.setItem(GEO_LS,JSON.stringify({sheetId:geoSheetId,scriptUrl:geoScriptUrl}));
-  // โหลด cache จาก Sheets
   const btn=document.querySelector('#geo-modal .primary');
   const orig=btn.innerHTML; btn.disabled=true;
   btn.innerHTML='<span class="spinner" style="width:13px;height:13px;border-width:2px;margin-right:4px"></span>กำลังโหลด...';
@@ -2192,7 +2148,6 @@ async function saveGeoSettings(){
   else if(geoSheetId) el.innerHTML=`<div class="geo-status-bar info">ℹ️ ยังไม่มี Sheet "GeoCache" — จะสร้างอัตโนมัติเมื่อ geocode ครั้งแรก</div>`;
 }
 
-
 function copyScriptCode(){
   const code=document.getElementById('apps-script-code').textContent;
   navigator.clipboard.writeText(code).then(()=>{
@@ -2202,7 +2157,6 @@ function copyScriptCode(){
   });
 }
 
-// sync cache ขึ้น Sheets อัตโนมัติหลัง geocode เสร็จ (debounce 3 วิ)
 let syncTimer=null;
 const origSaveCache=saveCacheLocal;
 function scheduleSync(){
@@ -2210,9 +2164,7 @@ function scheduleSync(){
   syncTimer=setTimeout(()=>syncNewCacheToSheets(),3000);
 }
 
-// patch geocodeNominatim ให้เรียก scheduleSync หลัง geocode ใหม่
 const _origGeocode=geocodeNominatim;
-// (ใช้ geoCacheDirty.add แล้ว → scheduleSync ใน ensureGeocoded)
 const _origEnsure=ensureGeocoded;
 async function ensureGeocodedPatched(o){
   await _origEnsure(o);
@@ -2236,7 +2188,6 @@ async function loadFromSheets(){
   btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:6px"></span>กำลังโหลด...';
   btn.disabled=true;
 
-  // ใช้ Google Visualization API (gviz) — เปิด CORS ให้โดย Google เอง, ไม่ต้อง proxy, ไม่ต้อง API key
   const tqUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
   try{
     const res=await fetch(tqUrl);
@@ -2248,7 +2199,6 @@ async function loadFromSheets(){
     currentSheetRef={sheetId,gid,sheetName:null};
     processCSVText(text);return;
   }catch(e){
-    // fallback: export CSV ตรง
     try{
       const csvUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
       const res2=await fetch(csvUrl);
@@ -2265,7 +2215,6 @@ async function loadFromSheets(){
   }
 }
 
-// ── โหลดด่วนจากแท็บ (sheet tab) ตามชื่อ เช่น "SCG", "ระยอง" ──
 async function loadFromSheetsByName(sheetName,btnEl){
   const url=document.getElementById('sheets-url').value.trim();
   const errEl=document.getElementById('sheets-error');errEl.style.display='none';
@@ -2292,14 +2241,12 @@ async function loadFromSheetsByName(sheetName,btnEl){
   }
 }
 
-// This app is intentionally locked to the SCG tab in the configured workbook.
 const SCG_SHEET_URL='https://docs.google.com/spreadsheets/d/1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44/edit?gid=1694042044#gid=1694042044';
 function loadConfiguredSCG(btnEl){
   document.getElementById('sheets-url').value=SCG_SHEET_URL;
   return loadFromSheetsByName('SCG',btnEl);
 }
 
-// ── รีเฟรชข้อมูล: โหลดชีต/แท็บเดิมที่กำลังใช้อยู่ซ้ำ โดยไม่ล้างฟิลเตอร์ที่เลือกไว้ ──
 async function refreshData(){
   const btn=document.getElementById('btn-refresh');
   const origHtml=btn.innerHTML;
@@ -2318,7 +2265,6 @@ async function refreshData(){
       if(!res.ok)throw new Error(`HTTP ${res.status}`);
       text=await res.text();
     }else{
-      // ยังไม่เคยตั้ง currentSheetRef (เผื่อกรณีโหลดผ่านไฟล์ Excel) — ใช้ค่าเริ่มต้น SCG
       const tqUrl=`https://docs.google.com/spreadsheets/d/1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44/gviz/tq?tqx=out:csv&sheet=SCG`;
       const res=await fetch(tqUrl);
       if(!res.ok)throw new Error(`HTTP ${res.status}`);
@@ -2377,30 +2323,31 @@ function processCSVText(text){
 <div class="modal-overlay" id="geo-modal" onclick="if(event.target===this)closeGeoModal()">
   <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto;">
     <h3>⚙️ ตั้งค่า Google Sheets Sync</h3>
-    <p>เชื่อมต่อ Sheet ข้อมูลออเดอร์ เพื่อให้การเปลี่ยนสถานะ (ค้างส่ง/ส่งแล้ว/ยกเลิก) จากแอปเขียนกลับเข้า Google Sheets ได้</p>
+    <p>เชื่อมต่อ Sheet ข้อมูลออเดอร์ เพื่อให้การเปลี่ยนสถานะ หรือ ใส่เลขแทรกกิ้ง เขียนกลับเข้า Google Sheets ได้</p>
 
     <div id="geo-status-display"></div>
 
     <div class="geo-settings-row">
       <div class="geo-settings-label">Sheet ID (ไฟล์ข้อมูลหลัก)</div>
       <input type="text" id="geo-sheet-id-input" placeholder="1lV0wrrsbB0DBMqEAB7ri40uUjM2T2yKeTuzzgdRoTKQ">
-      <div class="geo-settings-hint">ใช้ Sheet เดียวกับข้อมูล Order</div>
+      <div class="geo-settings-hint">ใช้ Sheet เดียวกับข้อมูล Order (ตั้งไว้เผื่อกรณีที่ไฟล์โหลดจากคอมพิวเตอร์)</div>
     </div>
 
     <div class="geo-settings-row">
       <div class="geo-settings-label">Apps Script Web App URL (สำหรับเขียนข้อมูล)</div>
       <input type="text" id="geo-script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
-      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App (ใช้ sync สถานะออเดอร์ + เช็คแทร็กกิ้งไปรษณีย์ไทย)</div>
+      <div class="geo-settings-hint">ต้องสร้าง Apps Script ก่อน — คัดลอก code ด้านล่างแล้ว Deploy เป็น Web App</div>
     </div>
 
     <details style="margin-bottom:var(--sp-3)">
-      <summary style="cursor:pointer;font-size:var(--text-sm);font-weight:600;color:var(--brand);padding:var(--sp-2) 0">📋 วิธีสร้าง Apps Script (คลิกเพื่อดู)</summary>
+      <summary style="cursor:pointer;font-size:var(--text-sm);font-weight:600;color:var(--brand);padding:var(--sp-2) 0">📋 วิธีสร้าง Apps Script <b>(สำคัญ: อย่าลืม Deploy ใหม่)</b></summary>
       <div style="margin-top:var(--sp-2)">
-        <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:6px">1. เปิด Google Sheets → Extensions → Apps Script → วาง code นี้ → Deploy → New deployment → Web App → Execute as: Me → Anyone can access<br>2. ก่อน Deploy: เมนู ⚙️ Project Settings → Script Properties → เพิ่ม <code>THAILANDPOST_API_KEY</code> = API key จาก track.thailandpost.co.th/dashboard</div>
+        <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:6px">1. เปิด Google Sheets → Extensions → Apps Script → วาง code นี้ <br>2. <b>กด Deploy → New deployment</b> (หรือ Manage Deployments -> edit -> New version) → Web App → Execute as: Me → Anyone can access<br>3. ก่อน Deploy: เมนู ⚙️ Project Settings → Script Properties → เพิ่ม <code>THAILANDPOST_API_KEY</code> = API key จาก track.thailandpost.co.th/dashboard</div>
         <div class="script-code-wrap" id="apps-script-code">function doPost(e){
   try{
     const d=JSON.parse(e.postData.contents);
     if(d.action==='updateOrderStatus')return handleUpdateOrderStatus(d);
+    if(d.action==='updateTracking')return handleUpdateTracking(d);
     if(d.action==='trackThailandPost')return handleTrackThailandPost(d);
     return ContentService.createTextOutput(JSON.stringify({ok:false,error:'unknown action'})).setMimeType(ContentService.MimeType.JSON);
   }catch(err){
@@ -2408,24 +2355,62 @@ function processCSVText(text){
   }
 }
 
+function expandSciNotation(raw){
+  const str=String(raw==null?'':raw).trim();
+  const m=str.match(/^(-?)(\d+)(?:\.(\d+))?[eE]\+?(\d+)$/);
+  if(!m)return str;
+  const sign=m[1],intPart=m[2],fracPart=m[3]||'',exp=parseInt(m[4],10);
+  let digits=intPart+fracPart;
+  const pointPos=intPart.length+exp;
+  while(digits.length<pointPos)digits+='0';
+  return sign+digits.slice(0,pointPos);
+}
+
+function getTargetSheet(d) {
+  const ss = d.sheetId ? SpreadsheetApp.openById(d.sheetId) : SpreadsheetApp.getActiveSpreadsheet();
+  let sh = null;
+  if(d.sheetName) {
+    sh = ss.getSheetByName(d.sheetName);
+  }
+  if(!sh && d.gid != null) {
+    sh = ss.getSheets().find(s => String(s.getSheetId()) === String(d.gid)) || null;
+  }
+  if(!sh) sh = ss.getSheets()[0];
+  return sh;
+}
+
 function handleUpdateOrderStatus(d){
-  const ss=d.sheetId?SpreadsheetApp.openById(d.sheetId):SpreadsheetApp.getActiveSpreadsheet();
-  let sh=null;
-  if(d.sheetName)sh=ss.getSheetByName(d.sheetName);
-  if(!sh&&d.gid!=null){sh=ss.getSheets().find(s=>String(s.getSheetId())===String(d.gid))||null;}
-  if(!sh)sh=ss.getSheets()[0];
-  // คอลัมน์: A=สถานะ(1), C=เลขออเดอร์(3)
-  // ใช้ getDisplayValues() อ่านเฉพาะคอลัมน์ C แทน getValues() ทั้งชีต — ถ้าเซลล์เลขออเดอร์เก็บเป็น Number,
-  // getValues() จะคืนค่าเป็น JS Number ซึ่งแม่นยำสูงสุดแค่ ~15-16 หลัก เลขออเดอร์ 18 หลักจะถูกปัดเศษ
-  // ทำให้เทียบไม่ตรงเลยสักแถว (updated:0) แบบเงียบๆ เพราะฝั่งแอปยิงด้วย mode:'no-cors' อ่าน response ไม่ได้อยู่แล้ว
-  const lastRow=sh.getLastRow();
-  if(lastRow<1)return ContentService.createTextOutput(JSON.stringify({ok:true,updated:0})).setMimeType(ContentService.MimeType.JSON);
-  const idCol=sh.getRange(1,3,lastRow,1).getDisplayValues();
-  const targetId=String(d.orderId).trim();
-  let updated=0;
-  for(let i=0;i<idCol.length;i++){
-    if(String(idCol[i][0]).trim()===targetId){
-      sh.getRange(i+1,1).setValue(d.status);
+  const sh = getTargetSheet(d);
+  const lastRow = sh.getLastRow();
+  if(lastRow < 1) return ContentService.createTextOutput(JSON.stringify({ok:true,updated:0})).setMimeType(ContentService.MimeType.JSON);
+  
+  const idCol = sh.getRange(1,3,lastRow,1).getDisplayValues(); // Col C
+  const targetId = String(d.orderId).trim();
+  let updated = 0;
+  
+  for(let i=0; i<idCol.length; i++){
+    let cellVal = String(idCol[i][0]).trim();
+    if(cellVal === targetId || expandSciNotation(cellVal) === targetId){
+      sh.getRange(i+1, 1).setValue(d.status); // Col A
+      updated++;
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:true,updated})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleUpdateTracking(d){
+  const sh = getTargetSheet(d);
+  const lastRow = sh.getLastRow();
+  if(lastRow < 1) return ContentService.createTextOutput(JSON.stringify({ok:true,updated:0})).setMimeType(ContentService.MimeType.JSON);
+  
+  const idCol = sh.getRange(1,3,lastRow,1).getDisplayValues(); // Col C
+  const targetId = String(d.orderId).trim();
+  let updated = 0;
+  
+  for(let i=0; i<idCol.length; i++){
+    let cellVal = String(idCol[i][0]).trim();
+    if(cellVal === targetId || expandSciNotation(cellVal) === targetId){
+      sh.getRange(i+1, 5).setValue(d.tracking); // Col E
       updated++;
     }
   }

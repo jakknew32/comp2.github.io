@@ -1510,6 +1510,7 @@ function renderResults(){
             <!-- เพิ่มช่องใส่เลขแทรกกิ้งในการ์ด -->
             <div class="card-row" style="align-items:center; margin-top:2px;">
               <span class="card-icon">📦</span>
+              <span style="font-size:var(--text-xs); font-weight:700; color:var(--gray-700); margin-right:4px;">เลข Tracking :</span>
               <input type="text" class="tracking-input" value="${o.tracking||''}" placeholder="ใส่เลขแทรกกิ้ง..." 
                 data-oid="${o.order_id.replace(/"/g,'&quot;')}" 
                 onchange="updateTrackingNumber(this)" 
