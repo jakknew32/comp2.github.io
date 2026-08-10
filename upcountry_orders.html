@@ -82,6 +82,18 @@
   .item-chip{font-size:12px; background:var(--panel2); border:1px solid var(--border); padding:3px 8px; border-radius:6px;}
   .note{font-size:12px; color:var(--warn); background:rgba(245,165,36,0.08); border:1px solid rgba(245,165,36,0.25); padding:6px 8px; border-radius:8px;}
   .batch-label{font-size:11px; color:var(--muted); border-top:1px dashed var(--border); padding-top:6px; margin-top:2px;}
+  .track-input-row{display:flex; gap:6px;}
+  .track-input{
+    flex:1; background:var(--panel2); border:1px solid var(--warn); color:var(--text);
+    padding:6px 10px; border-radius:6px; font-size:13px; font-family:monospace;
+  }
+  .track-input:focus{outline:none; border-color:var(--accent);}
+  .track-input.saved{border-color:var(--good);}
+  #exportBar{
+    display:none; align-items:center; gap:10px; margin-top:12px;
+    background:var(--panel2); border:1px solid var(--good); border-radius:10px; padding:10px 14px;
+    font-size:13px; color:var(--muted);
+  }
   .section-title{
     font-size:14px; color:var(--muted); margin:26px 0 12px; padding-bottom:6px;
     border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px;
@@ -108,6 +120,10 @@
       แสดงเฉพาะที่ไม่มี Tracking
     </label>
   </div>
+  <div id="exportBar">
+    <span id="exportCount">กรอกแล้ว 0 รายการ</span>
+    <button id="copyTrackingBtn" style="padding:5px 12px; font-size:12px;">📋 คัดลอก (เลขออเดอร์ + Tracking)</button>
+  </div>
 </header>
 
 <main>
@@ -120,6 +136,8 @@
 const SHEET_ID = "1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44";
 const TAB_NAME = "ออเดอร์ต่างจังหวัด";
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(TAB_NAME)}`;
+// Shared Apps Script Web App (same one used by cfm_zone_v2.html / tracking.html)
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvF3RVYhrfD5esX3V9BX1gf44P0YUq040i6U3-C1JJ-bSx8dM0xhb5Qf-LMJ1LEGmZNA/exec";
 
 const HEADER_KEYS = {
   seq: "ลำดับ",
@@ -137,6 +155,14 @@ const HEADER_KEYS = {
 };
 
 let allOrders = [];
+const trackingOverrides = {}; // orderId -> tracking string typed by user
+
+function updateExportBar(){
+  const count = Object.keys(trackingOverrides).filter(k=>trackingOverrides[k]).length;
+  const bar = document.getElementById('exportBar');
+  bar.style.display = count > 0 ? 'flex' : 'none';
+  document.getElementById('exportCount').textContent = `กรอกแล้ว ${count} รายการ`;
+}
 
 function findHeaderRow(rows){
   for(let i=0;i<rows.length;i++){
@@ -224,6 +250,7 @@ function parseData(csvText){
     }
 
     orders.push({
+      rowNumber: i + 1, // 1-indexed sheet row, for writing back
       seq: (row[colMap.seq]||"").trim(),
       tracking: (row[0]||"").trim(),
       orderId,
@@ -255,13 +282,20 @@ function renderProvinceFilter(orders){
 }
 
 function cardHTML(o){
+  const overrideVal = trackingOverrides[o.orderId] || '';
   return `
     <div class="card">
       <div class="card-top">
         <span class="order-id">#${o.seq ? o.seq+' · ' : ''}${o.orderId}</span>
         <span class="badge">${o.province}</span>
       </div>
-      ${o.tracking ? `<div class="phone">📦 Tracking: <span style="color:var(--text);font-family:monospace;">${o.tracking}</span></div>` : ''}
+      ${o.tracking
+        ? `<div class="phone">📦 Tracking: <span style="color:var(--text);font-family:monospace;">${o.tracking}</span></div>`
+        : `<div class="track-input-row">
+             <input type="text" class="track-input ${overrideVal?'saved':''}" placeholder="กรอกเลข tracking..." data-order="${o.orderId}" data-row="${o.rowNumber}" value="${overrideVal}">
+             <button class="save-track-btn" data-order="${o.orderId}" data-row="${o.rowNumber}" style="padding:6px 10px; font-size:12px;">บันทึก</button>
+           </div>`
+      }
       <div class="customer">${o.customer}</div>
       <div class="phone">📞 ${o.phone}</div>
       ${o.items.length ? `<div class="items">${o.items.map(it=>`<span class="item-chip">${it}</span>`).join('')}</div>` : ''}
@@ -332,6 +366,67 @@ document.getElementById('search').addEventListener('input', render);
 document.getElementById('provinceFilter').addEventListener('change', render);
 document.getElementById('noTrackingOnly').addEventListener('change', render);
 document.getElementById('refreshBtn').addEventListener('click', load);
+
+document.getElementById('cardsRoot').addEventListener('input', (e)=>{
+  if(e.target.classList.contains('track-input')){
+    const orderId = e.target.dataset.order;
+    trackingOverrides[orderId] = e.target.value.trim();
+    e.target.classList.toggle('saved', !!e.target.value.trim());
+    updateExportBar();
+  }
+});
+
+async function saveTrackingToSheet(orderId, rowNumber, trackingValue, btn){
+  if(!trackingValue){
+    btn.textContent = 'กรอกเลขก่อน';
+    setTimeout(()=>{ btn.textContent = 'บันทึก'; }, 1200);
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'กำลังบันทึก...';
+  try{
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors', // same workaround as other CFM pages — response is opaque, fire-and-forget
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'updateUpcountryTracking',
+        sheet: TAB_NAME,
+        row: rowNumber,
+        orderId: orderId,
+        tracking: trackingValue
+      })
+    });
+    btn.textContent = '✅ บันทึกแล้ว';
+    setTimeout(()=>{ btn.textContent = 'บันทึก'; btn.disabled = false; }, 1500);
+  }catch(err){
+    btn.textContent = '⚠️ ผิดพลาด';
+    btn.disabled = false;
+    setTimeout(()=>{ btn.textContent = 'บันทึก'; }, 1500);
+  }
+}
+
+document.getElementById('cardsRoot').addEventListener('click', (e)=>{
+  if(e.target.classList.contains('save-track-btn')){
+    const orderId = e.target.dataset.order;
+    const row = e.target.dataset.row;
+    const input = document.querySelector(`.track-input[data-order="${orderId}"]`);
+    saveTrackingToSheet(orderId, row, input ? input.value.trim() : '', e.target);
+  }
+});
+
+document.getElementById('copyTrackingBtn').addEventListener('click', ()=>{
+  const lines = Object.entries(trackingOverrides)
+    .filter(([,v])=>v)
+    .map(([orderId,tracking])=>`${orderId}\t${tracking}`);
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('copyTrackingBtn');
+    const original = btn.textContent;
+    btn.textContent = '✅ คัดลอกแล้ว';
+    setTimeout(()=>{ btn.textContent = original; }, 1500);
+  });
+});
 
 load();
 </script>
