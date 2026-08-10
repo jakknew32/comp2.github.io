@@ -89,6 +89,37 @@
   }
   .track-input:focus{outline:none; border-color:var(--accent);}
   .track-input.saved{border-color:var(--good);}
+  .card-check{display:flex; align-items:center; gap:8px;}
+  .card-check input[type="checkbox"]{width:16px; height:16px; accent-color:var(--accent); cursor:pointer;}
+  .print-btn{
+    background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:5px 10px; font-size:12px; border-radius:6px; cursor:pointer; white-space:nowrap;
+  }
+  .print-btn:hover{border-color:var(--accent);}
+  #printBar{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--panel); border:1px solid var(--accent); border-radius:30px;
+    padding:10px 20px; display:none; align-items:center; gap:14px; z-index:20;
+    box-shadow:0 8px 30px rgba(0,0,0,0.4);
+  }
+  #printBar.show{display:flex;}
+  #printBar span{font-size:13px; color:var(--muted);}
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{display:block; position:absolute; top:0; left:0; width:100%;}
+    .label-sheet{
+      width:10cm; min-height:7cm; border:1px dashed #999; padding:0.5cm;
+      page-break-after:always; font-family:"Sarabun",sans-serif; color:#000;
+    }
+    .label-sheet .l-order{font-family:monospace; font-size:12px; color:#333;}
+    .label-sheet .l-from{font-size:11px; color:#555; border-bottom:1px dashed #999; padding-bottom:6px; margin-bottom:8px;}
+    .label-sheet .l-name{font-size:18px; font-weight:700; margin:4px 0;}
+    .label-sheet .l-phone{font-size:15px; margin-bottom:6px;}
+    .label-sheet .l-addr{font-size:14px; line-height:1.5;}
+    .label-sheet .l-note{font-size:12px; margin-top:8px; border-top:1px dashed #999; padding-top:6px;}
+  }
   #exportBar{
     display:none; align-items:center; gap:10px; margin-top:12px;
     background:var(--panel2); border:1px solid var(--good); border-radius:10px; padding:10px 14px;
@@ -131,6 +162,14 @@
   <div id="cardsRoot"></div>
 </main>
 
+<div id="printBar">
+  <span id="printCount">เลือกแล้ว 0 การ์ด</span>
+  <button id="printSelectedBtn">🖨️ พิมพ์ Label ที่เลือก</button>
+  <button class="ghost" id="clearSelectionBtn">ล้างการเลือก</button>
+</div>
+
+<div id="printArea"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
 const SHEET_ID = "1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44";
@@ -156,6 +195,38 @@ const HEADER_KEYS = {
 
 let allOrders = [];
 const trackingOverrides = {}; // orderId -> tracking string typed by user
+
+const SENDER_NAME = "Chiangmai Freshmilk (CFM)";
+const SENDER_PHONE = "097-920-7044";
+const selectedOrders = new Set();
+
+function labelHTML(o){
+  const track = o.tracking || trackingOverrides[o.orderId] || '';
+  return `
+    <div class="label-sheet">
+      <div class="l-from">จาก: ${SENDER_NAME} · โทร ${SENDER_PHONE}</div>
+      <div class="l-order">เลขออเดอร์: ${o.orderId}${track ? ' · Tracking: '+track : ''}</div>
+      <div class="l-name">${o.customer}</div>
+      <div class="l-phone">📞 ${o.phone}</div>
+      <div class="l-addr">${o.address}${o.province && !o.address.includes(o.province) ? ' '+o.province : ''}</div>
+      ${(o.items && o.items.length) || o.note ? `<div class="l-note">${[...(o.items||[]), o.note].filter(Boolean).join(' | ')}</div>` : ''}
+    </div>
+  `;
+}
+
+function printOrders(orderIds){
+  const orders = allOrders.filter(o => orderIds.includes(o.orderId));
+  if(orders.length === 0) return;
+  document.getElementById('printArea').innerHTML = orders.map(labelHTML).join('');
+  window.print();
+}
+
+function updatePrintBar(){
+  const bar = document.getElementById('printBar');
+  const count = selectedOrders.size;
+  bar.classList.toggle('show', count > 0);
+  document.getElementById('printCount').textContent = `เลือกแล้ว ${count} การ์ด`;
+}
 
 function updateExportBar(){
   const count = Object.keys(trackingOverrides).filter(k=>trackingOverrides[k]).length;
@@ -286,7 +357,10 @@ function cardHTML(o){
   return `
     <div class="card">
       <div class="card-top">
-        <span class="order-id">#${o.seq ? o.seq+' · ' : ''}${o.orderId}</span>
+        <label class="card-check">
+          <input type="checkbox" class="card-select" data-order="${o.orderId}" ${selectedOrders.has(o.orderId) ? 'checked' : ''}>
+          <span class="order-id">#${o.seq ? o.seq+' · ' : ''}${o.orderId}</span>
+        </label>
         <span class="badge">${o.province}</span>
       </div>
       ${o.tracking
@@ -302,6 +376,7 @@ function cardHTML(o){
       <div class="addr">📍 ${o.address}</div>
       ${o.note ? `<div class="note">📝 ${o.note}</div>` : ''}
       ${o.batch ? `<div class="batch-label">${o.batch}</div>` : ''}
+      <button class="print-btn" data-order="${o.orderId}" data-single="1">🖨️ พิมพ์ Label</button>
     </div>
   `;
 }
@@ -412,7 +487,31 @@ document.getElementById('cardsRoot').addEventListener('click', (e)=>{
     const row = e.target.dataset.row;
     const input = document.querySelector(`.track-input[data-order="${orderId}"]`);
     saveTrackingToSheet(orderId, row, input ? input.value.trim() : '', e.target);
+    return;
   }
+  if(e.target.classList.contains('print-btn')){
+    printOrders([e.target.dataset.order]);
+    return;
+  }
+});
+
+document.getElementById('cardsRoot').addEventListener('change', (e)=>{
+  if(e.target.classList.contains('card-select')){
+    const orderId = e.target.dataset.order;
+    if(e.target.checked) selectedOrders.add(orderId);
+    else selectedOrders.delete(orderId);
+    updatePrintBar();
+  }
+});
+
+document.getElementById('printSelectedBtn').addEventListener('click', ()=>{
+  printOrders([...selectedOrders]);
+});
+
+document.getElementById('clearSelectionBtn').addEventListener('click', ()=>{
+  selectedOrders.clear();
+  document.querySelectorAll('.card-select').forEach(cb => cb.checked = false);
+  updatePrintBar();
 });
 
 document.getElementById('copyTrackingBtn').addEventListener('click', ()=>{
