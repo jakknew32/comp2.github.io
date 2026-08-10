@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ออเดอร์ต่างจังหวัด</title>
+<style>
+  :root{
+    --bg:#0f1420;
+    --panel:#161d2e;
+    --panel2:#1c2439;
+    --border:#2a3550;
+    --text:#e8ecf6;
+    --muted:#8b96b3;
+    --accent:#4f8cff;
+    --accent2:#7c5cff;
+    --good:#38c793;
+    --warn:#f5a524;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Sarabun","Segoe UI",sans-serif;
+    background:radial-gradient(1200px 600px at 10% -10%, #1a2440 0%, var(--bg) 60%);
+    color:var(--text);
+    min-height:100vh;
+  }
+  header{
+    position:sticky; top:0; z-index:10;
+    backdrop-filter:blur(10px);
+    background:rgba(15,20,32,0.85);
+    border-bottom:1px solid var(--border);
+    padding:16px 20px;
+  }
+  .headrow{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  h1{font-size:18px; margin:0; display:flex; align-items:center; gap:8px;}
+  h1 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);}
+  .stats{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+  .stat{
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:8px 14px; font-size:13px; color:var(--muted);
+  }
+  .stat b{color:var(--text); font-size:15px; display:block;}
+  .controls{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;}
+  input[type="text"], select{
+    background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:9px 12px; border-radius:8px; font-size:14px; font-family:inherit;
+  }
+  input[type="text"]{flex:1; min-width:200px;}
+  button{
+    background:var(--accent); color:#fff; border:none; padding:9px 16px;
+    border-radius:8px; font-size:14px; cursor:pointer; font-family:inherit;
+  }
+  button.ghost{background:transparent; border:1px solid var(--border); color:var(--text);}
+  main{padding:20px; max-width:1400px; margin:0 auto;}
+  #status{color:var(--muted); font-size:14px; padding:20px; text-align:center;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+    gap:14px;
+  }
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:14px; display:flex; flex-direction:column; gap:8px;
+    transition:transform .15s, border-color .15s;
+  }
+  .card:hover{transform:translateY(-2px); border-color:var(--accent);}
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .order-id{font-family:monospace; font-size:13px; color:var(--accent); word-break:break-all;}
+  .badge{
+    font-size:11px; padding:3px 8px; border-radius:20px; white-space:nowrap;
+    background:rgba(79,140,255,0.15); color:var(--accent); border:1px solid rgba(79,140,255,0.3);
+  }
+  .customer{font-size:16px; font-weight:600;}
+  .phone{font-size:13px; color:var(--muted);}
+  .addr{font-size:13px; color:var(--muted); line-height:1.5;}
+  .province{
+    display:inline-block; font-size:12px; color:var(--good); background:rgba(56,199,147,0.12);
+    border:1px solid rgba(56,199,147,0.3); padding:2px 8px; border-radius:20px; width:fit-content;
+  }
+  .items{display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;}
+  .item-chip{font-size:12px; background:var(--panel2); border:1px solid var(--border); padding:3px 8px; border-radius:6px;}
+  .note{font-size:12px; color:var(--warn); background:rgba(245,165,36,0.08); border:1px solid rgba(245,165,36,0.25); padding:6px 8px; border-radius:8px;}
+  .batch-label{font-size:11px; color:var(--muted); border-top:1px dashed var(--border); padding-top:6px; margin-top:2px;}
+  .section-title{
+    font-size:14px; color:var(--muted); margin:26px 0 12px; padding-bottom:6px;
+    border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px;
+  }
+  .section-title b{color:var(--text); font-size:15px;}
+  ::-webkit-scrollbar{width:10px;} ::-webkit-scrollbar-thumb{background:var(--border); border-radius:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="headrow">
+    <h1><span class="dot"></span>ออเดอร์ต่างจังหวัด</h1>
+    <div style="display:flex; gap:8px;">
+      <button class="ghost" id="refreshBtn">🔄 รีเฟรช</button>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="controls">
+    <input type="text" id="search" placeholder="ค้นหา ชื่อ / เบอร์โทร / จังหวัด / เลขออเดอร์...">
+    <select id="provinceFilter"><option value="">ทุกจังหวัด</option></select>
+  </div>
+</header>
+
+<main>
+  <div id="status">กำลังโหลดข้อมูล...</div>
+  <div id="cardsRoot"></div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+const SHEET_ID = "1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44";
+const TAB_NAME = "ออเดอร์ต่างจังหวัด";
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(TAB_NAME)}`;
+
+const HEADER_KEYS = {
+  seq: "ลำดับ",
+  orderId: "เลขออเดอร์",
+  productType: "ชนิดนม",
+  qty: "จำนวน",
+  customer: "ชื่อลูกค้า",
+  phone: "โทร",
+  note: "หมายเหตุ",
+  address: "ที่อยู่",
+  province: "จังหวัด",
+  hpPlain: "HP จืด",
+  hpChoc: "HP ช็อก",
+  hpHoney: "HP น้ำผึ้ง"
+};
+
+let allOrders = [];
+
+function findHeaderRow(rows){
+  for(let i=0;i<rows.length;i++){
+    if(rows[i].some(c => (c||"").trim() === HEADER_KEYS.orderId)){
+      return i;
+    }
+  }
+  return -1;
+}
+
+function buildColumnMap(headerRow){
+  const map = {};
+  headerRow.forEach((cell,idx)=>{
+    const val = (cell||"").trim();
+    for(const key in HEADER_KEYS){
+      if(val === HEADER_KEYS[key] && map[key]===undefined){
+        map[key] = idx;
+      }
+    }
+  });
+  // province usually sits in a later duplicate column near address; search all columns for a later match too
+  return map;
+}
+
+function isMarkerRow(row){
+  const first = (row[0]||"").trim();
+  if(!first) return false;
+  if(/^ส่ง/.test(first)) return true;
+  if(/^IV\d/.test(first)) return true;
+  return false;
+}
+
+function looksLikeOrderCode(val){
+  if(!val) return false;
+  val = val.trim();
+  if(val.length < 8) return false;
+  if(!/[0-9]/.test(val)) return false;
+  return true;
+}
+
+function parseData(csvText){
+  const parsed = Papa.parse(csvText, {skipEmptyLines:false});
+  const rows = parsed.data;
+  const headerIdx = findHeaderRow(rows);
+  if(headerIdx === -1){
+    throw new Error("ไม่พบหัวตาราง (เลขออเดอร์) ในชีต");
+  }
+  const colMap = buildColumnMap(rows[headerIdx]);
+  const orders = [];
+  let currentBatch = "";
+
+  for(let i = headerIdx+1; i<rows.length; i++){
+    const row = rows[i];
+    if(!row || row.every(c => !c || !c.trim())) continue;
+
+    if(isMarkerRow(row)){
+      currentBatch = row[0].trim();
+      continue;
+    }
+
+    const orderId = (row[colMap.orderId] || "").trim();
+    if(!looksLikeOrderCode(orderId)) continue;
+
+    const phone = (row[colMap.phone] || "").trim();
+    const customer = (row[colMap.customer] || "").trim();
+    if(!phone && !customer) continue;
+
+    const items = [];
+    const productType = (row[colMap.productType]||"").trim();
+    const qty = (row[colMap.qty]||"").trim();
+    if(productType) items.push(`${productType}${qty ? ' x'+qty : ''}`);
+
+    const hpPlain = (row[colMap.hpPlain]||"").trim();
+    const hpChoc = (row[colMap.hpChoc]||"").trim();
+    const hpHoney = (row[colMap.hpHoney]||"").trim();
+    if(hpPlain) items.push(`จืด ${hpPlain}`);
+    if(hpChoc) items.push(`ช็อก ${hpChoc}`);
+    if(hpHoney) items.push(`น้ำผึ้ง ${hpHoney}`);
+
+    let province = (row[colMap.province]||"").trim();
+    const address = (row[colMap.address]||"").trim();
+    if(!province && address){
+      const m = address.match(/จังหวัด[ก-๙]+/);
+      if(m) province = m[0];
+    }
+
+    orders.push({
+      seq: (row[colMap.seq]||"").trim(),
+      orderId,
+      customer: customer || "-",
+      phone: phone || "-",
+      address: address || "-",
+      province: province || "ไม่ระบุ",
+      items,
+      note: (row[colMap.note]||"").trim(),
+      batch: currentBatch
+    });
+  }
+  return orders;
+}
+
+function renderStats(orders){
+  const provinces = new Set(orders.map(o=>o.province));
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><b>${orders.length}</b>ออเดอร์ทั้งหมด</div>
+    <div class="stat"><b>${provinces.size}</b>จังหวัด</div>
+  `;
+}
+
+function renderProvinceFilter(orders){
+  const sel = document.getElementById('provinceFilter');
+  const provinces = [...new Set(orders.map(o=>o.province))].sort((a,b)=>a.localeCompare(b,'th'));
+  sel.innerHTML = '<option value="">ทุกจังหวัด</option>' +
+    provinces.map(p=>`<option value="${p}">${p} (${orders.filter(o=>o.province===p).length})</option>`).join('');
+}
+
+function cardHTML(o){
+  return `
+    <div class="card">
+      <div class="card-top">
+        <span class="order-id">#${o.seq ? o.seq+' · ' : ''}${o.orderId}</span>
+        <span class="badge">${o.province}</span>
+      </div>
+      <div class="customer">${o.customer}</div>
+      <div class="phone">📞 ${o.phone}</div>
+      ${o.items.length ? `<div class="items">${o.items.map(it=>`<span class="item-chip">${it}</span>`).join('')}</div>` : ''}
+      <div class="addr">📍 ${o.address}</div>
+      ${o.note ? `<div class="note">📝 ${o.note}</div>` : ''}
+      ${o.batch ? `<div class="batch-label">${o.batch}</div>` : ''}
+    </div>
+  `;
+}
+
+function render(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const provinceSel = document.getElementById('provinceFilter').value;
+
+  let filtered = allOrders.filter(o=>{
+    if(provinceSel && o.province !== provinceSel) return false;
+    if(q){
+      const hay = `${o.customer} ${o.phone} ${o.province} ${o.orderId} ${o.address}`.toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const root = document.getElementById('cardsRoot');
+  if(filtered.length === 0){
+    root.innerHTML = `<div id="status">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>`;
+    return;
+  }
+
+  // group by batch for readability
+  const groups = {};
+  const order = [];
+  filtered.forEach(o=>{
+    const key = o.batch || "อื่นๆ";
+    if(!groups[key]){ groups[key]=[]; order.push(key); }
+    groups[key].push(o);
+  });
+
+  let html = '';
+  order.forEach(key=>{
+    html += `<div class="section-title"><b>${key}</b><span>(${groups[key].length} ออเดอร์)</span></div>`;
+    html += `<div class="grid">${groups[key].map(cardHTML).join('')}</div>`;
+  });
+  root.innerHTML = html;
+}
+
+async function load(){
+  document.getElementById('status').textContent = 'กำลังโหลดข้อมูล...';
+  document.getElementById('cardsRoot').innerHTML = '';
+  try{
+    const res = await fetch(CSV_URL);
+    if(!res.ok) throw new Error('โหลดชีตไม่สำเร็จ (' + res.status + ')');
+    const text = await res.text();
+    allOrders = parseData(text);
+    document.getElementById('status').textContent = '';
+    renderStats(allOrders);
+    renderProvinceFilter(allOrders);
+    render();
+  }catch(err){
+    document.getElementById('status').textContent = '⚠️ ' + err.message + ' — ตรวจสอบว่าชีตแชร์แบบ "ทุกคนที่มีลิงก์ดูได้"';
+  }
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('provinceFilter').addEventListener('change', render);
+document.getElementById('refreshBtn').addEventListener('click', load);
+
+load();
+</script>
+</body>
+</html>
