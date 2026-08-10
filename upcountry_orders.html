@@ -103,6 +103,10 @@
   <div class="controls">
     <input type="text" id="search" placeholder="ค้นหา ชื่อ / เบอร์โทร / จังหวัด / เลขออเดอร์...">
     <select id="provinceFilter"><option value="">ทุกจังหวัด</option></select>
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); white-space:nowrap;">
+      <input type="checkbox" id="noTrackingOnly" style="width:16px;height:16px;">
+      แสดงเฉพาะที่ไม่มี Tracking
+    </label>
   </div>
 </header>
 
@@ -221,6 +225,7 @@ function parseData(csvText){
 
     orders.push({
       seq: (row[colMap.seq]||"").trim(),
+      tracking: (row[0]||"").trim(),
       orderId,
       customer: customer || "-",
       phone: phone || "-",
@@ -256,6 +261,7 @@ function cardHTML(o){
         <span class="order-id">#${o.seq ? o.seq+' · ' : ''}${o.orderId}</span>
         <span class="badge">${o.province}</span>
       </div>
+      ${o.tracking ? `<div class="phone">📦 Tracking: <span style="color:var(--text);font-family:monospace;">${o.tracking}</span></div>` : ''}
       <div class="customer">${o.customer}</div>
       <div class="phone">📞 ${o.phone}</div>
       ${o.items.length ? `<div class="items">${o.items.map(it=>`<span class="item-chip">${it}</span>`).join('')}</div>` : ''}
@@ -270,10 +276,13 @@ function render(){
   const q = document.getElementById('search').value.trim().toLowerCase();
   const provinceSel = document.getElementById('provinceFilter').value;
 
+  const noTrackingOnly = document.getElementById('noTrackingOnly').checked;
+
   let filtered = allOrders.filter(o=>{
+    if(noTrackingOnly && o.tracking) return false;
     if(provinceSel && o.province !== provinceSel) return false;
     if(q){
-      const hay = `${o.customer} ${o.phone} ${o.province} ${o.orderId} ${o.address}`.toLowerCase();
+      const hay = `${o.customer} ${o.phone} ${o.province} ${o.orderId} ${o.address} ${o.tracking}`.toLowerCase();
       if(!hay.includes(q)) return false;
     }
     return true;
@@ -321,6 +330,7 @@ async function load(){
 
 document.getElementById('search').addEventListener('input', render);
 document.getElementById('provinceFilter').addEventListener('change', render);
+document.getElementById('noTrackingOnly').addEventListener('change', render);
 document.getElementById('refreshBtn').addEventListener('click', load);
 
 load();
