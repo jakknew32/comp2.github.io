@@ -104,22 +104,6 @@
   }
   #printBar.show{display:flex;}
   #printBar span{font-size:13px; color:var(--muted);}
-  #printArea{display:none;}
-  @media print{
-    body *{visibility:hidden;}
-    #printArea, #printArea *{visibility:visible;}
-    #printArea{display:block; position:absolute; top:0; left:0; width:100%;}
-    .label-sheet{
-      width:10cm; min-height:7cm; border:1px dashed #999; padding:0.5cm;
-      page-break-after:always; font-family:"Sarabun",sans-serif; color:#000;
-    }
-    .label-sheet .l-order{font-family:monospace; font-size:12px; color:#333;}
-    .label-sheet .l-from{font-size:11px; color:#555; border-bottom:1px dashed #999; padding-bottom:6px; margin-bottom:8px;}
-    .label-sheet .l-name{font-size:18px; font-weight:700; margin:4px 0;}
-    .label-sheet .l-phone{font-size:15px; margin-bottom:6px;}
-    .label-sheet .l-addr{font-size:14px; line-height:1.5;}
-    .label-sheet .l-note{font-size:12px; margin-top:8px; border-top:1px dashed #999; padding-top:6px;}
-  }
   #exportBar{
     display:none; align-items:center; gap:10px; margin-top:12px;
     background:var(--panel2); border:1px solid var(--good); border-radius:10px; padding:10px 14px;
@@ -168,8 +152,6 @@
   <button class="ghost" id="clearSelectionBtn">ล้างการเลือก</button>
 </div>
 
-<div id="printArea"></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
 const SHEET_ID = "1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44";
@@ -196,29 +178,85 @@ const HEADER_KEYS = {
 let allOrders = [];
 const trackingOverrides = {}; // orderId -> tracking string typed by user
 
-const SENDER_NAME = "Chiangmai Freshmilk (CFM)";
-const SENDER_PHONE = "097-920-7044";
+// ===== LABEL PRINTING — same format as label.html =====
+const SENDER = 'เชียงใหม่เฟรชมิลค์ 57/1 ม.6 ต.ท่าวังตาล สารภี จ.เชียงใหม่ โทร.089-6354687';
 const selectedOrders = new Set();
 
-function labelHTML(o){
+function escLbl(str){
+  if(str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function tsLbl(){
+  const n = new Date();
+  return `พิมพ์: ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()+543} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+function orderToLabel(o){
   const track = o.tracking || trackingOverrides[o.orderId] || '';
-  return `
-    <div class="label-sheet">
-      <div class="l-from">จาก: ${SENDER_NAME} · โทร ${SENDER_PHONE}</div>
-      <div class="l-order">เลขออเดอร์: ${o.orderId}${track ? ' · Tracking: '+track : ''}</div>
-      <div class="l-name">${o.customer}</div>
-      <div class="l-phone">📞 ${o.phone}</div>
-      <div class="l-addr">${o.address}${o.province && !o.address.includes(o.province) ? ' '+o.province : ''}</div>
-      ${(o.items && o.items.length) || o.note ? `<div class="l-note">${[...(o.items||[]), o.note].filter(Boolean).join(' | ')}</div>` : ''}
-    </div>
-  `;
+  const noteParts = [...(o.items||[])];
+  if(o.note) noteParts.push(o.note);
+  if(track) noteParts.push(`Tracking: ${track}`);
+  return {
+    name: o.customer !== '-' ? o.customer : '',
+    phone: o.phone !== '-' ? o.phone : '',
+    addr: o.province && !o.address.includes(o.province) ? `${o.address} ${o.province}` : o.address,
+    order: o.orderId,
+    note: noteParts.join(' / ')
+  };
+}
+
+function buildPrintDoc(list){
+  const recvBg = '#000';
+  const fs = 17;
+
+  const labels_html = list.map((lb,i)=>{
+    const fullAddr = lb.addr || '';
+    const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone ? '\nโทร. '+lb.phone : ''}` : fullAddr;
+    const notePrint = (()=>{ const ol = lb.order ? `เลขออเดอร์: ${escLbl(lb.order)}${lb.note ? ' / หมายเหตุ: '+escLbl(lb.note) : ''}` : (lb.note ? `หมายเหตุ: ${escLbl(lb.note)}` : ''); return ol ? `<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>` : ''; })();
+    const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
+    return `<div class="shipping-label" style="${pageBreak}">
+      <div style="position:absolute;top:2mm;right:3mm;background:${recvBg};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Kanit','Sarabun',sans-serif;z-index:2;">ใบที่ ${i+1}</div>
+      <div style="position:relative;z-index:1;text-align:center;padding:5px 4mm 3px;background:#0D1B2A;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><h2 style="font-size:18px;font-weight:700;margin:0;color:#F59E0B;letter-spacing:.3px;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
+      <div style="position:relative;z-index:1;border-top:1.5px solid #333;margin:0"></div>
+      <div style="position:relative;z-index:1;text-align:center;font-size:10px;line-height:1.3;color:#444;padding:3px 4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escLbl(SENDER)}</div>
+      <div style="position:relative;z-index:1;border-top:1.5px dashed #999;margin:0 0 6px 0;"></div>
+      <div style="position:relative;z-index:1;background:${recvBg} !important;text-align:center;padding:7px;margin-bottom:8px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <span style="font-weight:800;font-size:15px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span>
+      </div>
+      <div style="position:relative;z-index:1;text-align:center;font-size:${fs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${escLbl(displayText).replace(/\n/g,'<br>')}</div>
+      ${notePrint}
+      <div style="position:relative;z-index:1;margin-top:auto;border-top:1.5px solid #333;text-align:center;">
+        <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" style="width:100%;height:auto;display:block;" onerror="this.style.display='none'">
+      </div>
+      <div style="position:relative;z-index:1;font-size:10px;color:#666;text-align:left;padding:4px 5mm;background:white;">${tsLbl()}</div>
+    </div>`;
+  }).join('');
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    @page{size:100mm 150mm;margin:0}
+    html,body{margin:0;padding:0;background:white;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif}
+    .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:3mm 0 0 0;display:flex;flex-direction:column;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;box-sizing:border-box;position:relative;overflow:hidden;}
+    </style>
+    </head><body>${labels_html}</body></html>`;
+}
+
+function doPrint(orderIds){
+  const list = allOrders.filter(o => orderIds.includes(o.orderId)).map(orderToLabel);
+  if(list.length === 0) return;
+  const html = buildPrintDoc(list);
+  const w = window.open('', '_blank', 'width=800,height=600');
+  if(!w){ alert('ไม่สามารถเปิดหน้าพิมพ์ได้ (เบราว์เซอร์บล็อกป๊อปอัป)'); return; }
+  w.document.write(html);
+  w.document.close();
+  w.onload = () => { setTimeout(() => { w.focus(); w.print(); }, 400); };
 }
 
 function printOrders(orderIds){
-  const orders = allOrders.filter(o => orderIds.includes(o.orderId));
-  if(orders.length === 0) return;
-  document.getElementById('printArea').innerHTML = orders.map(labelHTML).join('');
-  window.print();
+  doPrint(orderIds);
 }
 
 function updatePrintBar(){
