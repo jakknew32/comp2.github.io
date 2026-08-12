@@ -176,7 +176,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 const SHEET_ID = "1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44";
 const TAB_NAME = "ออเดอร์ต่างจังหวัด";
@@ -437,6 +437,11 @@ function renderChart(batchTotals){
   const wrap = document.getElementById('chartWrap');
   if(!batchTotals || batchTotals.length === 0){
     wrap.style.display = 'none';
+    return;
+  }
+  if(typeof Chart === 'undefined'){
+    wrap.style.display = 'block';
+    wrap.querySelector('canvas').outerHTML = '<div style="color:var(--muted); font-size:13px;">⚠️ โหลดไลบรารีกราฟไม่สำเร็จ (เครือข่ายอาจบล็อก cdn.jsdelivr.net) — ลองรีเฟรชหน้าอีกครั้ง</div>';
     return;
   }
   wrap.style.display = 'block';
