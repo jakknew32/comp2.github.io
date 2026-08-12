@@ -162,6 +162,10 @@
 
 <main>
   <div id="status">กำลังโหลดข้อมูล...</div>
+  <div id="chartWrap" style="display:none; background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:16px; margin-bottom:20px; box-shadow:0 1px 3px rgba(13,27,42,.06);">
+    <div style="font-size:14px; font-weight:600; color:var(--ink); margin-bottom:10px;">ยอดรวมรายวัน (คอลัมน์ AA)</div>
+    <canvas id="dailyTotalsChart" height="90"></canvas>
+  </div>
   <div id="cardsRoot"></div>
 </main>
 
@@ -172,6 +176,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script>
 const SHEET_ID = "1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44";
 const TAB_NAME = "ออเดอร์ต่างจังหวัด";
@@ -195,6 +200,7 @@ const HEADER_KEYS = {
 };
 
 let allOrders = [];
+let allBatchTotals = [];
 const trackingOverrides = {}; // orderId -> tracking string typed by user
 
 // ===== LABEL PRINTING — same format as label.html =====
@@ -292,6 +298,13 @@ function updateExportBar(){
   document.getElementById('exportCount').textContent = `กรอกแล้ว ${count} รายการ`;
 }
 
+function normalizePhone(p){
+  p = String(p||'').trim();
+  if(p.startsWith('66')) p = '0'+p.slice(2);
+  if(p.startsWith('+66')) p = '0'+p.slice(3);
+  return p;
+}
+
 function findHeaderRow(rows){
   for(let i=0;i<rows.length;i++){
     if(rows[i].some(c => (c||"").trim() === HEADER_KEYS.orderId)){
@@ -331,6 +344,16 @@ function looksLikeOrderCode(val){
   return true;
 }
 
+const TOTAL_COL_INDEX = 26; // column AA (0-indexed)
+
+function parseAmount(val){
+  if(!val) return null;
+  const cleaned = String(val).replace(/[^0-9.\-]/g, '');
+  if(!cleaned) return null;
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? null : n;
+}
+
 function parseData(csvText){
   const parsed = Papa.parse(csvText, {skipEmptyLines:false});
   const rows = parsed.data;
@@ -340,6 +363,7 @@ function parseData(csvText){
   }
   const colMap = buildColumnMap(rows[headerIdx]);
   const orders = [];
+  const batchTotals = []; // {batch, total} in sheet order
   let currentBatch = "";
 
   for(let i = headerIdx+1; i<rows.length; i++){
@@ -352,9 +376,22 @@ function parseData(csvText){
     }
 
     const orderId = (row[colMap.orderId] || "").trim();
-    if(!looksLikeOrderCode(orderId)) continue;
 
-    const phone = (row[colMap.phone] || "").trim();
+    // Detect the per-batch total row: has a value in column AA but no
+    // other order data in the row (order id / customer / phone / address).
+    const totalVal = row[TOTAL_COL_INDEX];
+    if(!looksLikeOrderCode(orderId)){
+      const custCheck = (row[colMap.customer]||"").trim();
+      const phoneCheck = (row[colMap.phone]||"").trim();
+      const addrCheck = (row[colMap.address]||"").trim();
+      const amount = parseAmount(totalVal);
+      if(amount !== null && !custCheck && !phoneCheck && !addrCheck){
+        batchTotals.push({ batch: currentBatch || `แถวที่ ${i+1}`, total: amount });
+      }
+      continue;
+    }
+
+    const phone = normalizePhone((row[colMap.phone] || "").trim());
     const customer = (row[colMap.customer] || "").trim();
     if(!phone && !customer) continue;
 
@@ -391,7 +428,58 @@ function parseData(csvText){
       batch: currentBatch
     });
   }
-  return orders;
+  return { orders, batchTotals };
+}
+
+let dailyChart = null;
+
+function renderChart(batchTotals){
+  const wrap = document.getElementById('chartWrap');
+  if(!batchTotals || batchTotals.length === 0){
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'block';
+
+  const labels = batchTotals.map(b => b.batch);
+  const data = batchTotals.map(b => b.total);
+
+  const ctx = document.getElementById('dailyTotalsChart').getContext('2d');
+  if(dailyChart) dailyChart.destroy();
+  dailyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'ยอดรวม (บาท)',
+        data,
+        backgroundColor: '#F59E0B',
+        borderRadius: 6,
+        maxBarThickness: 60
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => 'ยอดรวม: ' + ctx.parsed.y.toLocaleString('th-TH') + ' บาท'
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#2C3E50', font: { family: "'IBM Plex Sans Thai',sans-serif", size: 11 } } },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#6B7C93',
+            callback: (v) => v.toLocaleString('th-TH')
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderStats(orders){
@@ -454,6 +542,12 @@ function render(){
     return true;
   });
 
+  filtered = filtered.slice().sort((a,b)=>{
+    const aHas = a.tracking ? 1 : 0;
+    const bHas = b.tracking ? 1 : 0;
+    return aHas - bHas;
+  });
+
   const root = document.getElementById('cardsRoot');
   if(filtered.length === 0){
     root.innerHTML = `<div id="status">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>`;
@@ -484,10 +578,13 @@ async function load(){
     const res = await fetch(CSV_URL);
     if(!res.ok) throw new Error('โหลดชีตไม่สำเร็จ (' + res.status + ')');
     const text = await res.text();
-    allOrders = parseData(text);
+    const parsedResult = parseData(text);
+    allOrders = parsedResult.orders;
+    allBatchTotals = parsedResult.batchTotals;
     document.getElementById('status').textContent = '';
     renderStats(allOrders);
     renderProvinceFilter(allOrders);
+    renderChart(allBatchTotals);
     render();
   }catch(err){
     document.getElementById('status').textContent = '⚠️ ' + err.message + ' — ตรวจสอบว่าชีตแชร์แบบ "ทุกคนที่มีลิงก์ดูได้"';
