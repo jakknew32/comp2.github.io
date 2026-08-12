@@ -163,7 +163,20 @@
 <main>
   <div id="status">กำลังโหลดข้อมูล...</div>
   <div id="chartWrap" style="display:none; background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:16px; margin-bottom:20px; box-shadow:0 1px 3px rgba(13,27,42,.06);">
-    <div style="font-size:14px; font-weight:600; color:var(--ink); margin-bottom:10px;">ยอดรวมรายวัน (คอลัมน์ AA)</div>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+      <div style="font-size:14px; font-weight:600; color:var(--ink);">ยอดรวม (คอลัมน์ AA)</div>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <select id="chartView" style="padding:6px 10px; font-size:13px;">
+          <option value="day">รายวัน</option>
+          <option value="week">รายสัปดาห์</option>
+          <option value="month">รายเดือน</option>
+        </select>
+        <input type="date" id="chartStart" style="padding:6px 10px; font-size:13px;">
+        <span style="color:var(--muted); font-size:13px;">ถึง</span>
+        <input type="date" id="chartEnd" style="padding:6px 10px; font-size:13px;">
+        <button id="chartClearRange" class="ghost" style="padding:6px 12px; font-size:12px; color:var(--ink-soft); border:1.5px solid var(--border);">ล้างช่วงวัน</button>
+      </div>
+    </div>
     <canvas id="dailyTotalsChart" height="90"></canvas>
   </div>
   <div id="cardsRoot"></div>
@@ -433,21 +446,97 @@ function parseData(csvText){
 
 let dailyChart = null;
 
-function renderChart(batchTotals){
+function parseBatchDate(batchLabel){
+  // Matches DD/MM/YYYY where YYYY is Thai Buddhist year (e.g. 10/07/2569)
+  const m = (batchLabel||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(!m) return null;
+  const day = parseInt(m[1],10), month = parseInt(m[2],10), buddhistYear = parseInt(m[3],10);
+  const gregorianYear = buddhistYear > 2400 ? buddhistYear - 543 : buddhistYear;
+  const d = new Date(gregorianYear, month-1, day);
+  if(isNaN(d.getTime())) return null;
+  return d;
+}
+
+function isoWeekLabel(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (date.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+  const monday = new Date(date);
+  monday.setUTCDate(date.getUTCDate() - dayNum);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  const fmt = (x)=> `${x.getUTCDate()}/${x.getUTCMonth()+1}`;
+  return `${fmt(monday)} - ${fmt(sunday)}/${sunday.getUTCFullYear()+543}`;
+}
+
+function monthLabel(d){
+  const thMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${thMonths[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+
+function weekSortKey(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - dayNum);
+  return date.getTime();
+}
+
+function getFilteredGroupedTotals(){
+  const view = document.getElementById('chartView').value;
+  const startVal = document.getElementById('chartStart').value;
+  const endVal = document.getElementById('chartEnd').value;
+  const startDate = startVal ? new Date(startVal+'T00:00:00') : null;
+  const endDate = endVal ? new Date(endVal+'T23:59:59') : null;
+
+  const withDates = allBatchTotals.map(b => ({...b, date: parseBatchDate(b.batch)}));
+  let filtered = withDates.filter(b=>{
+    if(startDate && b.date && b.date < startDate) return false;
+    if(endDate && b.date && b.date > endDate) return false;
+    return true;
+  });
+
+  if(view === 'day'){
+    // one bar per batch as-is, sorted by date when available
+    filtered.sort((a,b)=> (a.date&&b.date) ? a.date-b.date : 0);
+    return { labels: filtered.map(b=>b.batch), data: filtered.map(b=>b.total) };
+  }
+
+  const groups = {};
+  const sortKeys = {};
+  filtered.forEach(b=>{
+    let key, sortKey;
+    if(!b.date){
+      key = 'ไม่ทราบวันที่';
+      sortKey = Infinity;
+    } else if(view === 'week'){
+      key = isoWeekLabel(b.date);
+      sortKey = weekSortKey(b.date);
+    } else { // month
+      key = monthLabel(b.date);
+      sortKey = new Date(b.date.getFullYear(), b.date.getMonth(), 1).getTime();
+    }
+    groups[key] = (groups[key]||0) + b.total;
+    sortKeys[key] = sortKey;
+  });
+
+  const labels = Object.keys(groups).sort((a,b)=> sortKeys[a]-sortKeys[b]);
+  return { labels, data: labels.map(l=>groups[l]) };
+}
+
+function renderChart(){
   const wrap = document.getElementById('chartWrap');
-  if(!batchTotals || batchTotals.length === 0){
+  if(!allBatchTotals || allBatchTotals.length === 0){
     wrap.style.display = 'none';
     return;
   }
   if(typeof Chart === 'undefined'){
     wrap.style.display = 'block';
-    wrap.querySelector('canvas').outerHTML = '<div style="color:var(--muted); font-size:13px;">⚠️ โหลดไลบรารีกราฟไม่สำเร็จ (เครือข่ายอาจบล็อก cdn.jsdelivr.net) — ลองรีเฟรชหน้าอีกครั้ง</div>';
+    const canvas = document.getElementById('dailyTotalsChart');
+    if(canvas) canvas.outerHTML = '<div style="color:var(--muted); font-size:13px;">⚠️ โหลดไลบรารีกราฟไม่สำเร็จ (เครือข่ายอาจบล็อก cdn.jsdelivr.net) — ลองรีเฟรชหน้าอีกครั้ง</div>';
     return;
   }
   wrap.style.display = 'block';
 
-  const labels = batchTotals.map(b => b.batch);
-  const data = batchTotals.map(b => b.total);
+  const { labels, data } = getFilteredGroupedTotals();
 
   const ctx = document.getElementById('dailyTotalsChart').getContext('2d');
   if(dailyChart) dailyChart.destroy();
@@ -589,7 +678,7 @@ async function load(){
     document.getElementById('status').textContent = '';
     renderStats(allOrders);
     renderProvinceFilter(allOrders);
-    renderChart(allBatchTotals);
+    renderChart();
     render();
   }catch(err){
     document.getElementById('status').textContent = '⚠️ ' + err.message + ' — ตรวจสอบว่าชีตแชร์แบบ "ทุกคนที่มีลิงก์ดูได้"';
@@ -600,6 +689,15 @@ document.getElementById('search').addEventListener('input', render);
 document.getElementById('provinceFilter').addEventListener('change', render);
 document.getElementById('noTrackingOnly').addEventListener('change', render);
 document.getElementById('refreshBtn').addEventListener('click', load);
+
+document.getElementById('chartView').addEventListener('change', renderChart);
+document.getElementById('chartStart').addEventListener('change', renderChart);
+document.getElementById('chartEnd').addEventListener('change', renderChart);
+document.getElementById('chartClearRange').addEventListener('click', ()=>{
+  document.getElementById('chartStart').value = '';
+  document.getElementById('chartEnd').value = '';
+  renderChart();
+});
 
 document.getElementById('cardsRoot').addEventListener('input', (e)=>{
   if(e.target.classList.contains('track-input')){
