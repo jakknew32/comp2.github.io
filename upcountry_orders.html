@@ -376,15 +376,21 @@ function parseData(csvText){
   }
   const colMap = buildColumnMap(rows[headerIdx]);
   const orders = [];
-  const batchTotals = []; // {batch, total} in sheet order
+  const batchTotals = []; // {batch, invoice, total} in sheet order
   let currentBatch = "";
+  let currentInvoice = "";
 
   for(let i = headerIdx+1; i<rows.length; i++){
     const row = rows[i];
     if(!row || row.every(c => !c || !c.trim())) continue;
 
     if(isMarkerRow(row)){
-      currentBatch = row[0].trim();
+      const marker = row[0].trim();
+      if(/^IV\d/.test(marker)){
+        currentInvoice = marker;
+      } else {
+        currentBatch = marker;
+      }
       continue;
     }
 
@@ -399,7 +405,7 @@ function parseData(csvText){
       const addrCheck = (row[colMap.address]||"").trim();
       const amount = parseAmount(totalVal);
       if(amount !== null && !custCheck && !phoneCheck && !addrCheck){
-        batchTotals.push({ batch: currentBatch || `แถวที่ ${i+1}`, total: amount });
+        batchTotals.push({ batch: currentBatch || `แถวที่ ${i+1}`, invoice: currentInvoice, total: amount });
       }
       continue;
     }
@@ -446,12 +452,14 @@ function parseData(csvText){
 
 let dailyChart = null;
 
-function parseBatchDate(batchLabel){
-  // Matches DD/MM/YYYY where YYYY is Thai Buddhist year (e.g. 10/07/2569)
-  const m = (batchLabel||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+function parseInvoiceDate(invoiceCode){
+  // e.g. "IV690801033" -> yy=69, mm=08, dd=01 (Buddhist year, 2-digit)
+  const m = (invoiceCode||"").match(/^IV(\d{2})(\d{2})(\d{2})/);
   if(!m) return null;
-  const day = parseInt(m[1],10), month = parseInt(m[2],10), buddhistYear = parseInt(m[3],10);
-  const gregorianYear = buddhistYear > 2400 ? buddhistYear - 543 : buddhistYear;
+  const yy = parseInt(m[1],10), month = parseInt(m[2],10), day = parseInt(m[3],10);
+  if(month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const buddhistYear = 2500 + yy;
+  const gregorianYear = buddhistYear - 543;
   const d = new Date(gregorianYear, month-1, day);
   if(isNaN(d.getTime())) return null;
   return d;
@@ -487,7 +495,17 @@ function getFilteredGroupedTotals(){
   const startDate = startVal ? new Date(startVal+'T00:00:00') : null;
   const endDate = endVal ? new Date(endVal+'T23:59:59') : null;
 
-  const withDates = allBatchTotals.map(b => ({...b, date: parseBatchDate(b.batch)}));
+  const withDates = allBatchTotals.map(b => ({
+    ...b,
+    date: parseInvoiceDate(b.invoice) || (()=>{
+      const m = (b.batch||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if(!m) return null;
+      const day=parseInt(m[1],10), month=parseInt(m[2],10), by=parseInt(m[3],10);
+      const gy = by > 2400 ? by-543 : by;
+      const d = new Date(gy, month-1, day);
+      return isNaN(d.getTime()) ? null : d;
+    })()
+  }));
   let filtered = withDates.filter(b=>{
     if(startDate && b.date && b.date < startDate) return false;
     if(endDate && b.date && b.date > endDate) return false;
