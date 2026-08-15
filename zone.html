@@ -498,6 +498,29 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .zs-badge-danger{background:var(--danger-lt);color:var(--danger);}
 @media(max-width:720px){.zs-table th:nth-child(2),.zs-table td:nth-child(2),.zs-table th:nth-child(6),.zs-table td:nth-child(6){display:none;}}
 
+/* Repeat-purchase report — states: default row, :hover, .is-expanded (order list open) */
+.repeat-customer{border-bottom:1px solid var(--border);}
+.repeat-customer:last-child{border-bottom:none;}
+.repeat-head{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);cursor:pointer;transition:background var(--dur-fast);}
+.repeat-head:hover{background:var(--gray-50);}
+.repeat-head:focus-visible{outline:2px solid var(--info-mid);outline-offset:-2px;}
+.repeat-avatar{width:34px;height:34px;border-radius:var(--r-full);background:var(--brand-lt);color:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:var(--text-sm);flex-shrink:0;}
+.repeat-name{font-weight:700;font-size:var(--text-sm);color:var(--text);}
+.repeat-phone{font-size:var(--text-xs);color:var(--muted);}
+.repeat-info{flex:1;min-width:0;}
+.repeat-times-badge{background:var(--brand-lt);color:var(--brand);font-size:var(--text-xs);font-weight:700;padding:var(--pill-pad-y) var(--pill-pad-x);border-radius:var(--r-full);white-space:nowrap;}
+.repeat-milk-total{display:flex;gap:var(--sp-2);font-size:var(--text-xs);font-weight:700;white-space:nowrap;}
+.repeat-chevron{transition:transform var(--dur-base);color:var(--muted);flex-shrink:0;}
+.repeat-customer.is-expanded .repeat-chevron{transform:rotate(90deg);}
+.repeat-orders{max-height:0;overflow:hidden;transition:max-height var(--dur-slow) var(--ease-standard);background:var(--gray-50);}
+.repeat-customer.is-expanded .repeat-orders{max-height:1000px;}
+.repeat-order-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-4) var(--sp-2) 56px;font-size:var(--text-sm);border-top:1px dashed var(--border);}
+.repeat-order-seq{font-weight:700;color:var(--brand);font-size:var(--text-xs);min-width:52px;}
+.repeat-order-date{color:var(--muted);font-size:var(--text-xs);min-width:80px;}
+.repeat-order-id{color:var(--text);font-family:monospace;font-size:var(--text-xs);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.repeat-order-milk{display:flex;gap:var(--sp-2);font-size:var(--text-xs);font-weight:700;}
+@media(max-width:640px){.repeat-milk-total{display:none;}.repeat-order-date{display:none;}}
+
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
 /* Modal — base is the confirm/settings dialog shell (see .modal-overlay for open/closed state via .show).
@@ -632,6 +655,19 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
                 </tr></thead>
                 <tbody id="db-zone-status-body"></tbody>
               </table>
+            </div>
+          </div>
+        </div>
+        <div class="db-row" style="grid-template-columns:1fr">
+          <div class="db-card">
+            <div class="db-card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              รายงานลูกค้าซื้อซ้ำ
+              <span class="badge-count" id="repeat-count-badge" style="margin-left:auto"></span>
+            </div>
+            <div class="db-card-body" style="padding:0">
+              <div id="repeat-empty" style="padding:var(--sp-5);text-align:center;color:var(--muted);font-size:var(--text-sm)">ไม่มีลูกค้าที่ซื้อซ้ำในข้อมูลชุดนี้</div>
+              <div id="repeat-list"></div>
             </div>
           </div>
         </div>
@@ -2041,6 +2077,86 @@ function renderDashboardPage(){
       <td>${badge}</td>
     </tr>`;
   }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:var(--sp-5)">ไม่มีข้อมูล</td></tr>';
+
+  renderRepeatPurchaseReport(orders);
+}
+
+/* Groups orders by phone number, keeps customers with 2+ orders, sorted by
+   most-purchases first. Each occurrence shows its date, order id, and milk
+   quantities (Plain/Choc/Honey) so ops can see what was bought each time. */
+function renderRepeatPurchaseReport(orders){
+  const byPhone={};
+  orders.forEach(o=>{
+    const key=(o.phone||'').trim();
+    if(!key)return;
+    if(!byPhone[key])byPhone[key]={phone:key,customer:o.customer||'-',orders:[]};
+    byPhone[key].orders.push(o);
+    if(o.customer)byPhone[key].customer=o.customer;
+  });
+  const repeatCustomers=Object.values(byPhone)
+    .filter(c=>c.orders.length>=2)
+    .map(c=>{
+      c.orders.sort((a,b)=>(a.order_date_key||'').localeCompare(b.order_date_key||''));
+      c.totalPlain=c.orders.reduce((s,o)=>s+o.qty_plain,0);
+      c.totalChoc=c.orders.reduce((s,o)=>s+o.qty_choc,0);
+      c.totalHoney=c.orders.reduce((s,o)=>s+o.qty_honey,0);
+      return c;
+    })
+    .sort((a,b)=>b.orders.length-a.orders.length);
+
+  const badgeEl=document.getElementById('repeat-count-badge');
+  const emptyEl=document.getElementById('repeat-empty');
+  const listEl=document.getElementById('repeat-list');
+
+  if(repeatCustomers.length===0){
+    badgeEl.textContent='';
+    emptyEl.style.display='block';
+    listEl.innerHTML='';
+    return;
+  }
+  badgeEl.textContent=`${repeatCustomers.length} คน`;
+  emptyEl.style.display='none';
+
+  listEl.innerHTML=repeatCustomers.map((c,idx)=>{
+    const initial=(c.customer||'?').trim().charAt(0)||'?';
+    const orderRows=c.orders.map((o,i)=>`
+      <div class="repeat-order-row">
+        <span class="repeat-order-seq">ครั้งที่ ${i+1}</span>
+        <span class="repeat-order-date">${o.order_date||'-'}</span>
+        <span class="repeat-order-id">#${o.order_id}</span>
+        <span class="repeat-order-milk">
+          <span style="color:var(--plain-color)">🥛${o.qty_plain||0}</span>
+          <span style="color:var(--choc-color)">🍫${o.qty_choc||0}</span>
+          <span style="color:var(--honey-color)">🍯${o.qty_honey||0}</span>
+        </span>
+      </div>`).join('');
+    return `
+    <div class="repeat-customer" id="repeat-cust-${idx}">
+      <div class="repeat-head" tabindex="0" role="button" aria-expanded="false"
+           onclick="toggleRepeatCustomer(${idx})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRepeatCustomer(${idx})}">
+        <div class="repeat-avatar">${initial}</div>
+        <div class="repeat-info">
+          <div class="repeat-name">${c.customer||'ไม่ระบุชื่อ'}</div>
+          <div class="repeat-phone">${c.phone}</div>
+        </div>
+        <div class="repeat-milk-total">
+          <span style="color:var(--plain-color)">🥛${c.totalPlain}</span>
+          <span style="color:var(--choc-color)">🍫${c.totalChoc}</span>
+          <span style="color:var(--honey-color)">🍯${c.totalHoney}</span>
+        </div>
+        <span class="repeat-times-badge">ซื้อ ${c.orders.length} ครั้ง</span>
+        <svg class="repeat-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="repeat-orders">${orderRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRepeatCustomer(idx){
+  const el=document.getElementById(`repeat-cust-${idx}`);
+  if(!el)return;
+  const expanded=el.classList.toggle('is-expanded');
+  el.querySelector('.repeat-head').setAttribute('aria-expanded',expanded?'true':'false');
 }
 
 let routeOrders=[], routeSorted=[];
