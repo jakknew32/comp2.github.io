@@ -65,6 +65,9 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .logo svg{width:28px;height:28px;}
 .logo-sub{font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:400;margin-left:2px;}
 .topbar-spacer{flex:1;}
+/* Topbar/filter buttons — base: .topbar-btn (icon buttons in dark topbar) + .filter-btn (light chip buttons).
+   Variants: .btn-ghost / .btn-export / .btn-print (topbar-btn skins) · .filter-btn.primary (active filter).
+   States: :hover (per-skin), :active (press), :focus-visible (keyboard), :disabled, .is-loading (spinner) */
 .topbar-btn{display:inline-flex;align-items:center;gap:var(--sp-1);padding:6px var(--sp-3);border-radius:var(--r-md);font-size:var(--text-sm);font-weight:600;cursor:pointer;border:none;transition:background var(--dur-base),transform var(--dur-fast),opacity var(--dur-base);white-space:nowrap;}
 .topbar-btn:active{transform:scale(.97);}
 .topbar-btn:focus-visible,.filter-btn:focus-visible{outline:2px solid var(--info-mid);outline-offset:2px;}
@@ -148,12 +151,17 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .zone-multi-btn.open .arrow{transform:rotate(180deg);}
 .zone-dropdown{position:absolute;top:calc(100% + 4px);left:0;min-width:200px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);z-index:100;overflow:hidden;display:none;}
 .zone-dropdown.open{display:block;}
+/* Zone dropdown item — states: default, :hover, checkbox checked/indeterminate (JS-driven, see zone group select), .is-disabled */
 .zone-dd-item{display:flex;align-items:center;gap:var(--sp-2);padding:8px var(--sp-3);cursor:pointer;font-size:var(--text-sm);transition:background var(--dur-fast);user-select:none;}
 .zone-dd-item:hover{background:var(--gray-100);}
+.zone-dd-item.is-disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
 .zone-dd-item input[type=checkbox]{accent-color:var(--brand);width:14px;height:14px;cursor:pointer;}
+.zone-dd-item input[type=checkbox]:focus-visible{outline:2px solid var(--info-mid);outline-offset:2px;}
 .zone-dd-actions{display:flex;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-top:1px solid var(--border);}
 .zone-dd-action{font-size:var(--text-xs);color:var(--brand);cursor:pointer;font-weight:600;padding:2px 6px;border-radius:var(--r-sm);}
 .zone-dd-action:hover{background:var(--brand-lt);}
+.zone-dd-action:focus-visible{outline:2px solid var(--info-mid);outline-offset:1px;}
+.zone-dd-action.is-disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
 
 /* ── DATE CALENDAR PICKER ── */
 .cal-wrap{position:relative;}
@@ -162,14 +170,21 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .cal-popup{position:absolute;top:calc(100% + 4px);left:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);z-index:100;display:none;padding:var(--sp-3);min-width:280px;}
 .cal-popup.open{display:block;}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);}
+/* Calendar — .cal-nav (prev/next): default, :hover, :focus-visible, :disabled (out-of-bounds month)
+   .cal-day: default, :hover, :focus-visible, .cal-empty (blank cell), .cal-disabled (out of range),
+   .cal-no-data / .cal-has-data (variant), .cal-selected / .cal-range-start / .cal-range-end / .cal-in-range (range picker), .cal-today */
 .cal-nav{background:none;border:1px solid var(--border);border-radius:var(--r-sm);width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);transition:background var(--dur-fast);}
 .cal-nav:hover{background:var(--gray-100);}
+.cal-nav:focus-visible{outline:2px solid var(--info-mid);outline-offset:2px;}
+.cal-nav:disabled{opacity:.35;cursor:not-allowed;pointer-events:none;}
 .cal-month-label{font-size:var(--text-sm);font-weight:700;color:var(--text);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
 .cal-day-head{font-size:var(--text-xs);color:var(--muted);text-align:center;padding:4px 0;font-weight:600;}
 .cal-day{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);font-size:var(--text-sm);cursor:pointer;transition:background var(--dur-fast),color var(--dur-fast);user-select:none;}
-.cal-day:hover:not(.cal-empty){background:var(--brand-lt);color:var(--brand);}
+.cal-day:hover:not(.cal-empty):not(.cal-disabled){background:var(--brand-lt);color:var(--brand);}
+.cal-day:focus-visible{outline:2px solid var(--info-mid);outline-offset:1px;}
 .cal-day.cal-empty{cursor:default;pointer-events:none;}
+.cal-day.cal-disabled{color:var(--gray-300);cursor:not-allowed;pointer-events:none;}
 .cal-day.cal-no-data{color:var(--gray-300);}
 .cal-day.cal-has-data{color:var(--text);font-weight:600;}
 .cal-day.cal-selected{background:var(--brand);color:var(--white);border-radius:var(--r-sm);}
@@ -193,13 +208,22 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .zone-section{margin-bottom:var(--sp-6);}
 .zone-header{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-md) var(--r-md) 0 0;font-weight:700;font-size:var(--text-sm);position:sticky;top:56px;z-index:10;box-shadow:0 2px 4px rgba(0,0,0,.08);}
 .zone-cards-wrap{border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-md) var(--r-md);background:var(--bg-page);padding:var(--sp-3);display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--sp-3);}
-.order-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-4);box-shadow:none;display:flex;flex-direction:column;gap:var(--sp-2);transition:box-shadow var(--dur-base),border-color var(--dur-base);position:relative;overflow:hidden;}
+/* Order card — states: default, :hover, .is-selected, .is-loading (skeleton), .is-syncing (dimmed+wait cursor), .card-hidden (filtered out)
+   Variants: .is-problem / .is-pending / .is-packed / .is-delivered (left accent stripe, color from status tokens) */
+.order-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-4);box-shadow:none;display:flex;flex-direction:column;gap:var(--sp-2);transition:box-shadow var(--dur-base),border-color var(--dur-base),opacity var(--dur-base);position:relative;overflow:hidden;}
 .order-card:hover{box-shadow:var(--shadow-sm);border-color:var(--gray-300);}
+.order-card:focus-visible{outline:2px solid var(--info-mid);outline-offset:2px;}
 .order-card.is-problem{border-left:4px solid var(--danger);}
 .order-card.is-pending{border-left:4px solid var(--warning);}
 .order-card.is-packed{border-left:4px solid var(--info);}
 .order-card.is-delivered{border-left:4px solid var(--success);}
 .order-card.card-hidden{display:none;}
+.order-card.is-selected{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-lt);}
+.order-card.is-syncing{opacity:.6;cursor:wait;pointer-events:none;}
+.order-card.is-loading{gap:var(--sp-2);}
+.order-card.is-loading > *{visibility:hidden;position:relative;}
+.order-card.is-loading > *::before{content:"";visibility:visible;position:absolute;inset:0;background:linear-gradient(90deg,var(--gray-100) 25%,var(--gray-200) 37%,var(--gray-100) 63%);background-size:400% 100%;animation:card-skeleton 1.4s ease infinite;border-radius:var(--r-sm);}
+@keyframes card-skeleton{0%{background-position:100% 50%;}100%{background-position:0 50%;}}
 .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);}
 .card-order-id{font-family:monospace;font-size:var(--text-xs);color:var(--muted);}
 .card-name{font-size:var(--text-md);font-weight:700;color:var(--text);margin-top:2px;}
@@ -214,6 +238,9 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 .card-products{display:flex;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-radius:var(--r-md);}
 .card-qty{display:flex;align-items:center;gap:4px;font-size:var(--text-sm);font-weight:700;}
 .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:var(--sp-1);}
+/* Status badge (read-only, e.g. list summaries) vs status-select (editable dropdown, used on order cards).
+   Variants (shared): .s-pending / .s-packed / .s-delivered / .s-problem, sourced from --warning/--info/--success/--danger tokens.
+   States: badge has .is-disabled; select has :hover, :focus-visible, :disabled, .status-saving (mid-save, dimmed+wait) */
 .status-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);padding:var(--pill-pad-y) var(--pill-pad-x);border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;}
 .status-select{display:inline-flex;align-items:center;font-size:var(--text-xs);padding:var(--pill-pad-y) 22px var(--pill-pad-y) var(--pill-pad-x);border-radius:var(--r-full);font-weight:700;letter-spacing:.02em;
   appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;font-family:inherit;outline:none;
@@ -473,6 +500,8 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--bg-page);color
 
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
+/* Modal — base is the confirm/settings dialog shell (see .modal-overlay for open/closed state via .show).
+   Size variants: .modal-sm / (default) / .modal-lg. Type variants: .modal-danger / .modal-success / .modal-plain (top-accent color). */
 .modal{background:var(--bg-card);border-radius:var(--r-xl);padding:var(--sp-6);width:100%;max-width:480px;box-shadow:var(--shadow-md);border-top:3px solid var(--brand);}
 .modal.modal-sm{max-width:340px;}
 .modal.modal-lg{max-width:680px;}
