@@ -8,26 +8,49 @@
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
-        .header { text-align: center; margin-bottom: 30px; }
+        .header { text-align: center; margin-bottom: 20px; }
         .upload-btn { padding: 10px; font-size: 16px; margin-bottom: 20px; }
         
-        /* การจัดเรียงแบบ Grid สำหรับแกลลอรี่ */
+        /* ปรับแต่งเป็น Grid เลื่อนซ้าย-ขวาแบบนุ่มนวล */
         .gallery { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            grid-auto-flow: column; /* จัดทิศทางแนวนอน */
+            grid-template-rows: repeat(2, auto); /* แสดงผล 2 แถวขนานกัน */
             gap: 20px; 
-            max-width: 1200px;
+            max-width: 100%;
             margin: 0 auto;
+            overflow-x: auto; /* เปิดการเลื่อนแนวนอน */
+            scroll-behavior: smooth; /* เลื่อนแบบลื่นไหล */
+            scroll-snap-type: x mandatory; /* ล็อคตำแหน่งการเลื่อนทีละการ์ด */
+            padding-bottom: 15px;
+            -webkit-overflow-scrolling: touch;
         }
+
+        /* ตกแต่ง Scrollbar ให้สวยงาม */
+        .gallery::-webkit-scrollbar {
+            height: 8px;
+        }
+        .gallery::-webkit-scrollbar-track {
+            background: #e0e0e0;
+            border-radius: 10px;
+        }
+        .gallery::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 10px;
+        }
+
         .card { 
+            width: 280px; /* กำหนดความกว้างคงที่เพื่อให้จัดเรียงแนวนอนสวยงาม */
             background: #fff; 
             border-radius: 12px; 
             overflow: hidden; 
             box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
             transition: transform 0.2s;
+            scroll-snap-align: start; /* จุดหยุดยึดตามขอบการ์ด */
+            flex-shrink: 0;
         }
         .card:hover { transform: translateY(-5px); }
-        .card img { width: 100%; height: 250px; object-fit: cover; }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
         .info { padding: 15px; }
         .info p { margin: 8px 0; font-size: 14px; color: #444; }
     </style>
@@ -46,7 +69,6 @@
             const files = e.target.files;
             const gallery = document.getElementById('gallery');
             
-            // ล้างข้อมูลเก่าออกเมื่ออัปโหลดใหม่
             gallery.innerHTML = ''; 
 
             Array.from(files).forEach(file => {
@@ -56,16 +78,12 @@
                     const card = document.createElement('div');
                     card.className = 'card';
 
-                    // สร้าง Image Object เพื่อใช้อ่าน EXIF
                     const imgElement = new Image();
                     imgElement.src = imgUrl;
                     
                     imgElement.onload = function() {
                         EXIF.getData(imgElement, function() {
-                            // ดึงข้อมูลเวลา
                             const dateTaken = EXIF.getTag(this, "DateTimeOriginal") || "ไม่ระบุเวลา";
-                            
-                            // ดึงข้อมูล GPS
                             const lat = EXIF.getTag(this, "GPSLatitude");
                             const lon = EXIF.getTag(this, "GPSLongitude");
                             let locationStr = "ไม่ระบุสถานที่";
@@ -80,7 +98,6 @@
                                 locationStr = `<a href="https://www.google.com/maps/search/?api=1&query=${latDec},${lonDec}" target="_blank">เปิดดูบนแผนที่ 🗺️</a>`;
                             }
 
-                            // จัดรูปแบบวันที่ (ออปชันเสริมเพื่อให้อ่านง่ายขึ้น)
                             const formattedDate = dateTaken !== "ไม่ระบุเวลา" ? dateTaken.replace(/:/, '/').replace(/:/, '/') : dateTaken;
 
                             card.innerHTML = `
@@ -98,7 +115,6 @@
             });
         });
 
-        // ฟังก์ชันแปลงพิกัดจากองศา (DMS) เป็นจุดทศนิยม (DD) เพื่อใช้กับ Google Maps
         function convertDMSToDD(degrees, minutes, seconds, direction) {
             let dd = degrees + (minutes/60) + (seconds/3600);
             if (direction == "S" || direction == "W") { 
