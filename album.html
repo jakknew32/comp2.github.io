@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Memory Gallery</title>
+    <!-- เรียกใช้ไลบรารี EXIF.js ผ่าน CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .upload-btn { padding: 10px; font-size: 16px; margin-bottom: 20px; }
+        
+        /* การจัดเรียงแบบ Grid สำหรับแกลลอรี่ */
+        .gallery { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card { 
+            background: #fff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: 250px; object-fit: cover; }
+        .info { padding: 15px; }
+        .info p { margin: 8px 0; font-size: 14px; color: #444; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>แกลลอรี่ภาพความทรงจำ</h2>
+        <input type="file" id="fileInput" class="upload-btn" multiple accept="image/jpeg, image/png">
+    </div>
+
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const gallery = document.getElementById('gallery');
+            
+            // ล้างข้อมูลเก่าออกเมื่ออัปโหลดใหม่
+            gallery.innerHTML = ''; 
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const imgUrl = event.target.result;
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    // สร้าง Image Object เพื่อใช้อ่าน EXIF
+                    const imgElement = new Image();
+                    imgElement.src = imgUrl;
+                    
+                    imgElement.onload = function() {
+                        EXIF.getData(imgElement, function() {
+                            // ดึงข้อมูลเวลา
+                            const dateTaken = EXIF.getTag(this, "DateTimeOriginal") || "ไม่ระบุเวลา";
+                            
+                            // ดึงข้อมูล GPS
+                            const lat = EXIF.getTag(this, "GPSLatitude");
+                            const lon = EXIF.getTag(this, "GPSLongitude");
+                            let locationStr = "ไม่ระบุสถานที่";
+
+                            if (lat && lon) {
+                                const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+                                const lonRef = EXIF.getTag(this, "GPSLongitudeRef");
+                                
+                                const latDec = convertDMSToDD(lat[0], lat[1], lat[2], latRef);
+                                const lonDec = convertDMSToDD(lon[0], lon[1], lon[2], lonRef);
+                                
+                                locationStr = `<a href="https://www.google.com/maps/search/?api=1&query=${latDec},${lonDec}" target="_blank">เปิดดูบนแผนที่ 🗺️</a>`;
+                            }
+
+                            // จัดรูปแบบวันที่ (ออปชันเสริมเพื่อให้อ่านง่ายขึ้น)
+                            const formattedDate = dateTaken !== "ไม่ระบุเวลา" ? dateTaken.replace(/:/, '/').replace(/:/, '/') : dateTaken;
+
+                            card.innerHTML = `
+                                <img src="${imgUrl}" alt="Gallery Image">
+                                <div class="info">
+                                    <p><strong>🕒 เวลา:</strong> ${formattedDate}</p>
+                                    <p><strong>📍 สถานที่:</strong> ${locationStr}</p>
+                                </div>
+                            `;
+                            gallery.appendChild(card);
+                        });
+                    };
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // ฟังก์ชันแปลงพิกัดจากองศา (DMS) เป็นจุดทศนิยม (DD) เพื่อใช้กับ Google Maps
+        function convertDMSToDD(degrees, minutes, seconds, direction) {
+            let dd = degrees + (minutes/60) + (seconds/3600);
+            if (direction == "S" || direction == "W") { 
+                dd = dd * -1; 
+            }
+            return dd;
+        }
+    </script>
+</body>
+</html>
