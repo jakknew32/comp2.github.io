@@ -58,6 +58,7 @@
                 <button onclick="switchTab('monthly')" id="tab-monthly" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📊 รายงานรายเดือน</button>
                 <span class="w-px h-6 bg-blue-600 mx-1"></span>
                 <span id="current-user-email" class="text-sm text-blue-200"></span>
+                <span id="current-user-role" class="text-xs px-2 py-0.5 rounded-full bg-blue-700"></span>
                 <button id="btn-logout" class="px-3 py-2 rounded-lg font-medium bg-red-600 hover:bg-red-700 transition text-sm">ออกจากระบบ</button>
             </nav>
         </div>
@@ -140,6 +141,9 @@
             <!-- ฟอร์มเพิ่มสมาชิก -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-xl font-bold mb-4 text-blue-900 border-b pb-2">ลงทะเบียนสมาชิกใหม่</h2>
+                <div id="members-readonly-notice" class="hidden mb-4 bg-yellow-50 border border-yellow-300 text-yellow-800 text-sm p-3 rounded-lg">
+                    🔒 บัญชีของคุณเป็นระดับพนักงาน ดูข้อมูลสมาชิกได้อย่างเดียว ไม่สามารถเพิ่ม/แก้ไขข้อมูลสมาชิกได้ กรุณาติดต่อผู้ดูแลระบบ
+                </div>
                 <form id="form-add-member" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">รหัสสมาชิก (เช่น M001)</label>
@@ -170,7 +174,7 @@
 
             <!-- ตารางสมาชิก -->
             <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h2 class="text-xl font-bold mb-4 text-blue-900 border-b pb-2">รายชื่อสมาชิกทั้งหมด</h2>
+                <h2 id="member-table-heading" class="text-xl font-bold mb-4 text-blue-900 border-b pb-2">รายชื่อสมาชิกทั้งหมด</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -324,6 +328,7 @@
         let scaleReader = null; // เก็บ reference ของ reader ไว้ปิดตอน disconnect
         let memberList = [];
         let isSaving = false; // ตัวแปรสำหรับป้องกันการกดปุ่มบันทึกรัวๆ
+        let currentUserRole = null; // 'admin' หรือ 'staff' — กำหนดจาก collection user_roles ใน Firestore
 
         const MAX_REASONABLE_WEIGHT = 500; // กก. — ค่าสูงสุดที่สมเหตุสมผลสำหรับถังนมหนึ่งใบ ปรับได้ตามหน้างานจริง
 
@@ -373,18 +378,28 @@
         // ================= โหลดข้อมูลสมาชิกและกลุ่ม =================
         async function loadMemberList() {
             try {
-                const q = query(collection(db, "members"), orderBy("member_id", "asc"));
+                let q;
+                if (currentUserRole === 'admin') {
+                    q = query(collection(db, "members"), orderBy("member_id", "asc"));
+                } else {
+                    // พนักงานเห็นเฉพาะสมาชิกที่ตัวเองเพิ่มเข้าระบบเท่านั้น
+                    q = query(collection(db, "members"), where("created_by", "==", auth.currentUser.uid));
+                }
                 const querySnapshot = await getDocs(q);
                 memberList = [];
                 let groups = new Set();
-                
+
+                querySnapshot.forEach((docSnap) => {
+                    memberList.push(docSnap.data());
+                });
+
+                // เรียงลำดับฝั่ง client (กรณี staff ที่ query ด้วย where อย่างเดียวไม่ได้ orderBy มาด้วย)
+                memberList.sort((a, b) => (a.member_id || '').localeCompare(b.member_id || ''));
+
                 let selectHtml = '<option value="">-- เลือกรหัสหรือชื่อสมาชิก --</option>';
                 let tableHtml = '';
 
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    memberList.push(data);
-                    
+                memberList.forEach((data) => {
                     if (data.group) groups.add(data.group);
 
                     const groupText = data.group ? `[${esc(data.group)}] ` : '';
@@ -426,13 +441,24 @@
             try {
                 // เช็คว่ารหัสนี้มีสมาชิกอยู่แล้วหรือไม่ ป้องกันการบันทึกทับข้อมูลเดิมโดยไม่ตั้งใจ
                 const existingSnap = await getDoc(doc(db, "members", memberId));
+                let ownerUid = auth.currentUser.uid; // ค่าเริ่มต้น: เจ้าของคือคนที่กำลังเพิ่มสมาชิกใหม่
+
                 if (existingSnap.exists()) {
                     const existing = existingSnap.data();
+
+                    // พนักงาน (ไม่ใช่ admin) แก้ไขได้เฉพาะสมาชิกที่ตัวเองเป็นคนเพิ่มเท่านั้น
+                    if (currentUserRole !== 'admin' && existing.created_by !== auth.currentUser.uid) {
+                        alert('รหัสสมาชิกนี้ถูกเพิ่มโดยพนักงานคนอื่น คุณไม่มีสิทธิ์แก้ไขข้อมูลนี้ กรุณาใช้รหัสสมาชิกอื่น หรือติดต่อผู้ดูแลระบบ');
+                        return;
+                    }
+
                     const confirmOverwrite = confirm(
                         `⚠️ รหัสสมาชิก "${memberId}" มีอยู่แล้วในระบบ (ชื่อเดิม: ${existing.name || '-'})\n\n` +
                         `หากดำเนินการต่อ ข้อมูลเดิมของสมาชิกนี้จะถูกเขียนทับ ต้องการดำเนินการต่อหรือไม่?`
                     );
                     if (!confirmOverwrite) return;
+
+                    ownerUid = existing.created_by || auth.currentUser.uid; // คงเจ้าของเดิมไว้เมื่อแก้ไขข้อมูล
                 }
 
                 // ตรวจกลุ่มที่พิมพ์ ถ้าใกล้เคียงกับกลุ่มเดิมที่มีอยู่ (ต่างแค่ช่องว่าง/ตัวพิมพ์) ให้ใช้ชื่อกลุ่มเดิมแทน ลดปัญหากลุ่มซ้ำซ้อน
@@ -452,6 +478,7 @@
                     group: finalGroup,
                     phone: phone,
                     address: address,
+                    created_by: ownerUid,
                     created_at: serverTimestamp()
                 });
                 alert('บันทึกสมาชิกเรียบร้อยแล้ว!');
@@ -662,18 +689,26 @@
                 const q = query(collection(db, "milk_records"), where("date_str", "==", selectedDate));
                 const querySnapshot = await getDocs(q);
 
+                // พนักงาน (ไม่ใช่ admin) เห็นเฉพาะรายการชั่งของสมาชิกที่ตัวเองเพิ่มเข้าระบบเท่านั้น
+                const ownMemberIds = currentUserRole === 'admin' ? null : new Set(memberList.map(m => m.member_id));
+
                 let totalWeight = 0; let count = 0;
                 let uniqueMembers = new Set();
                 let tableHtml = '';
 
                 querySnapshot.forEach((docSnap) => {
                     const d = docSnap.data();
+                    if (ownMemberIds && !ownMemberIds.has(d.member_id)) return; // ข้ามรายการของสมาชิกคนอื่น
+
                     totalWeight += d.weight_kg;
                     count++;
                     uniqueMembers.add(d.member_id);
 
                     const timeStr = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) : '-';
                     const groupBadge = d.member_group ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${esc(d.member_group)}</span>` : '-';
+                    const actionCell = currentUserRole === 'admin'
+                        ? `<button onclick="deleteMilkRecord('${docSnap.id}')" class="text-red-600 hover:text-red-800 text-xs font-medium">🗑️ ลบ</button>`
+                        : `<span class="text-gray-300 text-xs">-</span>`;
 
                     tableHtml += `
                         <tr>
@@ -683,9 +718,7 @@
                             <td class="p-3">${esc(d.member_name)}</td>
                             <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${esc(d.period)}</span></td>
                             <td class="p-3 text-right font-bold">${d.weight_kg.toFixed(2)}</td>
-                            <td class="p-3 text-center">
-                                <button onclick="deleteMilkRecord('${docSnap.id}')" class="text-red-600 hover:text-red-800 text-xs font-medium">🗑️ ลบ</button>
-                            </td>
+                            <td class="p-3 text-center">${actionCell}</td>
                         </tr>
                     `;
                 });
@@ -700,6 +733,10 @@
 
         // ลบรายการชั่งน้ำหนักที่บันทึกผิด
         window.deleteMilkRecord = async function(recordId) {
+            if (currentUserRole !== 'admin') {
+                alert('เฉพาะผู้ดูแลระบบเท่านั้นที่ลบรายการได้');
+                return;
+            }
             const confirmDelete = confirm('ต้องการลบรายการนี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้');
             if (!confirmDelete) return;
             try {
@@ -719,10 +756,15 @@
                 const q = query(collection(db, "milk_records"), where("month_str", "==", selectedMonth));
                 const querySnapshot = await getDocs(q);
 
+                // พนักงาน (ไม่ใช่ admin) เห็นเฉพาะสรุปยอดของสมาชิกที่ตัวเองเพิ่มเข้าระบบเท่านั้น
+                const ownMemberIds = currentUserRole === 'admin' ? null : new Set(memberList.map(m => m.member_id));
+
                 let memberSummary = {};
 
                 querySnapshot.forEach((docSnap) => {
                     const d = docSnap.data();
+                    if (ownMemberIds && !ownMemberIds.has(d.member_id)) return; // ข้ามรายการของสมาชิกคนอื่น
+
                     if (!memberSummary[d.member_id]) {
                         memberSummary[d.member_id] = {
                             name: d.member_name,
@@ -792,17 +834,62 @@
             await signOut(auth);
         });
 
-        onAuthStateChanged(auth, (user) => {
+        // ดึงระดับสิทธิ์ผู้ใช้จาก Firestore (collection user_roles, doc id = uid ของผู้ใช้)
+        // ถ้าไม่พบเอกสาร ให้ถือว่าเป็น 'staff' โดย default (หลักการ least privilege)
+        async function fetchUserRole(uid) {
+            try {
+                const roleSnap = await getDoc(doc(db, "user_roles", uid));
+                if (roleSnap.exists() && roleSnap.data().role === 'admin') {
+                    return 'admin';
+                }
+                return 'staff';
+            } catch (err) {
+                console.error("Error fetching role:", err);
+                return 'staff';
+            }
+        }
+
+        // ปรับ UI ตามระดับสิทธิ์: พนักงานเพิ่มสมาชิกได้แต่เห็น/แก้ไขได้เฉพาะสมาชิกที่ตัวเองเพิ่ม, ปุ่มลบรายการชั่งน้ำหนักเฉพาะ admin
+        function applyRoleUI(role) {
+            const roleLabel = document.getElementById('current-user-role');
+            const membersTabBtn = document.getElementById('tab-members');
+            const readonlyNotice = document.getElementById('members-readonly-notice');
+            const memberTableHeading = document.getElementById('member-table-heading');
+
+            if (role === 'admin') {
+                roleLabel.innerText = 'ผู้ดูแลระบบ';
+                roleLabel.classList.remove('bg-blue-700');
+                roleLabel.classList.add('bg-green-600');
+                readonlyNotice.classList.add('hidden');
+                if (memberTableHeading) memberTableHeading.innerText = 'รายชื่อสมาชิกทั้งหมด';
+            } else {
+                roleLabel.innerText = 'พนักงาน';
+                roleLabel.classList.remove('bg-green-600');
+                roleLabel.classList.add('bg-blue-700');
+                // พนักงานเพิ่มสมาชิกได้ตามปกติ แต่จะเห็น/แก้ไขได้เฉพาะสมาชิกที่ตัวเองเพิ่มเข้าระบบเท่านั้น
+                readonlyNotice.innerText = 'ℹ️ คุณจะเห็นเฉพาะสมาชิกที่คุณเพิ่มเข้าระบบเองเท่านั้น (ไม่รวมสมาชิกของพนักงานคนอื่น)';
+                readonlyNotice.classList.remove('hidden');
+                readonlyNotice.classList.remove('bg-yellow-50', 'border-yellow-300', 'text-yellow-800');
+                readonlyNotice.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-800');
+                if (memberTableHeading) memberTableHeading.innerText = 'สมาชิกที่คุณเพิ่ม';
+            }
+            membersTabBtn.classList.remove('hidden'); // พนักงานเข้าแท็บสมาชิกได้ทั้ง admin/staff ต่างกันแค่ขอบเขตข้อมูลที่เห็น
+        }
+
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-root').classList.remove('hidden');
                 document.getElementById('current-user-email').innerText = esc(user.email || '');
+                currentUserRole = await fetchUserRole(user.uid);
+                applyRoleUI(currentUserRole);
                 loadMemberList();
                 switchTab('weigh');
             } else {
                 document.getElementById('app-root').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('login-form').reset();
+                currentUserRole = null;
             }
         });
     </script>
