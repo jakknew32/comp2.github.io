@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรับซื้อและบันทึกน้ำหนักนมสด</title>
+    <!-- Google Fonts & Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-print, #receipt-print * { visibility: visible; }
+            #receipt-print { position: absolute; left: 0; top: 0; width: 80mm; padding: 10px; font-size: 14px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+
+    <!-- Header / Navbar -->
+    <header class="bg-blue-800 text-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap gap-4 justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                🥛 ระบบรับซื้อและบันทึกน้ำหนักนม
+            </h1>
+            <nav class="flex flex-wrap gap-2">
+                <button onclick="switchTab('weigh')" id="tab-weigh" class="nav-btn bg-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">⚖️ ชั่งน้ำหนัก & ออกตั๋ว</button>
+                <button onclick="switchTab('members')" id="tab-members" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">👥 ระบบสมาชิก</button>
+                <button onclick="switchTab('daily')" id="tab-daily" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📅 รายงานรายวัน</button>
+                <button onclick="switchTab('monthly')" id="tab-monthly" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📊 รายงานรายเดือน</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 no-print">
+
+        <!-- ================= TAB 1: ชั่งน้ำหนัก & ออกตั๋ว ================= -->
+        <section id="sec-weigh" class="tab-content grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-xl font-bold mb-4 text-blue-900 border-b pb-2">บันทึกข้อมูลน้ำหนักนม</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">เลือกสมาชิก / ค้นหา</label>
+                        <select id="weigh-member-select" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- เลือกรหัสหรือชื่อสมาชิก --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">รอบการส่งนม</label>
+                        <select id="weigh-period" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="เช้า">รอบเช้า ☀️</option>
+                            <option value="เย็น">รอบเย็น 🌙</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 text-green-400 p-6 rounded-xl text-center my-6">
+                    <span class="text-sm text-gray-400 block mb-1">น้ำหนักที่อ่านได้จากเครื่องชั่ง (กก.)</span>
+                    <div class="text-6xl font-bold tracking-wider" id="weight-display">0.00</div>
+                    <div class="mt-2 text-xs text-gray-400" id="scale-status">สถานะ: ยังไม่ได้เชื่อมต่อเครื่องชั่ง</div>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    <button id="btn-connect-scale" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg font-medium transition flex items-center gap-2">
+                        🔌 เชื่อมต่อเครื่องชั่ง (USB/Serial)
+                    </button>
+                    <button id="btn-manual-input" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2.5 rounded-lg font-medium transition">
+                        ✏️ ป้อนน้ำหนักเอง
+                    </button>
+                </div>
+
+                <hr class="my-6">
+
+                <button id="btn-save-record" class="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-bold py-3.5 rounded-lg shadow-lg transition flex justify-center items-center gap-2">
+                    💾 บันทึกข้อมูล & พิมพ์ตั๋วสลิป
+                </button>
+            </div>
+
+            <!-- Ticket Preview -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-lg font-bold mb-3 text-gray-700 border-b pb-2">ตัวอย่างตั๋วรับนม (Receipt Preview)</h3>
+                <div class="bg-yellow-50 p-4 rounded border border-yellow-200 font-mono text-sm leading-relaxed">
+                    <div class="text-center font-bold text-base">สหกรณ์ศูนย์รับน้ำหนักนมสด</div>
+                    <div class="text-center text-xs border-b border-dashed border-gray-400 pb-2 mb-2">ใบรับน้ำหนักนมดิบ</div>
+                    <div>วันที่: <span id="prev-date">-</span></div>
+                    <div>เวลา: <span id="prev-time">-</span></div>
+                    <div>กลุ่ม/โซน: <span id="prev-group">-</span></div>
+                    <div>รหัสสมาชิก: <span id="prev-id">-</span></div>
+                    <div>ชื่อสมาชิก: <span id="prev-name">-</span></div>
+                    <div>รอบ: <span id="prev-period">-</span></div>
+                    <div class="border-t border-b border-dashed border-gray-400 my-2 py-1 font-bold text-base flex justify-between">
+                        <span>น้ำหนักสุทธิ:</span>
+                        <span><span id="prev-weight">0.00</span> กก.</span>
+                    </div>
+                    <div class="text-center text-xs mt-4">*** ขอบคุณที่นำส่งนมคุณภาพ ***</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: ระบบสมาชิก ================= -->
+        <section id="sec-members" class="tab-content hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- ฟอร์มเพิ่มสมาชิก -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-xl font-bold mb-4 text-blue-900 border-b pb-2">ลงทะเบียนสมาชิกใหม่</h2>
+                <form id="form-add-member" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">รหัสสมาชิก (เช่น M001)</label>
+                        <input type="text" id="m-id" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล</label>
+                        <input type="text" id="m-name" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">กลุ่ม / โซนสายรถ</label>
+                        <input type="text" id="m-group" list="group-list" placeholder="เช่น สายเหนือ, กลุ่ม A" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <datalist id="group-list"></datalist>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">เบอร์โทรศัพท์</label>
+                        <input type="tel" id="m-phone" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ที่อยู่ / ฟาร์ม</label>
+                        <textarea id="m-address" rows="2" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition">
+                        ➕ บันทึกข้อมูลสมาชิก
+                    </button>
+                </form>
+            </div>
+
+            <!-- ตารางสมาชิก -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-xl font-bold mb-4 text-blue-900 border-b pb-2">รายชื่อสมาชิกทั้งหมด</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-sm">
+                                <th class="p-3 border-b">รหัส</th>
+                                <th class="p-3 border-b">กลุ่ม</th>
+                                <th class="p-3 border-b">ชื่อ-นามสกุล</th>
+                                <th class="p-3 border-b">เบอร์โทร</th>
+                            </tr>
+                        </thead>
+                        <tbody id="member-table-body" class="text-sm divide-y">
+                            <tr><td colspan="4" class="p-4 text-center text-gray-500">กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: รายงานรายวัน ================= -->
+        <section id="sec-daily" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-4">
+                <h2 class="text-xl font-bold text-blue-900">📅 รายงานสรุปการรับนมประจำวัน</h2>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">เลือกวันที่:</label>
+                    <input type="date" id="daily-date-picker" class="p-2 border rounded-lg">
+                    <button onclick="loadDailyReport()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700">ค้นหา</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 p-5 rounded-xl border border-blue-200">
+                    <div class="text-blue-600 text-sm font-medium">น้ำหนักรวมวันนี้</div>
+                    <div class="text-3xl font-bold text-blue-900 mt-1"><span id="daily-total-weight">0.00</span> กก.</div>
+                </div>
+                <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+                    <div class="text-green-600 text-sm font-medium">จำนวนรายการชั่ง</div>
+                    <div class="text-3xl font-bold text-green-900 mt-1"><span id="daily-total-count">0</span> รายการ</div>
+                </div>
+                <div class="bg-purple-50 p-5 rounded-xl border border-purple-200">
+                    <div class="text-purple-600 text-sm font-medium">จำนวนสมาชิกที่ส่งนม</div>
+                    <div class="text-3xl font-bold text-purple-900 mt-1"><span id="daily-unique-members">0</span> ราย</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-sm">
+                                <th class="p-3 border-b">เวลา</th>
+                                <th class="p-3 border-b">กลุ่ม</th>
+                                <th class="p-3 border-b">รหัสสมาชิก</th>
+                                <th class="p-3 border-b">ชื่อสมาชิก</th>
+                                <th class="p-3 border-b">รอบ</th>
+                                <th class="p-3 border-b text-right">น้ำหนัก (กก.)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="daily-table-body" class="text-sm divide-y">
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">กรุณาเลือกวันที่ต้องการดูรายงาน</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: รายงานรายเดือน ================= -->
+        <section id="sec-monthly" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-4">
+                <h2 class="text-xl font-bold text-blue-900">📊 รายงานสรุปยอดรวมรายเดือน</h2>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">เลือกเดือน:</label>
+                    <input type="month" id="monthly-picker" class="p-2 border rounded-lg">
+                    <button onclick="loadMonthlyReport()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700">ดึงรายงาน</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-sm">
+                                <th class="p-3 border-b">กลุ่ม</th>
+                                <th class="p-3 border-b">รหัสสมาชิก</th>
+                                <th class="p-3 border-b">ชื่อ-นามสกุล</th>
+                                <th class="p-3 border-b text-center">จำนวนครั้งที่ส่ง</th>
+                                <th class="p-3 border-b text-right">น้ำหนักรวม (กก.)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthly-table-body" class="text-sm divide-y">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-500">กรุณาเลือกเดือนเพื่อดูรายงานสรุป</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= สำหรับสั่งพิมพ์ใบสลิป (Thermal Printer) ================= -->
+    <div id="receipt-print" class="hidden">
+        <div style="text-align: center; font-weight: bold; font-size: 16px;">ศูนย์รับน้ำหนักนมสด</div>
+        <div style="text-align: center; font-size: 12px; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px;">
+            ใบรับน้ำหนักนมดิบ
+        </div>
+        <div>วันที่: <span id="p-date"></span></div>
+        <div>เวลา: <span id="p-time"></span></div>
+        <div>กลุ่ม: <span id="p-group"></span></div>
+        <div>รหัสสมาชิก: <span id="p-id"></span></div>
+        <div>ชื่อสมาชิก: <span id="p-name"></span></div>
+        <div>รอบการส่ง: <span id="p-period"></span></div>
+        <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; margin: 8px 0; padding: 5px 0; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between;">
+            <span>น้ำหนักสุทธิ:</span>
+            <span><span id="p-weight">0.00</span> กก.</span>
+        </div>
+        <div style="text-align: center; font-size: 11px; margin-top: 15px;">
+            *** ขอบคุณที่นำส่งนมคุณภาพ ***
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, collection, addDoc, getDocs, doc, setDoc, query, where, orderBy, serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ⚠️ 1. ใส่ Config จาก Firebase ของคุณที่นี่
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentScaleWeight = 0.00;
+        let scalePort = null;
+        let memberList = [];
+        let isSaving = false; // ตัวแปรสำหรับป้องกันการกดปุ่มบันทึกรัวๆ
+
+        // ตั้งค่าวันที่ Default
+        const todayStr = new Date().toISOString().split('T')[0];
+        const monthStr = todayStr.substring(0, 7);
+        document.getElementById('daily-date-picker').value = todayStr;
+        document.getElementById('monthly-picker').value = monthStr;
+
+        // สลับ Tab
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('bg-blue-900'));
+            document.getElementById(`sec-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('bg-blue-900');
+
+            if(tabName === 'members') loadMemberList();
+            if(tabName === 'daily') loadDailyReport();
+            if(tabName === 'monthly') loadMonthlyReport();
+        }
+
+        // ================= โหลดข้อมูลสมาชิกและกลุ่ม =================
+        async function loadMemberList() {
+            try {
+                const q = query(collection(db, "members"), orderBy("member_id", "asc"));
+                const querySnapshot = await getDocs(q);
+                memberList = [];
+                let groups = new Set();
+                
+                let selectHtml = '<option value="">-- เลือกรหัสหรือชื่อสมาชิก --</option>';
+                let tableHtml = '';
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    memberList.push(data);
+                    
+                    if (data.group) groups.add(data.group);
+
+                    const groupText = data.group ? `[${data.group}] ` : '';
+                    selectHtml += `<option value="${data.member_id}">${data.member_id} - ${groupText}${data.name}</option>`;
+                    
+                    tableHtml += `
+                        <tr>
+                            <td class="p-3 font-semibold text-blue-800">${data.member_id}</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${data.group || '-'}</span></td>
+                            <td class="p-3">${data.name}</td>
+                            <td class="p-3">${data.phone || '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('weigh-member-select').innerHTML = selectHtml;
+                document.getElementById('member-table-body').innerHTML = tableHtml || '<tr><td colspan="4" class="p-4 text-center">ยังไม่มีข้อมูลสมาชิก</td></tr>';
+                document.getElementById('group-list').innerHTML = Array.from(groups).map(g => `<option value="${g}">`).join('');
+
+            } catch (err) {
+                console.error("Error loading members:", err);
+            }
+        }
+
+        // บันทึกสมาชิกใหม่ + กลุ่ม
+        document.getElementById('form-add-member').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const memberId = document.getElementById('m-id').value.trim();
+            const name = document.getElementById('m-name').value.trim();
+            const group = document.getElementById('m-group').value.trim();
+            const phone = document.getElementById('m-phone').value.trim();
+            const address = document.getElementById('m-address').value.trim();
+
+            try {
+                await setDoc(doc(db, "members", memberId), {
+                    member_id: memberId,
+                    name: name,
+                    group: group,
+                    phone: phone,
+                    address: address,
+                    created_at: serverTimestamp()
+                });
+                alert('บันทึกสมาชิกเรียบร้อยแล้ว!');
+                document.getElementById('form-add-member').reset();
+                loadMemberList();
+            } catch (err) {
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            }
+        });
+
+        // ================= ระบบเครื่องชั่ง =================
+        document.getElementById('btn-connect-scale').addEventListener('click', async () => {
+            try {
+                scalePort = await navigator.serial.requestPort();
+                await scalePort.open({ baudRate: 9600 });
+                document.getElementById('scale-status').innerText = "สถานะ: เชื่อมต่อเครื่องชั่งแล้ว";
+                document.getElementById('scale-status').classList.replace("text-gray-400", "text-green-400");
+                readSerialData();
+            } catch (err) {
+                alert('ไม่สามารถเชื่อมต่อสายเครื่องชั่งได้: ' + err.message);
+            }
+        });
+
+        async function readSerialData() {
+            const textDecoder = new TextDecoderStream();
+            scalePort.readable.pipeTo(textDecoder.writable);
+            const reader = textDecoder.readable.getReader();
+            let rawBuffer = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                rawBuffer += value;
+                if (rawBuffer.includes('\n') || rawBuffer.includes('\r')) {
+                    let weightMatch = rawBuffer.match(/[0-9]+\.?[0-9]*/);
+                    if (weightMatch) {
+                        currentScaleWeight = parseFloat(weightMatch[0]);
+                        updateWeightDisplay(currentScaleWeight);
+                    }
+                    rawBuffer = "";
+                }
+            }
+        }
+
+        document.getElementById('btn-manual-input').addEventListener('click', () => {
+            const input = prompt("กรุณากรอกค่าน้ำหนักนม (กก.):", currentScaleWeight);
+            if (input !== null && !isNaN(input)) {
+                currentScaleWeight = parseFloat(input);
+                updateWeightDisplay(currentScaleWeight);
+            }
+        });
+
+        function updateWeightDisplay(weight) {
+            document.getElementById('weight-display').innerText = weight.toFixed(2);
+            document.getElementById('prev-weight').innerText = weight.toFixed(2);
+        }
+
+        // อัปเดต Preview ตั๋วเมื่อเลือกสมาชิก
+        document.getElementById('weigh-member-select').addEventListener('change', (e) => {
+            const mId = e.target.value;
+            const member = memberList.find(m => m.member_id === mId);
+            const now = new Date();
+            
+            document.getElementById('prev-date').innerText = now.toLocaleDateString('th-TH');
+            document.getElementById('prev-time').innerText = now.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('prev-id').innerText = mId || '-';
+            document.getElementById('prev-name').innerText = member ? member.name : '-';
+            document.getElementById('prev-group').innerText = (member && member.group) ? member.group : '-';
+            document.getElementById('prev-period').innerText = document.getElementById('weigh-period').value;
+        });
+
+        // ================= บันทึกข้อมูลน้ำหนัก =================
+        document.getElementById('btn-save-record').addEventListener('click', async function(e) {
+            if (isSaving) return; // บล็อกการกดซ้ำ
+
+            const memberId = document.getElementById('weigh-member-select').value;
+            const period = document.getElementById('weigh-period').value;
+
+            if (!memberId) {
+                alert("กรุณาเลือกสมาชิกก่อนบันทึก!"); return;
+            }
+            if (currentScaleWeight <= 0) {
+                alert("น้ำหนักต้องมากกว่า 0 กิโลกรัม"); return;
+            }
+
+            const member = memberList.find(m => m.member_id === memberId);
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const monthStr = dateStr.substring(0, 7);
+            
+            const btn = e.currentTarget;
+            const originalBtnText = btn.innerHTML;
+
+            try {
+                // 1. ล็อกปุ่ม
+                isSaving = true;
+                btn.innerHTML = '⏳ กำลังบันทึกข้อมูล...';
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                // 2. เซฟลง Firestore
+                await addDoc(collection(db, "milk_records"), {
+                    member_id: memberId,
+                    member_name: member.name,
+                    member_group: member.group || '', 
+                    weight_kg: currentScaleWeight,
+                    period: period,
+                    date_str: dateStr,
+                    month_str: monthStr,
+                    timestamp: serverTimestamp()
+                });
+
+                // 3. เตรียมข้อมูลสลิปพิมพ์
+                document.getElementById('p-date').innerText = now.toLocaleDateString('th-TH');
+                document.getElementById('p-time').innerText = now.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('p-id').innerText = memberId;
+                document.getElementById('p-name').innerText = member.name;
+                document.getElementById('p-group').innerText = member.group || '-';
+                document.getElementById('p-period').innerText = period;
+                document.getElementById('p-weight').innerText = currentScaleWeight.toFixed(2);
+
+                // 4. หน่วงเวลา 0.5 วิ ให้ HTML วาดข้อมูลสลิปเสร็จก่อนสั่งพิมพ์
+                setTimeout(() => {
+                    window.print(); // สั่งพิมพ์
+
+                    alert("บันทึกข้อมูลและสั่งพิมพ์สลิปเรียบร้อยแล้ว!");
+                    
+                    // ล้างค่าหน้าจอ
+                    currentScaleWeight = 0.00;
+                    updateWeightDisplay(0.00);
+                    document.getElementById('weigh-member-select').value = "";
+                    document.getElementById('weigh-member-select').dispatchEvent(new Event('change'));
+
+                    // 5. หน่วงเวลา 3 วินาที (Cooldown) ก่อนปลดล็อกปุ่มให้ชั่งถังต่อไปได้
+                    setTimeout(() => {
+                        isSaving = false;
+                        btn.innerHTML = originalBtnText;
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }, 3000);
+
+                }, 500);
+
+            } catch (err) {
+                alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+                isSaving = false;
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        // ================= รายงานรายวัน =================
+        window.loadDailyReport = async function() {
+            const selectedDate = document.getElementById('daily-date-picker').value;
+            if(!selectedDate) return;
+
+            try {
+                const q = query(collection(db, "milk_records"), where("date_str", "==", selectedDate));
+                const querySnapshot = await getDocs(q);
+
+                let totalWeight = 0; let count = 0;
+                let uniqueMembers = new Set();
+                let tableHtml = '';
+
+                querySnapshot.forEach((docSnap) => {
+                    const d = docSnap.data();
+                    totalWeight += d.weight_kg;
+                    count++;
+                    uniqueMembers.add(d.member_id);
+
+                    const timeStr = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) : '-';
+                    const groupBadge = d.member_group ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${d.member_group}</span>` : '-';
+
+                    tableHtml += `
+                        <tr>
+                            <td class="p-3">${timeStr}</td>
+                            <td class="p-3">${groupBadge}</td>
+                            <td class="p-3 font-semibold text-blue-800">${d.member_id}</td>
+                            <td class="p-3">${d.member_name}</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${d.period}</span></td>
+                            <td class="p-3 text-right font-bold">${d.weight_kg.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('daily-total-weight').innerText = totalWeight.toFixed(2);
+                document.getElementById('daily-total-count').innerText = count;
+                document.getElementById('daily-unique-members').innerText = uniqueMembers.size;
+                document.getElementById('daily-table-body').innerHTML = tableHtml || '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในวันที่เลือก</td></tr>';
+
+            } catch (err) { console.error(err); }
+        }
+
+        // ================= รายงานรายเดือน =================
+        window.loadMonthlyReport = async function() {
+            const selectedMonth = document.getElementById('monthly-picker').value;
+            if(!selectedMonth) return;
+
+            try {
+                const q = query(collection(db, "milk_records"), where("month_str", "==", selectedMonth));
+                const querySnapshot = await getDocs(q);
+
+                let memberSummary = {};
+
+                querySnapshot.forEach((docSnap) => {
+                    const d = docSnap.data();
+                    if (!memberSummary[d.member_id]) {
+                        memberSummary[d.member_id] = {
+                            name: d.member_name,
+                            group: d.member_group || '-',
+                            total_weight: 0,
+                            deliver_count: 0
+                        };
+                    }
+                    memberSummary[d.member_id].total_weight += d.weight_kg;
+                    memberSummary[d.member_id].deliver_count += 1;
+                });
+
+                let summaryArray = Object.entries(memberSummary).map(([id, info]) => ({ id, ...info }));
+                summaryArray.sort((a, b) => a.group.localeCompare(b.group) || a.id.localeCompare(b.id));
+
+                let tableHtml = '';
+                summaryArray.forEach(info => {
+                    const groupBadge = info.group !== '-' ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${info.group}</span>` : '-';
+                    tableHtml += `
+                        <tr>
+                            <td class="p-3">${groupBadge}</td>
+                            <td class="p-3 font-semibold text-blue-800">${info.id}</td>
+                            <td class="p-3">${info.name}</td>
+                            <td class="p-3 text-center">${info.deliver_count} ครั้ง</td>
+                            <td class="p-3 text-right font-bold text-green-700">${info.total_weight.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('monthly-table-body').innerHTML = tableHtml || '<tr><td colspan="5" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในเดือนที่เลือก</td></tr>';
+
+            } catch (err) { console.error(err); }
+        }
+
+        loadMemberList();
+    </script>
+</body>
+</html>
