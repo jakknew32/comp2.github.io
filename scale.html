@@ -88,9 +88,13 @@
                 </div>
 
                 <div class="bg-gray-900 text-green-400 p-6 rounded-xl text-center my-6">
-                    <span class="text-sm text-gray-400 block mb-1">น้ำหนักที่อ่านได้จากเครื่องชั่ง (กก.)</span>
+                    <span class="text-sm text-gray-400 block mb-1">น้ำหนักสด (real-time จากเครื่องชั่ง)</span>
+                    <div class="text-3xl font-bold tracking-wider text-gray-400" id="live-weight-display">0.00</div>
+                    <div class="border-t border-gray-700 my-3"></div>
+                    <span class="text-sm text-gray-400 block mb-1">น้ำหนักที่ล็อกไว้ (ใช้บันทึก)</span>
                     <div class="text-6xl font-bold tracking-wider" id="weight-display">0.00</div>
                     <div class="mt-2 text-xs text-gray-400" id="scale-status">สถานะ: ยังไม่ได้เชื่อมต่อเครื่องชั่ง</div>
+                    <div class="mt-1 text-xs" id="lock-status">🔓 ยังไม่ได้ล็อกค่า</div>
                 </div>
 
                 <div class="flex flex-wrap gap-3">
@@ -99,6 +103,12 @@
                     </button>
                     <button id="btn-disconnect-scale" class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2.5 rounded-lg font-medium transition">
                         ⛔ ตัดการเชื่อมต่อ
+                    </button>
+                    <button id="btn-lock-weight" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2.5 rounded-lg font-medium transition">
+                        🔒 ล็อกค่านี้
+                    </button>
+                    <button id="btn-unlock-weight" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2.5 rounded-lg font-medium transition">
+                        🔓 ปลดล็อก / อ่านค่าใหม่
                     </button>
                     <button id="btn-manual-input" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2.5 rounded-lg font-medium transition">
                         ✏️ ป้อนน้ำหนักเอง
@@ -323,7 +333,9 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let currentScaleWeight = 0.00;
+        let currentScaleWeight = 0.00; // ค่าที่ "ล็อก" ไว้แล้ว ใช้สำหรับบันทึกจริง
+        let liveScaleWeight = 0.00;    // ค่าที่อ่านสดจากเครื่องชั่งแบบ real-time (ยังไม่ล็อก)
+        let isWeightLocked = false;    // สถานะว่าตอนนี้ล็อกค่าไว้อยู่หรือยัง
         let scalePort = null;
         let scaleReader = null; // เก็บ reference ของ reader ไว้ปิดตอน disconnect
         let memberList = [];
@@ -516,17 +528,26 @@
                     const { value, done } = await reader.read();
                     if (done) break;
                     rawBuffer += value;
-                    if (rawBuffer.includes('\n') || rawBuffer.includes('\r')) {
-                        // รองรับเครื่องหมายลบ (ค่า error/ค่าติดลบจากเครื่องชั่ง) และปฏิเสธค่าที่ผิดปกติ
-                        let weightMatch = rawBuffer.match(/-?[0-9]+\.?[0-9]*/);
-                        if (weightMatch) {
-                            const parsed = parseFloat(weightMatch[0]);
-                            if (!isNaN(parsed) && parsed >= 0) {
-                                currentScaleWeight = parsed;
-                                updateWeightDisplay(currentScaleWeight);
+                    
+                    const parts = rawBuffer.split(/[\r\n]+/);
+                    
+                    if (parts.length > 1) {
+                        for (let i = 0; i < parts.length - 1; i++) {
+                            let weightMatch = parts[i].match(/-?[0-9]+\.?[0-9]*/);
+                            if (weightMatch) {
+                                const parsed = parseFloat(weightMatch[0]);
+                                if (!isNaN(parsed) && parsed >= 0) {
+                                    liveScaleWeight = parsed;
+                                    updateLiveWeightDisplay(liveScaleWeight);
+                                    
+                                    if (!isWeightLocked) {
+                                        currentScaleWeight = parsed;
+                                        updateWeightDisplay(currentScaleWeight);
+                                    }
+                                }
                             }
                         }
-                        rawBuffer = "";
+                        rawBuffer = parts[parts.length - 1];
                     }
                 }
             } catch (err) {
@@ -558,15 +579,54 @@
 
         document.getElementById('btn-manual-input').addEventListener('click', () => {
             const input = prompt("กรุณากรอกค่าน้ำหนักนม (กก.):", currentScaleWeight);
-            if (input !== null && !isNaN(input)) {
+            if (input !== null && !isNaN(input) && input.trim() !== '') {
                 currentScaleWeight = parseFloat(input);
+                isWeightLocked = true; // ค่าที่ป้อนเองถือว่าล็อกทันที ไม่ต้องรอกดล็อกซ้ำ
                 updateWeightDisplay(currentScaleWeight);
+                updateLockStatusDisplay();
             }
         });
+
+        // ล็อกค่าน้ำหนักสดปัจจุบันไว้ใช้บันทึก ไม่ให้เปลี่ยนตามเครื่องชั่งอีกจนกว่าจะปลดล็อก
+        document.getElementById('btn-lock-weight').addEventListener('click', () => {
+            if (liveScaleWeight <= 0) {
+                alert('ยังไม่มีค่าน้ำหนักสดให้ล็อก กรุณาเชื่อมต่อเครื่องชั่งหรือป้อนน้ำหนักเองก่อน');
+                return;
+            }
+            currentScaleWeight = liveScaleWeight;
+            isWeightLocked = true;
+            updateWeightDisplay(currentScaleWeight);
+            updateLockStatusDisplay();
+        });
+
+        // ปลดล็อก กลับไปอ่านค่าสดจากเครื่องชั่งต่อ
+        document.getElementById('btn-unlock-weight').addEventListener('click', () => {
+            isWeightLocked = false;
+            currentScaleWeight = liveScaleWeight;
+            updateWeightDisplay(currentScaleWeight);
+            updateLockStatusDisplay();
+        });
+
+        function updateLockStatusDisplay() {
+            const el = document.getElementById('lock-status');
+            if (isWeightLocked) {
+                el.innerText = '🔒 ล็อกค่าไว้แล้ว — กดปลดล็อกถ้าต้องการอ่านค่าใหม่';
+                el.classList.remove('text-gray-400');
+                el.classList.add('text-yellow-400');
+            } else {
+                el.innerText = '🔓 ยังไม่ได้ล็อกค่า (ค่าจะวิ่งตามเครื่องชั่งสด)';
+                el.classList.remove('text-yellow-400');
+                el.classList.add('text-gray-400');
+            }
+        }
 
         function updateWeightDisplay(weight) {
             document.getElementById('weight-display').innerText = weight.toFixed(2);
             document.getElementById('prev-weight').innerText = weight.toFixed(2);
+        }
+
+        function updateLiveWeightDisplay(weight) {
+            document.getElementById('live-weight-display').innerText = weight.toFixed(2);
         }
 
         // อัปเดต Preview ตั๋วเมื่อเลือกสมาชิก
@@ -657,7 +717,9 @@
                     
                     // ล้างค่าหน้าจอ
                     currentScaleWeight = 0.00;
+                    isWeightLocked = false;
                     updateWeightDisplay(0.00);
+                    updateLockStatusDisplay();
                     document.getElementById('weigh-member-select').value = "";
                     document.getElementById('weigh-member-select').dispatchEvent(new Event('change'));
 
