@@ -19,17 +19,46 @@
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800">
 
+    <!-- ================= หน้าเข้าสู่ระบบ ================= -->
+    <div id="login-screen" class="no-print fixed inset-0 bg-blue-900 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
+            <h1 class="text-xl font-bold text-blue-900 text-center mb-1">🥛 ระบบรับซื้อและบันทึกน้ำหนักนม</h1>
+            <p class="text-sm text-gray-500 text-center mb-6">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+            <form id="login-form" class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                    <input type="email" id="login-email" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                    <input type="password" id="login-password" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div id="login-error" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2"></div>
+                <button type="submit" id="login-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+            <p class="text-xs text-gray-400 text-center mt-4">บัญชีผู้ใช้ต้องถูกสร้างไว้ล่วงหน้าโดยผู้ดูแลระบบใน Firebase Console</p>
+        </div>
+    </div>
+
+    <!-- ================= แอปหลัก (แสดงหลังล็อกอินสำเร็จ) ================= -->
+    <div id="app-root" class="hidden">
+
     <!-- Header / Navbar -->
     <header class="bg-blue-800 text-white shadow-md no-print">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap gap-4 justify-between items-center">
             <h1 class="text-2xl font-bold flex items-center gap-2">
                 🥛 ระบบรับซื้อและบันทึกน้ำหนักนม
             </h1>
-            <nav class="flex flex-wrap gap-2">
+            <nav class="flex flex-wrap gap-2 items-center">
                 <button onclick="switchTab('weigh')" id="tab-weigh" class="nav-btn bg-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">⚖️ ชั่งน้ำหนัก & ออกตั๋ว</button>
                 <button onclick="switchTab('members')" id="tab-members" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">👥 ระบบสมาชิก</button>
                 <button onclick="switchTab('daily')" id="tab-daily" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📅 รายงานรายวัน</button>
                 <button onclick="switchTab('monthly')" id="tab-monthly" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📊 รายงานรายเดือน</button>
+                <span class="w-px h-6 bg-blue-600 mx-1"></span>
+                <span id="current-user-email" class="text-sm text-blue-200"></span>
+                <button id="btn-logout" class="px-3 py-2 rounded-lg font-medium bg-red-600 hover:bg-red-700 transition text-sm">ออกจากระบบ</button>
             </nav>
         </div>
     </header>
@@ -67,9 +96,15 @@
                     <button id="btn-connect-scale" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg font-medium transition flex items-center gap-2">
                         🔌 เชื่อมต่อเครื่องชั่ง (USB/Serial)
                     </button>
+                    <button id="btn-disconnect-scale" class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2.5 rounded-lg font-medium transition">
+                        ⛔ ตัดการเชื่อมต่อ
+                    </button>
                     <button id="btn-manual-input" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2.5 rounded-lg font-medium transition">
                         ✏️ ป้อนน้ำหนักเอง
                     </button>
+                </div>
+                <div id="serial-unsupported-warning" class="hidden mt-3 bg-yellow-50 border border-yellow-300 text-yellow-800 text-sm p-3 rounded-lg">
+                    ⚠️ เบราว์เซอร์นี้ไม่รองรับการเชื่อมต่อเครื่องชั่งผ่าน USB/Serial โดยตรง (รองรับเฉพาะ Chrome/Edge บนคอมพิวเตอร์เท่านั้น) กรุณาใช้ปุ่ม "ป้อนน้ำหนักเอง" แทน
                 </div>
 
                 <hr class="my-6">
@@ -191,10 +226,11 @@
                                 <th class="p-3 border-b">ชื่อสมาชิก</th>
                                 <th class="p-3 border-b">รอบ</th>
                                 <th class="p-3 border-b text-right">น้ำหนัก (กก.)</th>
+                                <th class="p-3 border-b text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="daily-table-body" class="text-sm divide-y">
-                            <tr><td colspan="6" class="p-4 text-center text-gray-500">กรุณาเลือกวันที่ต้องการดูรายงาน</td></tr>
+                            <tr><td colspan="7" class="p-4 text-center text-gray-500">กรุณาเลือกวันที่ต้องการดูรายงาน</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -234,6 +270,8 @@
 
     </main>
 
+    </div> <!-- /#app-root -->
+
     <!-- ================= สำหรับสั่งพิมพ์ใบสลิป (Thermal Printer) ================= -->
     <div id="receipt-print" class="hidden">
         <div style="text-align: center; font-weight: bold; font-size: 16px;">ศูนย์รับน้ำหนักนมสด</div>
@@ -259,26 +297,60 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
-            getFirestore, collection, addDoc, getDocs, doc, setDoc, query, where, orderBy, serverTimestamp 
+            getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, deleteDoc, query, where, orderBy, serverTimestamp 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import {
+            getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // ⚠️ 1. ใส่ Config จาก Firebase ของคุณที่นี่
+        // Firebase config ของโปรเจกต์ lineorder-69d5d
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyCgwWtRfU-VP4JK8EegFEMgubAID2vmYUg",
+            authDomain: "lineorder-69d5d.firebaseapp.com",
+            databaseURL: "https://lineorder-69d5d-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "lineorder-69d5d",
+            storageBucket: "lineorder-69d5d.firebasestorage.app",
+            messagingSenderId: "325494140904",
+            appId: "1:325494140904:web:a0a6094cbf65cc3c817e5d",
+            measurementId: "G-GL2QYWQBL2"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         let currentScaleWeight = 0.00;
         let scalePort = null;
+        let scaleReader = null; // เก็บ reference ของ reader ไว้ปิดตอน disconnect
         let memberList = [];
         let isSaving = false; // ตัวแปรสำหรับป้องกันการกดปุ่มบันทึกรัวๆ
+
+        const MAX_REASONABLE_WEIGHT = 500; // กก. — ค่าสูงสุดที่สมเหตุสมผลสำหรับถังนมหนึ่งใบ ปรับได้ตามหน้างานจริง
+
+        // ป้องกัน XSS: escape ข้อความก่อนแทรกลงใน innerHTML
+        function esc(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // ทำให้ชื่อกลุ่มเทียบกันแบบไม่สนตัวพิมพ์/ช่องว่างเกิน เพื่อลดปัญหากลุ่มซ้ำจากการพิมพ์ต่างกัน (เช่น "สายเหนือ" vs "สาย เหนือ")
+        function normalizeGroupKey(g) {
+            return (g || '').trim().replace(/\s+/g, '');
+        }
+
+        // ตรวจสอบว่าเบราว์เซอร์รองรับ Web Serial API หรือไม่ (รองรับเฉพาะ Chrome/Edge บนเดสก์ท็อป)
+        if (!('serial' in navigator)) {
+            document.getElementById('btn-connect-scale').disabled = true;
+            document.getElementById('btn-connect-scale').classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('serial-unsupported-warning').classList.remove('hidden');
+        }
+        document.getElementById('btn-disconnect-scale').disabled = true;
+        document.getElementById('btn-disconnect-scale').classList.add('opacity-50', 'cursor-not-allowed');
 
         // ตั้งค่าวันที่ Default
         const todayStr = new Date().toISOString().split('T')[0];
@@ -315,22 +387,22 @@
                     
                     if (data.group) groups.add(data.group);
 
-                    const groupText = data.group ? `[${data.group}] ` : '';
-                    selectHtml += `<option value="${data.member_id}">${data.member_id} - ${groupText}${data.name}</option>`;
+                    const groupText = data.group ? `[${esc(data.group)}] ` : '';
+                    selectHtml += `<option value="${esc(data.member_id)}">${esc(data.member_id)} - ${groupText}${esc(data.name)}</option>`;
                     
                     tableHtml += `
                         <tr>
-                            <td class="p-3 font-semibold text-blue-800">${data.member_id}</td>
-                            <td class="p-3"><span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${data.group || '-'}</span></td>
-                            <td class="p-3">${data.name}</td>
-                            <td class="p-3">${data.phone || '-'}</td>
+                            <td class="p-3 font-semibold text-blue-800">${esc(data.member_id)}</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${esc(data.group) || '-'}</span></td>
+                            <td class="p-3">${esc(data.name)}</td>
+                            <td class="p-3">${esc(data.phone) || '-'}</td>
                         </tr>
                     `;
                 });
 
                 document.getElementById('weigh-member-select').innerHTML = selectHtml;
                 document.getElementById('member-table-body').innerHTML = tableHtml || '<tr><td colspan="4" class="p-4 text-center">ยังไม่มีข้อมูลสมาชิก</td></tr>';
-                document.getElementById('group-list').innerHTML = Array.from(groups).map(g => `<option value="${g}">`).join('');
+                document.getElementById('group-list').innerHTML = Array.from(groups).map(g => `<option value="${esc(g)}">`).join('');
 
             } catch (err) {
                 console.error("Error loading members:", err);
@@ -346,11 +418,38 @@
             const phone = document.getElementById('m-phone').value.trim();
             const address = document.getElementById('m-address').value.trim();
 
+            if (memberId.includes('/')) {
+                alert('รหัสสมาชิกห้ามมีเครื่องหมาย "/" เพราะจะทำให้บันทึกข้อมูลผิดพลาด');
+                return;
+            }
+
             try {
+                // เช็คว่ารหัสนี้มีสมาชิกอยู่แล้วหรือไม่ ป้องกันการบันทึกทับข้อมูลเดิมโดยไม่ตั้งใจ
+                const existingSnap = await getDoc(doc(db, "members", memberId));
+                if (existingSnap.exists()) {
+                    const existing = existingSnap.data();
+                    const confirmOverwrite = confirm(
+                        `⚠️ รหัสสมาชิก "${memberId}" มีอยู่แล้วในระบบ (ชื่อเดิม: ${existing.name || '-'})\n\n` +
+                        `หากดำเนินการต่อ ข้อมูลเดิมของสมาชิกนี้จะถูกเขียนทับ ต้องการดำเนินการต่อหรือไม่?`
+                    );
+                    if (!confirmOverwrite) return;
+                }
+
+                // ตรวจกลุ่มที่พิมพ์ ถ้าใกล้เคียงกับกลุ่มเดิมที่มีอยู่ (ต่างแค่ช่องว่าง/ตัวพิมพ์) ให้ใช้ชื่อกลุ่มเดิมแทน ลดปัญหากลุ่มซ้ำซ้อน
+                let finalGroup = group;
+                if (group) {
+                    const existingGroups = Array.from(new Set(memberList.map(m => m.group).filter(Boolean)));
+                    const match = existingGroups.find(g => normalizeGroupKey(g).toLowerCase() === normalizeGroupKey(group).toLowerCase() && g !== group);
+                    if (match) {
+                        const useExisting = confirm(`พบกลุ่มที่ใกล้เคียงกันอยู่แล้วคือ "${match}" ต้องการใช้ชื่อกลุ่มนี้แทน "${group}" เพื่อไม่ให้ข้อมูลกระจัดกระจายหรือไม่?`);
+                        if (useExisting) finalGroup = match;
+                    }
+                }
+
                 await setDoc(doc(db, "members", memberId), {
                     member_id: memberId,
                     name: name,
-                    group: group,
+                    group: finalGroup,
                     phone: phone,
                     address: address,
                     created_at: serverTimestamp()
@@ -370,6 +469,8 @@
                 await scalePort.open({ baudRate: 9600 });
                 document.getElementById('scale-status').innerText = "สถานะ: เชื่อมต่อเครื่องชั่งแล้ว";
                 document.getElementById('scale-status').classList.replace("text-gray-400", "text-green-400");
+                document.getElementById('btn-disconnect-scale').disabled = false;
+                document.getElementById('btn-disconnect-scale').classList.remove('opacity-50', 'cursor-not-allowed');
                 readSerialData();
             } catch (err) {
                 alert('ไม่สามารถเชื่อมต่อสายเครื่องชั่งได้: ' + err.message);
@@ -378,24 +479,55 @@
 
         async function readSerialData() {
             const textDecoder = new TextDecoderStream();
-            scalePort.readable.pipeTo(textDecoder.writable);
+            const readableClosed = scalePort.readable.pipeTo(textDecoder.writable);
             const reader = textDecoder.readable.getReader();
+            scaleReader = reader;
             let rawBuffer = "";
 
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-                rawBuffer += value;
-                if (rawBuffer.includes('\n') || rawBuffer.includes('\r')) {
-                    let weightMatch = rawBuffer.match(/[0-9]+\.?[0-9]*/);
-                    if (weightMatch) {
-                        currentScaleWeight = parseFloat(weightMatch[0]);
-                        updateWeightDisplay(currentScaleWeight);
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    rawBuffer += value;
+                    if (rawBuffer.includes('\n') || rawBuffer.includes('\r')) {
+                        // รองรับเครื่องหมายลบ (ค่า error/ค่าติดลบจากเครื่องชั่ง) และปฏิเสธค่าที่ผิดปกติ
+                        let weightMatch = rawBuffer.match(/-?[0-9]+\.?[0-9]*/);
+                        if (weightMatch) {
+                            const parsed = parseFloat(weightMatch[0]);
+                            if (!isNaN(parsed) && parsed >= 0) {
+                                currentScaleWeight = parsed;
+                                updateWeightDisplay(currentScaleWeight);
+                            }
+                        }
+                        rawBuffer = "";
                     }
-                    rawBuffer = "";
                 }
+            } catch (err) {
+                console.error("Serial read error:", err);
+            } finally {
+                reader.releaseLock();
             }
         }
+
+        // ปุ่มตัดการเชื่อมต่อเครื่องชั่ง
+        document.getElementById('btn-disconnect-scale').addEventListener('click', async () => {
+            try {
+                if (scaleReader) {
+                    await scaleReader.cancel().catch(() => {});
+                    scaleReader = null;
+                }
+                if (scalePort) {
+                    await scalePort.close().catch(() => {});
+                    scalePort = null;
+                }
+                document.getElementById('scale-status').innerText = "สถานะ: ยังไม่ได้เชื่อมต่อเครื่องชั่ง";
+                document.getElementById('scale-status').classList.replace("text-green-400", "text-gray-400");
+                document.getElementById('btn-disconnect-scale').disabled = true;
+                document.getElementById('btn-disconnect-scale').classList.add('opacity-50', 'cursor-not-allowed');
+            } catch (err) {
+                console.error("Disconnect error:", err);
+            }
+        });
 
         document.getElementById('btn-manual-input').addEventListener('click', () => {
             const input = prompt("กรุณากรอกค่าน้ำหนักนม (กก.):", currentScaleWeight);
@@ -437,12 +569,28 @@
             if (currentScaleWeight <= 0) {
                 alert("น้ำหนักต้องมากกว่า 0 กิโลกรัม"); return;
             }
+            if (currentScaleWeight > MAX_REASONABLE_WEIGHT) {
+                const proceedAnyway = confirm(
+                    `⚠️ น้ำหนักที่อ่านได้ (${currentScaleWeight.toFixed(2)} กก.) สูงผิดปกติ (เกิน ${MAX_REASONABLE_WEIGHT} กก.)\n` +
+                    `อาจเกิดจากการอ่านค่าเครื่องชั่งผิดพลาด ต้องการบันทึกค่านี้ต่อไปหรือไม่?`
+                );
+                if (!proceedAnyway) return;
+            }
 
             const member = memberList.find(m => m.member_id === memberId);
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
             const monthStr = dateStr.substring(0, 7);
             
+            const confirmSave = confirm(
+                `ยืนยันบันทึกข้อมูล?\n\n` +
+                `สมาชิก: ${memberId} - ${member ? member.name : ''}\n` +
+                `รอบ: ${period}\n` +
+                `น้ำหนัก: ${currentScaleWeight.toFixed(2)} กก.\n\n` +
+                `หมายเหตุ: หากพบว่าข้อมูลผิดหลังบันทึก สามารถลบรายการได้จากตารางในหน้า "รายงานรายวัน"`
+            );
+            if (!confirmSave) return;
+
             const btn = e.currentTarget;
             const originalBtnText = btn.innerHTML;
 
@@ -525,16 +673,19 @@
                     uniqueMembers.add(d.member_id);
 
                     const timeStr = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) : '-';
-                    const groupBadge = d.member_group ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${d.member_group}</span>` : '-';
+                    const groupBadge = d.member_group ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${esc(d.member_group)}</span>` : '-';
 
                     tableHtml += `
                         <tr>
                             <td class="p-3">${timeStr}</td>
                             <td class="p-3">${groupBadge}</td>
-                            <td class="p-3 font-semibold text-blue-800">${d.member_id}</td>
-                            <td class="p-3">${d.member_name}</td>
-                            <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${d.period}</span></td>
+                            <td class="p-3 font-semibold text-blue-800">${esc(d.member_id)}</td>
+                            <td class="p-3">${esc(d.member_name)}</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${esc(d.period)}</span></td>
                             <td class="p-3 text-right font-bold">${d.weight_kg.toFixed(2)}</td>
+                            <td class="p-3 text-center">
+                                <button onclick="deleteMilkRecord('${docSnap.id}')" class="text-red-600 hover:text-red-800 text-xs font-medium">🗑️ ลบ</button>
+                            </td>
                         </tr>
                     `;
                 });
@@ -542,9 +693,21 @@
                 document.getElementById('daily-total-weight').innerText = totalWeight.toFixed(2);
                 document.getElementById('daily-total-count').innerText = count;
                 document.getElementById('daily-unique-members').innerText = uniqueMembers.size;
-                document.getElementById('daily-table-body').innerHTML = tableHtml || '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในวันที่เลือก</td></tr>';
+                document.getElementById('daily-table-body').innerHTML = tableHtml || '<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในวันที่เลือก</td></tr>';
 
             } catch (err) { console.error(err); }
+        }
+
+        // ลบรายการชั่งน้ำหนักที่บันทึกผิด
+        window.deleteMilkRecord = async function(recordId) {
+            const confirmDelete = confirm('ต้องการลบรายการนี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้');
+            if (!confirmDelete) return;
+            try {
+                await deleteDoc(doc(db, "milk_records", recordId));
+                loadDailyReport();
+            } catch (err) {
+                alert('ลบรายการไม่สำเร็จ: ' + err.message);
+            }
         }
 
         // ================= รายงานรายเดือน =================
@@ -577,12 +740,12 @@
 
                 let tableHtml = '';
                 summaryArray.forEach(info => {
-                    const groupBadge = info.group !== '-' ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${info.group}</span>` : '-';
+                    const groupBadge = info.group !== '-' ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${esc(info.group)}</span>` : '-';
                     tableHtml += `
                         <tr>
                             <td class="p-3">${groupBadge}</td>
-                            <td class="p-3 font-semibold text-blue-800">${info.id}</td>
-                            <td class="p-3">${info.name}</td>
+                            <td class="p-3 font-semibold text-blue-800">${esc(info.id)}</td>
+                            <td class="p-3">${esc(info.name)}</td>
                             <td class="p-3 text-center">${info.deliver_count} ครั้ง</td>
                             <td class="p-3 text-right font-bold text-green-700">${info.total_weight.toFixed(2)}</td>
                         </tr>
@@ -594,7 +757,54 @@
             } catch (err) { console.error(err); }
         }
 
-        loadMemberList();
+        // ================= ระบบ Login / Logout =================
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorBox = document.getElementById('login-error');
+            const submitBtn = document.getElementById('login-submit-btn');
+            errorBox.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'กำลังเข้าสู่ระบบ...';
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged จะจัดการแสดงแอปหลักให้เอง
+            } catch (err) {
+                let msg = 'เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบอีเมล/รหัสผ่าน';
+                if (err.code === 'auth/too-many-requests') msg = 'พยายามเข้าสู่ระบบผิดหลายครั้งเกินไป กรุณาลองใหม่ภายหลัง';
+                errorBox.innerText = msg;
+                errorBox.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'เข้าสู่ระบบ';
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            if (!confirm('ต้องการออกจากระบบใช่หรือไม่?')) return;
+            // ตัดการเชื่อมต่อเครื่องชั่งก่อนออกจากระบบ ถ้ามีการเชื่อมต่ออยู่
+            try {
+                if (scaleReader) { await scaleReader.cancel().catch(() => {}); scaleReader = null; }
+                if (scalePort) { await scalePort.close().catch(() => {}); scalePort = null; }
+            } catch (err) { /* ignore */ }
+            await signOut(auth);
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-root').classList.remove('hidden');
+                document.getElementById('current-user-email').innerText = esc(user.email || '');
+                loadMemberList();
+                switchTab('weigh');
+            } else {
+                document.getElementById('app-root').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('login-form').reset();
+            }
+        });
     </script>
 </body>
 </html>
