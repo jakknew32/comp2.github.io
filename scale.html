@@ -69,6 +69,7 @@
                 <button onclick="switchTab('members')" id="tab-members" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">👥 ระบบสมาชิก</button>
                 <button onclick="switchTab('daily')" id="tab-daily" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📅 รายงานรายวัน</button>
                 <button onclick="switchTab('monthly')" id="tab-monthly" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📊 รายงานรายเดือน</button>
+                <button onclick="switchTab('member')" id="tab-member" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">👤 รายงานรายสมาชิก</button>
                 <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn hidden px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">⚙️ ตั้งค่าตั๋ว</button>
                 <span class="w-px h-6 bg-blue-600 mx-1"></span>
                 <span id="current-user-email" class="text-sm text-blue-200"></span>
@@ -323,7 +324,7 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-100 text-gray-700 text-sm">
-                                <th class="p-3 border-b">วันที่</th>
+                                <th class="p-3 border-b">ลำดับ</th>
                                 <th class="p-3 border-b">กลุ่ม</th>
                                 <th class="p-3 border-b">รหัสสมาชิก</th>
                                 <th class="p-3 border-b">ชื่อสมาชิก</th>
@@ -333,6 +334,59 @@
                         </thead>
                         <tbody id="monthly-detail-table-body" class="text-sm divide-y">
                             <tr><td colspan="6" class="p-4 text-center text-gray-500">กรุณาเลือกเดือนเพื่อดูรายละเอียด</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB: รายงานรายสมาชิก ================= -->
+        <section id="sec-member" class="tab-content hidden space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex flex-wrap items-center gap-2">
+                    <label class="text-sm font-medium">เลือกสมาชิก:</label>
+                    <select id="member-report-select" class="p-2 border rounded-lg min-w-[220px]">
+                        <option value="">-- เลือกสมาชิก --</option>
+                    </select>
+                    <label class="text-sm font-medium ml-2">เดือน (ไม่เลือก = ทุกเดือน):</label>
+                    <input type="month" id="member-report-month" class="p-2 border rounded-lg">
+                    <button onclick="loadMemberReport()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700">ค้นหา</button>
+                    <button id="btn-export-member-csv" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700">📥 Export CSV</button>
+                    <button id="btn-print-member" class="bg-gray-700 text-white px-3 py-2 rounded-lg hover:bg-gray-800">🖨️ พิมพ์ A4</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 text-center">
+                    <div class="text-sm text-gray-500">จำนวนครั้งที่ส่ง</div>
+                    <div class="text-2xl font-bold text-blue-800" id="member-report-count">0</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 text-center">
+                    <div class="text-sm text-gray-500">น้ำหนักรวม (กก.)</div>
+                    <div class="text-2xl font-bold text-green-700" id="member-report-total">0.00</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 text-center">
+                    <div class="text-sm text-gray-500">น้ำหนักเฉลี่ยต่อครั้ง (กก.)</div>
+                    <div class="text-2xl font-bold text-gray-700" id="member-report-avg">0.00</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-lg font-bold mb-3 text-gray-700 border-b pb-2">ประวัติการส่งนม</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-sm">
+                                <th class="p-3 border-b">ลำดับ</th>
+                                <th class="p-3 border-b">กลุ่ม</th>
+                                <th class="p-3 border-b">รหัสสมาชิก</th>
+                                <th class="p-3 border-b">ชื่อสมาชิก</th>
+                                <th class="p-3 border-b">รอบ</th>
+                                <th class="p-3 border-b text-right">น้ำหนัก (กก.)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="member-report-table-body" class="text-sm divide-y">
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">กรุณาเลือกสมาชิกเพื่อดูประวัติการส่งนม</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -456,6 +510,7 @@
         let lastDailyExportData = [];   // ข้อมูลรายงานรายวันที่ดึงล่าสุด ใช้สำหรับ export CSV
         let lastMonthlyExportData = []; // ข้อมูลรายงานรายเดือนที่ดึงล่าสุด ใช้สำหรับ export CSV
         let lastMonthlyDetailData = []; // รายละเอียดทุกครั้งที่ส่งนมในเดือน พร้อมวันที่ (ตารางที่สองของรายงานรายเดือน)
+        let lastMemberReportData = []; // ประวัติการส่งนมของสมาชิกที่เลือกในแท็บรายงานรายสมาชิก
 
         const MAX_REASONABLE_WEIGHT = 500; // กก. — ค่าสูงสุดที่สมเหตุสมผลสำหรับถังนมหนึ่งใบ ปรับได้ตามหน้างานจริง
         const MIN_REASONABLE_WEIGHT = 0.5; // กก. — ค่าต่ำสุดที่ถือว่าเป็นน้ำหนักจริง (กันสัญญาณรบกวนเล็กน้อยจากเครื่องชั่งที่ปัดเศษแล้วโชว์ 0.00 บนสลิป)
@@ -484,6 +539,72 @@
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
+
+        // สร้างแถวตาราง HTML แบบแยกหมวดตามวันที่ (หัวข้อวันที่ + รายการต่อครั้ง + ยอดรวมของวันนั้น)
+        // ใช้ร่วมกันทั้งตารางบนจอ และตอนพิมพ์ A4 เพื่อให้หน้าตาตรงกัน
+        // tdOpen(extraStyle, colspan): ฟังก์ชันสร้างแท็กเปิด <td ...> ที่เหมาะกับปลายทาง (class บนจอ / inline style ตอนพิมพ์)
+        //   ผสาน extraStyle เข้ากับ style พื้นฐานให้ถูกต้อง ไม่ให้เกิด style ซ้ำสองแอตทริบิวต์ในแท็กเดียว
+        function buildGroupedByDateRows(detailList, tdOpen) {
+            let html = '';
+            let currentGroupDate = null;
+            let dateSubtotal = 0;
+            let dateCount = 0;
+
+            const flushDateGroup = () => {
+                if (currentGroupDate !== null) {
+                    html += `
+                        <tr style="background:#eff6ff;">
+                            ${tdOpen('text-align:right;font-size:12px;color:#666;', 4)}รวมวันที่ ${esc(currentGroupDate)} (${dateCount} ครั้ง)</td>
+                            ${tdOpen('text-align:right;font-weight:bold;color:#1e40af;', 2)}${dateSubtotal.toFixed(2)} กก.</td>
+                        </tr>
+                    `;
+                }
+            };
+
+            detailList.forEach(item => {
+                if (item.date !== currentGroupDate) {
+                    flushDateGroup();
+                    currentGroupDate = item.date;
+                    dateSubtotal = 0;
+                    dateCount = 0;
+                    html += `
+                        <tr style="background:#f3f4f6;">
+                            ${tdOpen('font-weight:bold;', 6)}📅 วันที่ ${esc(item.date)}</td>
+                        </tr>
+                    `;
+                }
+                dateSubtotal += item.weight_kg;
+                dateCount++;
+
+                html += `
+                    <tr>
+                        ${tdOpen('color:#999;font-size:12px;')}ครั้งที่ ${dateCount}</td>
+                        ${tdOpen()}${esc(item.group)}</td>
+                        ${tdOpen('font-weight:600;')}${esc(item.member_id)}</td>
+                        ${tdOpen()}${esc(item.member_name)}</td>
+                        ${tdOpen()}${esc(item.period)}</td>
+                        ${tdOpen('text-align:right;font-weight:bold;')}${item.weight_kg.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            flushDateGroup();
+            return html;
+        }
+
+        // ตัวสร้างแท็ก <td> สำหรับตารางบนจอ (ใช้ Tailwind class 'p-3' + inline style เสริมถ้ามี)
+        function onScreenTdOpen(extraStyle, colspan) {
+            const colspanAttr = colspan ? ` colspan="${colspan}"` : '';
+            const styleAttr = extraStyle ? ` style="${extraStyle}"` : '';
+            return `<td class="p-3"${colspanAttr}${styleAttr}>`;
+        }
+
+        // ตัวสร้างแท็ก <td> สำหรับตอนพิมพ์ A4 (ใช้ inline style ล้วน ผสาน base style กับ extra style เข้าด้วยกัน)
+        function printTdOpen(extraStyle, colspan) {
+            const colspanAttr = colspan ? ` colspan="${colspan}"` : '';
+            const baseStyle = 'padding:6px;border:1px solid #ccc;';
+            return `<td${colspanAttr} style="${baseStyle}${extraStyle || ''}">`;
+        }
+
 
         // ตรวจสอบว่าเบราว์เซอร์รองรับ Web Serial API หรือไม่ (รองรับเฉพาะ Chrome/Edge บนเดสก์ท็อป)
         if (!('serial' in navigator)) {
@@ -546,13 +667,16 @@
                 memberList.sort((a, b) => (a.member_id || '').localeCompare(b.member_id || ''));
 
                 let selectHtml = '<option value="">-- เลือกรหัสหรือชื่อสมาชิก --</option>';
+                let reportSelectHtml = '<option value="">-- เลือกสมาชิก --</option>';
                 let tableHtml = '';
 
                 memberList.forEach((data) => {
                     if (data.group) groups.add(data.group);
 
                     const groupText = data.group ? `[${esc(data.group)}] ` : '';
-                    selectHtml += `<option value="${esc(data.member_id)}">${esc(data.member_id)} - ${groupText}${esc(data.name)}</option>`;
+                    const optionHtml = `<option value="${esc(data.member_id)}">${esc(data.member_id)} - ${groupText}${esc(data.name)}</option>`;
+                    selectHtml += optionHtml;
+                    reportSelectHtml += optionHtml;
                     
                     tableHtml += `
                         <tr>
@@ -565,6 +689,7 @@
                 });
 
                 document.getElementById('weigh-member-select').innerHTML = selectHtml;
+                document.getElementById('member-report-select').innerHTML = reportSelectHtml;
                 document.getElementById('member-table-body').innerHTML = tableHtml || '<tr><td colspan="4" class="p-4 text-center">ยังไม่มีข้อมูลสมาชิก</td></tr>';
                 document.getElementById('group-list').innerHTML = Array.from(groups).map(g => `<option value="${esc(g)}">`).join('');
 
@@ -1076,6 +1201,21 @@
                     </thead>
                     <tbody>${rowsHtml}</tbody>
                 </table>
+
+                <h2 style="text-align:center;font-size:16px;font-weight:bold;margin-top:28px;margin-bottom:12px;page-break-before:always;">รายละเอียดการส่งนมแต่ละครั้ง</h2>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                    <thead>
+                        <tr style="background:#f0f0f0;">
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">ลำดับ</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">กลุ่ม</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">รหัสสมาชิก</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">ชื่อสมาชิก</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">รอบ</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:right;">น้ำหนัก (กก.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>${buildGroupedByDateRows(lastMonthlyDetailData, printTdOpen)}</tbody>
+                </table>
             `;
             document.body.classList.add('print-target-report');
             window.print();
@@ -1192,20 +1332,7 @@
 
                 document.getElementById('monthly-table-body').innerHTML = tableHtml || '<tr><td colspan="5" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในเดือนที่เลือก</td></tr>';
 
-                let detailHtml = '';
-                detailList.forEach(item => {
-                    const groupBadge = item.group !== '-' ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${esc(item.group)}</span>` : '-';
-                    detailHtml += `
-                        <tr>
-                            <td class="p-3">${esc(item.date)}</td>
-                            <td class="p-3">${groupBadge}</td>
-                            <td class="p-3 font-semibold text-blue-800">${esc(item.member_id)}</td>
-                            <td class="p-3">${esc(item.member_name)}</td>
-                            <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${esc(item.period)}</span></td>
-                            <td class="p-3 text-right font-bold">${item.weight_kg.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
+                const detailHtml = buildGroupedByDateRows(detailList, onScreenTdOpen);
                 document.getElementById('monthly-detail-table-body').innerHTML = detailHtml || '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในเดือนที่เลือก</td></tr>';
 
             } catch (err) {
@@ -1214,6 +1341,97 @@
                 document.getElementById('monthly-detail-table-body').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-600">ดึงรายงานไม่สำเร็จ: ${esc(err.message)}</td></tr>`;
             }
         }
+
+        // ================= รายงานรายสมาชิก =================
+        window.loadMemberReport = async function() {
+            const selectedMemberId = document.getElementById('member-report-select').value;
+            if (!selectedMemberId) {
+                alert('กรุณาเลือกสมาชิกก่อน');
+                return;
+            }
+            try {
+                // พนักงาน (ไม่ใช่ admin) ดูรายงานได้เฉพาะสมาชิกที่ตัวเองเพิ่มเข้าระบบเท่านั้น (dropdown กรองไว้แล้ว แต่กันไว้อีกชั้น)
+                if (currentUserRole !== 'admin' && !memberList.some(m => m.member_id === selectedMemberId)) {
+                    alert('คุณไม่มีสิทธิ์ดูรายงานของสมาชิกคนนี้');
+                    return;
+                }
+
+                // ใช้ member_id เป็นตัวกรองหลัก (equality เดียว ไม่ต้องสร้าง composite index เพิ่ม)
+                const q = query(collection(db, "milk_records"), where("member_id", "==", selectedMemberId));
+                const querySnapshot = await getDocs(q);
+
+                const selectedMonth = document.getElementById('member-report-month').value; // อาจเว้นว่างได้ = ทุกเดือน
+
+                let detailList = [];
+                querySnapshot.forEach((docSnap) => {
+                    const d = docSnap.data();
+                    if (selectedMonth && d.month_str !== selectedMonth) return; // กรองเฉพาะเดือนที่เลือก ถ้ามีการเลือกไว้
+                    detailList.push({
+                        date: d.date_str || '-',
+                        group: d.member_group || '-',
+                        member_id: d.member_id,
+                        member_name: d.member_name,
+                        period: d.period,
+                        weight_kg: d.weight_kg
+                    });
+                });
+                detailList.sort((a, b) => a.date.localeCompare(b.date));
+                lastMemberReportData = detailList;
+
+                const totalWeight = detailList.reduce((sum, d) => sum + d.weight_kg, 0);
+                const count = detailList.length;
+                document.getElementById('member-report-count').innerText = count;
+                document.getElementById('member-report-total').innerText = totalWeight.toFixed(2);
+                document.getElementById('member-report-avg').innerText = count > 0 ? (totalWeight / count).toFixed(2) : '0.00';
+
+                const tableHtml = buildGroupedByDateRows(detailList, onScreenTdOpen);
+                document.getElementById('member-report-table-body').innerHTML = tableHtml || '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีประวัติการส่งนมของสมาชิกคนนี้ในช่วงที่เลือก</td></tr>';
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('member-report-table-body').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-600">ดึงรายงานไม่สำเร็จ: ${esc(err.message)}</td></tr>`;
+            }
+        }
+
+        document.getElementById('btn-export-member-csv').addEventListener('click', () => {
+            if (lastMemberReportData.length === 0) {
+                alert('ยังไม่มีข้อมูลรายงานให้ export กรุณาเลือกสมาชิกและกด "ค้นหา" ก่อน');
+                return;
+            }
+            const memberId = document.getElementById('member-report-select').value;
+            const headers = ['วันที่', 'กลุ่ม', 'รหัสสมาชิก', 'ชื่อสมาชิก', 'รอบ', 'น้ำหนัก (กก.)'];
+            const rows = lastMemberReportData.map(d => [d.date, d.group, d.member_id, d.member_name, d.period, d.weight_kg.toFixed(2)]);
+            downloadCsv(`รายงานรายสมาชิก_${memberId}.csv`, headers, rows);
+        });
+
+        document.getElementById('btn-print-member').addEventListener('click', () => {
+            if (lastMemberReportData.length === 0) {
+                alert('ยังไม่มีข้อมูลรายงานให้พิมพ์ กรุณาเลือกสมาชิกและกด "ค้นหา" ก่อน');
+                return;
+            }
+            const memberSelectEl = document.getElementById('member-report-select');
+            const memberLabel = memberSelectEl.options[memberSelectEl.selectedIndex].text;
+            const totalWeight = lastMemberReportData.reduce((sum, d) => sum + d.weight_kg, 0);
+            document.getElementById('print-report-area').innerHTML = `
+                <h2 style="text-align:center;font-size:18px;font-weight:bold;margin-bottom:4px;">รายงานประวัติการส่งนมรายสมาชิก</h2>
+                <p style="text-align:center;margin-bottom:16px;">${esc(memberLabel)} — รวม ${lastMemberReportData.length} ครั้ง — น้ำหนักรวม ${totalWeight.toFixed(2)} กก.</p>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                    <thead>
+                        <tr style="background:#f0f0f0;">
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">ลำดับ</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">กลุ่ม</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">รหัสสมาชิก</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">ชื่อสมาชิก</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">รอบ</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:right;">น้ำหนัก (กก.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>${buildGroupedByDateRows(lastMemberReportData, printTdOpen)}</tbody>
+                </table>
+            `;
+            document.body.classList.add('print-target-report');
+            window.print();
+        });
 
         // ================= ระบบ Login / Logout =================
         document.getElementById('login-form').addEventListener('submit', async (e) => {
