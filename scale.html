@@ -11,9 +11,22 @@
         body { font-family: 'Sarabun', sans-serif; }
         @media print {
             body * { visibility: hidden; }
-            #receipt-print, #receipt-print * { visibility: visible; }
-            #receipt-print { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; padding: 10px; font-size: 14px; }
             .no-print { display: none !important; }
+
+            /* พิมพ์ตั๋วรับนม (เครื่องพิมพ์ใบเสร็จ 80mm) */
+            body.print-target-receipt #receipt-print,
+            body.print-target-receipt #receipt-print * { visibility: visible; }
+            body.print-target-receipt #receipt-print {
+                display: block !important; position: absolute; left: 0; top: 0; width: 80mm; padding: 10px; font-size: 14px;
+            }
+
+            /* พิมพ์รายงาน (กระดาษ A4) */
+            body.print-target-report #print-report-area,
+            body.print-target-report #print-report-area * { visibility: visible; }
+            body.print-target-report #print-report-area {
+                display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 10mm;
+            }
+            @page { size: A4; margin: 12mm; }
         }
     </style>
 </head>
@@ -230,6 +243,7 @@
                     <input type="date" id="daily-date-picker" class="p-2 border rounded-lg">
                     <button onclick="loadDailyReport()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700">ค้นหา</button>
                     <button id="btn-export-daily-csv" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700">📥 Export CSV</button>
+                    <button id="btn-print-daily" class="bg-gray-700 text-white px-3 py-2 rounded-lg hover:bg-gray-800">🖨️ พิมพ์ A4</button>
                 </div>
             </div>
 
@@ -279,6 +293,7 @@
                     <input type="month" id="monthly-picker" class="p-2 border rounded-lg">
                     <button onclick="loadMonthlyReport()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700">ดึงรายงาน</button>
                     <button id="btn-export-monthly-csv" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700">📥 Export CSV</button>
+                    <button id="btn-print-monthly" class="bg-gray-700 text-white px-3 py-2 rounded-lg hover:bg-gray-800">🖨️ พิมพ์ A4</button>
                 </div>
             </div>
 
@@ -361,6 +376,21 @@
             *** ขอบคุณที่นำส่งนมคุณภาพ ***
         </div>
     </div>
+
+    <!-- กล่องพรีวิวตั๋วก่อนพิมพ์จริง -->
+    <div id="ticket-preview-modal" class="no-print hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs">
+            <h3 class="text-lg font-bold text-gray-800 mb-3 text-center">👁️ ตัวอย่างตั๋วก่อนพิมพ์</h3>
+            <div id="ticket-preview-content" class="border rounded-lg p-4 text-sm bg-gray-50"></div>
+            <div class="flex gap-2 mt-4">
+                <button id="ticket-preview-close" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-lg font-medium">ปิด</button>
+                <button id="ticket-preview-print" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium">🖨️ พิมพ์ตั๋ว</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- พื้นที่สำหรับพิมพ์รายงาน A4 (ซ่อนอยู่ปกติ ใช้เฉพาะตอนพิมพ์) -->
+    <div id="print-report-area" class="hidden"></div>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -807,40 +837,50 @@
                     timestamp: serverTimestamp()
                 });
 
-                // 3. เตรียมข้อมูลสลิปพิมพ์
+                // 3. เตรียมข้อมูลสลิปพิมพ์ (เก็บน้ำหนักไว้ในตัวแปรก่อน เพราะอีกไม่กี่บรรทัดจะรีเซ็ต currentScaleWeight กลับ 0)
+                const savedWeight = currentScaleWeight;
                 document.getElementById('p-date').innerText = now.toLocaleDateString('th-TH');
                 document.getElementById('p-time').innerText = now.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
                 document.getElementById('p-id').innerText = memberId;
                 document.getElementById('p-name').innerText = member.name;
                 document.getElementById('p-group').innerText = member.group || '-';
                 document.getElementById('p-period').innerText = period;
-                document.getElementById('p-weight').innerText = currentScaleWeight.toFixed(2);
+                document.getElementById('p-weight').innerText = savedWeight.toFixed(2);
 
-                // 4. หน่วงเวลา 0.5 วิ ให้ HTML วาดข้อมูลสลิปเสร็จก่อนสั่งพิมพ์
+                // 4. แสดงกล่องพรีวิวตั๋วให้ตรวจสอบก่อนพิมพ์จริง (ไม่พิมพ์อัตโนมัติอีกต่อไป)
+                document.getElementById('ticket-preview-content').innerHTML = `
+                    <div style="text-align:center;font-weight:bold;">${esc(receiptSettings.shop_name)}</div>
+                    <div style="text-align:center;font-size:11px;border-bottom:1px dashed #999;padding-bottom:4px;margin-bottom:4px;">${esc(receiptSettings.subtitle)}</div>
+                    <div>วันที่: ${esc(now.toLocaleDateString('th-TH'))}</div>
+                    <div>เวลา: ${esc(now.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}))}</div>
+                    <div>กลุ่ม: ${esc(member.group || '-')}</div>
+                    <div>รหัสสมาชิก: ${esc(memberId)}</div>
+                    <div>ชื่อสมาชิก: ${esc(member.name)}</div>
+                    <div>รอบการส่ง: ${esc(period)}</div>
+                    <div style="border-top:1px dashed #999;border-bottom:1px dashed #999;margin:6px 0;padding:4px 0;font-weight:bold;display:flex;justify-content:space-between;">
+                        <span>น้ำหนักสุทธิ:</span><span>${savedWeight.toFixed(2)} กก.</span>
+                    </div>
+                    <div style="text-align:center;font-size:10px;margin-top:8px;">${esc(receiptSettings.footer)}</div>
+                `;
+                document.getElementById('ticket-preview-modal').classList.remove('hidden');
+
+                // 5. ล้างค่าหน้าจอสำหรับถังถัดไป (ข้อมูลบันทึกลง Firestore เรียบร้อยแล้ว ไม่ต้องรอพิมพ์เสร็จก่อน)
+                currentScaleWeight = 0.00;
+                isWeightLocked = false;
+                updateWeightDisplay(0.00);
+                updateLockStatusDisplay();
+                document.getElementById('allow-zero-weight').checked = false; // ต้องติ๊กใหม่ทุกครั้งที่จะบันทึก 0 กก. ป้องกันลืมปิด
+                autoSetDeliveryPeriod(); // อัปเดตรอบส่งใหม่ตามเวลาปัจจุบัน เผื่อชั่งข้ามช่วงเที่ยงพอดี
+                document.getElementById('weigh-member-select').value = "";
+                document.getElementById('weigh-member-select').dispatchEvent(new Event('change'));
+
+                // 6. หน่วงเวลาสั้นๆ ก่อนปลดล็อกปุ่มให้ชั่งถังต่อไปได้
                 setTimeout(() => {
-                    window.print(); // สั่งพิมพ์
-
-                    alert("บันทึกข้อมูลและสั่งพิมพ์สลิปเรียบร้อยแล้ว!");
-                    
-                    // ล้างค่าหน้าจอ
-                    currentScaleWeight = 0.00;
-                    isWeightLocked = false;
-                    updateWeightDisplay(0.00);
-                    updateLockStatusDisplay();
-                    document.getElementById('allow-zero-weight').checked = false; // ต้องติ๊กใหม่ทุกครั้งที่จะบันทึก 0 กก. ป้องกันลืมปิด
-                    autoSetDeliveryPeriod(); // อัปเดตรอบส่งใหม่ตามเวลาปัจจุบัน เผื่อชั่งข้ามช่วงเที่ยงพอดี
-                    document.getElementById('weigh-member-select').value = "";
-                    document.getElementById('weigh-member-select').dispatchEvent(new Event('change'));
-
-                    // 5. หน่วงเวลา 3 วินาที (Cooldown) ก่อนปลดล็อกปุ่มให้ชั่งถังต่อไปได้
-                    setTimeout(() => {
-                        isSaving = false;
-                        btn.innerHTML = originalBtnText;
-                        btn.disabled = false;
-                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    }, 3000);
-
-                }, 500);
+                    isSaving = false;
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }, 1000);
 
             } catch (err) {
                 alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
@@ -927,6 +967,97 @@
                 alert('ลบรายการไม่สำเร็จ: ' + err.message);
             }
         }
+
+        // ================= พรีวิวตั๋วก่อนพิมพ์ =================
+        document.getElementById('ticket-preview-close').addEventListener('click', () => {
+            document.getElementById('ticket-preview-modal').classList.add('hidden');
+        });
+        document.getElementById('ticket-preview-print').addEventListener('click', () => {
+            document.body.classList.add('print-target-receipt');
+            window.print();
+        });
+        // ล้าง class พิมพ์ทันทีที่หน้าต่างพิมพ์ปิดลง (ไม่ว่าจะกดพิมพ์จริงหรือยกเลิก) ป้องกันค้างจนพิมพ์หน้าอื่นผิด
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('print-target-receipt');
+            document.body.classList.remove('print-target-report');
+        });
+
+        // ================= พิมพ์รายงาน A4 =================
+        function printDailyReport() {
+            if (lastDailyExportData.length === 0) {
+                alert('ยังไม่มีข้อมูลรายงานให้พิมพ์ กรุณากด "ค้นหา" เพื่อดึงรายงานก่อน');
+                return;
+            }
+            const selectedDate = document.getElementById('daily-date-picker').value;
+            const totalWeight = lastDailyExportData.reduce((sum, d) => sum + d.weight_kg, 0);
+            let rowsHtml = lastDailyExportData.map(d => `
+                <tr>
+                    <td style="padding:6px;border:1px solid #ccc;">${esc(d.time)}</td>
+                    <td style="padding:6px;border:1px solid #ccc;">${esc(d.group)}</td>
+                    <td style="padding:6px;border:1px solid #ccc;">${esc(d.member_id)}</td>
+                    <td style="padding:6px;border:1px solid #ccc;">${esc(d.member_name)}</td>
+                    <td style="padding:6px;border:1px solid #ccc;">${esc(d.period)}</td>
+                    <td style="padding:6px;border:1px solid #ccc;text-align:right;">${d.weight_kg.toFixed(2)}</td>
+                </tr>
+            `).join('');
+            document.getElementById('print-report-area').innerHTML = `
+                <h2 style="text-align:center;font-size:18px;font-weight:bold;margin-bottom:4px;">รายงานสรุปการรับนมประจำวัน</h2>
+                <p style="text-align:center;margin-bottom:16px;">วันที่ ${esc(selectedDate)} — รวม ${lastDailyExportData.length} รายการ — น้ำหนักรวม ${totalWeight.toFixed(2)} กก.</p>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                    <thead>
+                        <tr style="background:#f0f0f0;">
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">เวลา</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">กลุ่ม</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">รหัสสมาชิก</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">ชื่อสมาชิก</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">รอบ</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:right;">น้ำหนัก (กก.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            `;
+            document.body.classList.add('print-target-report');
+            window.print();
+        }
+        document.getElementById('btn-print-daily').addEventListener('click', printDailyReport);
+
+        function printMonthlyReport() {
+            if (lastMonthlyExportData.length === 0) {
+                alert('ยังไม่มีข้อมูลรายงานให้พิมพ์ กรุณากด "ดึงรายงาน" ก่อน');
+                return;
+            }
+            const selectedMonth = document.getElementById('monthly-picker').value;
+            const totalWeight = lastMonthlyExportData.reduce((sum, d) => sum + d.total_weight, 0);
+            let rowsHtml = lastMonthlyExportData.map(info => `
+                <tr>
+                    <td style="padding:6px;border:1px solid #ccc;">${esc(info.group)}</td>
+                    <td style="padding:6px;border:1px solid #ccc;">${esc(info.id)}</td>
+                    <td style="padding:6px;border:1px solid #ccc;">${esc(info.name)}</td>
+                    <td style="padding:6px;border:1px solid #ccc;text-align:center;">${info.deliver_count}</td>
+                    <td style="padding:6px;border:1px solid #ccc;text-align:right;">${info.total_weight.toFixed(2)}</td>
+                </tr>
+            `).join('');
+            document.getElementById('print-report-area').innerHTML = `
+                <h2 style="text-align:center;font-size:18px;font-weight:bold;margin-bottom:4px;">รายงานสรุปยอดรวมรายเดือน</h2>
+                <p style="text-align:center;margin-bottom:16px;">เดือน ${esc(selectedMonth)} — สมาชิก ${lastMonthlyExportData.length} ราย — น้ำหนักรวม ${totalWeight.toFixed(2)} กก.</p>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                    <thead>
+                        <tr style="background:#f0f0f0;">
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">กลุ่ม</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">รหัสสมาชิก</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:left;">ชื่อ-นามสกุล</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:center;">จำนวนครั้งที่ส่ง</th>
+                            <th style="padding:6px;border:1px solid #ccc;text-align:right;">น้ำหนักรวม (กก.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            `;
+            document.body.classList.add('print-target-report');
+            window.print();
+        }
+        document.getElementById('btn-print-monthly').addEventListener('click', printMonthlyReport);
 
         // ================= Export CSV =================
         // แปลง array of objects เป็น CSV string แล้วสั่งดาวน์โหลด (ใส่ BOM ให้ Excel อ่านภาษาไทยถูกต้อง)
