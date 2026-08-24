@@ -419,6 +419,15 @@
             return (g || '').trim().replace(/\s+/g, '');
         }
 
+        // แปลงเป็นสตริงวันที่ "YYYY-MM-DD" ตามเวลาท้องถิ่นของเครื่อง (ห้ามใช้ toISOString() เพราะนั่นคือเวลา UTC
+        // ถ้าใช้ toISOString() ตอนเที่ยงคืน-ตี 7 เวลาไทยจะได้วันที่ผิดเป็นเมื่อวาน เพราะไทยเร็วกว่า UTC 7 ชั่วโมง)
+        function toLocalDateStr(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         // ตรวจสอบว่าเบราว์เซอร์รองรับ Web Serial API หรือไม่ (รองรับเฉพาะ Chrome/Edge บนเดสก์ท็อป)
         if (!('serial' in navigator)) {
             document.getElementById('btn-connect-scale').disabled = true;
@@ -428,8 +437,8 @@
         document.getElementById('btn-disconnect-scale').disabled = true;
         document.getElementById('btn-disconnect-scale').classList.add('opacity-50', 'cursor-not-allowed');
 
-        // ตั้งค่าวันที่ Default
-        const todayStr = new Date().toISOString().split('T')[0];
+        // ตั้งค่าวันที่ Default (ใช้เวลาท้องถิ่น ไม่ใช่ UTC)
+        const todayStr = toLocalDateStr(new Date());
         const monthStr = todayStr.substring(0, 7);
         document.getElementById('daily-date-picker').value = todayStr;
         document.getElementById('monthly-picker').value = monthStr;
@@ -760,7 +769,7 @@
 
             const member = memberList.find(m => m.member_id === memberId);
             const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
+            const dateStr = toLocalDateStr(now); // ใช้เวลาท้องถิ่นของเครื่อง ไม่ใช่ UTC ป้องกันวันที่เพี้ยนช่วงเที่ยงคืน-ตี 7
             const monthStr = dateStr.substring(0, 7);
             
             const confirmSave = confirm(
