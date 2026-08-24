@@ -56,6 +56,7 @@
                 <button onclick="switchTab('members')" id="tab-members" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">👥 ระบบสมาชิก</button>
                 <button onclick="switchTab('daily')" id="tab-daily" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📅 รายงานรายวัน</button>
                 <button onclick="switchTab('monthly')" id="tab-monthly" class="nav-btn px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">📊 รายงานรายเดือน</button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn hidden px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">⚙️ ตั้งค่าตั๋ว</button>
                 <span class="w-px h-6 bg-blue-600 mx-1"></span>
                 <span id="current-user-email" class="text-sm text-blue-200"></span>
                 <span id="current-user-role" class="text-xs px-2 py-0.5 rounded-full bg-blue-700"></span>
@@ -120,9 +121,26 @@
 
                 <hr class="my-6">
 
+                <label class="flex items-center gap-2 mb-3 text-sm text-gray-600 cursor-pointer">
+                    <input type="checkbox" id="allow-zero-weight" class="w-4 h-4 rounded">
+                    อนุญาตให้บันทึก/พิมพ์น้ำหนัก 0 กก. (กรณีตั้งใจบันทึกจริงๆ เช่น สมาชิกไม่มีนมส่งรอบนี้)
+                </label>
+
                 <button id="btn-save-record" class="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-bold py-3.5 rounded-lg shadow-lg transition flex justify-center items-center gap-2">
                     💾 บันทึกข้อมูล & พิมพ์ตั๋วสลิป
                 </button>
+
+                <!-- กล่องป้อนน้ำหนักเอง (แทน window.prompt ซึ่ง Electron ไม่รองรับ) -->
+                <div id="manual-input-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">ป้อนน้ำหนักนม (กก.)</h3>
+                        <input type="number" id="manual-weight-value" step="0.01" min="0" class="w-full p-2.5 border rounded-lg text-2xl text-center focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                        <div class="flex gap-2 mt-4">
+                            <button id="manual-input-cancel" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-lg font-medium">ยกเลิก</button>
+                            <button id="manual-input-confirm" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium">ยืนยัน</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Ticket Preview -->
@@ -282,14 +300,49 @@
             </div>
         </section>
 
+        <!-- ================= TAB 5: ตั้งค่าข้อความบนตั๋ว (admin เท่านั้น) ================= -->
+        <section id="sec-settings" class="tab-content hidden max-w-2xl">
+            <div class="bg-white rounded-xl shadow p-6">
+                <h2 class="text-xl font-bold mb-4 text-blue-900 border-b pb-2">แก้ไขข้อความบนตั๋วรับนม</h2>
+                <p class="text-sm text-gray-500 mb-4">การแก้ไขนี้จะมีผลกับตั๋วที่พิมพ์ทุกใบ ทุกเครื่อง ทุกผู้ใช้ในระบบ</p>
+                <form id="form-receipt-settings" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อหัวตั๋ว (บรรทัดแรก)</label>
+                        <input type="text" id="setting-shop-name" maxlength="60" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="เช่น ศูนย์รับน้ำหนักนมสด">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">คำบรรยายใต้หัวตั๋ว (บรรทัดที่สอง)</label>
+                        <input type="text" id="setting-subtitle" maxlength="60" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="เช่น ใบรับน้ำหนักนมดิบ">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ข้อความท้ายตั๋ว</label>
+                        <input type="text" id="setting-footer" maxlength="100" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="เช่น *** ขอบคุณที่นำส่งนมคุณภาพ ***">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition">
+                        💾 บันทึกการตั้งค่า
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-4 border-t">
+                    <h3 class="text-sm font-bold text-gray-600 mb-2">ตัวอย่างตั๋ว</h3>
+                    <div class="bg-gray-50 border rounded-lg p-4 max-w-[220px] mx-auto text-sm">
+                        <div class="text-center font-bold" id="settings-preview-shop">ศูนย์รับน้ำหนักนมสด</div>
+                        <div class="text-center text-xs border-b border-dashed pb-1 mb-1" id="settings-preview-subtitle">ใบรับน้ำหนักนมดิบ</div>
+                        <div class="text-xs text-gray-400 my-2">...รายละเอียดสมาชิก/น้ำหนัก...</div>
+                        <div class="text-center text-xs mt-2" id="settings-preview-footer">*** ขอบคุณที่นำส่งนมคุณภาพ ***</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     </div> <!-- /#app-root -->
 
     <!-- ================= สำหรับสั่งพิมพ์ใบสลิป (Thermal Printer) ================= -->
     <div id="receipt-print" class="hidden">
-        <div style="text-align: center; font-weight: bold; font-size: 16px;">ศูนย์รับน้ำหนักนมสด</div>
-        <div style="text-align: center; font-size: 12px; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px;">
+        <div style="text-align: center; font-weight: bold; font-size: 16px;" id="p-shop-name">ศูนย์รับน้ำหนักนมสด</div>
+        <div style="text-align: center; font-size: 12px; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px;" id="p-subtitle">
             ใบรับน้ำหนักนมดิบ
         </div>
         <div>วันที่: <span id="p-date"></span></div>
@@ -302,7 +355,7 @@
             <span>น้ำหนักสุทธิ:</span>
             <span><span id="p-weight">0.00</span> กก.</span>
         </div>
-        <div style="text-align: center; font-size: 11px; margin-top: 15px;">
+        <div style="text-align: center; font-size: 11px; margin-top: 15px;" id="p-footer">
             *** ขอบคุณที่นำส่งนมคุณภาพ ***
         </div>
     </div>
@@ -341,8 +394,14 @@
         let memberList = [];
         let isSaving = false; // ตัวแปรสำหรับป้องกันการกดปุ่มบันทึกรัวๆ
         let currentUserRole = null; // 'admin' หรือ 'staff' — กำหนดจาก collection user_roles ใน Firestore
+        let receiptSettings = {
+            shop_name: 'ศูนย์รับน้ำหนักนมสด',
+            subtitle: 'ใบรับน้ำหนักนมดิบ',
+            footer: '*** ขอบคุณที่นำส่งนมคุณภาพ ***'
+        };
 
         const MAX_REASONABLE_WEIGHT = 500; // กก. — ค่าสูงสุดที่สมเหตุสมผลสำหรับถังนมหนึ่งใบ ปรับได้ตามหน้างานจริง
+        const MIN_REASONABLE_WEIGHT = 0.5; // กก. — ค่าต่ำสุดที่ถือว่าเป็นน้ำหนักจริง (กันสัญญาณรบกวนเล็กน้อยจากเครื่องชั่งที่ปัดเศษแล้วโชว์ 0.00 บนสลิป)
 
         // ป้องกัน XSS: escape ข้อความก่อนแทรกลงใน innerHTML
         function esc(str) {
@@ -375,8 +434,19 @@
         document.getElementById('daily-date-picker').value = todayStr;
         document.getElementById('monthly-picker').value = monthStr;
 
+        // เลือก "รอบการส่งนม" ให้อัตโนมัติตามเวลาปัจจุบันของเครื่อง (ก่อนเที่ยง = เช้า, หลังเที่ยง = เย็น)
+        // พนักงานยังสามารถเปลี่ยนเองได้ในหน้าจอ ค่านี้เป็นแค่ค่าเริ่มต้นเพื่อความสะดวก
+        function autoSetDeliveryPeriod() {
+            const hour = new Date().getHours();
+            document.getElementById('weigh-period').value = (hour < 12) ? 'เช้า' : 'เย็น';
+        }
+        autoSetDeliveryPeriod();
+
         // สลับ Tab
         window.switchTab = function(tabName) {
+            if (tabName === 'settings' && currentUserRole !== 'admin') {
+                tabName = 'weigh'; // เฉพาะ admin เท่านั้นที่แก้ไขข้อความบนตั๋วได้ (ป้องกันชั้น UI เพิ่มเติมจาก Security Rules)
+            }
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('bg-blue-900'));
             document.getElementById(`sec-${tabName}`).classList.remove('hidden');
@@ -385,6 +455,7 @@
             if(tabName === 'members') loadMemberList();
             if(tabName === 'daily') loadDailyReport();
             if(tabName === 'monthly') loadMonthlyReport();
+            if(tabName === 'settings') loadReceiptSettingsForm();
         }
 
         // ================= โหลดข้อมูลสมาชิกและกลุ่ม =================
@@ -528,26 +599,22 @@
                     const { value, done } = await reader.read();
                     if (done) break;
                     rawBuffer += value;
-                    
-                    const parts = rawBuffer.split(/[\r\n]+/);
-                    
-                    if (parts.length > 1) {
-                        for (let i = 0; i < parts.length - 1; i++) {
-                            let weightMatch = parts[i].match(/-?[0-9]+\.?[0-9]*/);
-                            if (weightMatch) {
-                                const parsed = parseFloat(weightMatch[0]);
-                                if (!isNaN(parsed) && parsed >= 0) {
-                                    liveScaleWeight = parsed;
-                                    updateLiveWeightDisplay(liveScaleWeight);
-                                    
-                                    if (!isWeightLocked) {
-                                        currentScaleWeight = parsed;
-                                        updateWeightDisplay(currentScaleWeight);
-                                    }
+                    if (rawBuffer.includes('\n') || rawBuffer.includes('\r')) {
+                        // รองรับเครื่องหมายลบ (ค่า error/ค่าติดลบจากเครื่องชั่ง) และปฏิเสธค่าที่ผิดปกติ
+                        let weightMatch = rawBuffer.match(/-?[0-9]+\.?[0-9]*/);
+                        if (weightMatch) {
+                            const parsed = parseFloat(weightMatch[0]);
+                            if (!isNaN(parsed) && parsed >= 0) {
+                                liveScaleWeight = parsed;
+                                updateLiveWeightDisplay(liveScaleWeight);
+                                // อัปเดตค่าที่ใช้บันทึกเฉพาะตอนยังไม่ได้ล็อกเท่านั้น เพื่อไม่ให้ค่าที่ล็อกไว้แล้วถูกเขียนทับ/รีเซ็ตกลับ 0
+                                if (!isWeightLocked) {
+                                    currentScaleWeight = parsed;
+                                    updateWeightDisplay(currentScaleWeight);
                                 }
                             }
                         }
-                        rawBuffer = parts[parts.length - 1];
+                        rawBuffer = "";
                     }
                 }
             } catch (err) {
@@ -577,20 +644,43 @@
             }
         });
 
+        // กล่องป้อนน้ำหนักเอง (ใช้แทน window.prompt เพราะ Electron ไม่รองรับ window.prompt)
         document.getElementById('btn-manual-input').addEventListener('click', () => {
-            const input = prompt("กรุณากรอกค่าน้ำหนักนม (กก.):", currentScaleWeight);
-            if (input !== null && !isNaN(input) && input.trim() !== '') {
-                currentScaleWeight = parseFloat(input);
-                isWeightLocked = true; // ค่าที่ป้อนเองถือว่าล็อกทันที ไม่ต้องรอกดล็อกซ้ำ
-                updateWeightDisplay(currentScaleWeight);
-                updateLockStatusDisplay();
+            document.getElementById('manual-weight-value').value = currentScaleWeight > 0 ? currentScaleWeight.toFixed(2) : '';
+            document.getElementById('manual-input-modal').classList.remove('hidden');
+            document.getElementById('manual-weight-value').focus();
+        });
+
+        document.getElementById('manual-input-cancel').addEventListener('click', () => {
+            document.getElementById('manual-input-modal').classList.add('hidden');
+        });
+
+        function confirmManualWeight() {
+            const raw = document.getElementById('manual-weight-value').value;
+            const parsed = parseFloat(raw);
+            const allowZero = document.getElementById('allow-zero-weight').checked;
+            const minAllowed = allowZero ? 0 : MIN_REASONABLE_WEIGHT;
+            if (raw.trim() === '' || isNaN(parsed) || parsed < minAllowed) {
+                alert(`กรุณาป้อนน้ำหนักที่ถูกต้อง (อย่างน้อย ${minAllowed} กก.)`);
+                return;
             }
+            currentScaleWeight = parsed;
+            isWeightLocked = true; // ค่าที่ป้อนเองถือว่าล็อกทันที ไม่ต้องรอกดล็อกซ้ำ
+            updateWeightDisplay(currentScaleWeight);
+            updateLockStatusDisplay();
+            document.getElementById('manual-input-modal').classList.add('hidden');
+        }
+        document.getElementById('manual-input-confirm').addEventListener('click', confirmManualWeight);
+        document.getElementById('manual-weight-value').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') confirmManualWeight();
         });
 
         // ล็อกค่าน้ำหนักสดปัจจุบันไว้ใช้บันทึก ไม่ให้เปลี่ยนตามเครื่องชั่งอีกจนกว่าจะปลดล็อก
         document.getElementById('btn-lock-weight').addEventListener('click', () => {
-            if (liveScaleWeight <= 0) {
-                alert('ยังไม่มีค่าน้ำหนักสดให้ล็อก กรุณาเชื่อมต่อเครื่องชั่งหรือป้อนน้ำหนักเองก่อน');
+            const allowZero = document.getElementById('allow-zero-weight').checked;
+            const minAllowed = allowZero ? 0 : MIN_REASONABLE_WEIGHT;
+            if (liveScaleWeight < minAllowed) {
+                alert(`ยังไม่มีน้ำหนักสดที่มากพอให้ล็อก (ต้องอย่างน้อย ${minAllowed} กก.) กรุณาเชื่อมต่อเครื่องชั่งหรือป้อนน้ำหนักเองก่อน`);
                 return;
             }
             currentScaleWeight = liveScaleWeight;
@@ -653,8 +743,12 @@
             if (!memberId) {
                 alert("กรุณาเลือกสมาชิกก่อนบันทึก!"); return;
             }
-            if (currentScaleWeight <= 0) {
-                alert("น้ำหนักต้องมากกว่า 0 กิโลกรัม"); return;
+            const allowZero = document.getElementById('allow-zero-weight').checked;
+            if (currentScaleWeight < 0) {
+                alert("น้ำหนักต้องไม่ติดลบ"); return;
+            }
+            if (!allowZero && currentScaleWeight < MIN_REASONABLE_WEIGHT) {
+                alert(`น้ำหนักต้องมากกว่า ${MIN_REASONABLE_WEIGHT} กิโลกรัม (ค่าปัจจุบันต่ำเกินไป อาจเป็นสัญญาณรบกวนจากเครื่องชั่ง)\n\nถ้าตั้งใจบันทึก 0 กก. จริงๆ ให้ติ๊กช่อง "อนุญาตให้บันทึก/พิมพ์น้ำหนัก 0 กก." ก่อน`); return;
             }
             if (currentScaleWeight > MAX_REASONABLE_WEIGHT) {
                 const proceedAnyway = confirm(
@@ -720,6 +814,8 @@
                     isWeightLocked = false;
                     updateWeightDisplay(0.00);
                     updateLockStatusDisplay();
+                    document.getElementById('allow-zero-weight').checked = false; // ต้องติ๊กใหม่ทุกครั้งที่จะบันทึก 0 กก. ป้องกันลืมปิด
+                    autoSetDeliveryPeriod(); // อัปเดตรอบส่งใหม่ตามเวลาปัจจุบัน เผื่อชั่งข้ามช่วงเที่ยงพอดี
                     document.getElementById('weigh-member-select').value = "";
                     document.getElementById('weigh-member-select').dispatchEvent(new Event('change'));
 
@@ -744,10 +840,10 @@
 
         // ================= รายงานรายวัน =================
         window.loadDailyReport = async function() {
-            const selectedDate = document.getElementById('daily-date-picker').value;
-            if(!selectedDate) return;
-
             try {
+                const selectedDate = document.getElementById('daily-date-picker').value;
+                if(!selectedDate) return;
+
                 const q = query(collection(db, "milk_records"), where("date_str", "==", selectedDate));
                 const querySnapshot = await getDocs(q);
 
@@ -790,10 +886,11 @@
                 document.getElementById('daily-unique-members').innerText = uniqueMembers.size;
                 document.getElementById('daily-table-body').innerHTML = tableHtml || '<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในวันที่เลือก</td></tr>';
 
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('daily-table-body').innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-600">ดึงรายงานไม่สำเร็จ: ${esc(err.message)}</td></tr>`;
+            }
         }
-
-        // ลบรายการชั่งน้ำหนักที่บันทึกผิด
         window.deleteMilkRecord = async function(recordId) {
             if (currentUserRole !== 'admin') {
                 alert('เฉพาะผู้ดูแลระบบเท่านั้นที่ลบรายการได้');
@@ -811,10 +908,10 @@
 
         // ================= รายงานรายเดือน =================
         window.loadMonthlyReport = async function() {
-            const selectedMonth = document.getElementById('monthly-picker').value;
-            if(!selectedMonth) return;
-
             try {
+                const selectedMonth = document.getElementById('monthly-picker').value;
+                if(!selectedMonth) return;
+
                 const q = query(collection(db, "milk_records"), where("month_str", "==", selectedMonth));
                 const querySnapshot = await getDocs(q);
 
@@ -858,7 +955,10 @@
 
                 document.getElementById('monthly-table-body').innerHTML = tableHtml || '<tr><td colspan="5" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในเดือนที่เลือก</td></tr>';
 
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('monthly-table-body').innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-600">ดึงรายงานไม่สำเร็จ: ${esc(err.message)}</td></tr>`;
+            }
         }
 
         // ================= ระบบ Login / Logout =================
@@ -896,6 +996,72 @@
             await signOut(auth);
         });
 
+        // ================= ตั้งค่าข้อความบนตั๋ว (admin แก้ไขได้, ทุกคนใช้ค่าเดียวกัน) =================
+        async function loadReceiptSettings() {
+            try {
+                const snap = await getDoc(doc(db, "app_settings", "receipt"));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    receiptSettings.shop_name = d.shop_name || receiptSettings.shop_name;
+                    receiptSettings.subtitle = d.subtitle || receiptSettings.subtitle;
+                    receiptSettings.footer = d.footer || receiptSettings.footer;
+                }
+            } catch (err) {
+                console.error("Error loading receipt settings:", err);
+            }
+            applyReceiptSettingsToPrint();
+        }
+
+        // นำค่าที่โหลดมาแสดงบนตัวตั๋วจริงที่จะพิมพ์
+        function applyReceiptSettingsToPrint() {
+            document.getElementById('p-shop-name').innerText = receiptSettings.shop_name;
+            document.getElementById('p-subtitle').innerText = receiptSettings.subtitle;
+            document.getElementById('p-footer').innerText = receiptSettings.footer;
+        }
+
+        // เติมค่าปัจจุบันลงในฟอร์มตั้งค่า (เฉพาะตอน admin เปิดแท็บตั้งค่า)
+        function loadReceiptSettingsForm() {
+            document.getElementById('setting-shop-name').value = receiptSettings.shop_name;
+            document.getElementById('setting-subtitle').value = receiptSettings.subtitle;
+            document.getElementById('setting-footer').value = receiptSettings.footer;
+            updateSettingsPreview();
+        }
+
+        function updateSettingsPreview() {
+            document.getElementById('settings-preview-shop').innerText = document.getElementById('setting-shop-name').value || 'ศูนย์รับน้ำหนักนมสด';
+            document.getElementById('settings-preview-subtitle').innerText = document.getElementById('setting-subtitle').value || 'ใบรับน้ำหนักนมดิบ';
+            document.getElementById('settings-preview-footer').innerText = document.getElementById('setting-footer').value || '*** ขอบคุณที่นำส่งนมคุณภาพ ***';
+        }
+        ['setting-shop-name', 'setting-subtitle', 'setting-footer'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateSettingsPreview);
+        });
+
+        document.getElementById('form-receipt-settings').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (currentUserRole !== 'admin') {
+                alert('เฉพาะผู้ดูแลระบบเท่านั้นที่แก้ไขข้อความบนตั๋วได้');
+                return;
+            }
+            const shopName = document.getElementById('setting-shop-name').value.trim() || 'ศูนย์รับน้ำหนักนมสด';
+            const subtitle = document.getElementById('setting-subtitle').value.trim() || 'ใบรับน้ำหนักนมดิบ';
+            const footer = document.getElementById('setting-footer').value.trim() || '*** ขอบคุณที่นำส่งนมคุณภาพ ***';
+
+            try {
+                await setDoc(doc(db, "app_settings", "receipt"), {
+                    shop_name: shopName,
+                    subtitle: subtitle,
+                    footer: footer,
+                    updated_by: auth.currentUser.uid,
+                    updated_at: serverTimestamp()
+                });
+                receiptSettings = { shop_name: shopName, subtitle: subtitle, footer: footer };
+                applyReceiptSettingsToPrint();
+                alert('บันทึกการตั้งค่าตั๋วเรียบร้อยแล้ว! มีผลกับตั๋วที่พิมพ์ครั้งถัดไปทุกเครื่อง');
+            } catch (err) {
+                alert('บันทึกไม่สำเร็จ: ' + err.message);
+            }
+        });
+
         // ดึงระดับสิทธิ์ผู้ใช้จาก Firestore (collection user_roles, doc id = uid ของผู้ใช้)
         // ถ้าไม่พบเอกสาร ให้ถือว่าเป็น 'staff' โดย default (หลักการ least privilege)
         async function fetchUserRole(uid) {
@@ -915,6 +1081,7 @@
         function applyRoleUI(role) {
             const roleLabel = document.getElementById('current-user-role');
             const membersTabBtn = document.getElementById('tab-members');
+            const settingsTabBtn = document.getElementById('tab-settings');
             const readonlyNotice = document.getElementById('members-readonly-notice');
             const memberTableHeading = document.getElementById('member-table-heading');
 
@@ -924,6 +1091,7 @@
                 roleLabel.classList.add('bg-green-600');
                 readonlyNotice.classList.add('hidden');
                 if (memberTableHeading) memberTableHeading.innerText = 'รายชื่อสมาชิกทั้งหมด';
+                settingsTabBtn.classList.remove('hidden');
             } else {
                 roleLabel.innerText = 'พนักงาน';
                 roleLabel.classList.remove('bg-green-600');
@@ -934,6 +1102,7 @@
                 readonlyNotice.classList.remove('bg-yellow-50', 'border-yellow-300', 'text-yellow-800');
                 readonlyNotice.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-800');
                 if (memberTableHeading) memberTableHeading.innerText = 'สมาชิกที่คุณเพิ่ม';
+                settingsTabBtn.classList.add('hidden');
             }
             membersTabBtn.classList.remove('hidden'); // พนักงานเข้าแท็บสมาชิกได้ทั้ง admin/staff ต่างกันแค่ขอบเขตข้อมูลที่เห็น
         }
@@ -946,6 +1115,7 @@
                 currentUserRole = await fetchUserRole(user.uid);
                 applyRoleUI(currentUserRole);
                 loadMemberList();
+                loadReceiptSettings();
                 switchTab('weigh');
             } else {
                 document.getElementById('app-root').classList.add('hidden');
