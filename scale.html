@@ -298,6 +298,7 @@
             </div>
 
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-lg font-bold mb-3 text-gray-700 border-b pb-2">สรุปยอดรวมรายสมาชิก</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -311,6 +312,27 @@
                         </thead>
                         <tbody id="monthly-table-body" class="text-sm divide-y">
                             <tr><td colspan="5" class="p-4 text-center text-gray-500">กรุณาเลือกเดือนเพื่อดูรายงานสรุป</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-lg font-bold mb-3 text-gray-700 border-b pb-2">รายละเอียดการส่งนมแต่ละครั้งในเดือนนี้</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-sm">
+                                <th class="p-3 border-b">วันที่</th>
+                                <th class="p-3 border-b">กลุ่ม</th>
+                                <th class="p-3 border-b">รหัสสมาชิก</th>
+                                <th class="p-3 border-b">ชื่อสมาชิก</th>
+                                <th class="p-3 border-b">รอบ</th>
+                                <th class="p-3 border-b text-right">น้ำหนัก (กก.)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthly-detail-table-body" class="text-sm divide-y">
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">กรุณาเลือกเดือนเพื่อดูรายละเอียด</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -433,6 +455,7 @@
         };
         let lastDailyExportData = [];   // ข้อมูลรายงานรายวันที่ดึงล่าสุด ใช้สำหรับ export CSV
         let lastMonthlyExportData = []; // ข้อมูลรายงานรายเดือนที่ดึงล่าสุด ใช้สำหรับ export CSV
+        let lastMonthlyDetailData = []; // รายละเอียดทุกครั้งที่ส่งนมในเดือน พร้อมวันที่ (ตารางที่สองของรายงานรายเดือน)
 
         const MAX_REASONABLE_WEIGHT = 500; // กก. — ค่าสูงสุดที่สมเหตุสมผลสำหรับถังนมหนึ่งใบ ปรับได้ตามหน้างานจริง
         const MIN_REASONABLE_WEIGHT = 0.5; // กก. — ค่าต่ำสุดที่ถือว่าเป็นน้ำหนักจริง (กันสัญญาณรบกวนเล็กน้อยจากเครื่องชั่งที่ปัดเศษแล้วโชว์ 0.00 บนสลิป)
@@ -1119,6 +1142,7 @@
                 const ownMemberIds = currentUserRole === 'admin' ? null : new Set(memberList.map(m => m.member_id));
 
                 let memberSummary = {};
+                let detailList = []; // รายการรายละเอียดทุกครั้งที่ส่ง พร้อมวันที่ (ใช้แสดงตารางที่สอง)
 
                 querySnapshot.forEach((docSnap) => {
                     const d = docSnap.data();
@@ -1134,11 +1158,23 @@
                     }
                     memberSummary[d.member_id].total_weight += d.weight_kg;
                     memberSummary[d.member_id].deliver_count += 1;
+
+                    detailList.push({
+                        date: d.date_str || '-',
+                        group: d.member_group || '-',
+                        member_id: d.member_id,
+                        member_name: d.member_name,
+                        period: d.period,
+                        weight_kg: d.weight_kg
+                    });
                 });
 
                 let summaryArray = Object.entries(memberSummary).map(([id, info]) => ({ id, ...info }));
                 summaryArray.sort((a, b) => a.group.localeCompare(b.group) || a.id.localeCompare(b.id));
                 lastMonthlyExportData = summaryArray; // เก็บไว้ใช้ตอน export CSV
+
+                detailList.sort((a, b) => a.date.localeCompare(b.date) || a.member_id.localeCompare(b.member_id));
+                lastMonthlyDetailData = detailList; // เก็บไว้ใช้ตอน export/พิมพ์รายละเอียด (ถ้าต้องการในอนาคต)
 
                 let tableHtml = '';
                 summaryArray.forEach(info => {
@@ -1156,9 +1192,26 @@
 
                 document.getElementById('monthly-table-body').innerHTML = tableHtml || '<tr><td colspan="5" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในเดือนที่เลือก</td></tr>';
 
+                let detailHtml = '';
+                detailList.forEach(item => {
+                    const groupBadge = item.group !== '-' ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${esc(item.group)}</span>` : '-';
+                    detailHtml += `
+                        <tr>
+                            <td class="p-3">${esc(item.date)}</td>
+                            <td class="p-3">${groupBadge}</td>
+                            <td class="p-3 font-semibold text-blue-800">${esc(item.member_id)}</td>
+                            <td class="p-3">${esc(item.member_name)}</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${esc(item.period)}</span></td>
+                            <td class="p-3 text-right font-bold">${item.weight_kg.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('monthly-detail-table-body').innerHTML = detailHtml || '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีข้อมูลการรับนมในเดือนที่เลือก</td></tr>';
+
             } catch (err) {
                 console.error(err);
                 document.getElementById('monthly-table-body').innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-600">ดึงรายงานไม่สำเร็จ: ${esc(err.message)}</td></tr>`;
+                document.getElementById('monthly-detail-table-body').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-600">ดึงรายงานไม่สำเร็จ: ${esc(err.message)}</td></tr>`;
             }
         }
 
