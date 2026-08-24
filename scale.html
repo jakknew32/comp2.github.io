@@ -229,6 +229,7 @@
                     <label class="text-sm font-medium">เลือกวันที่:</label>
                     <input type="date" id="daily-date-picker" class="p-2 border rounded-lg">
                     <button onclick="loadDailyReport()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700">ค้นหา</button>
+                    <button id="btn-export-daily-csv" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700">📥 Export CSV</button>
                 </div>
             </div>
 
@@ -277,6 +278,7 @@
                     <label class="text-sm font-medium">เลือกเดือน:</label>
                     <input type="month" id="monthly-picker" class="p-2 border rounded-lg">
                     <button onclick="loadMonthlyReport()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700">ดึงรายงาน</button>
+                    <button id="btn-export-monthly-csv" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700">📥 Export CSV</button>
                 </div>
             </div>
 
@@ -399,6 +401,8 @@
             subtitle: 'ใบรับน้ำหนักนมดิบ',
             footer: '*** ขอบคุณที่นำส่งนมคุณภาพ ***'
         };
+        let lastDailyExportData = [];   // ข้อมูลรายงานรายวันที่ดึงล่าสุด ใช้สำหรับ export CSV
+        let lastMonthlyExportData = []; // ข้อมูลรายงานรายเดือนที่ดึงล่าสุด ใช้สำหรับ export CSV
 
         const MAX_REASONABLE_WEIGHT = 500; // กก. — ค่าสูงสุดที่สมเหตุสมผลสำหรับถังนมหนึ่งใบ ปรับได้ตามหน้างานจริง
         const MIN_REASONABLE_WEIGHT = 0.5; // กก. — ค่าต่ำสุดที่ถือว่าเป็นน้ำหนักจริง (กันสัญญาณรบกวนเล็กน้อยจากเครื่องชั่งที่ปัดเศษแล้วโชว์ 0.00 บนสลิป)
@@ -862,6 +866,7 @@
                 let totalWeight = 0; let count = 0;
                 let uniqueMembers = new Set();
                 let tableHtml = '';
+                lastDailyExportData = []; // เก็บข้อมูลดิบไว้ใช้ตอน export CSV
 
                 querySnapshot.forEach((docSnap) => {
                     const d = docSnap.data();
@@ -872,6 +877,14 @@
                     uniqueMembers.add(d.member_id);
 
                     const timeStr = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) : '-';
+                    lastDailyExportData.push({
+                        time: timeStr,
+                        group: d.member_group || '',
+                        member_id: d.member_id,
+                        member_name: d.member_name,
+                        period: d.period,
+                        weight_kg: d.weight_kg
+                    });
                     const groupBadge = d.member_group ? `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">${esc(d.member_group)}</span>` : '-';
                     const actionCell = currentUserRole === 'admin'
                         ? `<button onclick="deleteMilkRecord('${docSnap.id}')" class="text-red-600 hover:text-red-800 text-xs font-medium">🗑️ ลบ</button>`
@@ -915,6 +928,53 @@
             }
         }
 
+        // ================= Export CSV =================
+        // แปลง array of objects เป็น CSV string แล้วสั่งดาวน์โหลด (ใส่ BOM ให้ Excel อ่านภาษาไทยถูกต้อง)
+        function downloadCsv(filename, headers, rows) {
+            const escapeCsvCell = (val) => {
+                const str = String(val ?? '');
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return '"' + str.replace(/"/g, '""') + '"';
+                }
+                return str;
+            };
+            const lines = [headers.map(escapeCsvCell).join(',')];
+            rows.forEach(row => lines.push(row.map(escapeCsvCell).join(',')));
+            const csvContent = '\uFEFF' + lines.join('\r\n'); // \uFEFF = BOM กันภาษาไทยเพี้ยนตอนเปิดด้วย Excel
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('btn-export-daily-csv').addEventListener('click', () => {
+            if (lastDailyExportData.length === 0) {
+                alert('ยังไม่มีข้อมูลรายงานให้ export กรุณากด "ค้นหา" เพื่อดึงรายงานก่อน');
+                return;
+            }
+            const selectedDate = document.getElementById('daily-date-picker').value;
+            const headers = ['เวลา', 'กลุ่ม', 'รหัสสมาชิก', 'ชื่อสมาชิก', 'รอบ', 'น้ำหนัก (กก.)'];
+            const rows = lastDailyExportData.map(d => [d.time, d.group, d.member_id, d.member_name, d.period, d.weight_kg.toFixed(2)]);
+            downloadCsv(`รายงานรายวัน_${selectedDate}.csv`, headers, rows);
+        });
+
+        document.getElementById('btn-export-monthly-csv').addEventListener('click', () => {
+            if (lastMonthlyExportData.length === 0) {
+                alert('ยังไม่มีข้อมูลรายงานให้ export กรุณากด "ดึงรายงาน" ก่อน');
+                return;
+            }
+            const selectedMonth = document.getElementById('monthly-picker').value;
+            const headers = ['กลุ่ม', 'รหัสสมาชิก', 'ชื่อ-นามสกุล', 'จำนวนครั้งที่ส่ง', 'น้ำหนักรวม (กก.)'];
+            const rows = lastMonthlyExportData.map(info => [info.group, info.id, info.name, info.deliver_count, info.total_weight.toFixed(2)]);
+            downloadCsv(`รายงานรายเดือน_${selectedMonth}.csv`, headers, rows);
+        });
+
         // ================= รายงานรายเดือน =================
         window.loadMonthlyReport = async function() {
             try {
@@ -947,6 +1007,7 @@
 
                 let summaryArray = Object.entries(memberSummary).map(([id, info]) => ({ id, ...info }));
                 summaryArray.sort((a, b) => a.group.localeCompare(b.group) || a.id.localeCompare(b.id));
+                lastMonthlyExportData = summaryArray; // เก็บไว้ใช้ตอน export CSV
 
                 let tableHtml = '';
                 summaryArray.forEach(info => {
