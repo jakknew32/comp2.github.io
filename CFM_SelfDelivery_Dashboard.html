@@ -12,15 +12,15 @@
 
 body {
     margin: 0;
-    font-family: Arial, "Noto Sans Thai", sans-serif;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
     background: #f4f6f9;
     color: #1f2937;
 }
 
 .header {
-    background: #111827;
+    background: linear-gradient(135deg, #111827, #1f2937);
     color: white;
-    padding: 22px 30px;
+    padding: 22px 28px;
 }
 
 .header h1 {
@@ -30,8 +30,7 @@ body {
 
 .header p {
     margin: 6px 0 0;
-    color: #cbd5e1;
-    font-size: 13px;
+    opacity: .75;
 }
 
 .container {
@@ -40,206 +39,277 @@ body {
     padding: 22px;
 }
 
-/* SUMMARY */
+/* =========================
+   TOP CONTROL
+========================= */
 
-.summary {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-}
-
-.card {
+.controls {
     background: white;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.06);
-}
-
-.card-title {
-    color: #6b7280;
-    font-size: 14px;
-}
-
-.card-number {
-    font-size: 32px;
-    font-weight: bold;
-    margin-top: 8px;
-}
-
-.total {
-    color: #2563eb;
-}
-
-.sent {
-    color: #16a34a;
-}
-
-.pending {
-    color: #dc2626;
-}
-
-.percent {
-    color: #d97706;
-}
-
-/* FILTER */
-
-.filter-box {
-    background: white;
-    margin-top: 20px;
-    padding: 15px;
-    border-radius: 15px;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
     display: flex;
-    gap: 10px;
     flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
 }
 
 input,
 select,
 button {
-    padding: 10px 13px;
-    border-radius: 9px;
+    font-family: inherit;
+}
+
+input,
+select {
     border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 12px;
     background: white;
 }
 
-input {
-    min-width: 280px;
+.search {
+    flex: 1;
+    min-width: 250px;
 }
 
 button {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 16px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
 }
 
-button:hover {
-    background: #f3f4f6;
-}
-
-/* TABS */
-
-.tabs {
-    display: flex;
-    gap: 8px;
-    margin-top: 20px;
-}
-
-.tab {
-    border: none;
-    background: #e5e7eb;
-}
-
-.tab.active {
+.btn {
     background: #111827;
     color: white;
 }
 
-/* TABLE */
+.btn:hover {
+    opacity: .9;
+}
 
-.table-box {
-    margin-top: 12px;
+.status {
+    font-size: 13px;
+    color: #6b7280;
+    margin-left: auto;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.card {
     background: white;
-    border-radius: 15px;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.card-title {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.card-value {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.card-sub {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 5px;
+}
+
+.sent {
+    border-left: 5px solid #16a34a;
+}
+
+.pending {
+    border-left: 5px solid #f59e0b;
+}
+
+.cancelled {
+    border-left: 5px solid #ef4444;
+}
+
+.total {
+    border-left: 5px solid #2563eb;
+}
+
+.success {
+    border-left: 5px solid #7c3aed;
+}
+
+/* =========================
+   PROGRESS
+========================= */
+
+.progress-box {
+    background: white;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.progress-title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 9px;
+    font-weight: 600;
+}
+
+.progress {
+    width: 100%;
+    height: 16px;
+    background: #e5e7eb;
+    border-radius: 99px;
     overflow: hidden;
 }
 
-.table-header {
-    padding: 16px;
+.progress-bar {
+    height: 100%;
+    background: #16a34a;
+    width: 0%;
+    transition: width .4s ease;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table-box {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    overflow: hidden;
+}
+
+.table-head {
+    padding: 16px 18px;
     border-bottom: 1px solid #e5e7eb;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
-.table-container {
-    overflow: auto;
-    max-height: 650px;
+.table-head h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.table-wrap {
+    overflow-x: auto;
 }
 
 table {
     width: 100%;
-    min-width: 1200px;
     border-collapse: collapse;
-}
-
-th,
-td {
-    padding: 11px 12px;
-    border-bottom: 1px solid #e5e7eb;
-    font-size: 13px;
-    text-align: left;
+    min-width: 1100px;
 }
 
 th {
-    position: sticky;
-    top: 0;
-    background: #f8fafc;
+    background: #f9fafb;
+    color: #6b7280;
+    font-size: 12px;
+    text-align: left;
+    padding: 12px;
+    white-space: nowrap;
 }
 
-.status {
+td {
+    padding: 12px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 13px;
+    vertical-align: top;
+}
+
+tr:hover {
+    background: #fafafa;
+}
+
+.badge {
     display: inline-block;
     padding: 5px 9px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
 }
 
-.status-sent {
+.badge-sent {
     background: #dcfce7;
     color: #166534;
 }
 
-.status-pending {
+.badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-cancelled {
     background: #fee2e2;
     color: #991b1b;
 }
 
-.status-cancel {
-    background: #e5e7eb;
-    color: #4b5563;
+.order-id {
+    font-weight: 700;
+    color: #111827;
+}
+
+.phone {
+    white-space: nowrap;
+}
+
+.empty {
+    text-align: center;
+    padding: 50px;
+    color: #9ca3af;
 }
 
 .loading {
     text-align: center;
     padding: 50px;
-    color: #6b7280;
 }
 
-.error {
-    display: none;
-    margin-top: 15px;
-    padding: 15px;
-    background: #fee2e2;
-    color: #991b1b;
-    border-radius: 10px;
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:1100px) {
+    .cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
-.footer {
-    margin-top: 15px;
-    font-size: 12px;
-    color: #6b7280;
-}
+@media(max-width:700px) {
+    .container {
+        padding: 12px;
+    }
 
-/* MOBILE */
-
-@media(max-width:900px) {
-
-    .summary {
+    .cards {
         grid-template-columns: repeat(2, 1fr);
     }
 
-}
-
-@media(max-width:600px) {
-
-    .summary {
-        grid-template-columns: 1fr;
+    .card-value {
+        font-size: 24px;
     }
 
-    input {
+    .status {
         width: 100%;
-        min-width: 100%;
+        margin-left: 0;
     }
-
 }
 </style>
 </head>
@@ -248,186 +318,135 @@ th {
 
 <div class="header">
     <h1>🚚 CFM Self Delivery Dashboard</h1>
-    <p>
-        รายงานจัดส่งเอง • Google Sheet • อัปเดตข้อมูลอัตโนมัติทุก 5 นาที
-    </p>
+    <p>รายงานการจัดส่งเอง • Google Sheets • Real-time Dashboard</p>
 </div>
 
 <div class="container">
 
-    <!-- SUMMARY -->
-
-    <div class="summary">
-
-        <div class="card">
-            <div class="card-title">ออเดอร์ทั้งหมด</div>
-            <div class="card-number total" id="total">
-                0
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">ส่งแล้ว</div>
-            <div class="card-number sent" id="sent">
-                0
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">ค้างส่ง</div>
-            <div class="card-number pending" id="pending">
-                0
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">% ส่งสำเร็จ</div>
-            <div class="card-number percent" id="percent">
-                0%
-            </div>
-        </div>
-
-    </div>
-
-
-    <!-- FILTER -->
-
-    <div class="filter-box">
+    <!-- CONTROLS -->
+    <div class="controls">
 
         <input
-            type="text"
             id="search"
-            placeholder="ค้นหาเลขออเดอร์ / ลูกค้า / ผู้รับ / เบอร์โทร / จังหวัด"
-        >
-
-        <input
-            type="date"
-            id="dateFrom"
-        >
-
-        <input
-            type="date"
-            id="dateTo"
+            class="search"
+            type="text"
+            placeholder="🔎 ค้นหาเลขออเดอร์ / ลูกค้า / ผู้รับ / เบอร์ / จังหวัด..."
         >
 
         <select id="statusFilter">
-
-            <option value="all">
-                ทุกสถานะ
-            </option>
-
-            <option value="sent">
-                ส่งแล้ว
-            </option>
-
-            <option value="pending">
-                ค้างส่ง
-            </option>
-
-            <option value="cancel">
-                ยกเลิก
-            </option>
-
+            <option value="all">ทุกสถานะ</option>
+            <option value="sent">ส่งแล้ว</option>
+            <option value="pending">ค้างส่ง</option>
+            <option value="cancelled">ยกเลิก</option>
         </select>
 
-        <button onclick="loadData()">
-            🔄 รีเฟรชข้อมูล
+        <input
+            id="dateFilter"
+            type="date"
+        >
+
+        <button class="btn" onclick="loadData()">
+            🔄 รีเฟรช
         </button>
 
-        <button onclick="clearFilter()">
-            ล้างตัวกรอง
-        </button>
+        <div class="status" id="updateStatus">
+            กำลังโหลด...
+        </div>
 
     </div>
 
+    <!-- SUMMARY -->
+    <div class="cards">
 
-    <div id="error" class="error"></div>
+        <div class="card total">
+            <div class="card-title">ออเดอร์ทั้งหมด</div>
+            <div class="card-value" id="total">0</div>
+            <div class="card-sub">หลังตัดรายการซ้ำ</div>
+        </div>
 
+        <div class="card sent">
+            <div class="card-title">ส่งแล้ว</div>
+            <div class="card-value" id="sent">0</div>
+            <div class="card-sub">จัดส่งสำเร็จ</div>
+        </div>
 
-    <!-- TABS -->
+        <div class="card pending">
+            <div class="card-title">ค้างส่ง</div>
+            <div class="card-value" id="pending">0</div>
+            <div class="card-sub">ต้องติดตาม</div>
+        </div>
 
-    <div class="tabs">
+        <div class="card cancelled">
+            <div class="card-title">ยกเลิก</div>
+            <div class="card-value" id="cancelled">0</div>
+            <div class="card-sub">ไม่รวมในยอดจัดส่ง</div>
+        </div>
 
-        <button
-            class="tab active"
-            onclick="changeTab('all',this)"
-        >
-            ทั้งหมด
-        </button>
-
-        <button
-            class="tab"
-            onclick="changeTab('sent',this)"
-        >
-            ✅ ส่งแล้ว
-        </button>
-
-        <button
-            class="tab"
-            onclick="changeTab('pending',this)"
-        >
-            ⏳ ค้างส่ง
-        </button>
+        <div class="card success">
+            <div class="card-title">อัตราส่งสำเร็จ</div>
+            <div class="card-value" id="success">0%</div>
+            <div class="card-sub">Sent / (Sent + Pending)</div>
+        </div>
 
     </div>
 
+    <!-- PROGRESS -->
+    <div class="progress-box">
+
+        <div class="progress-title">
+            <span>ความคืบหน้าการจัดส่ง</span>
+            <span id="progressText">0%</span>
+        </div>
+
+        <div class="progress">
+            <div
+                class="progress-bar"
+                id="progressBar">
+            </div>
+        </div>
+
+    </div>
 
     <!-- TABLE -->
-
     <div class="table-box">
 
-        <div class="table-header">
+        <div class="table-head">
 
-            <strong id="tableTitle">
-                รายการทั้งหมด
-            </strong>
-
-            <span id="count">
-                0 รายการ
-            </span>
+            <h2>
+                รายการจัดส่ง
+                <span id="resultCount"
+                      style="font-size:13px;color:#9ca3af;">
+                    0 รายการ
+                </span>
+            </h2>
 
         </div>
 
-
-        <div class="table-container">
+        <div class="table-wrap">
 
             <table>
 
                 <thead>
-
                     <tr>
-
+                        <th>#</th>
                         <th>สถานะ</th>
-
-                        <th>เลขออเดอร์</th>
-
+                        <th>หมายเลขคำสั่งซื้อ</th>
                         <th>วันที่สั่งซื้อ</th>
-
                         <th>ผู้ซื้อ</th>
-
                         <th>ผู้รับ</th>
-
                         <th>โทรศัพท์</th>
-
                         <th>จังหวัด</th>
-
                         <th>อำเภอ/เขต</th>
-
-                        <th>วันที่คาดว่าจะส่ง</th>
-
-                        <th>ที่อยู่</th>
-
+                        <th>รหัสไปรษณีย์</th>
+                        <th>วันที่คาดว่าจะจัดส่ง</th>
+                        <th>หมายเลขติดตาม</th>
                     </tr>
-
                 </thead>
 
                 <tbody id="tableBody">
 
                     <tr>
-                        <td
-                            colspan="10"
-                            class="loading"
-                        >
+                        <td colspan="12" class="loading">
                             กำลังโหลดข้อมูล...
                         </td>
                     </tr>
@@ -440,85 +459,65 @@ th {
 
     </div>
 
-
-    <div class="footer">
-
-        Google Sheet:
-        แท็บ <b>จัดส่งเอง</b>
-        |
-        อัปเดตล่าสุด:
-        <span id="lastUpdate">-</span>
-
-    </div>
-
 </div>
-
 
 <script>
 
 /* =====================================================
-   GOOGLE SHEET
+   GOOGLE SHEETS CONFIG
 ===================================================== */
 
 const SHEET_ID =
-"1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44";
+    "1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44";
 
 const SHEET_GID =
-"1694042044";
-
+    "1694042044";
 
 /*
-    Auto refresh
-    5 นาที
+    TAB:
+    จัดส่งเอง
 */
 
-const REFRESH_TIME =
-5 * 60 * 1000;
-
-
 /* =====================================================
-   COLUMN MAPPING
+   COLUMN MAP
 =====================================================
 
-   ปรับเลขตรงนี้ได้ถ้าคอลัมน์ใน Google Sheet เปลี่ยน
-*/
+   Google Sheet / Excel
 
-const COL = {
-
-    status: 0,
-
-    order: 2,
-
-    buyer: 6,
-
-    orderDate: 7,
-
-    tracking: 15,
-
-    expectedDate: 16,
-
-    recipient: 48,
-
-    phone: 49,
-
-    address: 51,
-
-    province: 52,
-
-    district: 53,
-
-    zip: 54
-
-};
-
-
-/* =====================================================
-   VARIABLES
+   C  = หมายเลขคำสั่งซื้อ
+   D/E = สถานะการสั่งซื้อ
+   G  = ชื่อผู้ใช้
+   H  = วันที่ทำการสั่งซื้อ
+   P  = หมายเลขติดตามพัสดุ
+   Q  = วันที่คาดว่าจะจัดส่ง
+   AW = ชื่อผู้รับ
+   AX = หมายเลขโทรศัพท์
+   AY = หมายเหตุจากผู้ซื้อ
+   AZ = ที่อยู่
+   BA = ประเทศ
+   BB = จังหวัด
+   BC = เขต/อำเภอ
+   BD = รหัสไปรษณีย์
 ===================================================== */
 
-let orders = [];
+const COL = {
+    orderId: 2,
+    status: 3,
+    buyer: 6,
+    orderDate: 7,
+    tracking: 15,
+    expectedDate: 16,
+    recipient: 48,
+    phone: 49,
+    note: 50,
+    address: 51,
+    country: 52,
+    province: 53,
+    district: 54,
+    zip: 55
+};
 
-let currentTab = "all";
+let allOrders = [];
 
 
 /* =====================================================
@@ -528,300 +527,131 @@ let currentTab = "all";
 function parseCSV(text) {
 
     const rows = [];
-
     let row = [];
-
     let cell = "";
+    let insideQuotes = false;
 
-    let quote = false;
-
-
-    for (
-        let i = 0;
-        i < text.length;
-        i++
-    ) {
+    for (let i = 0; i < text.length; i++) {
 
         const char = text[i];
+        const next = text[i + 1];
 
+        if (char === '"' && insideQuotes && next === '"') {
 
-        if (quote) {
+            cell += '"';
+            i++;
 
-            if (char === '"') {
+        } else if (char === '"') {
 
-                if (text[i + 1] === '"') {
+            insideQuotes = !insideQuotes;
 
-                    cell += '"';
+        } else if (char === "," && !insideQuotes) {
 
-                    i++;
+            row.push(cell);
+            cell = "";
 
-                } else {
+        } else if (
+            (char === "\n" || char === "\r") &&
+            !insideQuotes
+        ) {
 
-                    quote = false;
-
-                }
-
-            } else {
-
-                cell += char;
-
+            if (char === "\r" && next === "\n") {
+                i++;
             }
+
+            row.push(cell);
+
+            if (row.some(x => x.trim() !== "")) {
+                rows.push(row);
+            }
+
+            row = [];
+            cell = "";
 
         } else {
 
-            if (char === '"') {
-
-                quote = true;
-
-            }
-
-            else if (char === ',') {
-
-                row.push(cell);
-
-                cell = "";
-
-            }
-
-            else if (char === '\n') {
-
-                row.push(cell);
-
-                rows.push(row);
-
-                row = [];
-
-                cell = "";
-
-            }
-
-            else if (char !== '\r') {
-
-                cell += char;
-
-            }
-
+            cell += char;
         }
-
     }
 
-
-    if (
-        cell !== "" ||
-        row.length > 0
-    ) {
+    if (cell !== "" || row.length) {
 
         row.push(cell);
 
-        rows.push(row);
-
+        if (row.some(x => x.trim() !== "")) {
+            rows.push(row);
+        }
     }
-
 
     return rows;
 }
 
 
 /* =====================================================
-   CLEAN
+   CLEAN VALUE
 ===================================================== */
 
 function clean(value) {
 
     if (
-        value === null ||
-        value === undefined
+        value === undefined ||
+        value === null
     ) {
-
         return "";
-
     }
 
-    return String(value).trim();
-
+    return String(value)
+        .replace(/^"|"$/g, "")
+        .trim();
 }
 
 
 /* =====================================================
-   DATE
+   NORMALIZE STATUS
 ===================================================== */
 
-function normalizeDate(value) {
+function normalizeStatus(status) {
 
-    const text =
-        clean(value);
-
-
-    let match =
-        text.match(
-            /(\d{4})-(\d{2})-(\d{2})/
-        );
-
-
-    if (match) {
-
-        return match[0];
-
-    }
-
-
-    match =
-        text.match(
-            /(\d{1,2})\/(\d{1,2})\/(\d{4})/
-        );
-
-
-    if (match) {
-
-        let year =
-            parseInt(match[3]);
-
-
-        if (year > 2400) {
-
-            year -= 543;
-
-        }
-
-
-        return (
-            year +
-            "-" +
-            String(match[2]).padStart(2,"0") +
-            "-" +
-            String(match[1]).padStart(2,"0")
-        );
-
-    }
-
-
-    return "";
-
-}
-
-
-/* =====================================================
-   DISPLAY DATE
-===================================================== */
-
-function displayDate(value) {
-
-    const date =
-        normalizeDate(value);
-
-
-    if (!date) {
-
-        return clean(value);
-
-    }
-
-
-    const parts =
-        date.split("-");
-
-
-    return (
-        parts[2] +
-        "/" +
-        parts[1] +
-        "/" +
-        parts[0]
-    );
-
-}
-
-
-/* =====================================================
-   STATUS
-===================================================== */
-
-function getStatus(value) {
-
-    const status =
-        clean(value);
-
+    status = clean(status);
 
     if (
-        status === "จัดส่งแล้ว" ||
-        status === "มีใน SCG ส่งให้แล้ว"
+        status.includes("ยกเลิก") ||
+        status.includes("ยกเลิกคำสั่ง")
     ) {
+        return "cancelled";
+    }
 
+    if (
+        status.includes("จัดส่งแล้ว") ||
+        status.includes("ส่งแล้ว") ||
+        status.includes("มีใน SCG ส่งให้แล้ว")
+    ) {
         return "sent";
-
     }
 
-
     if (
-        status === "ค้างจัดส่ง"
+        status.includes("ค้าง") ||
+        status.includes("ยังไม่") ||
+        status.includes("รอ")
     ) {
-
         return "pending";
-
     }
-
-
-    if (
-        status === "ยกเลิก"
-    ) {
-
-        return "cancel";
-
-    }
-
-
-    /*
-       ถ้าไม่มีสถานะ
-       ถือว่าเป็นค้างส่ง
-    */
 
     return "pending";
-
 }
 
 
 /* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHTML(value) {
-
-    return clean(value)
-        .replace(
-            /[&<>"']/g,
-            function(char) {
-
-                const map = {
-
-                    "&": "&amp;",
-                    "<": "&lt;",
-                    ">": "&gt;",
-                    '"': "&quot;",
-                    "'": "&#039;"
-
-                };
-
-                return map[char];
-
-            }
-        );
-
-}
-
-
-/* =====================================================
-   LOAD GOOGLE SHEET
+   FETCH GOOGLE SHEET
 ===================================================== */
 
 async function loadData() {
 
-    const error =
-        document.getElementById("error");
+    const updateStatus =
+        document.getElementById("updateStatus");
 
-
-    error.style.display =
-        "none";
-
+    updateStatus.textContent =
+        "⏳ กำลังโหลดข้อมูล...";
 
     try {
 
@@ -833,216 +663,209 @@ async function loadData() {
             "&_=" +
             Date.now();
 
-
         const response =
-            await fetch(
-                url,
-                {
-                    cache: "no-store"
-                }
-            );
-
+            await fetch(url, {
+                cache: "no-store"
+            });
 
         if (!response.ok) {
-
             throw new Error(
-                "ไม่สามารถโหลด Google Sheet ได้"
+                "ไม่สามารถโหลด Google Sheets ได้"
             );
-
         }
 
-
-        const csv =
+        const text =
             await response.text();
 
-
-        const rows =
-            parseCSV(csv);
-
-
-        if (rows.length < 2) {
-
+        if (
+            text.includes("<!DOCTYPE html>") ||
+            text.includes("<html")
+        ) {
             throw new Error(
-                "ไม่พบข้อมูลในแท็บ จัดส่งเอง"
+                "Google Sheet ยังไม่ได้เปิดให้เว็บเข้าถึง"
             );
-
         }
 
+        const rows =
+            parseCSV(text);
 
-        /*
-           ตัด Header
-        */
-
-        const data =
-            rows.slice(1);
-
-
-        /*
-           รวม Order ID ซ้ำ
-        */
-
-        const map =
-            new Map();
-
-
-        data.forEach(
-            function(row) {
-
-                const order =
-                    clean(
-                        row[COL.order]
-                    );
-
-
-                if (!order) {
-
-                    return;
-
-                }
-
-
-                const status =
-                    getStatus(
-                        row[COL.status]
-                    );
-
-
-                if (!map.has(order)) {
-
-                    map.set(
-                        order,
-                        {
-                            row: row,
-                            status: status
-                        }
-                    );
-
-                } else {
-
-                    const item =
-                        map.get(order);
-
-
-                    /*
-                       ถ้ามีอย่างน้อยหนึ่งรายการ
-                       เป็นส่งแล้ว ให้ถือว่าส่งแล้ว
-                    */
-
-                    if (
-                        status === "sent"
-                    ) {
-
-                        item.status =
-                            "sent";
-
-                    }
-
-                }
-
-            }
-        );
-
-
-        orders =
-            Array.from(
-                map.values()
+        if (!rows.length) {
+            throw new Error(
+                "ไม่พบข้อมูล"
             );
+        }
 
+        processData(rows);
 
-        updateSummary();
+        updateStatus.textContent =
+            "🟢 อัปเดตล่าสุด " +
+            new Date().toLocaleString("th-TH");
 
-        render();
+    } catch (error) {
 
+        console.error(error);
 
-        document.getElementById(
-            "lastUpdate"
-        ).textContent =
-            new Date().toLocaleString(
-                "th-TH"
-            );
+        updateStatus.textContent =
+            "🔴 โหลดข้อมูลไม่สำเร็จ";
 
-
+        document.getElementById("tableBody").innerHTML = `
+            <tr>
+                <td colspan="12" class="empty">
+                    <strong>ไม่สามารถโหลดข้อมูลได้</strong>
+                    <br><br>
+                    ${error.message}
+                    <br><br>
+                    กรุณาตรวจสอบว่า Google Sheet ถูก Publish to Web แล้ว
+                </td>
+            </tr>
+        `;
     }
-    catch (err) {
-
-        error.textContent =
-            "⚠️ " +
-            err.message +
-            " — ตรวจสอบว่า Google Sheet ถูก Publish/แชร์ให้สามารถอ่านข้อมูลได้";
-
-
-        error.style.display =
-            "block";
-
-    }
-
 }
 
 
 /* =====================================================
-   SUMMARY
+   PROCESS DATA
 ===================================================== */
 
-function updateSummary() {
+function processData(rows) {
 
-    const validOrders =
-        orders.filter(
-            item =>
-                item.status !== "cancel"
-        );
+    const orderMap =
+        new Map();
+
+    /*
+        เริ่มที่ row 1
+        เพราะ row 0 คือ header
+    */
+
+    for (let i = 1; i < rows.length; i++) {
+
+        const r = rows[i];
+
+        const orderId =
+            clean(r[COL.orderId]);
+
+        /*
+            ตัดแถวหัวข้อ / invoice /
+            separator ที่ไม่มี Order ID
+        */
+
+        if (!orderId) {
+            continue;
+        }
+
+        const rawStatus =
+            clean(r[COL.status]);
+
+        const status =
+            normalizeStatus(rawStatus);
+
+        const order = {
+
+            orderId,
+
+            rawStatus,
+
+            status,
+
+            buyer:
+                clean(r[COL.buyer]),
+
+            orderDate:
+                clean(r[COL.orderDate]),
+
+            tracking:
+                clean(r[COL.tracking]),
+
+            expectedDate:
+                clean(r[COL.expectedDate]),
+
+            recipient:
+                clean(r[COL.recipient]),
+
+            phone:
+                clean(r[COL.phone]),
+
+            note:
+                clean(r[COL.note]),
+
+            address:
+                clean(r[COL.address]),
+
+            country:
+                clean(r[COL.country]),
+
+            province:
+                clean(r[COL.province]),
+
+            district:
+                clean(r[COL.district]),
+
+            zip:
+                clean(r[COL.zip])
+        };
 
 
-    const total =
-        validOrders.length;
+        /*
+            ถ้า Order ID ซ้ำ
+            ให้รวมข้อมูลเข้าด้วยกัน
+        */
+
+        if (!orderMap.has(orderId)) {
+
+            orderMap.set(
+                orderId,
+                order
+            );
+
+        } else {
+
+            const old =
+                orderMap.get(orderId);
+
+            /*
+                ถ้ามีรายการใดเป็น sent
+                ให้ถือว่า order นี้ sent
+            */
+
+            if (
+                order.status === "sent"
+            ) {
+
+                old.status = "sent";
+
+            } else if (
+                old.status !== "sent" &&
+                order.status === "cancelled"
+            ) {
+
+                old.status = "cancelled";
+            }
 
 
-    const sent =
-        validOrders.filter(
-            item =>
-                item.status === "sent"
-        ).length;
+            /*
+                เติมข้อมูลที่ว่าง
+            */
 
+            Object.keys(order).forEach(key => {
 
-    const pending =
-        validOrders.filter(
-            item =>
-                item.status === "pending"
-        ).length;
+                if (
+                    !old[key] &&
+                    order[key]
+                ) {
 
+                    old[key] =
+                        order[key];
+                }
 
-    const percent =
-        total > 0
-            ? (
-                sent /
-                total *
-                100
-            ).toFixed(1)
-            : 0;
+            });
 
+        }
+    }
 
-    document.getElementById(
-        "total"
-    ).textContent =
-        total.toLocaleString("th-TH");
+    allOrders =
+        Array.from(orderMap.values());
 
-
-    document.getElementById(
-        "sent"
-    ).textContent =
-        sent.toLocaleString("th-TH");
-
-
-    document.getElementById(
-        "pending"
-    ).textContent =
-        pending.toLocaleString("th-TH");
-
-
-    document.getElementById(
-        "percent"
-    ).textContent =
-        percent + "%";
-
+    render();
 }
 
 
@@ -1053,147 +876,139 @@ function updateSummary() {
 function getFilteredOrders() {
 
     const search =
-        clean(
-            document.getElementById(
-                "search"
-            ).value
-        ).toLowerCase();
-
-
-    const dateFrom =
-        document.getElementById(
-            "dateFrom"
-        ).value;
-
-
-    const dateTo =
-        document.getElementById(
-            "dateTo"
-        ).value;
-
+        document
+            .getElementById("search")
+            .value
+            .toLowerCase()
+            .trim();
 
     const statusFilter =
-        document.getElementById(
-            "statusFilter"
-        ).value;
+        document
+            .getElementById("statusFilter")
+            .value;
+
+    const dateFilter =
+        document
+            .getElementById("dateFilter")
+            .value;
 
 
-    return orders.filter(
-        function(item) {
+    return allOrders.filter(order => {
 
-            const row =
-                item.row;
+        /*
+            STATUS
+        */
+
+        if (
+            statusFilter !== "all" &&
+            order.status !== statusFilter
+        ) {
+
+            return false;
+        }
 
 
-            const orderDate =
+        /*
+            SEARCH
+        */
+
+        if (search) {
+
+            const searchable = [
+
+                order.orderId,
+                order.buyer,
+                order.recipient,
+                order.phone,
+                order.province,
+                order.district,
+                order.zip,
+                order.tracking,
+                order.address
+
+            ]
+            .join(" ")
+            .toLowerCase();
+
+            if (
+                !searchable.includes(search)
+            ) {
+
+                return false;
+            }
+        }
+
+
+        /*
+            DATE
+        */
+
+        if (dateFilter) {
+
+            const sheetDate =
                 normalizeDate(
-                    row[COL.orderDate]
+                    order.orderDate
                 );
 
-
-            /*
-               Date filter
-            */
-
             if (
-                dateFrom &&
-                orderDate &&
-                orderDate < dateFrom
+                sheetDate !== dateFilter
             ) {
 
                 return false;
-
             }
-
-
-            if (
-                dateTo &&
-                orderDate &&
-                orderDate > dateTo
-            ) {
-
-                return false;
-
-            }
-
-
-            /*
-               Status filter
-            */
-
-            if (
-                statusFilter !== "all" &&
-                item.status !== statusFilter
-            ) {
-
-                return false;
-
-            }
-
-
-            /*
-               Tab
-            */
-
-            if (
-                currentTab !== "all" &&
-                item.status !== currentTab
-            ) {
-
-                return false;
-
-            }
-
-
-            /*
-               Search
-            */
-
-            if (search) {
-
-                const searchable = [
-
-                    item.status,
-
-                    row[COL.order],
-
-                    row[COL.buyer],
-
-                    row[COL.recipient],
-
-                    row[COL.phone],
-
-                    row[COL.province],
-
-                    row[COL.district],
-
-                    row[COL.address],
-
-                    row[COL.tracking]
-
-                ]
-                .join(" ")
-                .toLowerCase();
-
-
-                if (
-                    !searchable.includes(
-                        search
-                    )
-                ) {
-
-                    return false;
-
-                }
-
-            }
-
-
-            return true;
-
         }
-    );
 
+        return true;
+    });
+}
+
+
+/* =====================================================
+   NORMALIZE DATE
+===================================================== */
+
+function normalizeDate(value) {
+
+    if (!value) return "";
+
+    let v =
+        String(value)
+            .trim();
+
+    /*
+        2026-07-10 01:10
+    */
+
+    if (
+        /^\d{4}-\d{2}-\d{2}/.test(v)
+    ) {
+
+        return v.substring(
+            0,
+            10
+        );
+    }
+
+    /*
+        fallback
+    */
+
+    const d =
+        new Date(v);
+
+    if (
+        isNaN(d.getTime())
+    ) {
+        return "";
+    }
+
+    return [
+        d.getFullYear(),
+        String(d.getMonth() + 1)
+            .padStart(2, "0"),
+        String(d.getDate())
+            .padStart(2, "0")
+    ].join("-");
 }
 
 
@@ -1203,83 +1018,159 @@ function getFilteredOrders() {
 
 function render() {
 
-    const list =
+    const filtered =
         getFilteredOrders();
 
+    updateSummary();
 
-    document.getElementById(
-        "count"
-    ).textContent =
-        list.length.toLocaleString(
-            "th-TH"
-        ) +
-        " รายการ";
+    renderTable(
+        filtered
+    );
+}
 
+
+/* =====================================================
+   SUMMARY
+===================================================== */
+
+function updateSummary() {
+
+    /*
+        Summary ใช้ข้อมูลตาม filter
+        เพื่อให้ดูรายวันได้
+    */
+
+    const filtered =
+        getFilteredOrders();
+
+    const sent =
+        filtered.filter(
+            x => x.status === "sent"
+        ).length;
+
+    const pending =
+        filtered.filter(
+            x => x.status === "pending"
+        ).length;
+
+    const cancelled =
+        filtered.filter(
+            x => x.status === "cancelled"
+        ).length;
+
+    const total =
+        sent +
+        pending +
+        cancelled;
+
+    const operational =
+        sent +
+        pending;
+
+    const success =
+        operational > 0
+            ? (sent / operational) * 100
+            : 0;
+
+
+    document.getElementById("total")
+        .textContent =
+        total.toLocaleString("th-TH");
+
+    document.getElementById("sent")
+        .textContent =
+        sent.toLocaleString("th-TH");
+
+    document.getElementById("pending")
+        .textContent =
+        pending.toLocaleString("th-TH");
+
+    document.getElementById("cancelled")
+        .textContent =
+        cancelled.toLocaleString("th-TH");
+
+    document.getElementById("success")
+        .textContent =
+        success.toFixed(1) + "%";
+
+
+    document.getElementById("progressText")
+        .textContent =
+        success.toFixed(1) + "%";
+
+    document.getElementById("progressBar")
+        .style.width =
+        success + "%";
+}
+
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+function renderTable(orders) {
 
     const tbody =
         document.getElementById(
             "tableBody"
         );
 
+    document.getElementById(
+        "resultCount"
+    ).textContent =
+        orders.length.toLocaleString(
+            "th-TH"
+        ) + " รายการ";
 
-    if (!list.length) {
+
+    if (!orders.length) {
 
         tbody.innerHTML = `
             <tr>
-                <td
-                    colspan="10"
-                    class="loading"
-                >
-                    ไม่พบข้อมูล
+                <td colspan="12"
+                    class="empty">
+                    ไม่พบรายการ
                 </td>
             </tr>
         `;
 
         return;
-
     }
 
 
     tbody.innerHTML =
-        list.map(
-            function(item) {
+        orders.map(
+            (order, index) => {
 
-                const row =
-                    item.row;
-
-
-                let statusHTML;
-
+                let badge = "";
 
                 if (
-                    item.status === "sent"
+                    order.status === "sent"
                 ) {
 
-                    statusHTML =
-                        `<span class="status status-sent">
+                    badge = `
+                        <span class="badge badge-sent">
                             ✓ ส่งแล้ว
-                        </span>`;
+                        </span>
+                    `;
 
-                }
-
-                else if (
-                    item.status === "pending"
+                } else if (
+                    order.status === "pending"
                 ) {
 
-                    statusHTML =
-                        `<span class="status status-pending">
+                    badge = `
+                        <span class="badge badge-pending">
                             ⏳ ค้างส่ง
-                        </span>`;
+                        </span>
+                    `;
 
-                }
+                } else {
 
-                else {
-
-                    statusHTML =
-                        `<span class="status status-cancel">
-                            ยกเลิก
-                        </span>`;
-
+                    badge = `
+                        <span class="badge badge-cancelled">
+                            ✕ ยกเลิก
+                        </span>
+                    `;
                 }
 
 
@@ -1287,66 +1178,72 @@ function render() {
                     <tr>
 
                         <td>
-                            ${statusHTML}
+                            ${index + 1}
                         </td>
 
                         <td>
-                            <b>
+                            ${badge}
+                        </td>
+
+                        <td>
+                            <span class="order-id">
                                 ${escapeHTML(
-                                    row[COL.order]
+                                    order.orderId
                                 )}
-                            </b>
+                            </span>
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                displayDate(
-                                    row[COL.orderDate]
-                                )
+                                order.orderDate
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                row[COL.buyer]
+                                order.buyer
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                row[COL.recipient]
+                                order.recipient
+                            )}
+                        </td>
+
+                        <td class="phone">
+                            ${escapeHTML(
+                                order.phone
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                row[COL.phone]
+                                order.province
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                row[COL.province]
+                                order.district
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                row[COL.district]
+                                order.zip
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                displayDate(
-                                    row[COL.expectedDate]
-                                )
+                                order.expectedDate
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                row[COL.address]
+                                order.tracking
                             )}
                         </td>
 
@@ -1354,136 +1251,22 @@ function render() {
                 `;
 
             }
-        )
-        .join("");
-
+        ).join("");
 }
 
 
 /* =====================================================
-   TAB
+   ESCAPE HTML
 ===================================================== */
 
-function changeTab(
-    tab,
-    button
-) {
+function escapeHTML(value) {
 
-    currentTab =
-        tab;
-
-
-    document
-        .querySelectorAll(".tab")
-        .forEach(
-            function(btn) {
-
-                btn.classList.remove(
-                    "active"
-                );
-
-            }
-        );
-
-
-    button.classList.add(
-        "active"
-    );
-
-
-    if (tab === "sent") {
-
-        document.getElementById(
-            "tableTitle"
-        ).textContent =
-            "รายการส่งแล้ว";
-
-    }
-
-    else if (
-        tab === "pending"
-    ) {
-
-        document.getElementById(
-            "tableTitle"
-        ).textContent =
-            "รายการค้างส่ง";
-
-    }
-
-    else {
-
-        document.getElementById(
-            "tableTitle"
-        ).textContent =
-            "รายการทั้งหมด";
-
-    }
-
-
-    render();
-
-}
-
-
-/* =====================================================
-   CLEAR FILTER
-===================================================== */
-
-function clearFilter() {
-
-    document.getElementById(
-        "search"
-    ).value = "";
-
-
-    document.getElementById(
-        "dateFrom"
-    ).value = "";
-
-
-    document.getElementById(
-        "dateTo"
-    ).value = "";
-
-
-    document.getElementById(
-        "statusFilter"
-    ).value = "all";
-
-
-    currentTab =
-        "all";
-
-
-    document
-        .querySelectorAll(".tab")
-        .forEach(
-            function(btn) {
-
-                btn.classList.remove(
-                    "active"
-                );
-
-            }
-        );
-
-
-    document
-        .querySelector(".tab")
-        .classList.add(
-            "active"
-        );
-
-
-    document.getElementById(
-        "tableTitle"
-    ).textContent =
-        "รายการทั้งหมด";
-
-
-    render();
-
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 
@@ -1491,53 +1274,47 @@ function clearFilter() {
    EVENTS
 ===================================================== */
 
-document.getElementById(
-    "search"
-).addEventListener(
-    "input",
-    render
-);
+document
+    .getElementById("search")
+    .addEventListener(
+        "input",
+        render
+    );
 
+document
+    .getElementById("statusFilter")
+    .addEventListener(
+        "change",
+        render
+    );
 
-document.getElementById(
-    "dateFrom"
-).addEventListener(
-    "change",
-    render
-);
-
-
-document.getElementById(
-    "dateTo"
-).addEventListener(
-    "change",
-    render
-);
-
-
-document.getElementById(
-    "statusFilter"
-).addEventListener(
-    "change",
-    render
-);
+document
+    .getElementById("dateFilter")
+    .addEventListener(
+        "change",
+        render
+    );
 
 
 /* =====================================================
-   START
+   AUTO REFRESH
 ===================================================== */
 
-loadData();
-
-
 /*
-   Auto Refresh ทุก 5 นาที
+    ทุก 5 นาที
 */
 
 setInterval(
     loadData,
-    REFRESH_TIME
+    5 * 60 * 1000
 );
+
+
+/* =====================================================
+   INITIAL LOAD
+===================================================== */
+
+loadData();
 
 </script>
 
