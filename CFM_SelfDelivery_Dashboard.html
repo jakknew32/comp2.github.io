@@ -1375,6 +1375,75 @@ function renderTable(orders) {
 
 
 /* =====================================================
+   ORDER GEO / DETAILS
+===================================================== */
+
+function buildOrderAddressText(order) {
+    return [
+        order.address,
+        order.district,
+        order.province,
+        order.country,
+        order.zip
+    ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+const geocodeCache = {};
+
+async function geocodeAddressText(addressText) {
+    const query = String(addressText || "").trim();
+
+    if (!query) {
+        return null;
+    }
+
+    if (geocodeCache[query]) {
+        return geocodeCache[query];
+    }
+
+    try {
+        const url =
+            "https://nominatim.openstreetmap.org/search?" +
+            "format=jsonv2" +
+            "&limit=1" +
+            "&accept-language=th" +
+            "&countrycodes=th" +
+            "&q=" + encodeURIComponent(query);
+
+        const response = await fetch(url, {
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data) || !data.length) {
+            geocodeCache[query] = null;
+            return null;
+        }
+
+        const result = {
+            lat: parseFloat(data[0].lat),
+            lon: parseFloat(data[0].lon),
+            displayName: data[0].display_name || query
+        };
+
+        geocodeCache[query] = result;
+        return result;
+
+    } catch (error) {
+        return null;
+    }
+}
+
+/* =====================================================
    ESCAPE HTML
 ===================================================== */
 
@@ -1396,6 +1465,8 @@ function showOrderDetail(orderId) {
     const modal = document.getElementById("orderModal");
     const detail = document.getElementById("orderDetailContent");
 
+    const addressText = buildOrderAddressText(order);
+
     detail.innerHTML = `
         <div class="detail-grid">
             <div><strong>วันที่สั่ง:</strong> ${escapeHTML(order.orderDate || "-")}</div>
@@ -1406,45 +1477,32 @@ function showOrderDetail(orderId) {
             <div style="grid-column: 1 / -1;"><strong>ผู้รับ:</strong> ${escapeHTML(order.recipient || "-")}</div>
             <div style="grid-column: 1 / -1;"><strong>หมายเหตุจากผู้ซื้อ:</strong> ${escapeHTML(order.note || "-")}</div>
             <div style="grid-column: 1 / -1;"><strong>หมายเลขติดตาม:</strong> ${escapeHTML(order.tracking || "-")}</div>
-            <div style="grid-column: 1 / -1;"><strong>หมายเหตุ:</strong> ${escapeHTML(order.note || "-")}</div>
+            <div style="grid-column: 1 / -1;"><strong>พิกัด:</strong> <span id="orderGeoStatus">กำลังค้นหาพิกัด…</span></div>
         </div>
     `;
 
     modal.style.display = "block";
+
+    (async () => {
+        const geoStatus = document.getElementById("orderGeoStatus");
+
+        if (!addressText) {
+            geoStatus.textContent = "ไม่พบที่อยู่";
+            return;
+        }
+
+        const geo = await geocodeAddressText(addressText);
+
+        if (!geo) {
+            geoStatus.textContent = "ไม่พบพิกัด";
+            return;
+        }
+
+        const mapsUrl = `https://www.google.com/maps?q=${geo.lat},${geo.lon}`;
+        geoStatus.innerHTML = `
+            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">
+                ${geo.lat.toFixed(6)}, ${geo.lon.toFixed(6)}
+            </a>
+        `;
+    })();
 }
-
-function closeOrderDetail() {
-    document.getElementById("orderModal").style.display = "none";
-}
-
-window.addEventListener("click", (event) => {
-    const modal = document.getElementById("orderModal");
-    if (event.target === modal) {
-        closeOrderDetail();
-    }
-});
-
-/* =====================================================
-   AUTO REFRESH
-===================================================== */
-
-/*
-    ทุก 5 นาที
-*/
-
-setInterval(
-    loadData,
-    5 * 60 * 1000
-);
-
-
-/* =====================================================
-   INITIAL LOAD
-===================================================== */
-
-loadData();
-
-</script>
-
-</body>
-</html>
