@@ -501,20 +501,20 @@ const SHEET_GID =
 ===================================================== */
 
 const COL = {
-    orderId: 2,
-    status: 3,
-    buyer: 6,
-    orderDate: 7,
-    tracking: 15,
-    expectedDate: 16,
-    recipient: 48,
-    phone: 49,
-    note: 50,
-    address: 51,
-    country: 52,
-    province: 53,
-    district: 54,
-    zip: 55
+    status: 0,          // A = สถานะการจัดส่งจริง
+    orderId: 2,         // C = หมายเลขคำสั่งซื้อ
+    buyer: 6,           // G
+    orderDate: 7,       // H
+    tracking: 15,       // P
+    expectedDate: 16,   // Q
+    recipient: 48,      // AW
+    phone: 49,          // AX
+    note: 50,           // AY
+    address: 51,        // AZ
+    country: 52,        // BA
+    province: 53,       // BB
+    district: 54,       // BC
+    zip: 55             // BD
 };
 
 let allOrders = [];
@@ -753,11 +753,28 @@ function processData(rows) {
             continue;
         }
 
-        const rawStatus =
-            clean(r[COL.status]);
+        const rawStatus = clean(r[COL.status]);
+
+let status = "pending";
+
+if (rawStatus === "จัดส่งแล้ว") {
+    status = "sent";
+}
+else if (rawStatus === "มีใน SCG ส่งให้แล้ว") {
+    status = "sent";
+}
+else if (rawStatus === "ค้างจัดส่ง") {
+    status = "pending";
+}
+else if (rawStatus === "ยกเลิก") {
+    status = "cancelled";
+}
+else {
+    status = "pending";
+}
 
         const status =
-            normalizeStatus(rawStatus);
+    normalizeStatus(rawStatus);
 
         const order = {
 
