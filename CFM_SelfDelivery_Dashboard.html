@@ -283,6 +283,75 @@ tr:hover {
     padding: 50px;
 }
 
+.order-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: #2563eb;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.order-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.55);
+    z-index: 1000;
+    padding: 24px;
+}
+
+.order-modal-content {
+    max-width: 700px;
+    width: min(100%, 700px);
+    margin: 60px auto;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+    padding: 22px 20px 18px;
+}
+
+.order-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    gap: 12px;
+}
+
+.order-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.order-modal-close {
+    background: #e5e7eb;
+    color: #111827;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    gap: 12px 18px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.detail-grid > div {
+    word-break: break-word;
+}
+
+.order-modal-content strong {
+    color: #111827;
+}
+
 /* =========================
    RESPONSIVE
 ========================= */
@@ -437,8 +506,8 @@ tr:hover {
                         <th>โทรศัพท์</th>
                         <th>จังหวัด</th>
                         <th>อำเภอ/เขต</th>
-                        <th>รหัสไปรษณีย์</th>
-                        <th>วันที่คาดว่าจะจัดส่ง</th>
+                        <th>ชนิดนม</th>
+                        <th>จำนวน</th>
                         <th>หมายเลขติดตาม</th>
                     </tr>
                 </thead>
@@ -459,6 +528,16 @@ tr:hover {
 
     </div>
 
+</div>
+
+<div id="orderModal" class="order-modal" aria-modal="true" role="dialog">
+    <div class="order-modal-content">
+        <div class="order-modal-header">
+            <h3>ข้อมูลออเดอร์</h3>
+            <button type="button" class="order-modal-close" onclick="closeOrderDetail()">ปิด</button>
+        </div>
+        <div id="orderDetailContent"></div>
+    </div>
 </div>
 
 <script>
@@ -507,6 +586,8 @@ const COL = {
     orderDate: 7,       // H
     tracking: 15,       // P
     expectedDate: 16,   // Q
+    product: 20,        // U = ชนิดนม
+    quantity: 24,       // Y = จำนวน
     recipient: 49,      // AX = ชื่อผู้รับ
     phone: 50,          // AY = หมายเลขโทรศัพท์
     note: 51,           // AZ = หมายเหตุจากผู้ซื้อ
@@ -744,6 +825,29 @@ function processData(rows) {
         const orderId =
             clean(r[COL.orderId]);
 
+        const recipient =
+            clean(r[COL.recipient]);
+
+        const phone =
+            clean(r[COL.phone]);
+
+        const address =
+            clean(r[COL.address]);
+
+        /*
+            ไม่ดึงรายการที่ข้อมูลไม่ครบ
+            เพื่อหลีกเลี่ยงออเดอร์ที่ยังไม่มีข้อมูลจำเป็น
+        */
+
+        if (
+            !orderId ||
+            !recipient ||
+            !phone ||
+            !address
+        ) {
+            continue;
+        }
+
         /*
             ตัดแถวหัวข้อ / invoice /
             separator ที่ไม่มี Order ID
@@ -778,17 +882,20 @@ function processData(rows) {
             expectedDate:
                 clean(r[COL.expectedDate]),
 
-            recipient:
-                clean(r[COL.recipient]),
+            product:
+                clean(r[COL.product]),
 
-            phone:
-                clean(r[COL.phone]),
+            quantity:
+                clean(r[COL.quantity]),
+
+            recipient,
+
+            phone,
 
             note:
                 clean(r[COL.note]),
 
-            address:
-                clean(r[COL.address]),
+            address,
 
             country:
                 clean(r[COL.country]),
@@ -802,7 +909,6 @@ function processData(rows) {
             zip:
                 clean(r[COL.zip])
         };
-
 
         /*
             ถ้า Order ID ซ้ำ
@@ -840,7 +946,6 @@ function processData(rows) {
                 old.status = "cancelled";
             }
 
-
             /*
                 เติมข้อมูลที่ว่าง
             */
@@ -862,7 +967,16 @@ function processData(rows) {
     }
 
     allOrders =
-        Array.from(orderMap.values());
+        Array.from(orderMap.values())
+            .sort((a, b) => {
+                const rank = {
+                    pending: 0,
+                    sent: 1,
+                    cancelled: 2
+                };
+
+                return (rank[a.status] ?? 99) - (rank[b.status] ?? 99);
+            });
 
     render();
 }
@@ -921,10 +1035,11 @@ function getFilteredOrders() {
                 order.phone,
                 order.province,
                 order.district,
+                order.product,
+                order.quantity,
                 order.zip,
                 order.tracking,
                 order.address
-
             ]
             .join(" ")
             .toLowerCase();
@@ -1185,11 +1300,9 @@ function renderTable(orders) {
                         </td>
 
                         <td>
-                            <span class="order-id">
-                                ${escapeHTML(
-                                    order.orderId
-                                )}
-                            </span>
+                            <button type="button" class="order-link" onclick="showOrderDetail('${escapeHTML(order.orderId).replace(/'/g, "\\'")}')">
+                                ${escapeHTML(order.orderId)}
+                            </button>
                         </td>
 
                         <td>
@@ -1230,13 +1343,13 @@ function renderTable(orders) {
 
                         <td>
                             ${escapeHTML(
-                                order.zip
+                                order.product
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                order.expectedDate
+                                order.quantity
                             )}
                         </td>
 
@@ -1268,32 +1381,40 @@ function escapeHTML(value) {
         .replace(/'/g, "&#039;");
 }
 
+function showOrderDetail(orderId) {
+    const order = allOrders.find(x => x.orderId === orderId);
 
-/* =====================================================
-   EVENTS
-===================================================== */
+    if (!order) return;
 
-document
-    .getElementById("search")
-    .addEventListener(
-        "input",
-        render
-    );
+    const modal = document.getElementById("orderModal");
+    const detail = document.getElementById("orderDetailContent");
 
-document
-    .getElementById("statusFilter")
-    .addEventListener(
-        "change",
-        render
-    );
+    detail.innerHTML = `
+        <div class="detail-grid">
+            <div><strong>วันที่สั่ง:</strong> ${escapeHTML(order.orderDate || "-")}</div>
+            <div><strong>สินค้า:</strong> ${escapeHTML(order.product || "-")}</div>
+            <div><strong>ผู้สั่ง:</strong> ${escapeHTML(order.buyer || "-")}</div>
+            <div><strong>โทร:</strong> ${escapeHTML(order.phone || "-")}</div>
+            <div style="grid-column: 1 / -1;"><strong>ที่อยู่:</strong> ${escapeHTML(order.address || "-")}</div>
+            <div style="grid-column: 1 / -1;"><strong>ผู้รับ:</strong> ${escapeHTML(order.recipient || "-")}</div>
+            <div style="grid-column: 1 / -1;"><strong>หมายเลขติดตาม:</strong> ${escapeHTML(order.tracking || "-")}</div>
+            <div style="grid-column: 1 / -1;"><strong>หมายเหตุ:</strong> ${escapeHTML(order.note || "-")}</div>
+        </div>
+    `;
 
-document
-    .getElementById("dateFilter")
-    .addEventListener(
-        "change",
-        render
-    );
+    modal.style.display = "block";
+}
 
+function closeOrderDetail() {
+    document.getElementById("orderModal").style.display = "none";
+}
+
+window.addEventListener("click", (event) => {
+    const modal = document.getElementById("orderModal");
+    if (event.target === modal) {
+        closeOrderDetail();
+    }
+});
 
 /* =====================================================
    AUTO REFRESH
