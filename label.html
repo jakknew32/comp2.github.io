@@ -1050,7 +1050,7 @@ async function fetchFromGoogleSheet(){
 }
 
 // คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, AX=49, AY=50, BA=52
-const COL_ORDER=2, COL_NOTE=18, COL_NAME=49, COL_PHONE=50, COL_ADDR=52;
+const COL_ORDER=2, COL_NOTE=18, COL_MILK=23, COL_QTY=24, COL_NAME=49, COL_PHONE=50, COL_ADDR=52;
 const GSHEET_ID='1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44';
 const GSHEET_TAB='ออเดอร์ต่างจังหวัด';
 
@@ -1111,21 +1111,24 @@ function parseRowsFixed(rows){
       phone:normalizePhone(r[COL_PHONE]),
       addr:String(r[COL_ADDR]||'').trim(),
       order:String(r[COL_ORDER]||'').trim(),
-      milk:String(r[COL_NOTE]||'').trim()
+      milk:String(r[COL_MILK]||'').trim(),
+      qty:parseFloat(String(r[COL_QTY]||'').replace(/,/g,''))||0
     }));
 
-  // รวมแถวที่มีเลขออเดอร์เดียวกัน/ซ้ำกัน -> รวมชนิดนมและเพิ่มหมายเหตุ
+  // รวมแถวที่มีเลขออเดอร์เดียวกัน/ซ้ำกัน -> รวมจำนวนต่อชนิดนม (X=ชนิดนม, Y=จำนวน)
   const groups=new Map();
   const orderedKeys=[];
   rawRows.forEach(r=>{
     const key=r.order?`o:${r.order}`:`u:${uid()}`; // ไม่มีเลขออเดอร์ -> ไม่รวมกับแถวอื่น
     if(!groups.has(key)){
-      groups.set(key,{name:r.name,phone:r.phone,addr:r.addr,order:r.order,milks:r.milk?[r.milk]:[],count:1});
+      const milks=new Map();
+      if(r.milk) milks.set(r.milk,(milks.get(r.milk)||0)+r.qty);
+      groups.set(key,{name:r.name,phone:r.phone,addr:r.addr,order:r.order,milks,count:1});
       orderedKeys.push(key);
     }else{
       const g=groups.get(key);
       g.count++;
-      if(r.milk && !g.milks.includes(r.milk)) g.milks.push(r.milk);
+      if(r.milk) g.milks.set(r.milk,(g.milks.get(r.milk)||0)+r.qty);
       if(!g.name && r.name) g.name=r.name;
       if(!g.phone && r.phone) g.phone=r.phone;
       if(!g.addr && r.addr) g.addr=r.addr;
@@ -1134,8 +1137,8 @@ function parseRowsFixed(rows){
 
   const parsed=orderedKeys.map(key=>{
     const g=groups.get(key);
-    const milkText=g.milks.join(', ');
-    const note=g.count>1?(milkText?`รวม ${g.count} รายการ: ${milkText}`:`รวม ${g.count} รายการ`):milkText;
+    const milkText=[...g.milks.entries()].map(([m,q])=>`${m} x${q}`).join(', ');
+    const note=milkText;
     return{
       id:uid(),
       name:g.name,
