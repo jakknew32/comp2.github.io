@@ -755,26 +755,8 @@ function processData(rows) {
 
         const rawStatus = clean(r[COL.status]);
 
-let status = "pending";
-
-if (rawStatus === "จัดส่งแล้ว") {
-    status = "sent";
-}
-else if (rawStatus === "มีใน SCG ส่งให้แล้ว") {
-    status = "sent";
-}
-else if (rawStatus === "ค้างจัดส่ง") {
-    status = "pending";
-}
-else if (rawStatus === "ยกเลิก") {
-    status = "cancelled";
-}
-else {
-    status = "pending";
-}
-
         const status =
-    normalizeStatus(rawStatus);
+            normalizeStatus(rawStatus);
 
         const order = {
 
