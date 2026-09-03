@@ -1200,6 +1200,41 @@ function forwardFillMerged(rows){
 
 let skippedData=[];
 
+// รวมแถวที่มี "เลขออเดอร์" ซ้ำกันให้เหลือฉลากเดียวต่อออเดอร์
+// โดยเอาชนิดนม+จำนวนของแต่ละแถวมาต่อกันเป็น "นมสด x2, นมช็อกโกแลต x1"
+// แถวที่ไม่มีเลขออเดอร์ (ว่าง) จะไม่ถูกรวมกับแถวอื่น เพราะไม่รู้ว่าเป็นออเดอร์เดียวกันจริงหรือไม่
+function typeEntry(row){
+  const n=String(row.note||'').trim();
+  const q=String(row.qty||'').trim();
+  if(!n && !q) return '';
+  if(!q) return n;
+  return n ? `${n} x${q}` : `x${q}`;
+}
+
+function groupByOrder(rows){
+  const map=new Map();
+  const orderKeys=[];
+  rows.forEach(r=>{
+    const key = r.order ? r.order : ('__single_'+r.id);
+    if(!map.has(key)){
+      const entry=typeEntry(r);
+      map.set(key, {...r, note: entry, _entries: entry?[entry]:[]});
+      orderKeys.push(key);
+    } else {
+      const g=map.get(key);
+      const entry=typeEntry(r);
+      if(entry) g._entries.push(entry);
+      g.note=g._entries.join(', ');
+      if(!g.phone && r.phone) g.phone=r.phone;
+      if(!g._rawPhone && r._rawPhone) g._rawPhone=r._rawPhone;
+      if(!g.addr && r.addr) g.addr=r.addr;
+      if(!g.name && r.name) g.name=r.name;
+      g.qty=''; // จำนวนถูกรวมเข้าไปใน note แล้ว ไม่ต้องแสดงแยกอีก
+    }
+  });
+  return orderKeys.map(k=>{ const g=map.get(k); delete g._entries; g.qty=''; return g; });
+}
+
 function parseRowsFixed(rows){
   rows=forwardFillMerged(rows);
   const parsed=[];
@@ -1238,7 +1273,7 @@ function parseRowsFixed(rows){
     });
   });
 
-  importData=parsed;
+  importData=groupByOrder(parsed);
 
   if(!importData.length && !skippedData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
 
