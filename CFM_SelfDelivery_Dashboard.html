@@ -508,6 +508,7 @@ tr:hover {
                         <th>อำเภอ/เขต</th>
                         <th>ชนิดนม</th>
                         <th>จำนวน</th>
+                        <th>หมายเหตุจากผู้ซื้อ</th>
                         <th>หมายเลขติดตาม</th>
                     </tr>
                 </thead>
@@ -515,7 +516,7 @@ tr:hover {
                 <tbody id="tableBody">
 
                     <tr>
-                        <td colspan="12" class="loading">
+                        <td colspan="13" class="loading">
                             กำลังโหลดข้อมูล...
                         </td>
                     </tr>
@@ -1355,6 +1356,12 @@ function renderTable(orders) {
 
                         <td>
                             ${escapeHTML(
+                                order.note
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHTML(
                                 order.tracking
                             )}
                         </td>
@@ -1397,6 +1404,7 @@ function showOrderDetail(orderId) {
             <div><strong>โทร:</strong> ${escapeHTML(order.phone || "-")}</div>
             <div style="grid-column: 1 / -1;"><strong>ที่อยู่:</strong> ${escapeHTML(order.address || "-")}</div>
             <div style="grid-column: 1 / -1;"><strong>ผู้รับ:</strong> ${escapeHTML(order.recipient || "-")}</div>
+            <div style="grid-column: 1 / -1;"><strong>หมายเหตุจากผู้ซื้อ:</strong> ${escapeHTML(order.note || "-")}</div>
             <div style="grid-column: 1 / -1;"><strong>หมายเลขติดตาม:</strong> ${escapeHTML(order.tracking || "-")}</div>
             <div style="grid-column: 1 / -1;"><strong>หมายเหตุ:</strong> ${escapeHTML(order.note || "-")}</div>
         </div>
