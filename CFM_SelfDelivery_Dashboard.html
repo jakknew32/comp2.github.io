@@ -826,6 +826,10 @@ function processData(rows) {
         const orderId =
             clean(r[COL.orderId]);
 
+        if (!orderId) {
+            continue;
+        }
+
         const recipient =
             clean(r[COL.recipient]);
 
@@ -836,40 +840,16 @@ function processData(rows) {
             clean(r[COL.address]);
 
         /*
-            ไม่ดึงรายการที่ข้อมูลไม่ครบ
-            เพื่อหลีกเลี่ยงออเดอร์ที่ยังไม่มีข้อมูลจำเป็น
+            เก็บข้อมูลทุกออเดอร์ที่มี Order ID
+            แม้บางฟิลด์จะว่าง ให้แสดงเป็นช่องว่าง/ - ได้
         */
-
-        if (
-            !orderId ||
-            !recipient ||
-            !phone ||
-            !address
-        ) {
-            continue;
-        }
-
-        /*
-            ตัดแถวหัวข้อ / invoice /
-            separator ที่ไม่มี Order ID
-        */
-
-        if (!orderId) {
-            continue;
-        }
-
-        const rawStatus = clean(r[COL.status]);
-
-        const status =
-            normalizeStatus(rawStatus);
-
         const order = {
 
             orderId,
 
-            rawStatus,
+            rawStatus: clean(r[COL.status]),
 
-            status,
+            status: normalizeStatus(clean(r[COL.status])),
 
             buyer:
                 clean(r[COL.buyer]),
