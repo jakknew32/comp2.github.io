@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL To Wiseplay JSON Generator</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: #1e293b; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        h2 { margin-top: 0; color: #38bdf8; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 14px; }
+        .flex-group { display: flex; gap: 10px; }
+        button { background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #0369a1; }
+        .btn-copy { background: #10b981; }
+        .btn-copy:hover { background: #059669; }
+        textarea { width: 100%; height: 400px; background: #0f172a; color: #38bdf8; border: 1px solid #475569; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 13px; margin-top: 15px; }
+        .actions { display: flex; gap: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>URL To Wiseplay JSON Generator</h2>
+    
+    <div class="form-group">
+        <label>URL หน้าหนัง/ซีรีส์:</label>
+        <input type="text" id="targetUrl" placeholder="https://www.123-hda.com/flex-x-cop-season-2">
+    </div>
+
+    <div class="form-group flex-group">
+        <div style="flex: 1;">
+            <label>จำนวน EP สำรอง (กรณีตรวจไม่พบ):</label>
+            <input type="number" id="totalEp" value="16">
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+            <button onclick="generateJson()">แปลงเป็น JSON</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>ผลลัพธ์ JSON:</label>
+        <textarea id="jsonOutput" readonly placeholder="ผลลัพธ์จะปรากฏที่นี่..."></textarea>
+    </div>
+
+    <div class="actions">
+        <button class="btn-copy" onclick="copyToClipboard()">คัดลอก JSON</button>
+        <button onclick="downloadJson()">ดาวน์โหลดไฟล์ .json</button>
+    </div>
+</div>
+
+<script>
+async function generateJson() {
+    const url = document.getElementById('targetUrl').value.trim();
+    const totalEp = parseInt(document.getElementById('totalEp').value) || 16;
+    const output = document.getElementById('jsonOutput');
+
+    if (!url) {
+        alert('กรุณากรอก URL');
+        return;
+    }
+
+    output.value = 'กำลังดึงข้อมูล...';
+
+    try {
+        // ใช้ CORS Proxy ยิงเข้าหน้าเว็บโดยตรงจาก Client
+        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+
+        if (!data.contents) {
+            throw new Error('ไม่สามารถดึงเนื้อหาจาก URL นี้ได้');
+        }
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+
+        // ดึง Meta Data
+        const titleMatch = doc.querySelector('meta[property="og:title"]');
+        const title = titleMatch ? titleMatch.getAttribute('content') : (doc.title || 'Movie Title');
+
+        const imageMatch = doc.querySelector('meta[property="og:image"]');
+        const image = imageMatch ? imageMatch.getAttribute('content') : '';
+
+        const infoMatch = doc.querySelector('meta[property="og:description"]');
+        const info = infoMatch ? infoMatch.getAttribute('content') : '';
+
+        const urlObj = new URL(url);
+        const domain = urlObj.hostname.replace('www.', '').split('.')[0].toUpperCase();
+        const origin = urlObj.origin;
+
+        const stations = [];
+        const epElements = doc.querySelectorAll('.ep-list a, .episode-list a, a[href*="-ep-"]');
+
+        if (epElements.length > 0) {
+            epElements.forEach((el, index) => {
+                const epName = el.textContent.trim() || `${title} EP.${index + 1}`;
+                const epUrl = el.getAttribute('href');
+                stations.push({
+                    name: epName,
+                    image: image,
+                    url: epUrl.startsWith('http') ? epUrl : `${origin}${epUrl}`,
+                    referer: `${origin}/`,
+                    userAgent: ""
+                });
+            });
+        } else {
+            const cleanUrl = url.replace(/\/$/, '');
+            for (let i = 1; i <= totalEp; i++) {
+                stations.push({
+                    name: `${title} EP.${i}`,
+                    image: image,
+                    url: `${cleanUrl}-ep-${i}`,
+                    referer: `${origin}/`,
+                    userAgent: ""
+                });
+            }
+        }
+
+        const jsonResult = {
+            name: title,
+            author: domain,
+            image: image,
+            info: info,
+            groups: [
+                {
+                    name: title,
+                    image: image,
+                    stations: stations
+                }
+            ]
+        };
+
+        output.value = JSON.stringify(jsonResult, null, 2);
+
+    } catch (err) {
+        output.value = 'เกิดข้อผิดพลาด: ' + err.message;
+    }
+}
+
+function copyToClipboard() {
+    const output = document.getElementById('jsonOutput');
+    if (!output.value) return;
+    output.select();
+    document.execCommand('copy');
+    alert('คัดลอกลง Clipboard เรียบร้อยแล้ว!');
+}
+
+function downloadJson() {
+    const text = document.getElementById('jsonOutput').value;
+    if (!text) return;
+    const blob = new Blob([text], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'playlist.json';
+    a.click();
+}
+</script>
+
+</body>
+</html>
