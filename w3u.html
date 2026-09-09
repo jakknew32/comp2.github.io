@@ -34,7 +34,7 @@
     <div class="form-group flex-group">
         <div style="flex: 1;">
             <label>จำนวน EP สำรอง (กรณีตรวจไม่พบ):</label>
-            <input type="number" id="totalEp" value="16">
+            <input type="number" id="totalEp" value="20">
         </div>
         <div style="display: flex; align-items: flex-end;">
             <button onclick="generateJson()">แปลงเป็น JSON</button>
@@ -65,20 +65,43 @@ async function generateJson() {
 
     output.value = 'กำลังดึงข้อมูล...';
 
-    try {
-        // ใช้ CORS Proxy ยิงเข้าหน้าเว็บโดยตรงจาก Client
-        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-        const response = await fetch(proxyUrl);
-        const data = await response.json();
+    // รายการ CORS Proxy หลายตัวสำรองไว้
+    const proxies = [
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+    ];
 
-        if (!data.contents) {
-            throw new Error('ไม่สามารถดึงเนื้อหาจาก URL นี้ได้');
+    let htmlContent = null;
+
+    for (const proxy of proxies) {
+        try {
+            const res = await fetch(proxy);
+            if (!res.ok) continue;
+
+            if (proxy.includes('allorigins')) {
+                const data = await res.json();
+                htmlContent = data.contents;
+            } else {
+                htmlContent = await res.text();
+            }
+
+            if (htmlContent && htmlContent.length > 500) break;
+        } catch (e) {
+            console.warn(`Proxy failed: ${proxy}`, e);
         }
+    }
 
+    if (!htmlContent) {
+        // ถ้าดึงผ่าน Proxy ไม่ได้ทั้งหมด ให้ใช้ Fallback Generator แกะจาก Pattern URL
+        generateFallbackJson(url, totalEp);
+        return;
+    }
+
+    try {
         const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
+        const doc = parser.parseFromString(htmlContent, 'text/html');
 
-        // ดึง Meta Data
         const titleMatch = doc.querySelector('meta[property="og:title"]');
         const title = titleMatch ? titleMatch.getAttribute('content') : (doc.title || 'Movie Title');
 
@@ -108,16 +131,8 @@ async function generateJson() {
                 });
             });
         } else {
-            const cleanUrl = url.replace(/\/$/, '');
-            for (let i = 1; i <= totalEp; i++) {
-                stations.push({
-                    name: `${title} EP.${i}`,
-                    image: image,
-                    url: `${cleanUrl}-ep-${i}`,
-                    referer: `${origin}/`,
-                    userAgent: ""
-                });
-            }
+            generateFallbackJson(url, totalEp, title, image, info);
+            return;
         }
 
         const jsonResult = {
@@ -125,19 +140,57 @@ async function generateJson() {
             author: domain,
             image: image,
             info: info,
-            groups: [
-                {
-                    name: title,
-                    image: image,
-                    stations: stations
-                }
-            ]
+            groups: [{ name: title, image: image, stations: stations }]
         };
 
         output.value = JSON.stringify(jsonResult, null, 2);
 
     } catch (err) {
-        output.value = 'เกิดข้อผิดพลาด: ' + err.message;
+        generateFallbackJson(url, totalEp);
+    }
+}
+
+function generateFallbackJson(url, totalEp, customTitle, customImage, customInfo) {
+    const output = document.getElementById('jsonOutput');
+    
+    try {
+        const urlObj = new URL(url);
+        const origin = urlObj.origin;
+        const domain = urlObj.hostname.replace('www.', '').split('.')[0].toUpperCase();
+        
+        let slug = urlObj.pathname.replace(/\/$/, '').split('/').pop();
+        slug = slug.replace(/-ep-\d+$/, '');
+
+        const formattedTitle = slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        
+        const title = customTitle || formattedTitle;
+        const image = customImage || `${origin}/wp-content/uploads/${slug}.jpg`;
+        const info = customInfo || `ดู ${title} ออนไลน์ HD พากย์ไทย ซับไทย เต็มเรื่อง`;
+
+        const stations = [];
+        const baseUrl = `${origin}/${slug}`;
+
+        for (let i = 1; i <= totalEp; i++) {
+            stations.push({
+                name: `${title} EP.${i}`,
+                image: image,
+                url: `${baseUrl}-ep-${i}`,
+                referer: `${origin}/`,
+                userAgent: ""
+            });
+        }
+
+        const jsonResult = {
+            name: title,
+            author: domain,
+            image: image,
+            info: info,
+            groups: [{ name: title, image: image, stations: stations }]
+        };
+
+        output.value = JSON.stringify(jsonResult, null, 2);
+    } catch (e) {
+        output.value = 'URL ไม่ถูกต้อง กรุณาตรวจสอบลิงก์อีกครั้ง';
     }
 }
 
