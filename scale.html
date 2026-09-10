@@ -112,7 +112,16 @@
                     <div class="mt-1 text-xs" id="lock-status">🔓 ยังไม่ได้ล็อกค่า</div>
                 </div>
 
-                <div class="flex flex-wrap gap-3">
+                <div class="flex flex-wrap gap-3 items-center">
+                    <label class="text-sm font-medium text-gray-600 flex items-center gap-1.5">
+                        Baud Rate
+                        <select id="scale-baudrate" class="p-2 border rounded-lg bg-white text-sm">
+                            <option value="2400">2400</option>
+                            <option value="4800">4800</option>
+                            <option value="9600">9600</option>
+                            <option value="19200" selected>19200</option>
+                        </select>
+                    </label>
                     <button id="btn-connect-scale" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg font-medium transition flex items-center gap-2">
                         🔌 เชื่อมต่อเครื่องชั่ง (USB/Serial)
                     </button>
@@ -767,7 +776,9 @@
         document.getElementById('btn-connect-scale').addEventListener('click', async () => {
             try {
                 scalePort = await navigator.serial.requestPort();
-                await scalePort.open({ baudRate: 9600 });
+                const baudSel = document.getElementById('scale-baudrate');
+                const baudRate = baudSel ? parseInt(baudSel.value, 10) : 19200;
+                await scalePort.open({ baudRate: baudRate });
                 document.getElementById('scale-status').innerText = "สถานะ: เชื่อมต่อเครื่องชั่งแล้ว";
                 document.getElementById('scale-status').classList.replace("text-gray-400", "text-green-400");
                 document.getElementById('btn-disconnect-scale').disabled = false;
