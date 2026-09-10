@@ -360,13 +360,8 @@ function buildFilters(){
   fPay.innerHTML = '<option value="">ทั้งหมด</option>' + pays.map(s=>`<option value="${s}">${s}</option>`).join('');
   if(skus.includes(keepSku)) fSku.value = keepSku;
   if(pays.includes(keepPay)) fPay.value = keepPay;
-  // set date bounds
-  if(allOrders.length){
-    const minD = allOrders[0].date;
-    const maxD = allOrders[allOrders.length-1].date;
-    if(!document.getElementById('fFrom').value) document.getElementById('fFrom').value = minD;
-    if(!document.getElementById('fTo').value) document.getElementById('fTo').value = maxD;
-  }
+  // set date bounds — ไม่ตั้งค่าเริ่มต้น เพื่อแสดงข้อมูลทั้งหมดจนถึงปัจจุบัน
+  // ผู้ใช้สามารถกรองเองได้ตามต้องการ
 }
 
 function applyFilters(){
@@ -395,10 +390,8 @@ function clearFilters(){
   document.getElementById('q').value='';
   document.getElementById('fSku').value='';
   document.getElementById('fPay').value='';
-  if(allOrders.length){
-    document.getElementById('fFrom').value = allOrders[0].date;
-    document.getElementById('fTo').value = allOrders[allOrders.length-1].date;
-  }
+  document.getElementById('fFrom').value='';
+  document.getElementById('fTo').value='';
   applyFilters();
 }
 document.getElementById('q').addEventListener('keydown', e=>{ if(e.key==='Enter') applyFilters(); });
