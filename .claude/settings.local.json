@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m 'Update mulk-dashboard to fetch data from sheet '\\\\''ออเดอร์ต่างจังหวัด'\\\\'' *)"
+    ]
+  }
+}
