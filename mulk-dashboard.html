@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mulk+ Dashboard — Live Google Sheet</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *{font-family:'Prompt',system-ui,sans-serif}
+  .mono{font-family:'JetBrains Mono',monospace}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+  .glass{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+</style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen">
+
+<!-- Top Nav -->
+<nav class="sticky top-0 z-40 bg-white/80 glass border-b border-slate-200">
+  <div class="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 h-[64px] flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white text-xl">🥛</div>
+      <div>
+        <h1 class="text-[18px] font-bold leading-none text-slate-900">Mulk+ Dashboard</h1>
+        <p class="text-[11px] tracking-wide text-slate-500 mt-0.5">LIVE FROM GOOGLE SHEET • gid 1694042044</p>
+      </div>
+      <span id="liveDot" class="hidden ml-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> LIVE
+      </span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="lastUpdate" class="hidden sm:inline text-xs text-slate-500 mono"></span>
+      <a id="sheetLink" href="https://docs.google.com/spreadsheets/d/1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44/edit#gid=1694042044" target="_blank" class="hidden sm:inline-flex text-xs font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg border border-slate-200 bg-white">เปิดชีต ↗</a>
+      <button onclick="loadData()" id="refreshBtn" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-black text-white text-sm font-medium px-4 py-2.5 rounded-xl transition">
+        <span id="refreshIcon">↻</span> รีเฟรช
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+  <!-- Status bar -->
+  <div id="statusBar" class="bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+    <span class="text-base">⏳</span> <span id="statusText">กำลังโหลดข้อมูลจาก Google Sheet…</span>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="kpiGrid">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">ออเดอร์ทั้งหมด</p>
+          <p id="kpiOrders" class="text-3xl font-bold text-slate-900 mt-1 mono">—</p>
+          <p id="kpiOrdersSub" class="text-xs text-slate-500 mt-1">รายการ</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-lg">📦</div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">ยอดขายสุทธิ</p>
+          <p id="kpiSales" class="text-3xl font-bold text-slate-900 mt-1 mono">—</p>
+          <p id="kpiAov" class="text-xs text-slate-500 mt-1">AOV — บาท</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-lg">💰</div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">จำนวนกล่อง/แพ็ค</p>
+          <p id="kpiUnits" class="text-3xl font-bold text-slate-900 mt-1 mono">—</p>
+          <p id="kpiUnitsSub" class="text-xs text-slate-500 mt-1">แพ็คที่ขายได้</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center text-lg">🥛</div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-[11px] font-semibold tracking-widest text-slate-400 uppercase">ช่วงวันที่</p>
+          <p id="kpiRange" class="text-[15px] font-semibold text-slate-900 mt-1 mono">—</p>
+          <p id="kpiDays" class="text-xs text-slate-500 mt-1">— วัน</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-lg">📅</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap gap-3 items-end">
+    <div class="flex-1 min-w-[180px]">
+      <label class="text-[11px] font-semibold tracking-widest text-slate-500 uppercase">ค้นหา</label>
+      <input id="q" type="text" placeholder="ค้นหา ชื่อลูกค้า / SKU / ผู้ใช้ / จังหวัด…" class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:bg-white">
+    </div>
+    <div>
+      <label class="text-[11px] font-semibold tracking-widest text-slate-500 uppercase">ชนิดนม / SKU</label>
+      <select id="fSku" class="mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm min-w-[170px] outline-none">
+        <option value="">ทั้งหมด</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[11px] font-semibold tracking-widest text-slate-500 uppercase">ช่องทางชำระ</label>
+      <select id="fPay" class="mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm min-w-[170px] outline-none">
+        <option value="">ทั้งหมด</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[11px] font-semibold tracking-widest text-slate-500 uppercase">วันที่</label>
+      <div class="mt-1 flex items-center gap-1">
+        <input id="fFrom" type="date" class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-2.5 text-sm outline-none">
+        <span class="text-slate-400">—</span>
+        <input id="fTo" type="date" class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-2.5 text-sm outline-none">
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="applyFilters()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl">กรอง</button>
+      <button onclick="clearFilters()" class="bg-white border border-slate-200 hover:bg-slate-50 text-sm font-medium px-4 py-2.5 rounded-xl">ล้าง</button>
+    </div>
+    <div class="ml-auto flex items-center gap-2 text-xs text-slate-500">
+      <span id="filterCount" class="mono">—</span>
+      <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+        <input id="autoRefresh" type="checkbox" class="rounded"> ออโต้รีเฟรช 60วิ
+      </label>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-slate-900">📈 ยอดขาย & จำนวนออเดอร์ รายวัน</h2>
+        <span class="text-xs text-slate-500">ตาม “วันที่ทำการสั่งซื้อ”</span>
+      </div>
+      <div class="h-[300px]"><canvas id="dailyChart"></canvas></div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-slate-900">💳 ช่องทางชำระเงิน</h2>
+        <span id="payTotal" class="text-xs text-slate-500 mono"></span>
+      </div>
+      <div class="h-[300px]"><canvas id="payChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-slate-900">🥛 ยอดขายตามชนิดนม / SKU</h2>
+        <span class="text-xs text-slate-500">Top 8</span>
+      </div>
+      <div class="h-[320px]"><canvas id="skuChart"></canvas></div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-slate-900">🗺️ จังหวัด Top 10</h2>
+        <span class="text-xs text-slate-500">นับตามออเดอร์</span>
+      </div>
+      <div class="h-[320px]"><canvas id="provChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+    <div class="px-5 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200">
+      <h2 class="font-semibold text-slate-900">📋 รายการออเดอร์ (กรองแล้ว)</h2>
+      <div class="flex items-center gap-2">
+        <span id="tableInfo" class="text-xs text-slate-500 mono"></span>
+        <button onclick="exportCSV()" class="text-xs font-medium bg-slate-900 text-white px-3 py-2 rounded-lg hover:bg-black">⬇ Export CSV (ที่กรอง)</button>
+        <select id="pageSize" onchange="renderTable()" class="text-xs border border-slate-200 rounded-lg px-2 py-2 bg-white">
+          <option value="25">25 / หน้า</option>
+          <option value="50">50 / หน้า</option>
+          <option value="100">100 / หน้า</option>
+        </select>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-[11px] font-semibold tracking-widest text-slate-500 uppercase">
+          <tr>
+            <th class="text-left px-4 py-3 whitespace-nowrap">#</th>
+            <th class="text-left px-4 py-3 whitespace-nowrap">วันที่สั่งซื้อ</th>
+            <th class="text-left px-4 py-3">SKU</th>
+            <th class="text-left px-4 py-3">ชื่อสินค้า</th>
+            <th class="text-right px-4 py-3">ราคา</th>
+            <th class="text-right px-4 py-3">จำนวน</th>
+            <th class="text-right px-4 py-3">สุทธิ</th>
+            <th class="text-left px-4 py-3">ชำระ</th>
+            <th class="text-left px-4 py-3">ลูกค้า</th>
+            <th class="text-left px-4 py-3">จังหวัด</th>
+          </tr>
+        </thead>
+        <tbody id="tbody" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+    <div class="px-5 py-3 flex items-center justify-between border-t border-slate-200 bg-slate-50/50">
+      <span id="pageInfo" class="text-xs text-slate-500 mono"></span>
+      <div class="flex gap-1">
+        <button onclick="prevPage()" class="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white hover:bg-slate-50">‹ ก่อนหน้า</button>
+        <button onclick="nextPage()" class="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white hover:bg-slate-50">ถัดไป ›</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="text-center text-xs text-slate-400 py-4">สร้างด้วย HTML เดียวจบ • ดึง CSV สดจาก Google Sheet ทุกครั้งที่รีเฟรช • ไม่เก็บข้อมูลส่วนตัวบนเซิร์ฟเวอร์</p>
+</div>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44/export?format=csv&gid=1694042044';
+
+let allOrders = [];
+let filtered = [];
+let currentPage = 1;
+
+let dailyChart, payChart, skuChart, provChart;
+let autoTimer = null;
+
+function fmtMoney(n){ return '฿' + Number(n).toLocaleString('th-TH',{minimumFractionDigits:0, maximumFractionDigits:0}); }
+function fmtNum(n){ return Number(n).toLocaleString('th-TH'); }
+
+function parseNumber(v){
+  if(v==null||v==='') return 0;
+  const s = String(v).replace(/[,฿\s]/g,'').trim();
+  const n = parseFloat(s);
+  return isNaN(n)?0:n;
+}
+
+function extractProvince(addr, col53){
+  if(col53 && col53.includes('จังหวัด')) return col53.trim();
+  if(!addr) return '—';
+  const m = addr.match(/จังหวัด\s*([ก-๙A-Za-z0-9\s\-]+)/);
+  if(m) {
+    // cut at numbers or trailing zip
+    let prov = m[0].trim();
+    // normalize: keep up to province name without address tail
+    // province name is typically 1-2 words after จังหวัด
+    const mm = prov.match(/จังหวัด([ก-๙]+)/);
+    if(mm) return 'จังหวัด' + mm[1];
+    return prov;
+  }
+  // fallback: if address contains จังหวัด anywhere
+  if(addr.includes('จังหวัด')) return addr.match(/จังหวัด[ก-๙]+/)?.[0] || '—';
+  return '—';
+}
+
+function loadData(){
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.disabled = true; icon.textContent = '⧗';
+  document.getElementById('statusBar').className = 'bg-sky-50 border border-sky-200 text-sky-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2';
+  document.getElementById('statusText').textContent = 'กำลังดึงข้อมูลจาก Google Sheet…';
+
+  Papa.parse(CSV_URL, {
+    download: true,
+    header: false,
+    skipEmptyLines: false,
+    complete: function(res){
+      try{
+        const rows = res.data;
+        const orders = [];
+        for(let i=1;i<rows.length;i++){
+          const r = rows[i];
+          if(!r || r.length < 7) continue;
+          const d = (r[6]||'').trim();
+          if(!/^\d{4}-\d{2}-\d{2}/.test(d)) continue; // skip separators like "ส่ง Inter Express…"
+          const sku = (r[17]||'').trim() || '—';
+          const fullName = (r[18]||'').trim();
+          const qty = parseNumber(r[23]) || 1;
+          const price = parseNumber(r[21]) || parseNumber(r[22]) || 0;
+          let net = parseNumber(r[25]);
+          if(!net) net = qty * price;
+          const pay = (r[8]||'').trim() || 'ไม่ระบุ';
+          const username = (r[5]||'').trim();
+          const customer = (r[48]||'').trim() || username || '—';
+          const addr = (r[54]||'').trim();
+          const col53 = (r[53]||'').trim();
+          const prov = extractProvince(addr, col53);
+          const dateStr = d.slice(0,10);
+          const datetime = d;
+          orders.push({idx: orders.length+1, date: dateStr, datetime, sku, fullName, qty, price, net, pay, customer, username, prov, addr});
+        }
+        allOrders = orders;
+        // sort by date asc for charts, but keep original idx
+        allOrders.sort((a,b)=> a.date.localeCompare(b.date) || a.datetime.localeCompare(b.datetime));
+        filtered = [...allOrders];
+        currentPage = 1;
+        buildFilters();
+        updateKPIs();
+        renderCharts();
+        renderTable();
+        document.getElementById('liveDot').classList.remove('hidden');
+        document.getElementById('lastUpdate').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleString('th-TH');
+        document.getElementById('statusBar').className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2';
+        document.getElementById('statusText').textContent = `✅ โหลดสำเร็จ ${fmtNum(orders.length)} ออเดอร์ จาก ${rows.length.toLocaleString()} แถวในชีต • พร้อมใช้งาน`;
+      }catch(e){
+        console.error(e);
+        document.getElementById('statusBar').className = 'bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl';
+        document.getElementById('statusText').textContent = '❌ ประมวลผลข้อมูลไม่สำเร็จ: ' + e.message;
+      }finally{
+        btn.disabled=false; icon.textContent='↻';
+      }
+    },
+    error: function(err){
+      document.getElementById('statusBar').className = 'bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl';
+      document.getElementById('statusText').textContent = '❌ ดึงข้อมูลไม่สำเร็จ — ตรวจสอบว่าชีตตั้งค่า Anyone with the link (Viewer) และลองรีเฟรชอีกครั้ง';
+      console.error(err);
+      btn.disabled=false; icon.textContent='↻';
+    }
+  });
+}
+
+function buildFilters(){
+  const skus = [...new Set(allOrders.map(o=>o.sku))].sort();
+  const pays = [...new Set(allOrders.map(o=>o.pay))].sort();
+  const fSku = document.getElementById('fSku');
+  const fPay = document.getElementById('fPay');
+  const keepSku = fSku.value, keepPay = fPay.value;
+  fSku.innerHTML = '<option value="">ทั้งหมด</option>' + skus.map(s=>`<option value="${s}">${s}</option>`).join('');
+  fPay.innerHTML = '<option value="">ทั้งหมด</option>' + pays.map(s=>`<option value="${s}">${s}</option>`).join('');
+  if(skus.includes(keepSku)) fSku.value = keepSku;
+  if(pays.includes(keepPay)) fPay.value = keepPay;
+  // set date bounds
+  if(allOrders.length){
+    const minD = allOrders[0].date;
+    const maxD = allOrders[allOrders.length-1].date;
+    if(!document.getElementById('fFrom').value) document.getElementById('fFrom').value = minD;
+    if(!document.getElementById('fTo').value) document.getElementById('fTo').value = maxD;
+  }
+}
+
+function applyFilters(){
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const sku = document.getElementById('fSku').value;
+  const pay = document.getElementById('fPay').value;
+  const from = document.getElementById('fFrom').value;
+  const to = document.getElementById('fTo').value;
+  filtered = allOrders.filter(o=>{
+    if(sku && o.sku !== sku) return false;
+    if(pay && o.pay !== pay) return false;
+    if(from && o.date < from) return false;
+    if(to && o.date > to) return false;
+    if(q){
+      const hay = `${o.customer} ${o.username} ${o.sku} ${o.fullName} ${o.prov} ${o.pay}`.toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  currentPage = 1;
+  updateKPIs();
+  renderCharts();
+  renderTable();
+}
+function clearFilters(){
+  document.getElementById('q').value='';
+  document.getElementById('fSku').value='';
+  document.getElementById('fPay').value='';
+  if(allOrders.length){
+    document.getElementById('fFrom').value = allOrders[0].date;
+    document.getElementById('fTo').value = allOrders[allOrders.length-1].date;
+  }
+  applyFilters();
+}
+document.getElementById('q').addEventListener('keydown', e=>{ if(e.key==='Enter') applyFilters(); });
+document.getElementById('fSku').addEventListener('change', applyFilters);
+document.getElementById('fPay').addEventListener('change', applyFilters);
+
+function updateKPIs(){
+  const n = filtered.length;
+  const sales = filtered.reduce((s,o)=>s+o.net,0);
+  const units = filtered.reduce((s,o)=>s+o.qty,0);
+  const aov = n? sales/n : 0;
+  document.getElementById('kpiOrders').textContent = fmtNum(n);
+  document.getElementById('kpiOrdersSub').textContent = `จากทั้งหมด ${fmtNum(allOrders.length)} รายการ`;
+  document.getElementById('kpiSales').textContent = fmtMoney(sales);
+  document.getElementById('kpiAov').textContent = `AOV ${fmtMoney(aov)} • เฉลี่ยต่อออเดอร์`;
+  document.getElementById('kpiUnits').textContent = fmtNum(units);
+  document.getElementById('kpiUnitsSub').textContent = `แพ็คที่ขายได้`;
+  if(filtered.length){
+    const dates = [...new Set(filtered.map(o=>o.date))].sort();
+    document.getElementById('kpiRange').textContent = dates[0] + ' → ' + dates[dates.length-1];
+    document.getElementById('kpiDays').textContent = `${dates.length} วัน • ${(n/dates.length).toFixed(1)} ออเดอร์/วัน`;
+  } else {
+    document.getElementById('kpiRange').textContent = '—';
+    document.getElementById('kpiDays').textContent = '—';
+  }
+  document.getElementById('filterCount').textContent = `${fmtNum(filtered.length)} / ${fmtNum(allOrders.length)} รายการ`;
+}
+
+function renderCharts(){
+  // Daily aggregation
+  const byDate = {};
+  filtered.forEach(o=>{
+    if(!byDate[o.date]) byDate[o.date]={orders:0, sales:0};
+    byDate[o.date].orders++;
+    byDate[o.date].sales+=o.net;
+  });
+  const dates = Object.keys(byDate).sort();
+  const ordersArr = dates.map(d=>byDate[d].orders);
+  const salesArr = dates.map(d=>byDate[d].sales);
+
+  const ctxDaily = document.getElementById('dailyChart').getContext('2d');
+  if(dailyChart) dailyChart.destroy();
+  dailyChart = new Chart(ctxDaily, {
+    type:'bar',
+    data:{
+      labels: dates,
+      datasets:[
+        {type:'bar', label:'ออเดอร์', data: ordersArr, backgroundColor:'rgba(99,102,241,0.85)', borderRadius:6, yAxisID:'y'},
+        {type:'line', label:'ยอดขาย (บาท)', data: salesArr, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.15)', fill:true, tension:0.35, pointRadius:0, yAxisID:'y1'}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+      scales:{
+        x:{grid:{display:false}, ticks:{maxRotation:0, autoSkip:true, maxTicksLimit:14, font:{size:10}}},
+        y:{position:'left', grid:{color:'#f1f5f9'}, ticks:{font:{size:11}}},
+        y1:{position:'right', grid:{display:false}, ticks:{font:{size:11}, callback:v=> '฿'+Number(v).toLocaleString('th-TH')}}
+      },
+      plugins:{legend:{position:'bottom', labels:{boxWidth:12, font:{size:12}}}}
+    }
+  });
+
+  // Payment
+  const payMap={}; filtered.forEach(o=> payMap[o.pay]=(payMap[o.pay]||0)+1);
+  const payLabels = Object.keys(payMap).sort((a,b)=>payMap[b]-payMap[a]);
+  const payVals = payLabels.map(k=>payMap[k]);
+  document.getElementById('payTotal').textContent = fmtNum(filtered.length) + ' ออเดอร์';
+  const ctxPay = document.getElementById('payChart').getContext('2d');
+  if(payChart) payChart.destroy();
+  payChart = new Chart(ctxPay, {
+    type:'doughnut',
+    data:{labels: payLabels, datasets:[{data: payVals, backgroundColor:['#6366f1','#10b981','#f59e0b','#06b6d4','#ef4444','#8b5cf6','#ec4899','#14b8a6'], borderWidth:0}]},
+    options:{responsive:true, maintainAspectRatio:false, cutout:'62%', plugins:{legend:{position:'bottom', labels:{boxWidth:12, font:{size:11}, padding:14}}}}
+  });
+
+  // SKU - aggregate by sku sales
+  const skuSales={}; filtered.forEach(o=> skuSales[o.sku]=(skuSales[o.sku]||0)+o.net);
+  const skuEntries = Object.entries(skuSales).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const skuLabels = skuEntries.map(e=>e[0]);
+  const skuVals = skuEntries.map(e=>e[1]);
+  const ctxSku = document.getElementById('skuChart').getContext('2d');
+  if(skuChart) skuChart.destroy();
+  skuChart = new Chart(ctxSku, {
+    type:'bar',
+    data:{labels: skuLabels, datasets:[{label:'ยอดขาย (บาท)', data: skuVals, backgroundColor:'#0ea5e9', borderRadius:8}]},
+    options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#f1f5f9'}, ticks:{callback:v=>'฿'+Number(v).toLocaleString()}}, y:{grid:{display:false}}}}
+  });
+
+  // Province
+  const provMap={}; filtered.forEach(o=> provMap[o.prov]=(provMap[o.prov]||0)+1);
+  const provEntries = Object.entries(provMap).filter(e=>e[0]!=='—').sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const provLabels = provEntries.map(e=>e[0].replace('จังหวัด',''));
+  const provVals = provEntries.map(e=>e[1]);
+  const ctxProv = document.getElementById('provChart').getContext('2d');
+  if(provChart) provChart.destroy();
+  provChart = new Chart(ctxProv, {
+    type:'bar',
+    data:{labels: provLabels, datasets:[{label:'ออเดอร์', data: provVals, backgroundColor:'#f59e0b', borderRadius:8}]},
+    options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#f1f5f9'}}, y:{grid:{display:false}}}}
+  });
+}
+
+function renderTable(){
+  const size = parseInt(document.getElementById('pageSize').value,10);
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total/size));
+  if(currentPage>totalPages) currentPage=totalPages;
+  const start = (currentPage-1)*size;
+  const slice = filtered.slice(start, start+size);
+  const tbody = document.getElementById('tbody');
+  if(!slice.length){
+    tbody.innerHTML = `<tr><td colspan="10" class="px-4 py-10 text-center text-slate-400">ไม่พบข้อมูลตามเงื่อนไข</td></tr>`;
+  } else {
+    tbody.innerHTML = slice.map(o=>`
+      <tr class="hover:bg-slate-50">
+        <td class="px-4 py-2.5 mono text-xs text-slate-500">${o.idx}</td>
+        <td class="px-4 py-2.5 whitespace-nowrap mono text-xs">${o.date}</td>
+        <td class="px-4 py-2.5"><span class="inline-flex text-xs font-semibold bg-slate-900 text-white px-2 py-1 rounded-lg">${o.sku}</span></td>
+        <td class="px-4 py-2.5 max-w-[280px] truncate text-xs" title="${o.fullName.replace(/"/g,'&quot;')}">${o.fullName||'—'}</td>
+        <td class="px-4 py-2.5 text-right mono text-xs">${fmtMoney(o.price)}</td>
+        <td class="px-4 py-2.5 text-right mono text-xs font-semibold">${o.qty}</td>
+        <td class="px-4 py-2.5 text-right mono text-xs font-bold text-emerald-700">${fmtMoney(o.net)}</td>
+        <td class="px-4 py-2.5 text-xs"><span class="bg-slate-100 border border-slate-200 px-2 py-1 rounded-full whitespace-nowrap">${o.pay}</span></td>
+        <td class="px-4 py-2.5 text-xs max-w-[140px] truncate" title="${o.customer}">${o.customer}</td>
+        <td class="px-4 py-2.5 text-xs whitespace-nowrap">${o.prov}</td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('tableInfo').textContent = `แสดง ${slice.length? start+1:0}–${Math.min(start+size, total)} จาก ${fmtNum(total)}`;
+  document.getElementById('pageInfo').textContent = `หน้า ${currentPage} / ${totalPages}`;
+}
+function prevPage(){ if(currentPage>1){ currentPage--; renderTable(); } }
+function nextPage(){
+  const size=parseInt(document.getElementById('pageSize').value,10);
+  const totalPages=Math.ceil(filtered.length/size);
+  if(currentPage < totalPages){ currentPage++; renderTable(); }
+}
+function exportCSV(){
+  if(!filtered.length) return;
+  const headers=['วันที่สั่งซื้อ','SKU','ชื่อสินค้า','ราคา','จำนวน','สุทธิ','ชำระ','ลูกค้า','จังหวัด','ที่อยู่'];
+  const rows = filtered.map(o=> [o.date, o.sku, `"${o.fullName.replace(/"/g,'""')}"`, o.price, o.qty, o.net, o.pay, o.customer, o.prov, `"${(o.addr||'').replace(/"/g,'""')}"`].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='mulk-orders-filtered.csv'; a.click(); URL.revokeObjectURL(url);
+}
+document.getElementById('autoRefresh').addEventListener('change', e=>{
+  if(e.target.checked){
+    autoTimer = setInterval(loadData, 60000);
+  } else {
+    clearInterval(autoTimer); autoTimer=null;
+  }
+});
+// init
+loadData();
+</script>
+</body>
+</html>
+
