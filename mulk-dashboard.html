@@ -232,6 +232,59 @@ function parseNumber(v){
   return isNaN(n)?0:n;
 }
 
+function parseDateCell(v){
+  if(v==null||v==='') return null;
+  let s = String(v).trim().replace(/^"+|"+$/g,'');
+  // 1) YYYY-MM-DD or YYYY/MM/DD with optional time
+  let m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(m){
+    let y=m[1], mo=m[2].padStart(2,'0'), d=m[3].padStart(2,'0');
+    if(parseInt(y)>2400) y=String(parseInt(y)-543);
+    return `${y}-${mo}-${d}`;
+  }
+  // 2) DD/MM/YYYY or DD-MM-YYYY [HH:MM] — Thai common, also handles พ.ศ.
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m){
+    let d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0'), y=m[3];
+    if(parseInt(y)>2400) y=String(parseInt(y)-543);
+    // Validate month 1-12 to avoid mis-parse
+    if(parseInt(mo)>=1 && parseInt(mo)<=12 && parseInt(d)>=1 && parseInt(d)<=31){
+      return `${y}-${mo}-${d}`;
+    }
+  }
+  // 2b) DD/MM/YY — Thai short year, e.g. 10/09/68 = 10 ก.ย. 2568 = 2025-09-10
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})(?!\d)/);
+  if(m){
+    let d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0'), yy=parseInt(m[3],10);
+    if(parseInt(mo)>=1 && parseInt(mo)<=12 && parseInt(d)>=1 && parseInt(d)<=31){
+      // yy >= 40 → พ.ศ. ย่อ (2568→68); else ค.ศ. ย่อ
+      const y = yy>=40 ? String(2500+yy-543) : String(2000+yy);
+      return `${y}-${mo}-${d}`;
+    }
+  }
+  // 2c) Thai month names: e.g. "10 ก.ย. 2568" or "10 กันยายน 2025"
+  const thMonths = {'ม.ค.':1,'ก.พ.':2,'มี.ค.':3,'เม.ย.':4,'พ.ค.':5,'มิ.ย.':6,'ก.ค.':7,'ส.ค.':8,'ก.ย.':9,'ต.ค.':10,'พ.ย.':11,'ธ.ค.':12,
+                    'มกราคม':1,'กุมภาพันธ์':2,'มีนาคม':3,'เมษายน':4,'พฤษภาคม':5,'มิถุนายน':6,'กรกฎาคม':7,'สิงหาคม':8,'กันยายน':9,'ตุลาคม':10,'พฤศจิกายน':11,'ธันวาคม':12};
+  const thRegex = new RegExp(`^(\\d{1,2})\\s*(${Object.keys(thMonths).join('|')})\\s*(\\d{2,4})`);
+  const tm = s.match(thRegex);
+  if(tm){
+    let d = tm[1].padStart(2,'0');
+    let mo = String(thMonths[tm[2]]).padStart(2,'0');
+    let yStr = tm[3];
+    let y = parseInt(yStr,10);
+    if(yStr.length===2) y = y>=40 ? (2500+y-543) : (2000+y);
+    else if(y>2400) y = y-543;
+    return `${y}-${mo}-${d}`;
+  }
+  // 3) fallback: try Date parse for e.g. "Sep 10, 2026"
+  const t = Date.parse(s);
+  if(!isNaN(t)){
+    const dt=new Date(t);
+    return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+  }
+  return null;
+}
+
 function extractProvince(addr, col53){
   if(col53 && col53.includes('จังหวัด')) return col53.trim();
   if(!addr) return '—';
@@ -265,11 +318,28 @@ function loadData(){
       try{
         const rows = res.data;
         const orders = [];
+        let skippedNoDate = 0;
+        let skippedShort = 0;
+        const skippedSamples = [];
         for(let i=1;i<rows.length;i++){
           const r = rows[i];
-          if(!r || r.length < 7) continue;
-          const d = (r[6]||'').trim();
-          if(!/^\d{4}-\d{2}-\d{2}/.test(d)) continue; // skip separators like "ส่ง Inter Express…"
+          if(!r || r.length < 2) { skippedShort++; continue; }
+          // Column G (index 6) is the primary date, but Fallback to F/H if sheet shifted.
+          let rawD = (r[6]||'').trim();
+          let dateStr = parseDateCell(rawD);
+          if(!dateStr){
+            // Try nearby columns in case the sheet column shifted
+            for(const ci of [7,5,0,1,2]){
+              const cand = (r[ci]||'').trim();
+              const pd = parseDateCell(cand);
+              if(pd){ rawD = cand; dateStr = pd; break; }
+            }
+          }
+          if(!dateStr){
+            skippedNoDate++;
+            if(skippedSamples.length < 5) skippedSamples.push(`แถว ${i+1}: colG="${(r[6]||'').toString().slice(0,60)}" | ทั้งแถว: ${r.slice(0,12).join(' | ').slice(0,180)}`);
+            continue;
+          }
           const sku = (r[17]||'').trim() || '—';
           const fullName = (r[18]||'').trim();
           const qty = parseNumber(r[23]) || 1;
@@ -282,9 +352,8 @@ function loadData(){
           const addr = (r[54]||'').trim();
           const col53 = (r[53]||'').trim();
           const prov = extractProvince(addr, col53);
-          const dateStr = d.slice(0,10);
-          const datetime = d;
-          orders.push({idx: orders.length+1, date: dateStr, datetime, sku, fullName, qty, price, net, pay, customer, username, prov, addr});
+          const datetime = rawD;
+          orders.push({idx: orders.length+1, date: dateStr, datetime, sku, fullName, qty, price, net, pay, customer, username, prov, addr, _row: i+1});
         }
         allOrders = orders;
         // sort by date asc for charts, but keep original idx
@@ -297,8 +366,26 @@ function loadData(){
         renderTable();
         document.getElementById('liveDot').classList.remove('hidden');
         document.getElementById('lastUpdate').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleString('th-TH');
+        const diagMsg = (skippedNoDate||skippedShort)
+          ? ` • ข้าม ${fmtNum(skippedNoDate+skippedShort)} แถว (ไม่มีวันที่ ${fmtNum(skippedNoDate)} / แถวสั้น ${fmtNum(skippedShort)})`
+          : '';
+        const isFull = orders.length > 0 ? ` • วันที่ ${orders[0].date} → ${orders[orders.length-1].date}` : '';
         document.getElementById('statusBar').className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2';
-        document.getElementById('statusText').textContent = `✅ โหลดสำเร็จ ${fmtNum(orders.length)} ออเดอร์ จาก ${rows.length.toLocaleString()} แถวในชีต • พร้อมใช้งาน`;
+        document.getElementById('statusText').textContent = `✅ โหลดสำเร็จ ${fmtNum(orders.length)} ออเดอร์ จาก ${rows.length.toLocaleString()} แถวในชีต${isFull}${diagMsg} • พร้อมใช้งาน`;
+        // Debug panel for skipped rows
+        let dbg = document.getElementById('debugPanel');
+        if(skippedSamples.length){
+          if(!dbg){
+            dbg = document.createElement('div');
+            dbg.id='debugPanel';
+            dbg.className='bg-white border border-amber-200 rounded-xl p-3 text-xs';
+            document.getElementById('statusBar').insertAdjacentElement('afterend', dbg);
+          }
+          dbg.innerHTML = `<div class="font-semibold text-amber-700 mb-1">⚠️ ตัวอย่างแถวที่ถูกข้าม (ไม่มีวันที่) — ช่วยวินิจฉัยว่าทำไมรายการมาไม่ครบ</div>`
+            + skippedSamples.map(s=>`<div class="mono text-slate-600 bg-slate-50 rounded px-2 py-1 mb-1 break-all">${s.replace(/</g,'&lt;')}</div>`).join('')
+            + `<div class="text-slate-500 mt-1">ทิป: เปิดชีตแล้วเช็คคอลัมน์ G ว่ามีวันที่รูปแบบ DD/MM/YYYY หรือ พ.ศ. หรือไม่ — โค้ดใหม่รองรับแล้ว แต่ถ้ายังข้าม ให้ copy 1 แถวที่หายไปส่งมาได้เลย</div>`;
+        } else if(dbg){ dbg.remove(); }
+        console.log(`[Mulk] rows=${rows.length} orders=${orders.length} skippedNoDate=${skippedNoDate} skippedShort=${skippedShort}`, skippedSamples);
       }catch(e){
         console.error(e);
         document.getElementById('statusBar').className = 'bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl';
