@@ -241,6 +241,12 @@ tr:last-child td{border-bottom:none}
             <input id="billNoInput" placeholder="POS-YYYYMMDD-001" spellcheck="false" oninput="onBillNoChange(this.value)">
             <button class="btn btn-ghost btn-sm" onclick="regenBillNo()" title="สุ่มเลขใหม่">↺</button>
           </div>
+          <div class="bill-row">
+            <label>วันที่ออกบิล</label>
+            <input id="billDateInput" type="date" onchange="onBillDateChange()" style="max-width:150px">
+            <input id="billTimeInput" type="time" onchange="onBillDateChange()" style="max-width:110px">
+            <button class="btn btn-ghost btn-sm" onclick="resetBillDate()" title="รีเซ็ตเป็นวันนี้ตอนนี้">วันนี้</button>
+          </div>
           <div style="margin-top:10px;display:grid;gap:8px">
             <div style="display:flex;gap:6px">
               <input id="customerSearch" placeholder="🔍 ค้นหาลูกค้า ชื่อ/เบอร์/รหัส" list="cusListPos" oninput="onCustomerSearch(this.value)" autocomplete="off">
@@ -425,6 +431,10 @@ tr:last-child td{border-bottom:none}
       <input type="hidden" id="e_oldId">
       <label>เลขที่บิล *</label><input id="e_billNo" style="font-family:'IBM Plex Mono',monospace;font-weight:700" placeholder="POS-YYYYMMDD-001">
       <div class="muted" style="margin-top:4px">แก้เลขแล้วบาร์โค้ดท้ายบิลจะเปลี่ยนตาม • ห้ามซ้ำกับบิลอื่น</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div><label>วันที่ออกบิล *</label><input id="e_billDate" type="date"></div>
+        <div><label>เวลา</label><input id="e_billTime" type="time"></div>
+      </div>
       <label style="margin-top:10px">ชื่อลูกค้า</label><input id="e_customerName" placeholder="ชื่อลูกค้า">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
         <div><label>เบอร์โทร</label><input id="e_customerPhone" placeholder="081-xxx-xxxx"></div>
@@ -832,8 +842,12 @@ function isBillNoDuplicate(billNo){
   return sales.some(s=> s.billNo===billNo);
 }
 function onBillNoChange(v){
-  // แค่รีเฟรชพรีวิวตามที่พิมพ์
   if(document.getElementById('page-settings')?.classList.contains('active')) refreshPreview();
+  else {
+    // อัปเดตพรีวิวเล็กในตะกร้าก็ได้
+    const el=document.getElementById('previewWrap');
+    if(el && el.innerHTML) refreshPreview();
+  }
 }
 function regenBillNo(){
   const inp=document.getElementById('billNoInput');
@@ -846,6 +860,49 @@ function initBillNo(){
   const inp=document.getElementById('billNoInput');
   if(!inp) return;
   if(!inp.value.trim()) inp.value=nextBillNo();
+}
+// ===== BILL DATE/TIME =====
+function nowLocal(){ return new Date(); }
+function toISODate(d){ return d.toISOString().slice(0,10); }
+function toHM(d){ return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function initBillDate(){
+  const d=document.getElementById('billDateInput'), t=document.getElementById('billTimeInput');
+  if(!d||!t) return;
+  if(!d.value) d.value = toISODate(nowLocal());
+  if(!t.value) t.value = toHM(nowLocal());
+}
+function resetBillDate(){
+  const d=document.getElementById('billDateInput'), t=document.getElementById('billTimeInput');
+  if(!d||!t) return;
+  const n=nowLocal();
+  d.value=toISODate(n); t.value=toHM(n);
+  onBillDateChange();
+  toast('รีเซ็ตวันที่เป็นวันนี้ '+ d.value+' '+t.value);
+}
+function onBillDateChange(){
+  if(document.getElementById('page-settings')?.classList.contains('active')) refreshPreview();
+}
+function getBillDateTime(){
+  const d=document.getElementById('billDateInput')?.value || '';
+  const tm=document.getElementById('billTimeInput')?.value || '';
+  if(!d) return { isoDate:'', hm:'', ts: Date.now(), dateStr: new Date().toLocaleString('th-TH') };
+  const datePart=d;
+  const timePart=tm || '00:00';
+  const iso = datePart+'T'+timePart+':00';
+  const dt=new Date(iso);
+  const valid=!isNaN(dt.getTime());
+  const ts = valid? dt.getTime() : Date.now();
+  const dateStr = valid? dt.toLocaleString('th-TH') : new Date().toLocaleString('th-TH');
+  return { isoDate:datePart, hm:timePart, ts, dateStr, iso };
+}
+function parseDateStrToInputs(dateStr){
+  // พยายาม parse วันที่จาก dateStr เดิม (th-TH) -> fallback วันนี้
+  try{
+    const dt=new Date(dateStr);
+    if(!isNaN(dt.getTime())) return { d: toISODate(dt), t: toHM(dt) };
+  }catch(e){}
+  const n=nowLocal();
+  return { d: toISODate(n), t: toHM(n) };
 }
 function sanitizeId(s){ return String(s||'').replace(/[^A-Za-z0-9]/g,'_'); }
 function renderBarcodes(root){
@@ -945,11 +1002,12 @@ function previewReceipt(){
   const t=calcTotals();
   const c=currentCustomerForBill();
   const billNo=getBillNo();
+  const dt=getBillDateTime();
   let sale;
   if(!cart.length){
-    sale={billNo, dateStr:new Date().toLocaleString('th-TH'), ...c, items:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:2}], subtotal:t.subtotal||90, discount:t.discount, vat:t.vat, total:t.total||90, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')}
+    sale={billNo, dateStr:dt.dateStr, ts:dt.ts, billDate:dt.isoDate, billTime:dt.hm, ...c, items:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:2}], subtotal:t.subtotal||90, discount:t.discount, vat:t.vat, total:t.total||90, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')}
   } else {
-    sale={billNo, dateStr:new Date().toLocaleString('th-TH'), ...c, items:cart, subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
+    sale={billNo, dateStr:dt.dateStr, ts:dt.ts, billDate:dt.isoDate, billTime:dt.hm, ...c, items:cart, subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
   }
   const html=buildReceiptHTML(sale);
   const a=document.getElementById('receiptPreview'); a.innerHTML=html; renderBarcodes(a);
@@ -961,7 +1019,8 @@ function refreshPreview(){
   const c=currentCustomerForBill();
   const fallback = (!c.customer ? 'ลูกค้าหน้าร้าน' : c.customer);
   const billNo=getBillNo();
-  const sale={billNo, dateStr:new Date().toLocaleString('th-TH'), customer:c.customer||fallback, customerId:c.customerId, customerPhone:c.customerPhone, customerAddress:c.customerAddress, customerTax:c.customerTax, items: cart.length?cart:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:1}], subtotal:t.subtotal||45, discount:t.discount, vat:t.vat, total:t.total||45, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
+  const dt=getBillDateTime();
+  const sale={billNo, dateStr:dt.dateStr, ts:dt.ts, billDate:dt.isoDate, billTime:dt.hm, customer:c.customer||fallback, customerId:c.customerId, customerPhone:c.customerPhone, customerAddress:c.customerAddress, customerTax:c.customerTax, items: cart.length?cart:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:1}], subtotal:t.subtotal||45, discount:t.discount, vat:t.vat, total:t.total||45, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
   const el=document.getElementById('previewWrap');
   if(el){ el.innerHTML=buildReceiptHTML(sale); renderBarcodes(el); }
 }
@@ -994,8 +1053,9 @@ function checkout(){
     if(idx>=0){ raw[idx].stock = Math.max(0, Number(raw[idx].stock||0) - c.qty) }
   }
   saveRawProducts(raw);
-  // push dispatches for each line (เชื่อมกับ stock.html)
-  const todayStr = new Date().toISOString().split('T')[0];
+  // push dispatches for each line (เชื่อมกับ stock.html) — ใช้วันที่บิลที่เลือก
+  const billDt=getBillDateTime();
+  const todayStr = billDt.isoDate || new Date().toISOString().slice(0,10);
   let nextId = nextDispatchId();
   const newDispatches = cart.map(c=>({
     id: nextId++,
@@ -1009,7 +1069,7 @@ function checkout(){
   const allDisp = getRawDispatches().concat(newDispatches);
   saveRawDispatches(allDisp);
   dispatches = allDisp;
-  const sale={ id:Date.now().toString(), billNo:billNoForDispatch, dateStr:new Date().toLocaleString('th-TH'), ts:Date.now(), customer:cInfo.customer||'ลูกค้าหน้าร้าน', customerId:cInfo.customerId||'', customerPhone:cInfo.customerPhone||'', customerAddress:cInfo.customerAddress||'', customerTax:cInfo.customerTax||'', items:JSON.parse(JSON.stringify(cart)), subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:Math.max(0,t.change), pay:payMethod, ref:val('transferRef'), note:val('receiptNote') };
+  const sale={ id:Date.now().toString(), billNo:billNoForDispatch, dateStr:billDt.dateStr, ts:billDt.ts, billDate:billDt.isoDate, billTime:billDt.hm, customer:cInfo.customer||'ลูกค้าหน้าร้าน', customerId:cInfo.customerId||'', customerPhone:cInfo.customerPhone||'', customerAddress:cInfo.customerAddress||'', customerTax:cInfo.customerTax||'', items:JSON.parse(JSON.stringify(cart)), subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:Math.max(0,t.change), pay:payMethod, ref:val('transferRef'), note:val('receiptNote') };
   sales.unshift(sale); saveSales();
   const html=buildReceiptHTML(sale);
   const rp=document.getElementById('receiptPreview'); rp.innerHTML=html; renderBarcodes(rp);
@@ -1023,10 +1083,11 @@ function checkout(){
   document.getElementById('customerPhone').value='';
   document.getElementById('customerAddress').value='';
   document.getElementById('customerId').value='';
-  // สร้างเลขบิลใหม่สำหรับบิลถัดไป
+  // สร้างเลขบิล+วันที่ใหม่สำหรับบิลถัดไป
   const bnInp=document.getElementById('billNoInput'); if(bnInp) bnInp.value=nextBillNo();
+  initBillDate();
   renderCart(); renderProducts(); renderManage(); renderHistory(); renderCustomers(); refreshPreview();
-  toast('บันทึกการขาย '+sale.billNo+' • สต๊อกอัปเดตแล้ว');
+  toast('บันทึกการขาย '+sale.billNo+' • '+sale.dateStr+' • สต๊อกอัปเดตแล้ว');
 }
 function doPrint(){
   const src=document.getElementById('receiptPreview');
@@ -1056,6 +1117,12 @@ function openEditBillModal(id){
   const s=sales.find(x=> x.id===id); if(!s) return;
   document.getElementById('e_oldId').value=s.id;
   document.getElementById('e_billNo').value=s.billNo;
+  // เติมวันที่/เวลาจากบิลเดิม
+  let dVal = s.billDate || '', tVal = s.billTime || '';
+  if(!dVal && s.ts){ const dt=new Date(Number(s.ts)); if(!isNaN(dt.getTime())){ dVal=toISODate(dt); tVal=toHM(dt); } }
+  if(!dVal && s.dateStr){ const p=parseDateStrToInputs(s.dateStr); dVal=p.d; tVal=p.t; }
+  document.getElementById('e_billDate').value=dVal||toISODate(nowLocal());
+  document.getElementById('e_billTime').value=tVal||toHM(nowLocal());
   document.getElementById('e_customerName').value=s.customer||'';
   document.getElementById('e_customerPhone').value=s.customerPhone||'';
   document.getElementById('e_customerAddress').value=s.customerAddress||'';
@@ -1069,21 +1136,29 @@ function saveEditBill(){
   const newBillNo=val('e_billNo').trim();
   if(!newBillNo) return toast('กรอกเลขที่บิล','err');
   if(newBillNo!==s.billNo && isBillNoDuplicate(newBillNo)) return toast('เลขที่บิลนี้ซ้ำกับบิลอื่นแล้ว','err');
+  const eDate=val('e_billDate'), eTime=val('e_billTime')||'00:00';
+  if(!eDate) return toast('เลือกวันที่ออกบิลด้วย','err');
+  const dt=new Date(eDate+'T'+eTime+':00');
+  if(isNaN(dt.getTime())) return toast('วันที่ไม่ถูกต้อง','err');
   const oldBillNo=s.billNo;
+  const oldDate = (function(){ try{ const r=getRawDispatches().find(d=> (d.note||'').includes(oldBillNo)); return r? r.date : null }catch(e){ return null } })();
   s.billNo=newBillNo;
+  s.billDate=eDate; s.billTime=eTime;
+  s.ts=dt.getTime(); s.dateStr=dt.toLocaleString('th-TH');
   s.customer=val('e_customerName');
   s.customerPhone=val('e_customerPhone');
   s.customerAddress=val('e_customerAddress');
   s.note=val('e_note');
   s.pay=val('e_pay');
   saveSales();
-  // อัปเดต dispatches ที่ผูกกับบิลนี้ (note มี POS <billNo>)
-  if(oldBillNo!==newBillNo){
+  // อัปเดต dispatches ที่ผูกกับบิลนี้ (note มี POS <billNo>) + วันที่จ่าย
+  {
     let disps=getRawDispatches();
     let changed=false;
     disps.forEach(d=>{
       if((d.note||'').includes(oldBillNo)){
-        d.note = d.note.replace(oldBillNo, newBillNo);
+        if(oldBillNo!==newBillNo) d.note = d.note.replace(oldBillNo, newBillNo);
+        if(d.date!==eDate) d.date=eDate;
         changed=true;
       }
     });
@@ -1399,7 +1474,7 @@ window.addEventListener('storage', (e)=>{
 });
 
 load(); applySettings(); renderProducts(); renderCart(); renderHistory(); renderManage(); renderCustomers(); updateHoldInfo(); barcodeHandler();
-refreshCustomerDatalist(); initBillNo(); refreshPreview(); renderShopPreview();
+refreshCustomerDatalist(); initBillNo(); initBillDate(); refreshPreview(); renderShopPreview();
 </script>
 </body>
 </html>
