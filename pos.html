@@ -301,9 +301,30 @@ tr:last-child td{border-bottom:none}
   </div>
 
   <div id="page-history" class="page">
+    <!-- สรุปปิดยอดประจำวัน -->
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-hd">
+        <h3>📊 สรุปปิดยอด — <span id="closeDayLabel">วันนี้</span></h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="closeDayDate" style="max-width:150px" onchange="renderHistory()">
+          <button class="btn btn-ghost btn-sm" onclick="setCloseDayToday()">วันนี้</button>
+          <button class="btn btn-ghost btn-sm" onclick="printCloseDay()">🖨️ พิมพ์สรุปปิดร้าน A4</button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <div class="stat-grid" id="closeDayStats"></div>
+        <div id="closeDayBreakdown" class="muted" style="font-size:11px"></div>
+        <div id="salesMigrationBar" class="hidden" style="margin-top:8px;background:#e0f2fe;border:1px solid #bae6fd;border-radius:10px;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="muted">พบประวัติขายเก่าในเครื่องนี้ — ย้ายขึ้น Firebase เพื่อดูข้ามเครื่องได้</span>
+          <button class="btn btn-primary btn-sm" onclick="migrateSalesToFirebase()">⬆️ ย้ายประวัติขายขึ้น Firebase</button>
+          <span id="salesMigrateStatus" class="muted"></span>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-hd">
-        <h3>ประวัติการขาย</h3>
+        <h3>ประวัติการขาย <span class="chip" id="salesCountChip">0 บิล</span></h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <input id="searchHistory" placeholder="ค้นหาเลขบิล / ลูกค้า" style="width:220px" oninput="renderHistory()">
           <button class="btn btn-ghost btn-sm" onclick="exportSales()">⬇️ Export CSV</button>
@@ -313,12 +334,14 @@ tr:last-child td{border-bottom:none}
       <div class="card-bd" style="padding:0">
         <div class="table-wrap" style="border:none;border-radius:0">
           <table>
-            <thead><tr><th>เวลา</th><th>เลขที่บิล</th><th>ลูกค้า</th><th>รายการ</th><th>ยอดสุทธิ</th><th>ชำระ</th><th></th></tr></thead>
+            <thead><tr><th>เวลา</th><th>เลขที่บิล</th><th>ลูกค้า</th><th>รายการ</th><th>ยอดสุทธิ</th><th>ชำระ</th><th>รับมา / ทอน</th><th></th></tr></thead>
             <tbody id="historyBody"></tbody>
           </table>
         </div>
       </div>
     </div>
+    <!-- พื้นที่พิมพ์สรุปปิดยอด (ซ่อน) -->
+    <div id="closeDayPrintArea" class="hidden"></div>
   </div>
 
   <div id="page-products" class="page">
@@ -1266,20 +1289,140 @@ function doPrint(){
   window.print();
   setTimeout(()=>{ pa.style.display='none'; }, 600);
 }
+function closeDayForDate(dStr){
+  if(!dStr) return sales;
+  return sales.filter(s=> (s.billDate||'')===dStr || (!s.billDate && (s.dateStr||'').includes(dStr.split('-').reverse().join('/'))));
+}
+function salesForCloseDay(){
+  const inp=document.getElementById('closeDayDate');
+  let dStr = inp && inp.value ? inp.value : new Date().toISOString().slice(0,10);
+  // รองรับทั้ง billDate และ dateStr เก่า — ใช้ ts เป็นหลักถ้ามี
+  return sales.filter(s=>{
+    let sd = s.billDate || '';
+    if(!sd && s.ts){ try{ sd=new Date(Number(s.ts)).toISOString().slice(0,10); }catch(e){} }
+    if(!sd && s.dateStr){
+      // พยายาม parse th-TH: "12/9/2569"
+      const m=(s.dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/));
+      if(m){ const y=Number(m[3])-543; sd=`${String(y).padStart(4,'0')}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`; }
+    }
+    return sd===dStr;
+  });
+}
+function setCloseDayToday(){
+  const inp=document.getElementById('closeDayDate');
+  if(inp) inp.value=new Date().toISOString().slice(0,10);
+  renderHistory();
+}
+function printCloseDay(){
+  const inp=document.getElementById('closeDayDate');
+  const dStr = inp && inp.value ? inp.value : new Date().toISOString().slice(0,10);
+  const list = salesForCloseDay();
+  if(!list.length){ toast('ไม่มีบิลในวันที่เลือก','err'); return; }
+  const s=getSettings();
+  const thDate=new Date(dStr+'T00:00:00').toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const total=list.reduce((a,b)=>a+Number(b.total||0),0);
+  const subtotal=list.reduce((a,b)=>a+Number(b.subtotal||0),0);
+  const discount=list.reduce((a,b)=>a+Number(b.discount||0),0);
+  const vat=list.reduce((a,b)=>a+Number(b.vat||0),0);
+  const byPay={ cash:0, transfer:0, card:0 };
+  let cashReceived=0, cashChange=0;
+  list.forEach(s=>{ byPay[s.pay]=(byPay[s.pay]||0)+Number(s.total||0); if(s.pay==='cash'){ cashReceived+=Number(s.received||0); cashChange+=Number(s.change||0); } });
+  const logoHtml = s.logo ? `<img src="${s.logo}" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 6px" onerror="this.style.display='none'">` : '';
+  const rows=list.map((b,i)=>`<tr><td style="border:1px solid #999;padding:5px;text-align:center">${i+1}</td><td style="border:1px solid #999;padding:5px;font-family:monospace">${escapeHtml(b.billNo)}</td><td style="border:1px solid #999;padding:5px">${escapeHtml(b.customer||'-')}</td><td style="border:1px solid #999;padding:5px;text-align:center">${b.items.length}</td><td style="border:1px solid #999;padding:5px;text-align:right">฿${fmt(b.total)}</td><td style="border:1px solid #999;padding:5px;text-align:center">${b.pay==='cash'?'เงินสด':b.pay==='transfer'?'โอน':'บัตร'}</td></tr>`).join('');
+  const html=`<div style="font-family:'Sarabun',sans-serif;color:#111;padding:20px;max-width:800px;margin:0 auto">
+    <div style="text-align:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:12px">
+      ${logoHtml}
+      <div style="font-weight:800;font-size:18px">${escapeHtml(s.shopName)}</div>
+      <div style="font-size:11px;color:#555">${escapeHtml(s.branch||'')}</div>
+      <div style="font-size:11px;color:#555">${escapeHtml(s.address||'')} ${s.phone? '• '+escapeHtml(s.phone):''}</div>
+      <div style="margin-top:8px;font-weight:700;font-size:14px">สรุปปิดยอดประจำวัน — ${escapeHtml(thDate)}</div>
+      <div style="font-size:11px;color:#555">พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')} • ทั้งหมด ${list.length} บิล</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0">
+      <div style="flex:1;min-width:120px;background:#f1f5f9;border-radius:8px;padding:10px;text-align:center"><div style="font-size:11px;color:#64748b">จำนวนบิล</div><div style="font-size:20px;font-weight:800">${list.length}</div></div>
+      <div style="flex:1;min-width:120px;background:#f1f5f9;border-radius:8px;padding:10px;text-align:center"><div style="font-size:11px;color:#64748b">ยอดขายสุทธิ</div><div style="font-size:20px;font-weight:800;color:#2563eb">฿${fmt(total)}</div></div>
+      <div style="flex:1;min-width:120px;background:#e0f2fe;border-radius:8px;padding:10px;text-align:center"><div style="font-size:11px;color:#0369a1">เงินสด</div><div style="font-size:16px;font-weight:700">฿${fmt(byPay.cash||0)}</div><div style="font-size:10px;color:#64748b">รับมา ฿${fmt(cashReceived)} • ทอน ฿${fmt(cashChange)}</div></div>
+      <div style="flex:1;min-width:120px;background:#e0f2fe;border-radius:8px;padding:10px;text-align:center"><div style="font-size:11px;color:#0369a1">โอน</div><div style="font-size:16px;font-weight:700">฿${fmt(byPay.transfer||0)}</div></div>
+      <div style="flex:1;min-width:120px;background:#e0f2fe;border-radius:8px;padding:10px;text-align:center"><div style="font-size:11px;color:#0369a1">บัตร</div><div style="font-size:16px;font-weight:700">฿${fmt(byPay.card||0)}</div></div>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:6px">รวมก่อนลด ฿${fmt(subtotal)} • ส่วนลด ฿${fmt(discount)} • VAT ฿${fmt(vat)} • สุทธิ ฿${fmt(total)}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th style="border:1px solid #999;padding:6px;background:#eef2f7">#</th><th style="border:1px solid #999;padding:6px;background:#eef2f7">เลขที่บิล</th><th style="border:1px solid #999;padding:6px;background:#eef2f7">ลูกค้า</th><th style="border:1px solid #999;padding:6px;background:#eef2f7">รายการ</th><th style="border:1px solid #999;padding:6px;background:#eef2f7">ยอดสุทธิ</th><th style="border:1px solid #999;padding:6px;background:#eef2f7">ชำระ</th></tr></thead><tbody>${rows}</tbody></table>
+    <div style="margin-top:14px;border-top:1px dashed #999;padding-top:10px;display:flex;justify-content:space-between;font-size:11px">
+      <span>ผู้จัดทำ ______________________</span><span>ผู้ตรวจสอบ ______________________</span>
+    </div>
+    <div style="text-align:center;margin-top:8px;font-size:10px;color:#666;white-space:pre-wrap">${escapeHtml(s.footer||'')}</div>
+  </div>`;
+  const out=document.getElementById('closeDayPrintArea');
+  if(out){ out.innerHTML=html; out.classList.remove('hidden'); }
+  const w=window.open('','_blank');
+  if(!w){ toast('เปิดหน้าพิมพ์ไม่สำเร็จ — ลองอนุญาต popup','err'); if(out) out.innerHTML=html; return; }
+  w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>สรุปปิดยอด ${escapeHtml(dStr)}</title><style>body{font-family:'Sarabun',sans-serif;padding:12px;color:#111} @media print{ @page{size:A4 portrait;margin:10mm} }</style></head><body>${html}<script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
 function renderHistory(){
-  const q=(document.getElementById('searchHistory').value||'').toLowerCase();
+  // ตั้งวันที่สรุปครั้งแรก
+  const dateInp=document.getElementById('closeDayDate');
+  if(dateInp && !dateInp.value) dateInp.value=new Date().toISOString().slice(0,10);
+  const label=document.getElementById('closeDayLabel');
+  if(label && dateInp && dateInp.value){
+    try{ label.textContent=new Date(dateInp.value+'T00:00:00').toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'}); }catch(e){}
+  }
+  // สรุปปิดยอด
+  const dayList=salesForCloseDay();
+  const total=dayList.reduce((a,b)=>a+Number(b.total||0),0);
+  const byPay={ cash:0, transfer:0, card:0 };
+  let cashReceived=0, cashChange=0;
+  dayList.forEach(s=>{ byPay[s.pay]=(byPay[s.pay]||0)+Number(s.total||0); if(s.pay==='cash'){ cashReceived+=Number(s.received||0); cashChange+=Number(s.change||0); } });
+  const statsEl=document.getElementById('closeDayStats');
+  if(statsEl){
+    statsEl.innerHTML=`
+      <div class="stat-card"><div class="stat-label">บิลวันนี้</div><div class="stat-value blue">${dayList.length}</div></div>
+      <div class="stat-card"><div class="stat-label">ยอดรวมสุทธิ</div><div class="stat-value green">฿${fmt(total)}</div></div>
+      <div class="stat-card"><div class="stat-label">เงินสด</div><div class="stat-value">฿${fmt(byPay.cash||0)}</div><div class="muted" style="font-size:10px">รับมา ฿${fmt(cashReceived)} • ทอน ฿${fmt(cashChange)}</div></div>
+      <div class="stat-card"><div class="stat-label">โอน / บัตร</div><div class="stat-value">฿${fmt((byPay.transfer||0)+(byPay.card||0))}</div><div class="muted" style="font-size:10px">โอน ฿${fmt(byPay.transfer||0)} • บัตร ฿${fmt(byPay.card||0)}</div></div>
+    `;
+  }
+  const breakdown=document.getElementById('closeDayBreakdown');
+  if(breakdown){
+    const subtotal=dayList.reduce((a,b)=>a+Number(b.subtotal||0),0);
+    const discount=dayList.reduce((a,b)=>a+Number(b.discount||0),0);
+    const vat=dayList.reduce((a,b)=>a+Number(b.vat||0),0);
+    breakdown.textContent = dayList.length ? `รวมก่อนลด ฿${fmt(subtotal)} • ส่วนลด ฿${fmt(discount)} • VAT ฿${fmt(vat)} • สุทธิ ฿${fmt(total)}` : 'ยังไม่มีบิลในวันที่เลือก';
+  }
+  const cntChip=document.getElementById('salesCountChip');
+  if(cntChip) cntChip.textContent=sales.length+' บิล'+(fbSalesReady? ' • Firebase ✓':'');
+
+  const q=(document.getElementById('searchHistory')?.value||'').toLowerCase();
   const body=document.getElementById('historyBody');
-  let list=sales.filter(s=> !q || (s.billNo+s.customer+s.items.map(i=>i.name).join(' ')).toLowerCase().includes(q));
-  if(!list.length){ body.innerHTML='<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:18px">ยังไม่มีประวัติการขาย</td></tr>'; return }
-  body.innerHTML=list.map(s=>`<tr>
-    <td style="white-space:nowrap">${escapeHtml(s.dateStr)}</td>
-    <td><b>${escapeHtml(s.billNo)}</b></td>
+  if(!body) return;
+  // เรียงใหม่สุดก่อน + filter
+  const sorted=[...sales].sort((a,b)=> (b.ts||0)-(a.ts||0));
+  let list=sorted.filter(s=> !q || (s.billNo+s.customer+s.items.map(i=>i.name).join(' ')).toLowerCase().includes(q));
+  // ถ้าเลือกวันที่สรุป ให้กรองตารางตามวันนั้นด้วย (ถ้าไม่ได้ค้นหา)
+  const dateFilter=document.getElementById('closeDayDate')?.value||'';
+  if(dateFilter && !q){
+    list=list.filter(s=>{
+      let sd=s.billDate||'';
+      if(!sd && s.ts){ try{ sd=new Date(Number(s.ts)).toISOString().slice(0,10); }catch(e){} }
+      return sd===dateFilter;
+    });
+  }
+  if(!list.length){ body.innerHTML='<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:18px">ยังไม่มีประวัติการขายในวันที่เลือก</td></tr>'; checkSalesMigrationBar(); return }
+  body.innerHTML=list.map(s=>{
+    const payLabel=s.pay==='cash'?'เงินสด':s.pay==='transfer'?'โอน':'บัตร';
+    const recvChange = s.pay==='cash' ? `<div style="font-size:11px">รับ ฿${fmt(s.received||0)}<br><span style="color:var(--green)">ทอน ฿${fmt(s.change||0)}</span></div>` : '<span class="muted" style="font-size:11px">—</span>';
+    return `<tr>
+    <td style="white-space:nowrap;font-size:12px">${escapeHtml(s.dateStr)}</td>
+    <td><b style="font-family:monospace;font-size:12px">${escapeHtml(s.billNo)}</b></td>
     <td>${escapeHtml(s.customer||'-')}</td>
     <td>${s.items.length} รายการ</td>
     <td style="font-weight:700">฿${fmt(s.total)}</td>
-    <td>${s.pay==='cash'?'เงินสด':s.pay==='transfer'?'โอน':'บัตร'}</td>
+    <td>${payLabel}</td>
+    <td>${recvChange}</td>
     <td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="openEditBillModal('${s.id}')">✏️ แก้บิล</button><button class="btn btn-ghost btn-sm" onclick="reprint('${s.id}')">พิมพ์ซ้ำ</button> <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="voidSale('${s.id}')">ยกเลิก</button></div></td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
+  checkSalesMigrationBar();
 }
 function openEditBillModal(id){
   const s=sales.find(x=> x.id===id); if(!s) return;
@@ -1298,7 +1441,7 @@ function openEditBillModal(id){
   document.getElementById('e_pay').value=s.pay||'cash';
   openModal('editBillModal');
 }
-function saveEditBill(){
+async function saveEditBill(){
   const oldId=val('e_oldId');
   const s=sales.find(x=> x.id===oldId); if(!s) return;
   const newBillNo=val('e_billNo').trim();
@@ -1320,7 +1463,21 @@ function saveEditBill(){
   s.pay=val('e_pay');
   saveSales();
   // อัปเดต dispatches ที่ผูกกับบิลนี้ (note มี POS <billNo>) + วันที่จ่าย
-  {
+  if(fbReady && fbDb && fbAuth.currentUser){
+    try{
+      // Firebase dispatches
+      const qs=await fbDb.collection('inventory_dispatches').where('note','>=','POS '+oldBillNo).where('note','<=','POS '+oldBillNo+'').get();
+      const batch=fbDb.batch();
+      let fbChanged=false;
+      qs.forEach(doc=>{
+        const d=doc.data();
+        let newNote=d.note; if(oldBillNo!==newBillNo) newNote=newNote.replace(oldBillNo,newBillNo);
+        const upd={}; if(newNote!==d.note) upd.note=newNote; if(d.date!==eDate) upd.date=eDate; if(Object.keys(upd).length){ batch.update(doc.ref, upd); fbChanged=true; }
+      });
+      if(fbChanged) await batch.commit();
+    }catch(e){ console.warn('edit dispatches FB',e); }
+    // Firebase stock fallback local already handled above via local dispatches sync — POS dispatches are also FB, so done
+  } else {
     let disps=getRawDispatches();
     let changed=false;
     disps.forEach(d=>{
@@ -1332,6 +1489,25 @@ function saveEditBill(){
     });
     if(changed) saveRawDispatches(disps);
   }
+  // อัปเดต pos_sales บน Firebase (ถ้ามี _fbId หรือหาเจอด้วย billNo เก่า)
+  try{
+    let fbId=s._fbId||null;
+    if(!fbId && fbDb){
+      const q=await fbDb.collection('pos_sales').where('billNo','==',oldBillNo).limit(5).get();
+      // หา doc ที่ ts ใกล้เคียง
+      q.forEach(doc=>{ const d=doc.data(); if(!fbId && String(d.id)===String(s.id)) fbId=doc.id; });
+      if(!fbId && !q.empty) fbId=q.docs[0].id;
+    }
+    if(fbId && fbDb){
+      await fbDb.collection('pos_sales').doc(fbId).update({
+        billNo: s.billNo, billDate: s.billDate, billTime: s.billTime, ts: s.ts, dateStr: s.dateStr,
+        customer: s.customer, customerPhone: s.customerPhone, customerAddress: s.customerAddress,
+        note: s.note, pay: s.pay
+      });
+      s._fbId=fbId;
+      saveSales();
+    }
+  }catch(e){ console.warn('edit pos_sales FB',e); }
   closeModal('editBillModal');
   renderHistory();
   // ถ้าเลขตรงกับบิลที่โชว์อยู่หรือแก้บิลเดียวกัน ให้รีเฟรชบาร์โค้ด
@@ -1345,14 +1521,26 @@ function reprint(id){
   const pa=document.getElementById('printArea'); pa.innerHTML=html; renderBarcodes(pa); pa.style.display='block';
   openModal('receiptModal');
 }
-function voidSale(id){
+async function voidSale(id){
   if(!confirm('ยกเลิกบิลนี้? สต๊อกจะคืนกลับและลบรายการจ่ายที่เกี่ยวข้อง')) return;
   const idx=sales.findIndex(x=>x.id===id); if(idx<0) return;
   const s=sales[idx];
-  // restore stock
-  const raw=getRawProducts();
-  for(const it of s.items){ const r=raw.find(x=> String(x.id)===String(it._rawId||it.id)); if(r) r.stock = Number(r.stock||0)+Number(it.qty||0); }
-  saveRawProducts(raw);
+  // restore stock — Firebase หรือ local ตามโหมด
+  if(fbReady && fbDb && fbAuth.currentUser){
+    try{
+      for(const it of s.items){
+        const ref=fbDb.collection('inventory_products').doc(String(it._rawId||it.id));
+        await fbDb.runTransaction(async (tx)=>{
+          const snap=await tx.get(ref);
+          if(snap.exists) tx.update(ref, { stock: Number(snap.data().stock||0)+Number(it.qty||0) });
+        });
+      }
+    }catch(e){ console.warn('restore stock FB',e); }
+  } else {
+    const raw=getRawProducts();
+    for(const it of s.items){ const r=raw.find(x=> String(x.id)===String(it._rawId||it.id)); if(r) r.stock = Number(r.stock||0)+Number(it.qty||0); }
+    saveRawProducts(raw);
+  }
   // remove linked dispatches (POS bill) — heuristic: today's POS dispatches with same qty & product
   // Safer: remove dispatches that were created at same ts? We stored note with billNo, so match note
   let disps=getRawDispatches();
@@ -1381,15 +1569,62 @@ function voidSale(id){
   });
   voidSale._removed=null;
   if(disps.length===before){
-    // no note match — try remove last N dispatches equal to items length from tail
-    // (last dispatches are likely this sale)
     disps.splice(-s.items.length, s.items.length);
   }
+  // ลบ dispatches: Firebase หรือ local
+  if(fbReady && fbDb && fbAuth.currentUser){
+    try{
+      const qs=await fbDb.collection('inventory_dispatches').where('note','>=','POS '+s.billNo).where('note','<=','POS '+s.billNo+'').get();
+      const b=fbDb.batch(); qs.forEach(doc=> b.delete(doc.ref)); if(!qs.empty) await b.commit();
+    }catch(e){ console.warn('delete dispatches FB',e); }
+  }
   saveRawDispatches(disps);
+  // ลบ pos_sales บน Firebase
+  if(fbDb){
+    try{
+      if(s._fbId) await fbDb.collection('pos_sales').doc(s._fbId).delete();
+      else if(fbReady && fbAuth.currentUser){
+        const q=await fbDb.collection('pos_sales').where('billNo','==',s.billNo).limit(5).get();
+        let target=null;
+        q.forEach(doc=>{ if(!target && String(doc.data().id)===String(s.id)) target=doc.id; });
+        if(!target && !q.empty) target=q.docs[0].id;
+        if(target) await fbDb.collection('pos_sales').doc(target).delete();
+      }
+    }catch(e){ console.warn('delete pos_sales',e); }
+  }
   sales.splice(idx,1); saveSales();
   load(); renderHistory(); renderProducts(); renderManage(); toast('ยกเลิกบิลและคืนสต๊อกแล้ว');
 }
-function clearHistory(){ if(!confirm('ล้างประวัติทั้งหมด?')) return; sales=[]; saveSales(); renderHistory(); }
+async function clearHistory(){
+  if(!confirm('ลบประวัติทั้งหมดที่เห็น (ตามวันที่กรองอยู่)? กด OK เพื่อลบเฉพาะวันที่เลือก, Cancel เพื่อยกเลิก')) return;
+  const dateFilter=document.getElementById('closeDayDate')?.value||'';
+  let toDelete;
+  if(dateFilter){
+    toDelete=sales.filter(s=>{ let sd=s.billDate||''; if(!sd&&s.ts){try{sd=new Date(Number(s.ts)).toISOString().slice(0,10);}catch(e){}} return sd===dateFilter; });
+    if(!toDelete.length){ toast('ไม่มีบิลในวันที่เลือก','err'); return; }
+    if(!confirm(`จะลบ ${toDelete.length} บิลของวันที่ ${dateFilter} ทั้งหมด?`)) return;
+    // ลบ Firebase ทีละบิลถ้ามี _fbId
+    if(fbReady && fbDb && fbAuth.currentUser){
+      for(const s of toDelete){
+        try{
+          if(s._fbId) await fbDb.collection('pos_sales').doc(s._fbId).delete();
+          else { const q=await fbDb.collection('pos_sales').where('billNo','==',s.billNo).limit(1).get(); if(!q.empty) await q.docs[0].ref.delete(); }
+        }catch(e){ console.warn(e); }
+      }
+    }
+    const ids=new Set(toDelete.map(s=>s.id));
+    sales=sales.filter(s=>!ids.has(s.id)); saveSales(); renderHistory(); toast(`ลบ ${toDelete.length} บิลแล้ว`);
+    return;
+  }
+  if(!confirm('ลบประวัติทั้งหมดทุกวัน? (ไม่สามารถกู้คืน)')) return;
+  if(fbReady && fbDb && fbAuth.currentUser && sales.some(s=>s._fbId)){
+    if(!confirm('จะลบประวัติบน Firebase ด้วยหรือไม่?')) { sales=[]; saveSales(); renderHistory(); return; }
+    for(const s of [...sales]){
+      try{ if(s._fbId) await fbDb.collection('pos_sales').doc(s._fbId).delete(); }catch(e){}
+    }
+  }
+  sales=[]; saveSales(); renderHistory();
+}
 function exportSales(){
   if(!sales.length) return toast('ไม่มีข้อมูล','err');
   let csv='﻿เลขที่บิล,วันที่,ลูกค้า,รายการ,ยอดสุทธิ,วิธีชำระ\n';
@@ -1641,8 +1876,8 @@ window.addEventListener('storage', (e)=>{
 
 // ===== Firebase หลังบ้าน (โปรเจกต์เดียวกับ scale.html: lineorder-69d5d) =====
 let fbApp=null, fbAuth=null, fbDb=null, adminRole=null;
-let adminUnsubProducts=null, adminUnsubDispatches=null;
-let fbProducts=[], fbDispatches=[], fbReady=false;
+let adminUnsubProducts=null, adminUnsubDispatches=null, adminUnsubSales=null;
+let fbProducts=[], fbDispatches=[], fbSales=[], fbReady=false, fbSalesReady=false;
 
 const FB_CONFIG = {
   apiKey: "AIzaSyCgwWtRfU-VP4JK8EegFEMgubAID2vmYUg",
@@ -1708,6 +1943,8 @@ function initFirebase(){
 function teardownAdminSubs(){
   if(adminUnsubProducts){ try{adminUnsubProducts();}catch(e){} adminUnsubProducts=null; }
   if(adminUnsubDispatches){ try{adminUnsubDispatches();}catch(e){} adminUnsubDispatches=null; }
+  if(adminUnsubSales){ try{adminUnsubSales();}catch(e){} adminUnsubSales=null; }
+  fbSalesReady=false;
 }
 function startAdminSubs(){
   if(!fbDb) return;
@@ -1732,6 +1969,92 @@ function startAdminSubs(){
     renderAdminDispatch(); renderAdminDashboard(); renderAdminReportFilters();
     if(document.getElementById('admin-sub-report') && !document.getElementById('admin-sub-report').classList.contains('hidden')) renderAdminReport();
   }, err=> console.error('dispatches onSnapshot',err));
+  // ประวัติขาย — ซิงค์ข้ามเครื่อง (อ่านไม่ต้อง login ก็ได้ พอดี rules เปิด read)
+  adminUnsubSales = fbDb.collection('pos_sales').orderBy('ts','desc').limit(300).onSnapshot(snap=>{
+    const list = snap.docs.map(d=>({ _fbId:d.id, ...d.data() }));
+    // normalize: ts อาจเป็น Firestore Timestamp
+    list.forEach(s=>{ if(s.ts && typeof s.ts.toDate==='function') s.ts = s.ts.toDate().getTime(); if(typeof s.ts==='string') s.ts=Number(s.ts)||Date.now(); });
+    fbSales = list;
+    fbSalesReady = true;
+    // รวมเข้าตัวแปร sales ที่ UI ใช้ (merge แบบ deduplicate ด้วย billNo+ts)
+    mergeSalesFromFirebase();
+    renderHistory();
+    checkSalesMigrationBar();
+  }, err=>{ console.warn('pos_sales onSnapshot',err); fbSalesReady=false; });
+}
+function mergeSalesFromFirebase(){
+  if(!fbSales.length) return;
+  // รวม fbSales เข้า local sales โดยไม่ซ้ำ billNo
+  const seen=new Set(sales.map(s=> s.billNo+'|'+(s.ts||s.dateStr)));
+  let added=0;
+  fbSales.forEach(fb=>{
+    const key = fb.billNo+'|'+(fb.ts||fb.dateStr);
+    if(seen.has(key)) return;
+    // map fb doc -> local sale shape
+    const local = {
+      id: fb.id || fb._fbId,
+      _fbId: fb._fbId,
+      billNo: fb.billNo,
+      dateStr: fb.dateStr,
+      ts: fb.ts,
+      billDate: fb.billDate||'',
+      billTime: fb.billTime||'',
+      customer: fb.customer||'',
+      customerId: fb.customerId||'',
+      customerPhone: fb.customerPhone||'',
+      customerAddress: fb.customerAddress||'',
+      customerTax: fb.customerTax||'',
+      items: fb.items||[],
+      subtotal: fb.subtotal||0, discount: fb.discount||0, vat: fb.vat||0, total: fb.total||0,
+      received: fb.received||0, change: fb.change||0,
+      pay: fb.pay||'cash', ref: fb.ref||'', note: fb.note||'',
+      _fromFB: true
+    };
+    sales.push(local); added++;
+  });
+  if(added){
+    sales.sort((a,b)=> (b.ts||0)-(a.ts||0));
+    // เก็บ cache รวมไว้ด้วย (ไม่บังคับ แต่ช่วยให้เปิดแบบไม่ล็อกอินยังเห็น)
+    try{ saveSales(); }catch(e){}
+  }
+}
+function checkSalesMigrationBar(){
+  const bar=document.getElementById('salesMigrationBar');
+  if(!bar) return;
+  const pending = sales.filter(s=> !s._fbId && !s._fromFB).length;
+  if(pending>0 && fbAuth && fbAuth.currentUser && fbSalesReady){
+    bar.classList.remove('hidden');
+    const st=document.getElementById('salesMigrateStatus');
+    if(st) st.textContent = pending + ' บิลรออัปโหลด';
+  } else bar.classList.add('hidden');
+}
+async function migrateSalesToFirebase(){
+  if(!fbDb || !fbAuth.currentUser){ toast('ล็อกอินก่อน','err'); return; }
+  const pending = sales.filter(s=> !s._fbId && !s._fromFB);
+  if(!pending.length){ toast('ไม่มีบิลรออัปโหลด','err'); return; }
+  const st=document.getElementById('salesMigrateStatus');
+  if(st) st.textContent='กำลังอัปโหลด '+pending.length+' บิล...';
+  let ok=0, skip=0;
+  for(const s of pending){
+    try{
+      const q=await fbDb.collection('pos_sales').where('billNo','==',s.billNo).limit(1).get();
+      if(!q.empty){ skip++; continue; }
+      const payload={
+        id: s.id, billNo: s.billNo, dateStr: s.dateStr, ts: s.ts, billDate: s.billDate||'', billTime: s.billTime||'',
+        customer: s.customer||'', customerId: s.customerId||'', customerPhone: s.customerPhone||'', customerAddress: s.customerAddress||'', customerTax: s.customerTax||'',
+        items: s.items||[], subtotal: s.subtotal||0, discount: s.discount||0, vat: s.vat||0, total: s.total||0,
+        received: s.received||0, change: s.change||0, pay: s.pay||'cash', ref: s.ref||'', note: s.note||'',
+        created_by: fbAuth.currentUser.uid, created_at: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      const ref=await fbDb.collection('pos_sales').add(payload);
+      s._fbId=ref.id; s._fromFB=true; ok++;
+    }catch(e){ console.warn('migrate sale',s.billNo,e); }
+  }
+  try{ saveSales(); }catch(e){}
+  if(st) st.textContent=`อัปโหลดเสร็จ ${ok} บิล (ข้ามซ้ำ ${skip})`;
+  toast(`ย้ายประวัติขาย ${ok} บิลแล้ว ✓`);
+  renderHistory();
+  checkSalesMigrationBar();
 }
 function checkMigrationBar(){
   const bar=document.getElementById('adminMigrationBar');
@@ -2177,6 +2500,16 @@ checkout = async function(){
   }catch(e){ toast('ตัดสต๊อกไม่สำเร็จ: '+e.message,'err'); return; }
   const sale={ id:Date.now().toString(), billNo:billNoForDispatch, dateStr:billDt.dateStr, ts:billDt.ts, billDate:billDt.isoDate, billTime:billDt.hm, customer:cInfo.customer||'ลูกค้าหน้าร้าน', customerId:cInfo.customerId||'', customerPhone:cInfo.customerPhone||'', customerAddress:cInfo.customerAddress||'', customerTax:cInfo.customerTax||'', items:JSON.parse(JSON.stringify(cart)), subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:Math.max(0,t.change), pay:payMethod, ref:val('transferRef'), note:val('receiptNote') };
   sales.unshift(sale); saveSales();
+  // ยิง pos_sales ขึ้น Firebase ด้วย (ซิงค์ข้ามเครื่อง)
+  if(fbDb && fbAuth.currentUser){
+    fbDb.collection('pos_sales').add({
+      id: sale.id, billNo: sale.billNo, dateStr: sale.dateStr, ts: sale.ts, billDate: sale.billDate||'', billTime: sale.billTime||'',
+      customer: sale.customer, customerId: sale.customerId, customerPhone: sale.customerPhone, customerAddress: sale.customerAddress, customerTax: sale.customerTax,
+      items: sale.items, subtotal: sale.subtotal, discount: sale.discount, vat: sale.vat, total: sale.total, received: sale.received, change: sale.change,
+      pay: sale.pay, ref: sale.ref, note: sale.note,
+      created_by: fbAuth.currentUser.uid, created_at: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(ref=>{ sale._fbId=ref.id; sale._fromFB=true; try{saveSales();}catch(e){} }).catch(e=>console.warn('pos_sales add',e));
+  }
   const html=buildReceiptHTML(sale);
   const rp=document.getElementById('receiptPreview'); rp.innerHTML=html; renderBarcodes(rp);
   const pa=document.getElementById('printArea'); pa.innerHTML=html; renderBarcodes(pa); pa.style.display='block';
