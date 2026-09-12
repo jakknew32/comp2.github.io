@@ -61,7 +61,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0
 .prod-stock.low{background:var(--amber)}
 .prod-stock.out{background:var(--red)}
 .prod-body{padding:10px 10px 8px;flex:1;display:flex;flex-direction:column;gap:3px}
-.prod-name{font-size:12.5px;font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:30px}
+.prod-name{font-size:12.5px;font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:30px}
 .prod-cat{font-size:10.5px;color:var(--muted)}
 .prod-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
 .prod-price{font-weight:700;color:var(--primary);font-size:14px}
@@ -96,6 +96,17 @@ tr:last-child td{border-bottom:none}
 @media(max-width:640px){.settings-grid{grid-template-columns:1fr}}
 .logo-preview{width:96px;height:96px;border:1.5px dashed var(--border);border-radius:12px;overflow:hidden;background:#f8fafc;display:flex;align-items:center;justify-content:center}
 .logo-preview img{width:100%;height:100%;object-fit:cover}
+.customer-card{border:1px solid var(--border);border-radius:12px;background:#f8fafc;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:start}
+.customer-card b{font-size:13px}
+.customer-card small{color:var(--muted);font-size:11px;line-height:1.4;display:block}
+.customer-actions{display:flex;gap:6px;flex-wrap:wrap}
+.cus-badge{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700}
+.search-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.search-row input,.search-row select{flex:1;min-width:160px}
+.empty-box{text-align:center;padding:28px;color:var(--muted)}
+.shop-preview{border:1px dashed var(--border);border-radius:12px;background:#f8fafc;padding:12px;display:flex;gap:12px;align-items:center}
+.shop-preview-logo{width:56px;height:56px;border-radius:10px;overflow:hidden;background:#fff;border:1px solid var(--border);flex-shrink:0}
+.shop-preview-logo img{width:100%;height:100%;object-fit:cover}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(6px);z-index:80;align-items:center;justify-content:center;padding:16px}
 .modal-bg.show{display:flex}
 .modal-box{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
@@ -140,6 +151,7 @@ tr:last-child td{border-bottom:none}
       <button class="tab active" data-page="pos">🛒 ขายหน้าร้าน</button>
       <button class="tab" data-page="history">📜 ประวัติขาย</button>
       <button class="tab" data-page="products">📦 สินค้า</button>
+      <button class="tab" data-page="customers">👥 ลูกค้า</button>
       <button class="tab" data-page="settings">⚙️ ตั้งค่า</button>
     </div>
   </div>
@@ -218,7 +230,16 @@ tr:last-child td{border-bottom:none}
             </div>
           </div>
           <div style="margin-top:10px;display:grid;gap:8px">
-            <input id="customerName" placeholder="ชื่อลูกค้า (ไม่บังคับ)">
+            <div style="display:flex;gap:6px">
+              <input id="customerSearch" placeholder="🔍 ค้นหาลูกค้า ชื่อ/เบอร์/รหัส" list="cusListPos" oninput="onCustomerSearch(this.value)" autocomplete="off">
+              <datalist id="cusListPos"></datalist>
+              <button class="btn btn-ghost btn-sm" style="white-space:nowrap" onclick="openAddCustomer('',true)">+ ลูกค้าใหม่</button>
+            </div>
+            <div id="selectedCustomerBox" class="customer-card hidden" style="background:#fff"></div>
+            <input type="hidden" id="customerId">
+            <input id="customerName" placeholder="ชื่อลูกค้า (ไม่บังคับ)" oninput="syncCustomerPreview()">
+            <input id="customerPhone" placeholder="เบอร์โทรลูกค้า (ไม่บังคับ)" oninput="syncCustomerPreview()">
+            <textarea id="customerAddress" rows="2" placeholder="ที่อยู่ลูกค้า (ขึ้นบนใบเสร็จถ้ากรอก)"></textarea>
             <textarea id="receiptNote" rows="2" placeholder="หมายเหตุท้ายบิล"></textarea>
           </div>
           <button class="btn btn-green btn-block" style="margin-top:12px" onclick="checkout()">✅ คิดเงิน & พิมพ์ใบเสร็จ <span class="kbd">F9</span></button>
@@ -267,10 +288,46 @@ tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <div id="page-customers" class="page">
+    <div class="card">
+      <div class="card-hd">
+        <h3>ลูกค้า <span class="chip" id="cusCount">0 คน</span></h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="exportCustomers()">⬇️ Export CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddCustomer()">+ เพิ่มลูกค้า</button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <div class="search-row">
+          <input id="searchCustomer" placeholder="🔍 ค้นหา ชื่อ / เบอร์ / รหัส / ที่อยู่" oninput="renderCustomers()">
+          <select id="filterCusSort" onchange="renderCustomers()" style="max-width:160px">
+            <option value="newest">ใหม่ที่สุดก่อน</option>
+            <option value="name">ชื่อ A-Z</option>
+            <option value="spent">ยอดซื้อมากก่อน</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="renderCustomers()">รีเฟรช</button>
+        </div>
+        <div id="customerList"></div>
+        <div id="customerEmpty" class="empty-box hidden">ยังไม่มีข้อมูลลูกค้า — กด <b>+ เพิ่มลูกค้า</b> เพื่อเริ่ม</div>
+        <div class="table-wrap hidden" id="customerTableWrap" style="margin-top:10px">
+          <table>
+            <thead><tr><th>รหัส</th><th>ชื่อ</th><th>เบอร์โทร</th><th>ที่อยู่</th><th>ยอดซื้อสะสม</th><th>จัดการ</th></tr></thead>
+            <tbody id="customerTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-hd"><h3>ลูกค้าซื้อบ่อย (Top)</h3><span class="muted">อิงจากประวัติขาย</span></div>
+      <div class="card-bd" id="topCustomersBox"></div>
+    </div>
+  </div>
+
   <div id="page-settings" class="page">
     <div class="card">
-      <div class="card-hd"><h3>ตั้งค่าร้าน & ใบเสร็จ</h3><button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 บันทึก</button></div>
+      <div class="card-hd"><h3>ตั้งค่าร้าน & ใบเสร็จ</h3><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="resetShopSettings()">↺ คืนค่าเริ่มต้น</button><button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 บันทึก</button></div></div>
       <div class="card-bd">
+        <div class="shop-preview" id="shopPreviewBox" style="margin-bottom:14px"></div>
         <div class="settings-grid">
           <div>
             <label>ชื่อร้าน</label><input id="s_shopName" placeholder="Chiangmai Freshmilk">
@@ -328,6 +385,27 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<div id="customerModal" class="modal-bg" onclick="if(event.target===this)closeModal('customerModal')">
+  <div class="modal-box">
+    <div class="modal-hd"><b id="customerModalTitle">เพิ่มลูกค้าใหม่</b><button class="btn btn-ghost btn-icon" onclick="closeModal('customerModal')">✕</button></div>
+    <div class="modal-bd">
+      <input type="hidden" id="c_id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label>รหัสลูกค้า</label><input id="c_code" placeholder="เช่น CUS-0001 (ออโต้)"></div>
+        <div><label>เบอร์โทรศัพท์ *</label><input id="c_phone" placeholder="081-xxx-xxxx"></div>
+      </div>
+      <label style="margin-top:10px">ชื่อ - นามสกุล *</label><input id="c_name" placeholder="ชื่อลูกค้า หรือชื่อบริษัท">
+      <label style="margin-top:10px">ที่อยู่ (สำหรับออกใบเสร็จ)</label><textarea id="c_address" rows="2" placeholder="บ้านเลขที่ ซอย ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div><label>เลขประจำตัวผู้เสียภาษี</label><input id="c_tax" placeholder="13 หลัก (ถ้ามี)"></div>
+        <div><label>กลุ่ม / ระดับ</label><select id="c_tag"><option value="ทั่วไป">ลูกค้าทั่วไป</option><option value="สมาชิก">สมาชิก VIP</option><option value="ขายส่ง">ลูกค้าขายส่ง</option></select></div>
+      </div>
+      <label style="margin-top:10px">หมายเหตุ</label><input id="c_note" placeholder="เช่น ชอบนมจืด, ส่งช่วงเช้า">
+    </div>
+    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('customerModal')">ยกเลิก</button><button class="btn btn-primary" onclick="saveCustomer()">💾 บันทึกข้อมูลลูกค้า</button></div>
+  </div>
+</div>
+
 <div id="receiptModal" class="modal-bg" onclick="if(event.target===this)closeModal('receiptModal')">
   <div class="modal-box" style="max-width:420px">
     <div class="modal-hd"><b>ใบเสร็จ</b><button class="btn btn-ghost btn-icon" onclick="closeModal('receiptModal')">✕</button></div>
@@ -345,8 +423,9 @@ tr:last-child td{border-bottom:none}
 // ===== SHARED STOCK STORE (ใช้ keys เดียวกับ stock.html) =====
 const SHARED_PRODUCTS = 'products';
 const SHARED_DISPATCHES = 'dispatches';
-const LS_SALES = 'pos_sales_v2', LS_SETTINGS='pos_settings_v2', LS_HOLD='pos_hold_v2';
+const LS_SALES = 'pos_sales_v2', LS_SETTINGS='pos_settings_v2', LS_HOLD='pos_hold_v2', LS_CUSTOMERS='pos_customers_v2';
 let products=[], cart=[], sales=[], dispatches=[], holdBills=[], payMethod='cash';
+let customers=[], selectedCustomer=null;
 
 const defaults = {
   shopName:'Chiangmai Freshmilk',
@@ -418,6 +497,48 @@ function getRawDispatches(){
 function saveRawProducts(arr){ localStorage.setItem(SHARED_PRODUCTS, JSON.stringify(arr)) }
 function saveRawDispatches(arr){ localStorage.setItem(SHARED_DISPATCHES, JSON.stringify(arr)) }
 
+function loadCustomers(){
+  try{ customers = JSON.parse(localStorage.getItem(LS_CUSTOMERS)||'null') || [] }catch(e){ customers=[] }
+  if(!Array.isArray(customers)) customers=[];
+  if(!customers.length){
+    // seed ตัวอย่าง + ดึงจากประวัติขายเดิมถ้ามี
+    const fromSales = [...new Set(sales.map(s=> (s.customer||'').trim()).filter(Boolean))].slice(0,5);
+    const seed = [
+      { id:'CUS-'+String(Date.now()).slice(-6)+'1', code:'CUS-0001', name:'สมชาย ใจดี', phone:'081-234-5678', address:'123 ม.1 ต.หนองหอย อ.เมือง จ.เชียงใหม่ 50000', tax:'', tag:'ทั่วไป', note:'', spent:0, visits:0 },
+      { id:'CUS-'+String(Date.now()).slice(-6)+'2', code:'CUS-0002', name:'บจก. เชียงใหม่เฟรชมิลค์ สาขาย่อย', phone:'053-111-222', address:'99 ถ.ซุปเปอร์ไฮเวย์ ต.ช้างเผือก อ.เมือง จ.เชียงใหม่ 50300', tax:'0505566001234', tag:'ขายส่ง', note:'รับบิล VAT', spent:0, visits:0 },
+    ];
+    customers = seed;
+    fromSales.forEach((nm,i)=>{
+      if(!customers.some(c=>c.name===nm)) customers.push({ id:'CUS-S'+i, code:'CUS-'+String(100+i).padStart(4,'0'), name:nm, phone:'', address:'', tax:'', tag:'ทั่วไป', note:'นำเข้าจากประวัติขาย', spent:0, visits:0 });
+    });
+    saveCustomers();
+  }
+  // เติม spent/visits จาก sales ย้อนหลัง
+  recalcCustomerStats();
+}
+function saveCustomers(){ localStorage.setItem(LS_CUSTOMERS, JSON.stringify(customers)) }
+function recalcCustomerStats(){
+  // รีเซ็ตก่อนนับใหม่ทุกครั้ง (กันนับซ้ำ)
+  customers.forEach(c=>{ c._spent=0; c._visits=0; });
+  sales.forEach(s=>{
+    if(!s.customer) return;
+    // หา customer ที่ตรง id หรือชื่อ
+    let c = null;
+    if(s.customerId) c = customers.find(x=> x.id===s.customerId);
+    if(!c && s.customer) c = customers.find(x=> x.name===s.customer);
+    if(!c) return;
+    c._spent = (c._spent||0) + Number(s.total||0);
+    c._visits = (c._visits||0)+1;
+  });
+  // อัปเดต spent/visits แบบถาวรสำหรับแสดง
+  customers.forEach(c=>{ c.spent = c._spent||0; c.visits = c._visits||0; });
+}
+function nextCustomerCode(){
+  const nums = customers.map(c=>{ const m=(c.code||'').match(/(\d+)$/); return m?parseInt(m[1]):0 });
+  const n = nums.length? Math.max(...nums)+1 : 1;
+  return 'CUS-'+String(n).padStart(4,'0');
+}
+
 function load(){
   // sales & hold
   try{sales = JSON.parse(localStorage.getItem(LS_SALES)||'[]')}catch(e){sales=[]}
@@ -458,6 +579,7 @@ function load(){
     saveRawDispatches([]);
   }
   products = raw.map(stockToPos);
+  loadCustomers();
 }
 function syncProductsToShared(){
   const raw = products.map(p=>{
@@ -492,7 +614,8 @@ function getSettings(){ try{return Object.assign({},defaults, JSON.parse(localSt
 function saveSettings(){
   const s={ shopName: val('s_shopName')||defaults.shopName, branch: val('s_branch'), address: val('s_address'), phone: val('s_phone'), tax: val('s_tax'), footer: val('s_footer'), paper: val('s_paper'), logo: document.getElementById('logoPreview').src };
   localStorage.setItem(LS_SETTINGS, JSON.stringify(s));
-  applySettings(); toast('บันทึกตั้งค่าแล้ว');
+  applySettings(); refreshPreview(); renderShopPreview();
+  toast('บันทึกข้อมูลร้านแล้ว ✓');
 }
 function applySettings(){
   const s=getSettings();
@@ -507,6 +630,27 @@ function applySettings(){
   document.getElementById('s_tax').value=s.tax;
   document.getElementById('s_footer').value=s.footer;
   document.getElementById('s_paper').value=s.paper;
+  renderShopPreview();
+}
+function resetShopSettings(){
+  if(!confirm('คืนค่าข้อมูลร้านเป็นค่าเริ่มต้น?')) return;
+  localStorage.removeItem(LS_SETTINGS);
+  document.getElementById('logoPreview').src='dont.png';
+  applySettings(); toast('คืนค่าเริ่มต้นแล้ว');
+}
+function renderShopPreview(){
+  const s=getSettings();
+  const logo = document.getElementById('logoPreview')?.src || s.logo || 'dont.png';
+  const box=document.getElementById('shopPreviewBox');
+  if(!box) return;
+  box.innerHTML=`<div class="shop-preview-logo"><img src="${logo}" onerror="this.src='dont.png'"></div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.shopName)}</div>
+      <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.branch||'—')}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.address||'ยังไม่ได้กรอกที่อยู่')} ${s.phone? '• '+escapeHtml(s.phone):''}</div>
+      ${s.tax?`<div style="font-size:11px;color:#0369a1">เลขผู้เสียภาษี: ${escapeHtml(s.tax)}</div>`:''}
+    </div>
+    <span class="cus-badge">ตัวอย่างหัวบิล</span>`;
 }
 function val(id){ return document.getElementById(id).value.trim() }
 
@@ -520,7 +664,8 @@ document.querySelectorAll('.tab').forEach(b=>{
     document.getElementById('page-'+p).classList.add('active');
     if(p==='history') renderHistory();
     if(p==='products') renderManage();
-    if(p==='settings') refreshPreview();
+    if(p==='customers') { recalcCustomerStats(); renderCustomers(); }
+    if(p==='settings') { renderShopPreview(); refreshPreview(); }
   })
 });
 setInterval(()=>{ const d=new Date(); document.getElementById('clock').textContent=d.toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}) },1000);
@@ -650,6 +795,19 @@ function buildReceiptHTML(sale){
   const width= paper==='58' ? '58mm' : paper==='A4' ? '190mm' : '80mm';
   const logoHtml = s.logo ? `<img class="r-logo" src="${s.logo}" alt="logo" onerror="this.style.display='none'">` : '';
   const itemsHtml = sale.items.map((it,i)=>`<tr><td style="width:6%">${i+1}</td><td>${escapeHtml(it.name)}<br><small style="color:#555">${escapeHtml(it.code)} x${it.qty} @${fmt(it.price)}</small></td><td style="text-align:right;white-space:nowrap">฿${fmt(it.price*it.qty)}</td></tr>`).join('');
+
+  // ข้อมูลลูกค้าแบบละเอียด
+  let cusBlock = '';
+  if(sale.customer){
+    cusBlock = `<div>ลูกค้า: <b>${escapeHtml(sale.customer)}</b>${sale.customerPhone? ` (${escapeHtml(sale.customerPhone)})`:''}</div>`;
+    if(sale.customerAddress){
+      cusBlock += `<div style="font-size:9.5px;color:#444">ที่อยู่: ${escapeHtml(sale.customerAddress)}</div>`;
+    }
+    if(sale.customerTax){
+      cusBlock += `<div style="font-size:9.5px;color:#444">Tax ID: ${escapeHtml(sale.customerTax)}</div>`;
+    }
+  }
+
   return `<div class="receipt" style="width:${width}">
     <div class="r-head">
       ${logoHtml}
@@ -662,7 +820,7 @@ function buildReceiptHTML(sale){
     <div class="r-meta">
       <div>เลขที่บิล: <b>${escapeHtml(sale.billNo)}</b></div>
       <div>วันที่: ${escapeHtml(sale.dateStr)}</div>
-      ${sale.customer?`<div>ลูกค้า: ${escapeHtml(sale.customer)}</div>`:''}
+      ${cusBlock}
       <div>ชำระ: ${sale.pay==='cash'?'เงินสด':sale.pay==='transfer'?'โอน':'บัตร'} ${sale.pay==='transfer'&&sale.ref?`(${escapeHtml(sale.ref)})`:''}</div>
       <div>พนักงาน: POS01</div>
     </div>
@@ -683,13 +841,33 @@ function buildReceiptHTML(sale){
     </div>
   </div>`;
 }
+function currentCustomerForBill(){
+  // ถ้าเลือกจากฐานลูกค้าแล้ว ให้ใช้ selectedCustomer เป็นหลัก
+  if(selectedCustomer){
+    return {
+      customer: selectedCustomer.name,
+      customerId: selectedCustomer.id,
+      customerPhone: selectedCustomer.phone || val('customerPhone') || '',
+      customerAddress: selectedCustomer.address || val('customerAddress') || '',
+      customerTax: selectedCustomer.tax || ''
+    };
+  }
+  return {
+    customer: val('customerName'),
+    customerId: val('customerId') || '',
+    customerPhone: val('customerPhone'),
+    customerAddress: val('customerAddress'),
+    customerTax: ''
+  };
+}
 function previewReceipt(){
   const t=calcTotals();
+  const c=currentCustomerForBill();
   let sale;
   if(!cart.length){
-    sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), customer: val('customerName'), items:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:2}], subtotal:t.subtotal||90, discount:t.discount, vat:t.vat, total:t.total||90, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')}
+    sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), ...c, items:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:2}], subtotal:t.subtotal||90, discount:t.discount, vat:t.vat, total:t.total||90, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')}
   } else {
-    sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), customer:val('customerName'), items:cart, subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
+    sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), ...c, items:cart, subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
   }
   const html=buildReceiptHTML(sale);
   document.getElementById('receiptPreview').innerHTML=html;
@@ -698,14 +876,30 @@ function previewReceipt(){
 }
 function refreshPreview(){
   const t=calcTotals();
-  const sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), customer:val('customerName')||'ลูกค้าหน้าร้าน', items: cart.length?cart:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:1}], subtotal:t.subtotal||45, discount:t.discount, vat:t.vat, total:t.total||45, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
-  document.getElementById('previewWrap').innerHTML=buildReceiptHTML(sale);
+  const c=currentCustomerForBill();
+  const fallback = (!c.customer ? 'ลูกค้าหน้าร้าน' : c.customer);
+  const sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), customer:c.customer||fallback, customerId:c.customerId, customerPhone:c.customerPhone, customerAddress:c.customerAddress, customerTax:c.customerTax, items: cart.length?cart:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:1}], subtotal:t.subtotal||45, discount:t.discount, vat:t.vat, total:t.total||45, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
+  const el=document.getElementById('previewWrap');
+  if(el) el.innerHTML=buildReceiptHTML(sale);
 }
 function checkout(){
   if(!cart.length) return toast('ตะกร้าว่าง','err');
   const t=calcTotals();
   if(t.total<=0) return toast('ยอดสุทธิไม่ถูกต้อง','err');
   if(payMethod==='cash' && (isNaN(t.received) || t.received < t.total)) return toast('จำนวนรับเงินไม่พอ','err');
+  const cInfo = currentCustomerForBill();
+  const billNoForDispatch = nextBillNo();
+  // ถ้ากรอกชื่อใหม่แต่ยังไม่เคยบันทึก ให้ auto-bump เป็นลูกค้าใหม่ (ถ้ามีเบอร์)
+  if(cInfo.customer && !cInfo.customerId && cInfo.customerPhone){
+    // auto-create customer แบบเงียบ
+    const exists = customers.find(x=> x.name===cInfo.customer || x.phone===cInfo.customerPhone);
+    if(!exists){
+      customers.push({ id:'CUS-'+Date.now(), code: nextCustomerCode(), name:cInfo.customer, phone:cInfo.customerPhone, address:cInfo.customerAddress||'', tax:cInfo.customerTax||'', tag:'ทั่วไป', note:'สร้างอัตโนมัติจาก POS', spent:0, visits:0 });
+      saveCustomers();
+      cInfo.customerId = customers[customers.length-1].id;
+      selectedCustomer = customers[customers.length-1];
+    }
+  }
   // deduct stock in shared products
   const raw = getRawProducts();
   for(const c of cart){
@@ -722,15 +916,13 @@ function checkout(){
     qty: c.qty,
     date: todayStr,
     dest: 'ขายหน้าร้าน (POS)',
-    receiver: val('customerName')||'ลูกค้าหน้าร้าน',
-    note: `POS ${nextBillNo()} • ${payMethod==='cash'?'เงินสด':payMethod==='transfer'?'โอน':'บัตร'}`
+    receiver: cInfo.customer||'ลูกค้าหน้าร้าน',
+    note: `POS ${billNoForDispatch} • ${payMethod==='cash'?'เงินสด':payMethod==='transfer'?'โอน':'บัตร'}`
   }));
   const allDisp = getRawDispatches().concat(newDispatches);
   saveRawDispatches(allDisp);
   dispatches = allDisp;
-  // reload products mapping
-  load();
-  const sale={ id:Date.now().toString(), billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), ts:Date.now(), customer:val('customerName'), items:JSON.parse(JSON.stringify(cart)), subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:Math.max(0,t.change), pay:payMethod, ref:val('transferRef'), note:val('receiptNote') };
+  const sale={ id:Date.now().toString(), billNo:billNoForDispatch, dateStr:new Date().toLocaleString('th-TH'), ts:Date.now(), customer:cInfo.customer||'ลูกค้าหน้าร้าน', customerId:cInfo.customerId||'', customerPhone:cInfo.customerPhone||'', customerAddress:cInfo.customerAddress||'', customerTax:cInfo.customerTax||'', items:JSON.parse(JSON.stringify(cart)), subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:Math.max(0,t.change), pay:payMethod, ref:val('transferRef'), note:val('receiptNote') };
   sales.unshift(sale); saveSales();
   const html=buildReceiptHTML(sale);
   document.getElementById('receiptPreview').innerHTML=html;
@@ -738,7 +930,14 @@ function checkout(){
   document.getElementById('printArea').style.display='block';
   openModal('receiptModal');
   setTimeout(()=>doPrint(), 350);
-  cart=[]; document.getElementById('cashReceived').value=''; renderCart(); renderProducts(); renderManage(); renderHistory();
+  cart=[]; document.getElementById('cashReceived').value='';
+  // เคลียร์ลูกค้าในตะกร้าหลังขายเสร็จ (คงข้อมูลฐานไว้)
+  clearSelectedCustomer();
+  document.getElementById('customerName').value='';
+  document.getElementById('customerPhone').value='';
+  document.getElementById('customerAddress').value='';
+  document.getElementById('customerId').value='';
+  renderCart(); renderProducts(); renderManage(); renderHistory(); renderCustomers();
   toast('บันทึกการขาย '+sale.billNo+' • สต๊อกอัปเดตแล้ว');
 }
 function doPrint(){
@@ -880,7 +1079,161 @@ function deleteProduct(id){
   load(); renderProducts(); renderManage();
   toast('ลบแล้ว');
 }
-function onLogoFile(e){ const f=e.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>{ document.getElementById('logoPreview').src=reader.result; toast('โหลดโลโก้แล้ว — อย่าลืมกดบันทึก'); }; reader.readAsDataURL(f); }
+// ===== CUSTOMER SYSTEM =====
+function onCustomerSearch(q){
+  const dl = document.getElementById('cusListPos');
+  const rawQ = (q||'').trim();
+  const qLower = rawQ.toLowerCase();
+  const namePart = rawQ.split('—')[0].trim().toLowerCase();
+  if(dl){
+    if(!qLower){ dl.innerHTML=''; }
+    else {
+      const hits = customers.filter(c=> (c.name+' '+c.phone+' '+c.code+' '+(c.address||'')).toLowerCase().includes(qLower) || (c.name+' '+c.phone).toLowerCase().includes(namePart)).slice(0,8);
+      dl.innerHTML = hits.map(c=> `<option value="${escapeHtml(c.name)}" label="${escapeHtml(c.code)} • ${escapeHtml(c.phone||'')}">`).join('');
+    }
+  }
+  if(!rawQ) return;
+  // ลองหาแบบตรงตัวก่อน
+  let exact = customers.find(c=> c.phone===rawQ || c.name.toLowerCase()===qLower || c.code.toLowerCase()===qLower);
+  if(!exact && namePart) exact = customers.find(c=> c.name.toLowerCase()===namePart);
+  if(exact) selectCustomer(exact.id);
+}
+function selectCustomer(id){
+  const c = customers.find(x=> x.id===id);
+  if(!c) return;
+  selectedCustomer=c;
+  document.getElementById('customerId').value=c.id;
+  document.getElementById('customerName').value=c.name;
+  document.getElementById('customerPhone').value=c.phone||'';
+  document.getElementById('customerAddress').value=c.address||'';
+  const box=document.getElementById('selectedCustomerBox');
+  box.classList.remove('hidden');
+  box.innerHTML=`<div><div style="font-weight:700">${escapeHtml(c.name)} <span class="cus-badge">${escapeHtml(c.code)}</span> <span style="font-size:11px;color:var(--muted)">${escapeHtml(c.tag||'')}</span></div><small>${escapeHtml(c.phone||'—')} ${c.address? '• '+escapeHtml(c.address):''} ${c.tax? '• Tax '+escapeHtml(c.tax):''}</small></div><div class="customer-actions"><button class="btn btn-ghost btn-sm" onclick="clearSelectedCustomer()">ล้าง</button><button class="btn btn-ghost btn-sm" onclick="openAddCustomer('${c.id}')">แก้ไข</button></div>`;
+  document.getElementById('customerSearch').value = c.name + (c.phone? ' — '+c.phone:'');
+  syncCustomerPreview();
+}
+function clearSelectedCustomer(){
+  selectedCustomer=null;
+  document.getElementById('customerId').value='';
+  document.getElementById('selectedCustomerBox').classList.add('hidden');
+  document.getElementById('selectedCustomerBox').innerHTML='';
+  document.getElementById('customerSearch').value='';
+}
+function syncCustomerPreview(){
+  // อัปเดตตัวอย่างใบเสร็จถ้าอยู่หน้า settings
+  if(document.getElementById('page-settings').classList.contains('active')) refreshPreview();
+}
+function openAddCustomer(id='', fromPOS=false){
+  const isEdit = !!id;
+  const c = isEdit ? customers.find(x=> x.id===id) : null;
+  document.getElementById('customerModalTitle').textContent = isEdit ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่';
+  document.getElementById('c_id').value = c? c.id : '';
+  document.getElementById('c_code').value = c? c.code : nextCustomerCode();
+  document.getElementById('c_name').value = c? c.name : (fromPOS ? val('customerName') : '');
+  document.getElementById('c_phone').value = c? c.phone : (fromPOS ? val('customerPhone') : '');
+  document.getElementById('c_address').value = c? c.address : (fromPOS ? val('customerAddress') : '');
+  document.getElementById('c_tax').value = c? c.tax : '';
+  document.getElementById('c_tag').value = c? (c.tag||'ทั่วไป') : 'ทั่วไป';
+  document.getElementById('c_note').value = c? (c.note||'') : '';
+  openModal('customerModal');
+}
+function saveCustomer(){
+  const id=val('c_id'), code=val('c_code')||nextCustomerCode(), name=val('c_name'), phone=val('c_phone'), address=val('c_address'), tax=val('c_tax'), tag=val('c_tag'), note=val('c_note');
+  if(!name) return toast('กรอกชื่อลูกค้าก่อน','err');
+  if(!phone) return toast('กรอกเบอร์โทรด้วย','err');
+  // กันเบอร์ซ้ำ (ยกเว้นตัวเอง)
+  const dup = customers.find(c=> c.phone===phone && c.id!==id);
+  if(dup) return toast('เบอร์นี้ซ้ำกับลูกค้า: '+dup.name,'err');
+  if(id){
+    const c=customers.find(x=> x.id===id);
+    Object.assign(c,{code,name,phone,address,tax,tag,note});
+  } else {
+    if(customers.some(c=> c.code===code)) return toast('รหัสลูกค้าซ้ำ','err');
+    const nid='CUS-'+Date.now();
+    customers.push({id:nid, code, name, phone, address, tax, tag, note, spent:0, visits:0});
+    // ถ้าเพิ่มจากหน้า POS ให้เลือกทันที
+    const added = customers[customers.length-1];
+    if(document.getElementById('page-pos').classList.contains('active')){
+      selectCustomer(added.id);
+    }
+  }
+  saveCustomers(); closeModal('customerModal'); recalcCustomerStats(); renderCustomers();
+  // อัปเดต datalist
+  refreshCustomerDatalist();
+  toast('บันทึกข้อมูลลูกค้าแล้ว ✓');
+}
+function deleteCustomer(id){
+  const c=customers.find(x=> x.id===id);
+  if(!c) return;
+  if(!confirm('ลบลูกค้า "'+c.name+'" ? ประวัติขายเดิมจะไม่หาย แค่ลบจากรายชื่อ')) return;
+  customers = customers.filter(x=> x.id!==id);
+  saveCustomers();
+  if(selectedCustomer && selectedCustomer.id===id) clearSelectedCustomer();
+  renderCustomers(); refreshCustomerDatalist();
+  toast('ลบลูกค้าแล้ว');
+}
+function useCustomerInPOS(id){
+  // จากหน้า Customers กด "ใช้ขาย"
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelector('[data-page="pos"]').classList.add('active');
+  document.querySelectorAll('.pages>.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-pos').classList.add('active');
+  selectCustomer(id);
+  toast('เลือกลูกค้าแล้ว — พร้อมขาย');
+}
+function refreshCustomerDatalist(){
+  const dl=document.getElementById('cusListPos');
+  if(!dl) return;
+  dl.innerHTML = customers.slice(0,20).map(c=> `<option value="${escapeHtml(c.name)}">`).join('');
+}
+function renderCustomers(){
+  recalcCustomerStats();
+  const q=(document.getElementById('searchCustomer')?.value||'').toLowerCase().trim();
+  const sort=document.getElementById('filterCusSort')?.value||'newest';
+  let list = customers.filter(c=> !q || (c.code+c.name+c.phone+c.address+c.tag).toLowerCase().includes(q));
+  if(sort==='name') list.sort((a,b)=> a.name.localeCompare(b.name,'th'));
+  else if(sort==='spent') list.sort((a,b)=> (b.spent||0)-(a.spent||0));
+  else list.sort((a,b)=> b.code.localeCompare(a.code));
+  document.getElementById('cusCount').textContent=list.length+' คน';
+  const wrap=document.getElementById('customerList');
+  const empty=document.getElementById('customerEmpty');
+  const tableWrap=document.getElementById('customerTableWrap');
+  const tbody=document.getElementById('customerTableBody');
+  const topBox=document.getElementById('topCustomersBox');
+  if(!list.length){
+    wrap.innerHTML=''; empty.classList.remove('hidden'); tableWrap.classList.add('hidden');
+  } else {
+    empty.classList.add('hidden'); wrap.innerHTML='';
+    tableWrap.classList.remove('hidden');
+    tbody.innerHTML = list.map(c=> `<tr>
+      <td><b>${escapeHtml(c.code)}</b></td>
+      <td><b>${escapeHtml(c.name)}</b> <span class="cus-badge">${escapeHtml(c.tag||'ทั่วไป')}</span></td>
+      <td style="white-space:nowrap">${escapeHtml(c.phone||'-')}</td>
+      <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escapeHtml(c.address||'')}">${escapeHtml(c.address||'-')}</td>
+      <td style="text-align:right;font-weight:700">฿${fmt(c.spent||0)} <small style="color:var(--muted)">(${c.visits||0} ครั้ง)</small></td>
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" onclick="useCustomerInPOS('${c.id}')">ใช้ขาย</button><button class="btn btn-ghost btn-sm" onclick="openAddCustomer('${c.id}')">แก้ไข</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteCustomer('${c.id}')">ลบ</button></div></td>
+    </tr>`).join('');
+  }
+  // Top customers
+  const top = [...customers].sort((a,b)=> (b.spent||0)-(a.spent||0)).slice(0,5);
+  if(!top.length || top.every(c=>!c.spent)){
+    topBox.innerHTML='<div class="muted">ยังไม่มีข้อมูลยอดซื้อ — ขายสักบิลแล้วจะขึ้นที่นี่</div>';
+  } else {
+    topBox.innerHTML = top.map((c,i)=> `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)"><span><b>#${i+1} ${escapeHtml(c.name)}</b> <small style="color:var(--muted)">${escapeHtml(c.phone||'')}</small></span><b style="color:var(--primary)">฿${fmt(c.spent||0)}</b></div>`).join('');
+  }
+  refreshCustomerDatalist();
+}
+function exportCustomers(){
+  if(!customers.length) return toast('ไม่มีข้อมูลลูกค้า','err');
+  let csv='﻿รหัส,ชื่อ,เบอร์โทร,ที่อยู่,เลขผู้เสียภาษี,กลุ่ม,ยอดซื้อสะสม,จำนวนครั้ง\n';
+  customers.forEach(c=>{
+    csv+=`"${c.code}","${c.name.replace(/"/g,'""')}","${c.phone}","${(c.address||'').replace(/"/g,'""')}","${c.tax||''}","${c.tag||''}",${c.spent||0},${c.visits||0}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}), url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='customers_'+new Date().toISOString().slice(0,10)+'.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+function onLogoFile(e){ const f=e.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>{ document.getElementById('logoPreview').src=reader.result; renderShopPreview(); toast('โหลดโลโก้แล้ว — อย่าลืมกดบันทึก'); }; reader.readAsDataURL(f); }
 function useDefaultLogo(){ document.getElementById('logoPreview').src='dont.png'; toast('ใช้ dont.png แล้ว'); }
 function clearLogo(){ document.getElementById('logoPreview').src=''; }
 function openModal(id){ document.getElementById(id).classList.add('show') }
@@ -906,8 +1259,8 @@ window.addEventListener('storage', (e)=>{
   }
 });
 
-load(); applySettings(); renderProducts(); renderCart(); renderHistory(); renderManage(); updateHoldInfo(); barcodeHandler();
-refreshPreview();
+load(); applySettings(); renderProducts(); renderCart(); renderHistory(); renderManage(); renderCustomers(); updateHoldInfo(); barcodeHandler();
+refreshCustomerDatalist(); refreshPreview(); renderShopPreview();
 </script>
 </body>
 </html>
