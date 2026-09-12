@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(git add *)",
-      "Bash(git commit -m 'Update mulk-dashboard to fetch data from sheet '\\\\''ออเดอร์ต่างจังหวัด'\\\\'' *)"
+      "Bash(git commit -m 'Update mulk-dashboard to fetch data from sheet '\\\\''ออเดอร์ต่างจังหวัด'\\\\'' *)",
+      "Bash(file *.png)",
+      "Bash(identify dont.png ddt.png \"Gemini_Generated_Image_ld3m7nld3m7nld3m.png\")"
     ]
   }
 }
