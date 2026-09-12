@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POS ขายหน้าร้าน — Chiangmai Freshmilk</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <style>
 :root{
   --bg:#f1f5f9; --card:#fff; --border:#e2e8f0; --text:#0f172a; --muted:#64748b;
@@ -127,6 +128,12 @@ tr:last-child td{border-bottom:none}
 .r-total{border-top:1.5px solid #111;margin-top:6px;padding-top:6px}
 .r-foot{text-align:center;margin-top:10px;font-size:10px;color:#333;border-top:1px dashed #999;padding-top:8px}
 .r-barcode{margin:8px auto 0;width:100%;height:38px;background:repeating-linear-gradient(90deg,#000 0 2px,#fff 2px 4px);opacity:.9}
+.r-barcode-wrap{text-align:center;margin-top:10px}
+.r-barcode-wrap svg{max-width:100%;height:48px}
+.r-barcode-type{font-size:8px;color:#666;letter-spacing:.5px;margin-top:2px}
+.bill-row{display:flex;gap:6px;align-items:center;background:#f8fafc;border:1px dashed var(--border);border-radius:10px;padding:8px 10px;margin-bottom:10px}
+.bill-row label{font-size:12px;font-weight:700;white-space:nowrap}
+.bill-row input{flex:1;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.3px}
 .hidden{display:none !important}
 .pages>.page{display:none}
 .pages>.page.active{display:block}
@@ -228,6 +235,11 @@ tr:last-child td{border-bottom:none}
               <input id="transferRef" placeholder="เลขที่อ้างอิง / 4 ตัวท้าย (ถ้ามี)">
               <div class="muted" style="margin-top:6px">* ตรวจยอดโอนให้ตรงกับยอดสุทธิ</div>
             </div>
+          </div>
+          <div class="bill-row">
+            <label>เลขที่บิล</label>
+            <input id="billNoInput" placeholder="POS-YYYYMMDD-001" spellcheck="false" oninput="onBillNoChange(this.value)">
+            <button class="btn btn-ghost btn-sm" onclick="regenBillNo()" title="สุ่มเลขใหม่">↺</button>
           </div>
           <div style="margin-top:10px;display:grid;gap:8px">
             <div style="display:flex;gap:6px">
@@ -403,6 +415,25 @@ tr:last-child td{border-bottom:none}
       <label style="margin-top:10px">หมายเหตุ</label><input id="c_note" placeholder="เช่น ชอบนมจืด, ส่งช่วงเช้า">
     </div>
     <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('customerModal')">ยกเลิก</button><button class="btn btn-primary" onclick="saveCustomer()">💾 บันทึกข้อมูลลูกค้า</button></div>
+  </div>
+</div>
+
+<div id="editBillModal" class="modal-bg" onclick="if(event.target===this)closeModal('editBillModal')">
+  <div class="modal-box">
+    <div class="modal-hd"><b>✏️ แก้ไขบิล</b><button class="btn btn-ghost btn-icon" onclick="closeModal('editBillModal')">✕</button></div>
+    <div class="modal-bd">
+      <input type="hidden" id="e_oldId">
+      <label>เลขที่บิล *</label><input id="e_billNo" style="font-family:'IBM Plex Mono',monospace;font-weight:700" placeholder="POS-YYYYMMDD-001">
+      <div class="muted" style="margin-top:4px">แก้เลขแล้วบาร์โค้ดท้ายบิลจะเปลี่ยนตาม • ห้ามซ้ำกับบิลอื่น</div>
+      <label style="margin-top:10px">ชื่อลูกค้า</label><input id="e_customerName" placeholder="ชื่อลูกค้า">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div><label>เบอร์โทร</label><input id="e_customerPhone" placeholder="081-xxx-xxxx"></div>
+        <div><label>วิธีชำระ</label><select id="e_pay"><option value="cash">เงินสด</option><option value="transfer">โอน</option><option value="card">บัตร</option></select></div>
+      </div>
+      <label style="margin-top:10px">ที่อยู่ลูกค้า</label><textarea id="e_customerAddress" rows="2" placeholder="ที่อยู่สำหรับออกใบเสร็จ"></textarea>
+      <label style="margin-top:10px">หมายเหตุท้ายบิล</label><input id="e_note" placeholder="หมายเหตุ">
+    </div>
+    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('editBillModal')">ยกเลิก</button><button class="btn btn-primary" onclick="saveEditBill()">💾 บันทึกการแก้ไข</button></div>
   </div>
 </div>
 
@@ -789,6 +820,53 @@ function nextBillNo(){
   const today=sales.filter(s=>s.billNo.startsWith(prefix)).length+1;
   return prefix+String(today).padStart(3,'0');
 }
+function getBillNo(){
+  const inp=document.getElementById('billNoInput');
+  let v=(inp && inp.value.trim()) || '';
+  if(!v) v=nextBillNo();
+  // ทำความสะอาดเบาๆ: ตัดช่องว่างซ้ำ
+  v=v.replace(/\s+/g,' ').trim();
+  return v;
+}
+function isBillNoDuplicate(billNo){
+  return sales.some(s=> s.billNo===billNo);
+}
+function onBillNoChange(v){
+  // แค่รีเฟรชพรีวิวตามที่พิมพ์
+  if(document.getElementById('page-settings')?.classList.contains('active')) refreshPreview();
+}
+function regenBillNo(){
+  const inp=document.getElementById('billNoInput');
+  if(!inp) return;
+  inp.value=nextBillNo();
+  onBillNoChange(inp.value);
+  toast('สร้างเลขที่บิลใหม่: '+inp.value);
+}
+function initBillNo(){
+  const inp=document.getElementById('billNoInput');
+  if(!inp) return;
+  if(!inp.value.trim()) inp.value=nextBillNo();
+}
+function sanitizeId(s){ return String(s||'').replace(/[^A-Za-z0-9]/g,'_'); }
+function renderBarcodes(root){
+  if(!root || typeof JsBarcode==='undefined') return;
+  const svgs=root.querySelectorAll('svg.jsbarcode');
+  svgs.forEach(svg=>{
+    const val=svg.getAttribute('data-value')||'';
+    if(!val) return;
+    try{
+      JsBarcode(svg, val, {
+        format: 'CODE128',
+        width: 1.6,
+        height: 42,
+        displayValue: false,
+        margin: 0,
+        background: '#fff',
+        lineColor: '#000'
+      });
+    }catch(e){ console.warn('JsBarcode error', e); }
+  });
+}
 function buildReceiptHTML(sale){
   const s=getSettings();
   const paper=s.paper||'80';
@@ -836,8 +914,11 @@ function buildReceiptHTML(sale){
     ${sale.note?`<div style="margin-top:6px;font-size:10px;color:#333">หมายเหตุ: ${escapeHtml(sale.note)}</div>`:''}
     <div class="r-foot">
       <div style="white-space:pre-wrap">${escapeHtml(s.footer||'')}</div>
-      <div class="r-barcode"></div>
-      <div style="margin-top:4px;letter-spacing:2px">${escapeHtml(sale.billNo)}</div>
+      <div class="r-barcode-wrap">
+        <svg class="jsbarcode" data-value="${escapeHtml(sale.billNo)}"></svg>
+        <div class="r-barcode-type">CODE128 • สแกนเลขที่บิล</div>
+      </div>
+      <div style="margin-top:4px;letter-spacing:2px;font-family:'IBM Plex Mono',monospace;font-size:10px">${escapeHtml(sale.billNo)}</div>
     </div>
   </div>`;
 }
@@ -863,24 +944,26 @@ function currentCustomerForBill(){
 function previewReceipt(){
   const t=calcTotals();
   const c=currentCustomerForBill();
+  const billNo=getBillNo();
   let sale;
   if(!cart.length){
-    sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), ...c, items:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:2}], subtotal:t.subtotal||90, discount:t.discount, vat:t.vat, total:t.total||90, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')}
+    sale={billNo, dateStr:new Date().toLocaleString('th-TH'), ...c, items:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:2}], subtotal:t.subtotal||90, discount:t.discount, vat:t.vat, total:t.total||90, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')}
   } else {
-    sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), ...c, items:cart, subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
+    sale={billNo, dateStr:new Date().toLocaleString('th-TH'), ...c, items:cart, subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
   }
   const html=buildReceiptHTML(sale);
-  document.getElementById('receiptPreview').innerHTML=html;
-  document.getElementById('previewWrap').innerHTML=html;
+  const a=document.getElementById('receiptPreview'); a.innerHTML=html; renderBarcodes(a);
+  const b=document.getElementById('previewWrap'); b.innerHTML=html; renderBarcodes(b);
   openModal('receiptModal');
 }
 function refreshPreview(){
   const t=calcTotals();
   const c=currentCustomerForBill();
   const fallback = (!c.customer ? 'ลูกค้าหน้าร้าน' : c.customer);
-  const sale={billNo:nextBillNo(), dateStr:new Date().toLocaleString('th-TH'), customer:c.customer||fallback, customerId:c.customerId, customerPhone:c.customerPhone, customerAddress:c.customerAddress, customerTax:c.customerTax, items: cart.length?cart:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:1}], subtotal:t.subtotal||45, discount:t.discount, vat:t.vat, total:t.total||45, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
+  const billNo=getBillNo();
+  const sale={billNo, dateStr:new Date().toLocaleString('th-TH'), customer:c.customer||fallback, customerId:c.customerId, customerPhone:c.customerPhone, customerAddress:c.customerAddress, customerTax:c.customerTax, items: cart.length?cart:[{code:'8850001',name:'นมสดพาสเจอร์ไรส์ 830ml',price:45,qty:1}], subtotal:t.subtotal||45, discount:t.discount, vat:t.vat, total:t.total||45, received:t.received, change:t.change, pay:payMethod, ref:val('transferRef'), note:val('receiptNote')};
   const el=document.getElementById('previewWrap');
-  if(el) el.innerHTML=buildReceiptHTML(sale);
+  if(el){ el.innerHTML=buildReceiptHTML(sale); renderBarcodes(el); }
 }
 function checkout(){
   if(!cart.length) return toast('ตะกร้าว่าง','err');
@@ -888,7 +971,11 @@ function checkout(){
   if(t.total<=0) return toast('ยอดสุทธิไม่ถูกต้อง','err');
   if(payMethod==='cash' && (isNaN(t.received) || t.received < t.total)) return toast('จำนวนรับเงินไม่พอ','err');
   const cInfo = currentCustomerForBill();
-  const billNoForDispatch = nextBillNo();
+  let billNoForDispatch = getBillNo();
+  if(!billNoForDispatch) return toast('กรอกเลขที่บิลก่อน','err');
+  if(isBillNoDuplicate(billNoForDispatch)){
+    if(!confirm('เลขที่บิล "'+billNoForDispatch+'" ซ้ำกับบิลเดิมแล้ว\nกด OK เพื่อบันทึกทับ (ไม่แนะนำ) หรือ Cancel เพื่อแก้ไขเลขก่อน')) return;
+  }
   // ถ้ากรอกชื่อใหม่แต่ยังไม่เคยบันทึก ให้ auto-bump เป็นลูกค้าใหม่ (ถ้ามีเบอร์)
   if(cInfo.customer && !cInfo.customerId && cInfo.customerPhone){
     // auto-create customer แบบเงียบ
@@ -925,9 +1012,8 @@ function checkout(){
   const sale={ id:Date.now().toString(), billNo:billNoForDispatch, dateStr:new Date().toLocaleString('th-TH'), ts:Date.now(), customer:cInfo.customer||'ลูกค้าหน้าร้าน', customerId:cInfo.customerId||'', customerPhone:cInfo.customerPhone||'', customerAddress:cInfo.customerAddress||'', customerTax:cInfo.customerTax||'', items:JSON.parse(JSON.stringify(cart)), subtotal:t.subtotal, discount:t.discount, vat:t.vat, total:t.total, received:t.received, change:Math.max(0,t.change), pay:payMethod, ref:val('transferRef'), note:val('receiptNote') };
   sales.unshift(sale); saveSales();
   const html=buildReceiptHTML(sale);
-  document.getElementById('receiptPreview').innerHTML=html;
-  document.getElementById('printArea').innerHTML=html;
-  document.getElementById('printArea').style.display='block';
+  const rp=document.getElementById('receiptPreview'); rp.innerHTML=html; renderBarcodes(rp);
+  const pa=document.getElementById('printArea'); pa.innerHTML=html; renderBarcodes(pa); pa.style.display='block';
   openModal('receiptModal');
   setTimeout(()=>doPrint(), 350);
   cart=[]; document.getElementById('cashReceived').value='';
@@ -937,15 +1023,19 @@ function checkout(){
   document.getElementById('customerPhone').value='';
   document.getElementById('customerAddress').value='';
   document.getElementById('customerId').value='';
-  renderCart(); renderProducts(); renderManage(); renderHistory(); renderCustomers();
+  // สร้างเลขบิลใหม่สำหรับบิลถัดไป
+  const bnInp=document.getElementById('billNoInput'); if(bnInp) bnInp.value=nextBillNo();
+  renderCart(); renderProducts(); renderManage(); renderHistory(); renderCustomers(); refreshPreview();
   toast('บันทึกการขาย '+sale.billNo+' • สต๊อกอัปเดตแล้ว');
 }
 function doPrint(){
-  const html=document.getElementById('receiptPreview').innerHTML;
-  document.getElementById('printArea').innerHTML=html;
-  document.getElementById('printArea').style.display='block';
+  const src=document.getElementById('receiptPreview');
+  const pa=document.getElementById('printArea');
+  pa.innerHTML=src.innerHTML;
+  renderBarcodes(pa);
+  pa.style.display='block';
   window.print();
-  setTimeout(()=>{ document.getElementById('printArea').style.display='none'; }, 500);
+  setTimeout(()=>{ pa.style.display='none'; }, 600);
 }
 function renderHistory(){
   const q=(document.getElementById('searchHistory').value||'').toLowerCase();
@@ -959,10 +1049,59 @@ function renderHistory(){
     <td>${s.items.length} รายการ</td>
     <td style="font-weight:700">฿${fmt(s.total)}</td>
     <td>${s.pay==='cash'?'เงินสด':s.pay==='transfer'?'โอน':'บัตร'}</td>
-    <td><button class="btn btn-ghost btn-sm" onclick="reprint('${s.id}')">พิมพ์ซ้ำ</button> <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="voidSale('${s.id}')">ยกเลิก</button></td>
+    <td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="openEditBillModal('${s.id}')">✏️ แก้บิล</button><button class="btn btn-ghost btn-sm" onclick="reprint('${s.id}')">พิมพ์ซ้ำ</button> <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="voidSale('${s.id}')">ยกเลิก</button></div></td>
   </tr>`).join('');
 }
-function reprint(id){ const s=sales.find(x=>x.id===id); if(!s) return; const html=buildReceiptHTML(s); document.getElementById('receiptPreview').innerHTML=html; document.getElementById('printArea').innerHTML=html; document.getElementById('printArea').style.display='block'; openModal('receiptModal'); }
+function openEditBillModal(id){
+  const s=sales.find(x=> x.id===id); if(!s) return;
+  document.getElementById('e_oldId').value=s.id;
+  document.getElementById('e_billNo').value=s.billNo;
+  document.getElementById('e_customerName').value=s.customer||'';
+  document.getElementById('e_customerPhone').value=s.customerPhone||'';
+  document.getElementById('e_customerAddress').value=s.customerAddress||'';
+  document.getElementById('e_note').value=s.note||'';
+  document.getElementById('e_pay').value=s.pay||'cash';
+  openModal('editBillModal');
+}
+function saveEditBill(){
+  const oldId=val('e_oldId');
+  const s=sales.find(x=> x.id===oldId); if(!s) return;
+  const newBillNo=val('e_billNo').trim();
+  if(!newBillNo) return toast('กรอกเลขที่บิล','err');
+  if(newBillNo!==s.billNo && isBillNoDuplicate(newBillNo)) return toast('เลขที่บิลนี้ซ้ำกับบิลอื่นแล้ว','err');
+  const oldBillNo=s.billNo;
+  s.billNo=newBillNo;
+  s.customer=val('e_customerName');
+  s.customerPhone=val('e_customerPhone');
+  s.customerAddress=val('e_customerAddress');
+  s.note=val('e_note');
+  s.pay=val('e_pay');
+  saveSales();
+  // อัปเดต dispatches ที่ผูกกับบิลนี้ (note มี POS <billNo>)
+  if(oldBillNo!==newBillNo){
+    let disps=getRawDispatches();
+    let changed=false;
+    disps.forEach(d=>{
+      if((d.note||'').includes(oldBillNo)){
+        d.note = d.note.replace(oldBillNo, newBillNo);
+        changed=true;
+      }
+    });
+    if(changed) saveRawDispatches(disps);
+  }
+  closeModal('editBillModal');
+  renderHistory();
+  // ถ้าเลขตรงกับบิลที่โชว์อยู่หรือแก้บิลเดียวกัน ให้รีเฟรชบาร์โค้ด
+  toast('แก้ไขบิลแล้ว: '+newBillNo);
+  reprint(s.id);
+}
+function reprint(id){
+  const s=sales.find(x=>x.id===id); if(!s) return;
+  const html=buildReceiptHTML(s);
+  const rp=document.getElementById('receiptPreview'); rp.innerHTML=html; renderBarcodes(rp);
+  const pa=document.getElementById('printArea'); pa.innerHTML=html; renderBarcodes(pa); pa.style.display='block';
+  openModal('receiptModal');
+}
 function voidSale(id){
   if(!confirm('ยกเลิกบิลนี้? สต๊อกจะคืนกลับและลบรายการจ่ายที่เกี่ยวข้อง')) return;
   const idx=sales.findIndex(x=>x.id===id); if(idx<0) return;
@@ -1260,7 +1399,7 @@ window.addEventListener('storage', (e)=>{
 });
 
 load(); applySettings(); renderProducts(); renderCart(); renderHistory(); renderManage(); renderCustomers(); updateHoldInfo(); barcodeHandler();
-refreshCustomerDatalist(); refreshPreview(); renderShopPreview();
+refreshCustomerDatalist(); initBillNo(); refreshPreview(); renderShopPreview();
 </script>
 </body>
 </html>
