@@ -185,9 +185,11 @@
                     <div>รหัสสมาชิก: <span id="prev-id">-</span></div>
                     <div>ชื่อสมาชิก: <span id="prev-name">-</span></div>
                     <div>รอบ: <span id="prev-period">-</span></div>
-                    <div class="border-t border-b border-dashed border-gray-400 my-2 py-1 font-bold text-base flex justify-between">
-                        <span>น้ำหนักสุทธิ:</span>
-                        <span><span id="prev-weight">0.00</span> กก.</span>
+                    <div class="border-t border-b border-dashed border-gray-400 my-2 py-2 text-center bg-white rounded">
+                        <div class="text-xs font-semibold text-gray-500">น้ำหนักสุทธิ (NET WEIGHT)</div>
+                        <div class="font-extrabold text-2xl tracking-wide text-blue-900 leading-tight my-0.5">
+                            <span id="prev-weight">0.00</span> <span class="text-lg">กก.</span>
+                        </div>
                     </div>
                     <div class="text-center text-xs mt-4">*** ขอบคุณที่นำส่งนมคุณภาพ ***</div>
                 </div>
@@ -460,9 +462,11 @@
         <div>รหัสสมาชิก: <span id="p-id"></span></div>
         <div>ชื่อสมาชิก: <span id="p-name"></span></div>
         <div>รอบการส่ง: <span id="p-period"></span></div>
-        <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; margin: 8px 0; padding: 5px 0; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between;">
-            <span>น้ำหนักสุทธิ:</span>
-            <span><span id="p-weight">0.00</span> กก.</span>
+        <div style="border-top: 2px dashed #000; border-bottom: 2px dashed #000; margin: 10px 0; padding: 8px 4px; text-align: center;">
+            <div style="font-size: 13px; font-weight: bold; letter-spacing: 0.5px;">น้ำหนักสุทธิ (NET WT)</div>
+            <div style="font-size: 32px; font-weight: 900; line-height: 1.15; margin: 4px 0; letter-spacing: 1px;">
+                <span id="p-weight">0.00</span> <span style="font-size: 20px; font-weight: bold;">กก.</span>
+            </div>
         </div>
         <div style="text-align: center; font-size: 11px; margin-top: 15px;" id="p-footer">
             *** ขอบคุณที่นำส่งนมคุณภาพ ***
@@ -1023,8 +1027,11 @@
                     <div>รหัสสมาชิก: ${esc(memberId)}</div>
                     <div>ชื่อสมาชิก: ${esc(member.name)}</div>
                     <div>รอบการส่ง: ${esc(period)}</div>
-                    <div style="border-top:1px dashed #999;border-bottom:1px dashed #999;margin:6px 0;padding:4px 0;font-weight:bold;display:flex;justify-content:space-between;">
-                        <span>น้ำหนักสุทธิ:</span><span>${savedWeight.toFixed(2)} กก.</span>
+                    <div style="border-top:2px dashed #000;border-bottom:2px dashed #000;margin:8px 0;padding:6px 0;text-align:center;">
+                        <div style="font-size:11px;font-weight:bold;color:#333;">น้ำหนักสุทธิ (NET WT)</div>
+                        <div style="font-size:26px;font-weight:900;line-height:1.2;margin:2px 0;">
+                            ${savedWeight.toFixed(2)} <span style="font-size:16px;font-weight:bold;">กก.</span>
+                        </div>
                     </div>
                     <div style="text-align:center;font-size:10px;margin-top:8px;">${esc(receiptSettings.footer)}</div>
                 `;
