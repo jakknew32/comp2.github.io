@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Content Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .hide { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Video Simulator Styles */
+        .phone-mockup {
+            width: 280px;
+            height: 500px;
+            border-radius: 30px;
+            border: 8px solid #1e293b;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .video-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 15px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            z-index: 10;
+        }
+        .slide-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .slide-image.active { opacity: 1; }
+        
+        /* Checkbox Custom Toggle */
+        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
+    </style>
+</head>
+<body class="text-slate-800 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex z-20 shadow-sm">
+        <div class="h-16 flex items-center px-6 border-b border-slate-200">
+            <i class="fa-solid fa-layer-group text-brand-600 text-xl mr-3"></i>
+            <span class="font-bold text-lg text-slate-800">Affiliate Hub</span>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li><a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition bg-brand-50 text-brand-600 border-r-4 border-brand-600"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a></li>
+                <li><a href="#" onclick="switchTab('products')" id="nav-products" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-box w-6"></i> Products & Links</a></li>
+                <li><a href="#" onclick="switchTab('script')" id="nav-script" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-pen-nib w-6"></i> Script AI (Thai)</a></li>
+                <li><a href="#" onclick="switchTab('studio')" id="nav-studio" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-video w-6"></i> Video Studio</a></li>
+                <li><a href="#" onclick="switchTab('publish')" id="nav-publish" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-paper-plane w-6"></i> Auto-Post</a></li>
+                <li><a href="#" onclick="switchTab('settings')" id="nav-settings" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-gear w-6"></i> Settings</a></li>
+            </ul>
+        </nav>
+        <div class="p-4 border-t border-slate-200 text-sm text-slate-500">
+            v1.0.0 Pro Edition
+        </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 w-full bg-white h-16 flex items-center justify-between px-4 border-b border-slate-200 z-30 shadow-sm">
+        <div class="flex items-center">
+            <i class="fa-solid fa-layer-group text-brand-600 text-xl mr-2"></i>
+            <span class="font-bold text-lg">Affiliate Hub</span>
+        </div>
+        <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="text-slate-600 text-xl"><i class="fa-solid fa-bars"></i></button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden md:hidden fixed inset-0 bg-white z-20 pt-16">
+        <nav class="flex flex-col p-4 space-y-2">
+            <a href="#" onclick="switchTab('dashboard'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg bg-brand-50 text-brand-600 rounded-lg"><i class="fa-solid fa-chart-pie w-8"></i> Dashboard</a>
+            <a href="#" onclick="switchTab('products'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-box w-8"></i> Products</a>
+            <a href="#" onclick="switchTab('script'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-pen-nib w-8"></i> Script AI</a>
+            <a href="#" onclick="switchTab('studio'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-video w-8"></i> Studio</a>
+            <a href="#" onclick="switchTab('publish'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-paper-plane w-8"></i> Publish</a>
+            <a href="#" onclick="switchTab('settings'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-gear w-8"></i> Settings</a>
+        </nav>
+    </div>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 pt-16 md:pt-0">
+        
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
+            <h1 id="pageTitle" class="text-xl font-semibold text-slate-800">Dashboard</h1>
+            <div class="flex items-center space-x-4">
+                <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-bell"></i></button>
+                <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-sm">A</div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-8 relative">
+            
+            <!-- Toast Notification -->
+            <div id="toast" class="fixed top-20 right-8 bg-slate-800 text-white px-4 py-3 rounded shadow-lg transform transition-transform translate-x-full opacity-0 z-50 flex items-center gap-3">
+                <i id="toastIcon" class="fa-solid fa-circle-check text-green-400"></i>
+                <span id="toastMsg">Action successful</span>
+            </div>
+
+            <div id="view-dashboard" class="view-section fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-slate-500 font-medium">Total Products</p>
+                            <p class="text-3xl font-bold text-slate-800 mt-1" id="stat-products">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-slate-500 font-medium">Generated Videos</p>
+                            <p class="text-3xl font-bold text-slate-800 mt-1" id="stat-videos">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-film"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-slate-500 font-medium">Posts Published</p>
+                            <p class="text-3xl font-bold text-slate-800 mt-1" id="stat-posts">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="text-lg font-semibold mb-4 border-b pb-2">Recent Activity</h3>
+                    <ul class="space-y-4" id="activity-list">
+                        <li class="text-slate-500 text-sm italic">No recent activity. Get started by adding a product!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="view-products" class="view-section hide fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold">Manage Products</h2>
+                    <button onclick="toggleProductModal(true)" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
+                        <i class="fa-solid fa-plus mr-2"></i> Add Product
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
+                                <th class="p-4 font-medium">Product Name</th>
+                                <th class="p-4 font-medium">Affiliate Link</th>
+                                <th class="p-4 font-medium text-center">Images</th>
+                                <th class="p-4 font-medium text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-table-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                    <div id="empty-products" class="p-8 text-center text-slate-500 hidden">
+                        <i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i>
+                        <p>No products added yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-script" class="view-section hide fade-in">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+                        <h2 class="text-lg font-semibold mb-4">Generate Thai Viral Script</h2>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Select Product</label>
+                            <select id="script-product-select" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
+                                <option value="">-- Choose a product --</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Additional Instructions (Optional)</label>
+                            <input type="text" id="script-context" placeholder="e.g. Focus on the discount, make it funny, target teenagers..." class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
+                        </div>
+                        <button onclick="generateScript()" id="btn-generate-script" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 rounded-lg transition shadow flex items-center justify-center">
+                            <i class="fa-solid fa-sparkles mr-2"></i> Generate with Gemini API
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-md font-semibold">Generated Script</h3>
+                            <button onclick="copyScript()" class="text-slate-500 hover:text-brand-600 text-sm flex items-center"><i class="fa-regular fa-copy mr-1"></i> Copy</button>
+                        </div>
+                        <textarea id="script-output" rows="10" class="w-full border border-slate-200 rounded-lg p-4 text-sm text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="Your script will appear here..."></textarea>
+                        <div class="mt-4 flex justify-end">
+                            <button onclick="saveScriptToProduct()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
+                                Save to Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-studio" class="view-section hide fade-in">
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- Controls -->
+                    <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-6 h-fit">
+                        <h2 class="text-lg font-semibold mb-6">Video Generator</h2>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Select Product for Video</label>
+                            <select id="studio-product-select" onchange="loadStudioPreview()" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
+                                <option value="">-- Choose a product --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Available Assets</label>
+                            <div id="studio-assets" class="grid grid-cols-3 gap-2 p-4 bg-slate-50 rounded-lg border border-slate-200 min-h-[100px] flex items-center justify-center text-sm text-slate-400">
+                                Select a product to view images
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Overlay Text (Hook)</label>
+                            <input type="text" id="studio-text" placeholder="e.g. ไอเท็มลับที่ต้องมี! (Must-have secret item!)" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
+                        </div>
+
+                        <button onclick="generateVideo()" id="btn-generate-video" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition shadow-md flex items-center justify-center">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Generate Reel / TikTok
+                        </button>
+                        
+                        <div id="video-progress" class="mt-4 hidden">
+                            <div class="flex justify-between text-xs text-slate-500 mb-1">
+                                <span>Rendering frames...</span>
+                                <span id="video-percent">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2">
+                                <div id="video-bar" class="bg-indigo-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Simulator -->
+                    <div class="w-full lg:w-auto flex flex-col items-center justify-center">
+                        <p class="text-sm text-slate-500 font-medium mb-4">Output Preview</p>
+                        <div class="phone-mockup" id="phone-screen">
+                            <!-- Placeholder -->
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 p-6 text-center" id="phone-placeholder">
+                                <i class="fa-solid fa-mobile-screen text-4xl mb-3 text-slate-700"></i>
+                                <p class="text-sm">Click Generate to create your promotional video</p>
+                            </div>
+                            
+                            <!-- Video Simulator -->
+                            <div id="video-player" class="hidden absolute inset-0 bg-black">
+                                <div id="slideshow-container" class="w-full h-full relative">
+                                    <!-- Images injected here -->
+                                </div>
+                                <div class="video-overlay flex flex-col">
+                                    <span id="overlay-hook-text" class="font-bold text-lg mb-2 text-shadow drop-shadow-md"></span>
+                                    <div class="flex items-center text-xs opacity-80 mb-1">
+                                        <i class="fa-solid fa-music mr-2"></i> Trending Sound - Viral
+                                    </div>
+                                    <div class="flex items-center text-sm font-semibold bg-brand-600 text-white w-max px-3 py-1 rounded-full mt-2 cursor-pointer shadow-lg">
+                                        <i class="fa-solid fa-cart-shopping mr-2"></i> Shop Now
+                                    </div>
+                                </div>
+                                <!-- Fake UI elements -->
+                                <div class="absolute right-3 bottom-24 flex flex-col items-center space-y-4 text-white drop-shadow-md">
+                                    <div class="flex flex-col items-center"><i class="fa-solid fa-heart text-2xl"></i><span class="text-xs mt-1">12K</span></div>
+                                    <div class="flex flex-col items-center"><i class="fa-solid fa-comment-dots text-2xl"></i><span class="text-xs mt-1">45</span></div>
+                                    <div class="flex flex-col items-center"><i class="fa-solid fa-share text-2xl"></i><span class="text-xs mt-1">Share</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-publish" class="view-section hide fade-in">
+                <div class="max-w-3xl mx-auto">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+                        <h2 class="text-xl font-bold mb-2">Multi-Platform Publisher</h2>
+                        <p class="text-slate-500 text-sm mb-6">Select a generated video and push it to multiple networks simultaneously.</p>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Select Video</label>
+                            <select id="publish-product-select" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
+                                <option value="">-- Choose a ready product --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-700 mb-3">Target Platforms</label>
+                            
+                            <div class="space-y-3">
+                                <!-- TikTok -->
+                                <label class="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center text-xl mr-4 shadow-sm">
+                                            <i class="fa-brands fa-tiktok"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-800">TikTok</p>
+                                            <p class="text-xs text-slate-500">Post directly to feed with cart link</p>
+                                        </div>
+                                    </div>
+                                    <input type="checkbox" id="plat-tiktok" class="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" checked>
+                                </label>
+                                
+                                <!-- Shopee Video -->
+                                <label class="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xl mr-4 shadow-sm">
+                                            <i class="fa-solid fa-bag-shopping"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-800">Shopee Video</p>
+                                            <p class="text-xs text-slate-500">Attach affiliate product automatically</p>
+                                        </div>
+                                    </div>
+                                    <input type="checkbox" id="plat-shopee" class="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" checked>
+                                </label>
+
+                                <!-- IG Reels -->
+                                <label class="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white rounded-lg flex items-center justify-center text-xl mr-4 shadow-sm">
+                                            <i class="fa-brands fa-instagram"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-800">Instagram Reels</p>
+                                            <p class="text-xs text-slate-500">Post reel with bio link prompt</p>
+                                        </div>
+                                    </div>
+                                    <input type="checkbox" id="plat-ig" class="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" checked>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Caption override (Optional)</label>
+                            <textarea id="publish-caption" rows="3" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="Leave blank to use generated script..."></textarea>
+                        </div>
+
+                        <button onclick="startPublishPipeline()" id="btn-publish" class="w-full bg-slate-900 hover:bg-black text-white font-medium py-4 rounded-xl transition shadow-lg flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-rocket mr-2"></i> Blast to Networks
+                        </button>
+                    </div>
+
+                    <!-- Pipeline status -->
+                    <div id="publish-pipeline" class="bg-slate-900 text-green-400 font-mono text-sm p-4 rounded-xl shadow-lg hidden">
+                        <div class="flex justify-between items-center mb-2 border-b border-slate-700 pb-2">
+                            <span class="text-slate-300 flex items-center"><i class="fa-solid fa-terminal mr-2"></i> Deployment Console</span>
+                            <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">Live</span>
+                        </div>
+                        <div id="pipeline-logs" class="space-y-1 h-32 overflow-y-auto pt-2">
+                            <!-- Logs injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-settings" class="view-section hide fade-in">
+                <div class="max-w-2xl mx-auto bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-lg font-semibold mb-6 border-b pb-4">Configuration</h2>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Google Gemini API Key</label>
+                        <p class="text-xs text-slate-500 mb-2">Required for generating Thai scripts. Get it from Google AI Studio.</p>
+                        <div class="flex gap-2">
+                            <input type="password" id="settings-gemini-key" placeholder="AIzaSy..." class="flex-1 border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition font-mono">
+                            <button onclick="saveSettings()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">Save</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mt-8 text-sm text-yellow-800">
+                        <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Privacy Note</p>
+                        <p>API keys are saved locally in your browser's <code>localStorage</code>. They are never sent to any server other than directly to Google's API during script generation.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Add Product Modal -->
+    <div id="modal-product" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 transform scale-95 transition-transform" id="modal-product-content">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200">
+                <h3 class="text-lg font-bold text-slate-800">Add New Product</h3>
+                <button onclick="toggleProductModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Product Name</label>
+                    <input type="text" id="prod-name" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. Matte Lipstick No. 5">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Affiliate Link</label>
+                    <input type="text" id="prod-link" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="https://shope.ee/...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Image URLs (Comma separated)</label>
+                    <textarea id="prod-images" rows="3" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"></textarea>
+                    <p class="text-xs text-slate-500 mt-1">These will be used to generate the video.</p>
+                </div>
+            </div>
+            <div class="p-6 border-t border-slate-200 bg-slate-50 flex justify-end gap-3 rounded-b-xl">
+                <button onclick="toggleProductModal(false)" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button>
+                <button onclick="saveProduct()" class="px-4 py-2 text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition shadow-sm">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let state = {
+            products: [],
+            activities: [],
+            stats: { videos: 0, posts: 0 }
+        };
+
+        let geminiKey = localStorage.getItem('gemini_api_key') || '';
+        let slideInterval;
+
+        // Initialization
+        function init() {
+            // Load state from local storage
+            const savedState = localStorage.getItem('affiliate_state');
+            if (savedState) {
+                state = JSON.parse(savedState);
+            } else {
+                // Mock initial data if empty
+                state.products.push({
+                    id: Date.now().toString(),
+                    name: 'Sample Whitening Serum',
+                    link: 'https://shopee.co.th/sample',
+                    images: [
+                        'https://placehold.co/400x700/fdf2f8/db2777?text=Serum+Shot+1',
+                        'https://placehold.co/400x700/fce7f3/be185d?text=Texture+Close-up',
+                        'https://placehold.co/400x700/fbcfe8/9d174d?text=Before+%26+After'
+                    ],
+                    script: '',
+                    hasVideo: false
+                });
+                logActivity('System initialized with sample data');
+                saveState();
+            }
+
+            if (geminiKey) {
+                document.getElementById('settings-gemini-key').value = geminiKey;
+            }
+
+            updateDashboard();
+            populateSelects();
+        }
+
+        function saveState() {
+            localStorage.setItem('affiliate_state', JSON.stringify(state));
+        }
+
+        // --- Navigation ---
+        function switchTab(tabId) {
+            // Update Title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'products': 'Manage Products',
+                'script': 'AI Script Generator',
+                'studio': 'Video Studio',
+                'publish': 'Auto-Publish',
+                'settings': 'Settings'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabId];
+
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hide'));
+            // Reset active nav states
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-brand-50', 'text-brand-600', 'border-r-4', 'border-brand-600');
+            });
+
+            // Show target view
+            document.getElementById(`view-${tabId}`).classList.remove('hide');
+            
+            // Set active nav
+            const nav = document.getElementById(`nav-${tabId}`);
+            if(nav) {
+                nav.classList.add('bg-brand-50', 'text-brand-600', 'border-r-4', 'border-brand-600');
+            }
+
+            // Specific Tab Triggers
+            if (tabId === 'products') renderProductsTable();
+            if (tabId === 'dashboard') updateDashboard();
+            if (tabId === 'script' || tabId === 'studio' || tabId === 'publish') populateSelects();
+            
+            // Stop video preview if leaving studio
+            if (tabId !== 'studio' && slideInterval) {
+                clearInterval(slideInterval);
+                document.getElementById('video-player').classList.add('hidden');
+                document.getElementById('phone-placeholder').classList.remove('hidden');
+            }
+        }
+
+        // --- Utils ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msgEl = document.getElementById('toastMsg');
+            
+            msgEl.textContent = msg;
+            
+            if(isError) {
+                toast.classList.replace('bg-slate-800', 'bg-red-600');
+                icon.className = 'fa-solid fa-triangle-exclamation text-white';
+            } else {
+                toast.classList.replace('bg-red-600', 'bg-slate-800');
+                icon.className = 'fa-solid fa-circle-check text-green-400';
+            }
+
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+            }, 3000);
+        }
+
+        function logActivity(msg) {
+            state.activities.unshift({ time: new Date().toLocaleTimeString(), msg });
+            if(state.activities.length > 5) state.activities.pop();
+            saveState();
+        }
+
+        // --- Dashboard ---
+        function updateDashboard() {
+            document.getElementById('stat-products').textContent = state.products.length;
+            document.getElementById('stat-videos').textContent = state.stats.videos;
+            document.getElementById('stat-posts').textContent = state.stats.posts;
+
+            const list = document.getElementById('activity-list');
+            if (state.activities.length === 0) {
+                list.innerHTML = '<li class="text-slate-500 text-sm italic">No recent activity.</li>';
+            } else {
+                list.innerHTML = state.activities.map(act => `
+                    <li class="flex justify-between items-center text-sm border-b border-slate-100 pb-2 last:border-0">
+                        <span class="text-slate-700">${act.msg}</span>
+                        <span class="text-slate-400 text-xs">${act.time}</span>
+                    </li>
+                `).join('');
+            }
+        }
+
+        // --- STREAMING_CHUNK:Products Management ---
+        function toggleProductModal(show) {
+            const modal = document.getElementById('modal-product');
+            const content = document.getElementById('modal-product-content');
+            
+            if(show) {
+                // Clear fields
+                document.getElementById('prod-name').value = '';
+                document.getElementById('prod-link').value = '';
+                document.getElementById('prod-images').value = '';
+                
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            } else {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('prod-name').value.trim();
+            const link = document.getElementById('prod-link').value.trim();
+            const imgsRaw = document.getElementById('prod-images').value.trim();
+            
+            if(!name || !link || !imgsRaw) {
+                showToast('Please fill all fields', true);
+                return;
+            }
+
+            const images = imgsRaw.split(',').map(url => url.trim()).filter(url => url);
+
+            state.products.push({
+                id: Date.now().toString(),
+                name,
+                link,
+                images,
+                script: '',
+                hasVideo: false
+            });
+
+            saveState();
+            logActivity(`Added new product: ${name}`);
+            toggleProductModal(false);
+            renderProductsTable();
+            showToast('Product added successfully');
+        }
+
+        function renderProductsTable() {
+            const tbody = document.getElementById('product-table-body');
+            const empty = document.getElementById('empty-products');
+            
+            if (state.products.length === 0) {
+                tbody.innerHTML = '';
+                empty.classList.remove('hidden');
+            } else {
+                empty.classList.add('hidden');
+                tbody.innerHTML = state.products.map(p => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                        <td class="p-4 font-medium text-slate-800">${p.name}</td>
+                        <td class="p-4"><a href="${p.link}" target="_blank" class="text-brand-500 hover:underline text-sm break-all"><i class="fa-solid fa-link mr-1"></i>Link</a></td>
+                        <td class="p-4 text-center text-sm text-slate-500">${p.images.length} images</td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded transition"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function deleteProduct(id) {
+            state.products = state.products.filter(p => p.id !== id);
+            saveState();
+            logActivity('Deleted a product');
+            renderProductsTable();
+            showToast('Product deleted');
+        }
+
+        function populateSelects() {
+            const selects = ['script-product-select', 'studio-product-select', 'publish-product-select'];
+            selects.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    const currentVal = el.value;
+                    let options = '<option value="">-- Choose a product --</option>';
+                    
+                    state.products.forEach(p => {
+                        // For publish, only show products with generated videos
+                        if(id === 'publish-product-select' && !p.hasVideo) return;
+                        options += `<option value="${p.id}">${p.name}</option>`;
+                    });
+                    
+                    el.innerHTML = options;
+                    if(state.products.find(p => p.id === currentVal)) el.value = currentVal;
+                }
+            });
+        }
+
+        // --- STREAMING_CHUNK:AI Script Generation ---
+        async function generateScript() {
+            if(!geminiKey) {
+                showToast('Please set Gemini API Key in Settings first', true);
+                switchTab('settings');
+                return;
+            }
+
+            const prodId = document.getElementById('script-product-select').value;
+            if(!prodId) {
+                showToast('Please select a product', true);
+                return;
+            }
+
+            const product = state.products.find(p => p.id === prodId);
+            const context = document.getElementById('script-context').value;
+            const btn = document.getElementById('btn-generate-script');
+            const output = document.getElementById('script-output');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Generating...';
+            output.value = 'AI is thinking...';
+
+            const prompt = `You are an expert affiliate marketer for TikTok and Shopee in Thailand. Write a short, highly engaging, and viral video script (under 60 seconds) in Thai to promote this product: "${product.name}". 
+            Additional context: ${context}
+            Make it catchy, use trendy slang if appropriate, and include a strong Call to Action (CTA) pointing to the shopping cart link. Format it clearly (e.g. [Hook], [Body], [CTA]). Do not include english translation.`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                if(!response.ok) throw new Error('API Request Failed');
+                
+                const data = await response.json();
+                const text = data.candidates[0].content.parts[0].text;
+                
+                output.value = text;
+                logActivity(`Generated script for ${product.name}`);
+                showToast('Script generated successfully');
+            } catch (error) {
+                output.value = '';
+                showToast('Error generating script. Check API key.', true);
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-sparkles mr-2"></i> Generate with Gemini API';
+            }
+        }
+
+        function copyScript() {
+            const output = document.getElementById('script-output');
+            output.select();
+            document.execCommand('copy');
+            showToast('Script copied to clipboard');
+        }
+
+        function saveScriptToProduct() {
+            const prodId = document.getElementById('script-product-select').value;
+            const text = document.getElementById('script-output').value.trim();
+            if(!prodId || !text) {
+                showToast('Nothing to save', true);
+                return;
+            }
+            
+            const product = state.products.find(p => p.id === prodId);
+            product.script = text;
+            saveState();
+            showToast('Script saved to product');
+        }
+
+        // --- STREAMING_CHUNK:Video Studio Simulation ---
+        function loadStudioPreview() {
+            const prodId = document.getElementById('studio-product-select').value;
+            const assetsContainer = document.getElementById('studio-assets');
+            
+            if(!prodId) {
+                assetsContainer.innerHTML = 'Select a product to view images';
+                return;
+            }
+            
+            const product = state.products.find(p => p.id === prodId);
+            assetsContainer.innerHTML = product.images.map(img => 
+                `<div class="w-full h-20 rounded bg-cover bg-center shadow-sm" style="background-image: url('${img}')"></div>`
+            ).join('');
+        }
+
+        function generateVideo() {
+            const prodId = document.getElementById('studio-product-select').value;
+            if(!prodId) {
+                showToast('Please select a product', true);
+                return;
+            }
+
+            const product = state.products.find(p => p.id === prodId);
+            if(!product.images || product.images.length === 0) {
+                showToast('Product has no images', true);
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate-video');
+            const progressArea = document.getElementById('video-progress');
+            const bar = document.getElementById('video-bar');
+            const percentTxt = document.getElementById('video-percent');
+            
+            btn.disabled = true;
+            progressArea.classList.remove('hidden');
+            
+            // Hide preview initially
+            document.getElementById('video-player').classList.add('hidden');
+            document.getElementById('phone-placeholder').classList.remove('hidden');
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if(progress > 100) progress = 100;
+                
+                bar.style.width = `${progress}%`;
+                percentTxt.textContent = `${Math.floor(progress)}%`;
+
+                if(progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        progressArea.classList.add('hidden');
+                        btn.disabled = false;
+                        
+                        // Mark as having video
+                        product.hasVideo = true;
+                        state.stats.videos++;
+                        saveState();
+                        
+                        logActivity(`Generated video for ${product.name}`);
+                        showToast('Video Generated Successfully!');
+                        playSimulatedVideo(product);
+                    }, 500);
+                }
+            }, 300);
+        }
+
+        function playSimulatedVideo(product) {
+            const placeholder = document.getElementById('phone-placeholder');
+            const player = document.getElementById('video-player');
+            const container = document.getElementById('slideshow-container');
+            const hookText = document.getElementById('overlay-hook-text');
+            const inputHook = document.getElementById('studio-text').value;
+
+            placeholder.classList.add('hidden');
+            player.classList.remove('hidden');
+
+            hookText.textContent = inputHook || product.name;
+
+            // Setup slides
+            container.innerHTML = product.images.map((img, idx) => 
+                `<img src="${img}" class="slide-image ${idx === 0 ? 'active' : ''}" alt="slide">`
+            ).join('');
+
+            const slides = container.querySelectorAll('.slide-image');
+            let currentIdx = 0;
+
+            if(slideInterval) clearInterval(slideInterval);
+
+            if(slides.length > 1) {
+                slideInterval = setInterval(() => {
+                    slides[currentIdx].classList.remove('active');
+                    currentIdx = (currentIdx + 1) % slides.length;
+                    slides[currentIdx].classList.add('active');
+                }, 2000);
+            }
+        }
+
+        // --- STREAMING_CHUNK:Multi-Platform Publishing ---
+        function startPublishPipeline() {
+            const prodId = document.getElementById('publish-product-select').value;
+            if(!prodId) {
+                showToast('Please select a video', true);
+                return;
+            }
+
+            const doTiktok = document.getElementById('plat-tiktok').checked;
+            const doShopee = document.getElementById('plat-shopee').checked;
+            const doIg = document.getElementById('plat-ig').checked;
+
+            if(!doTiktok && !doShopee && !doIg) {
+                showToast('Select at least one platform', true);
+                return;
+            }
+
+            const btn = document.getElementById('btn-publish');
+            const pipeline = document.getElementById('publish-pipeline');
+            const logs = document.getElementById('pipeline-logs');
+            
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            pipeline.classList.remove('hidden');
+            logs.innerHTML = '';
+
+            const addLog = (text, type = 'info') => {
+                const color = type === 'error' ? 'text-red-400' : (type === 'success' ? 'text-green-400' : 'text-slate-300');
+                const p = document.createElement('p');
+                p.className = `${color} mb-1`;
+                p.innerHTML = `> ${text}`;
+                logs.appendChild(p);
+                logs.scrollTop = logs.scrollHeight;
+            };
+
+            const tasks = [];
+            addLog('Initializing Auto-Post Pipeline...', 'info');
+
+            if(doTiktok) {
+                tasks.push(
+                    () => addLog('Authenticating with TikTok API...'),
+                    () => addLog('Uploading media to TikTok: [======    ] 60%'),
+                    () => addLog('Uploading media to TikTok: [==========] 100%'),
+                    () => addLog('Attaching affiliate link to TikTok post...'),
+                    () => addLog('TikTok Publishing SUCCESS!', 'success')
+                );
+            }
+            if(doShopee) {
+                tasks.push(
+                    () => addLog('Connecting to Shopee Open API...'),
+                    () => addLog('Uploading video to Shopee Video server...'),
+                    () => addLog('Linking product ID to video...'),
+                    () => addLog('Shopee Video Publishing SUCCESS!', 'success')
+                );
+            }
+            if(doIg) {
+                tasks.push(
+                    () => addLog('Connecting to Instagram Graph API...'),
+                    () => addLog('Creating Reels container...'),
+                    () => addLog('Publishing Reel...'),
+                    () => addLog('Instagram Reels Publishing SUCCESS!', 'success')
+                );
+            }
+
+            tasks.push(() => {
+                addLog('-------------------------');
+                addLog('PIPELINE COMPLETE.', 'success');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                
+                const platformCount = [doTiktok, doShopee, doIg].filter(Boolean).length;
+                state.stats.posts += platformCount;
+                saveState();
+                updateDashboard();
+                
+                const product = state.products.find(p => p.id === prodId);
+                logActivity(`Published ${product.name} to ${platformCount} platform(s)`);
+                showToast(`Successfully published to ${platformCount} platform(s)`);
+            });
+
+            // Run tasks sequentially with fake delay
+            let i = 0;
+            const runNext = () => {
+                if (i < tasks.length) {
+                    tasks[i]();
+                    i++;
+                    setTimeout(runNext, 600 + Math.random() * 800); // 0.6s - 1.4s delay per step
+                }
+            };
+            
+            setTimeout(runNext, 500);
+        }
+
+        // --- Settings ---
+        function saveSettings() {
+            const key = document.getElementById('settings-gemini-key').value.trim();
+            localStorage.setItem('gemini_api_key', key);
+            geminiKey = key;
+            showToast('Settings saved successfully');
+        }
+
+        // Start App
+        window.onload = init;
+    </script>
+</body>
+</html>
