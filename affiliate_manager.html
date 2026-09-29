@@ -1,972 +1,1542 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affiliate Content Manager</title>
+    <title>Affiliate Content Studio - TikTok & Shopee</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts: Prompt & Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Tailwind Configuration -->
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Prompt', 'Kanit', 'sans-serif'],
                     },
                     colors: {
-                        brand: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            900: '#312e81',
-                        }
+                        tiktok: '#000000',
+                        tiktokRed: '#FE2C55',
+                        tiktokCyan: '#25F4EE',
+                        shopee: '#EE4D2D',
+                        shopeeOrange: '#FF5722',
+                        amberGold: '#F59E0B'
                     }
                 }
             }
         }
     </script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .hide { display: none !important; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        body {
+            font-family: 'Prompt', 'Kanit', sans-serif;
         }
-        
-        /* Video Simulator Styles */
-        .phone-mockup {
-            width: 280px;
-            height: 500px;
-            border-radius: 30px;
-            border: 8px solid #1e293b;
-            background: #000;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        .video-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 15px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            color: white;
-            z-index: 10;
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.05);
         }
-        .slide-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0;
-            transition: opacity 0.5s ease;
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
         }
-        .slide-image.active { opacity: 1; }
-        
-        /* Checkbox Custom Toggle */
-        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        /* Video Phone Frame Simulation */
+        .phone-frame {
+            aspect-ratio: 9/16;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Toast Animation */
+        @keyframes slideInUp {
+            from { transform: translateY(100%) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.9); }
+        }
+        .toast-enter { animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-exit { animation: fadeOut 0.2s ease-in forwards; }
+
+        /* Sound Wave Bar Animation */
+        @keyframes soundWave {
+            0%, 100% { height: 4px; }
+            50% { height: 20px; }
+        }
+        .wave-bar {
+            animation: soundWave 1.2s infinite ease-in-out;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.3s; }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
     </style>
 </head>
-<body class="text-slate-800 flex h-screen overflow-hidden">
 
-    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex z-20 shadow-sm">
-        <div class="h-16 flex items-center px-6 border-b border-slate-200">
-            <i class="fa-solid fa-layer-group text-brand-600 text-xl mr-3"></i>
-            <span class="font-bold text-lg text-slate-800">Affiliate Hub</span>
-        </div>
-        <nav class="flex-1 overflow-y-auto py-4">
-            <ul class="space-y-1">
-                <li><a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition bg-brand-50 text-brand-600 border-r-4 border-brand-600"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a></li>
-                <li><a href="#" onclick="switchTab('products')" id="nav-products" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-box w-6"></i> Products & Links</a></li>
-                <li><a href="#" onclick="switchTab('script')" id="nav-script" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-pen-nib w-6"></i> Script AI (Thai)</a></li>
-                <li><a href="#" onclick="switchTab('studio')" id="nav-studio" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-video w-6"></i> Video Studio</a></li>
-                <li><a href="#" onclick="switchTab('publish')" id="nav-publish" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-paper-plane w-6"></i> Auto-Post</a></li>
-                <li><a href="#" onclick="switchTab('settings')" id="nav-settings" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition"><i class="fa-solid fa-gear w-6"></i> Settings</a></li>
-            </ul>
-        </nav>
-        <div class="p-4 border-t border-slate-200 text-sm text-slate-500">
-            v1.0.0 Pro Edition
-        </div>
-    </aside>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
 
-    <!-- Mobile Header -->
-    <div class="md:hidden fixed top-0 w-full bg-white h-16 flex items-center justify-between px-4 border-b border-slate-200 z-30 shadow-sm">
-        <div class="flex items-center">
-            <i class="fa-solid fa-layer-group text-brand-600 text-xl mr-2"></i>
-            <span class="font-bold text-lg">Affiliate Hub</span>
-        </div>
-        <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="text-slate-600 text-xl"><i class="fa-solid fa-bars"></i></button>
-    </div>
-
-    <!-- Mobile Menu -->
-    <div id="mobileMenu" class="hidden md:hidden fixed inset-0 bg-white z-20 pt-16">
-        <nav class="flex flex-col p-4 space-y-2">
-            <a href="#" onclick="switchTab('dashboard'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg bg-brand-50 text-brand-600 rounded-lg"><i class="fa-solid fa-chart-pie w-8"></i> Dashboard</a>
-            <a href="#" onclick="switchTab('products'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-box w-8"></i> Products</a>
-            <a href="#" onclick="switchTab('script'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-pen-nib w-8"></i> Script AI</a>
-            <a href="#" onclick="switchTab('studio'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-video w-8"></i> Studio</a>
-            <a href="#" onclick="switchTab('publish'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-paper-plane w-8"></i> Publish</a>
-            <a href="#" onclick="switchTab('settings'); document.getElementById('mobileMenu').classList.add('hidden')" class="p-3 text-lg text-slate-700"><i class="fa-solid fa-gear w-8"></i> Settings</a>
-        </nav>
-    </div>
-
-    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 pt-16 md:pt-0">
-        
-        <!-- Header -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-            <h1 id="pageTitle" class="text-xl font-semibold text-slate-800">Dashboard</h1>
-            <div class="flex items-center space-x-4">
-                <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-bell"></i></button>
-                <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-sm">A</div>
-            </div>
-        </header>
-
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto p-8 relative">
-            
-            <!-- Toast Notification -->
-            <div id="toast" class="fixed top-20 right-8 bg-slate-800 text-white px-4 py-3 rounded shadow-lg transform transition-transform translate-x-full opacity-0 z-50 flex items-center gap-3">
-                <i id="toastIcon" class="fa-solid fa-circle-check text-green-400"></i>
-                <span id="toastMsg">Action successful</span>
-            </div>
-
-            <div id="view-dashboard" class="view-section fade-in">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-slate-500 font-medium">Total Products</p>
-                            <p class="text-3xl font-bold text-slate-800 mt-1" id="stat-products">0</p>
-                        </div>
-                        <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-box"></i>
-                        </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-slate-500 font-medium">Generated Videos</p>
-                            <p class="text-3xl font-bold text-slate-800 mt-1" id="stat-videos">0</p>
-                        </div>
-                        <div class="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-film"></i>
-                        </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-slate-500 font-medium">Posts Published</p>
-                            <p class="text-3xl font-bold text-slate-800 mt-1" id="stat-posts">0</p>
-                        </div>
-                        <div class="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-share-nodes"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- TOP NAVBAR -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
                 
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                    <h3 class="text-lg font-semibold mb-4 border-b pb-2">Recent Activity</h3>
-                    <ul class="space-y-4" id="activity-list">
-                        <li class="text-slate-500 text-sm italic">No recent activity. Get started by adding a product!</li>
-                    </ul>
+                <!-- Brand Title -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-500 via-rose-500 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
+                        <i class="fa-solid fa-cart-shopping text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="font-bold text-lg leading-none bg-gradient-to-r from-slate-900 via-rose-600 to-amber-600 dark:from-white dark:via-rose-400 dark:to-amber-400 bg-clip-text text-transparent">
+                                Affiliate Studio Pro
+                            </h1>
+                            <span class="bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                                AI + Basket Pin
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">ระบบจัดการคอนเทนต์นายหน้า TikTok & Shopee</p>
+                    </div>
                 </div>
-            </div>
 
-            <div id="view-products" class="view-section hide fade-in">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-semibold">Manage Products</h2>
-                    <button onclick="toggleProductModal(true)" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
-                        <i class="fa-solid fa-plus mr-2"></i> Add Product
+                <!-- Right Header Actions -->
+                <div class="flex items-center gap-2">
+                    <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" title="สลับโหมดสว่าง/มืด">
+                        <i class="fa-solid fa-moon text-lg dark:hidden"></i>
+                        <i class="fa-solid fa-sun text-lg hidden dark:block text-amber-400"></i>
+                    </button>
+                    
+                    <button onclick="exportDataJSON()" class="p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors hidden sm:flex items-center gap-1.5 text-xs font-medium" title="สำรองข้อมูล">
+                        <i class="fa-solid fa-download"></i>
+                        <span>สำรองข้อมูล</span>
+                    </button>
+
+                    <button onclick="openNewModal()" class="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-md shadow-rose-500/20 transition-all flex items-center gap-2 active:scale-95">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>สร้างคอนเทนต์ใหม่</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-16 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex gap-2 overflow-x-auto py-2 scrollbar-none" id="mainTabNav">
+                <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>จัดการสินค้า & โพสต์</span>
+                    <span id="badgeCountTotal" class="bg-rose-200 dark:bg-rose-900/80 text-rose-800 dark:text-rose-200 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+
+                <button onclick="switchTab('aiStudio')" id="tabBtn-aiStudio" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                    <span>AI สคริปต์วิดีโอปักตะกร้า</span>
+                </button>
+
+                <button onclick="switchTab('visualStudio')" id="tabBtn-visualStudio" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-photo-film text-sky-500"></i>
+                    <span>สร้างภาพโปรโมต/หน้าปก (Studio)</span>
+                </button>
+
+                <button onclick="switchTab('autopost')" id="tabBtn-autopost" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-paper-plane text-violet-500"></i>
+                    <span>Auto-Post</span>
+                </button>
+
+                <button onclick="switchTab('settings')" id="tabBtn-settings" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>ตั้งค่า / Gemini API Key</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <!-- TAB 1: DASHBOARD & LINK MANAGEMENT -->
+        <section id="tab-dashboard" class="space-y-6">
+            
+            <!-- STATS SUMMARY BAR -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">สินค้าทั้งหมด</span>
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-box-archive"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold mt-2 text-slate-900 dark:text-white" id="statTotal">0</p>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">รอดำเนินการ / ถ่ายทำ</span>
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold mt-2 text-amber-600 dark:text-amber-400" id="statPending">0</p>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">โพสต์สำเร็จแล้ว</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold mt-2 text-emerald-600 dark:text-emerald-400" id="statPosted">0</p>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">แพลตฟอร์มปลายทาง</span>
+                        <div class="flex gap-1">
+                            <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded">TT</span>
+                            <span class="text-xs bg-shopee text-white px-1.5 py-0.5 rounded">SP</span>
+                        </div>
+                    </div>
+                    <p class="text-xs font-medium text-slate-600 dark:text-slate-300 mt-3">TikTok & Shopee Affiliate</p>
+                </div>
+            </div>
+
+            <!-- SEARCH, FILTER & ACTION TOOLBAR -->
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
                 
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
-                                <th class="p-4 font-medium">Product Name</th>
-                                <th class="p-4 font-medium">Affiliate Link</th>
-                                <th class="p-4 font-medium text-center">Images</th>
-                                <th class="p-4 font-medium text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="product-table-body">
-                            <!-- Populated via JS -->
-                        </tbody>
-                    </table>
-                    <div id="empty-products" class="p-8 text-center text-slate-500 hidden">
-                        <i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i>
-                        <p>No products added yet.</p>
+                <!-- Search Input -->
+                <div class="relative flex-grow">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="renderApp()" placeholder="ค้นหาตามชื่อสินค้า, แฮชแท็ก, หรือหมวดหมู่..." 
+                           class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 dark:text-white placeholder-slate-400">
+                </div>
+
+                <!-- Platform & Status Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <select id="filterPlatform" onchange="renderApp()" class="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <option value="all">ทุกแพลตฟอร์ม</option>
+                        <option value="tiktok">TikTok (ตะกร้าเหลือง)</option>
+                        <option value="shopee">Shopee (ตะกร้าส้ม)</option>
+                        <option value="both">ลงทั้งสองแพลตฟอร์ม</option>
+                    </select>
+
+                    <select id="filterStatus" onchange="renderApp()" class="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <option value="all">ทุกสถานะ</option>
+                        <option value="draft">📝 ฉบับร่าง (Draft)</option>
+                        <option value="scripted">📜 สคริปต์แล้ว (Scripted)</option>
+                        <option value="filmed">🎬 ถ่ายทำแล้ว (Filmed)</option>
+                        <option value="posted">✅ โพสต์สำเร็จ (Posted)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PRODUCT ITEMS CARDS GRID -->
+            <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Cards injected dynamically via JS -->
+            </div>
+
+            <!-- EMPTY STATE -->
+            <div id="emptyState" class="hidden flex-col items-center justify-center py-16 px-4 text-center bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
+                <div class="w-16 h-16 bg-rose-50 dark:bg-rose-950/60 rounded-full flex items-center justify-center mb-3 text-rose-500 text-2xl">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">ยังไม่มีรายการคอนเทนต์สินค้า</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">คลิกปุ่ม "สร้างคอนเทนต์ใหม่" ด้านบนเพื่อเริ่มบันทึกสินค้าและสคริปต์ปักตะกร้าแรกของคุณ</p>
+                <button onclick="openNewModal()" class="mt-4 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-medium shadow-md shadow-rose-500/20">
+                    <i class="fa-solid fa-plus mr-1"></i> เพิ่มสินค้าชิ้นแรก
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 2: AI SCRIPT & BASKET HOOK GENERATOR -->
+        <section id="tab-aiStudio" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left Control Panel -->
+                <div class="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                            สร้างสคริปต์วิดีโอปักตะกร้าด้วย AI
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            สร้างสคริปต์คลิปสั้น (TikTok/Shopee Video) พร้อมคำพูดกระตุ้นให้คนกดปุ่มตะกร้าสีเหลือง/ส้ม
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            ชื่อสินค้า / ประเภทสินค้า <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="aiProductName" placeholder="เช่น แก้วเก็บความเย็น 900ml, หูฟังบลูทูธไร้สาย" 
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">จุดขายหลัก / คุณสมบัติเด่น</label>
+                        <textarea id="aiProductFeatures" rows="2" placeholder="เช่น เก็บน้ำแข็งได้นาน 24 ชม., ไม่ไอน้ำเกาะ, มีหลอดในตัว, ลดราคาพิเศษวันนี้"
+                                  class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">มุมการนำเสนอ (Hook Angle)</label>
+                            <select id="aiHookAngle" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                                <option value="unboxing">📦 แกะกล่องลองใช้ (Unboxing)</option>
+                                <option value="problem">⚠️ เปิดด้วยปัญหา (Problem & Solution)</option>
+                                <option value="discount">🔥 แจกพิกัดลดราคา / Flash Sale</option>
+                                <option value="honest">⭐ รีวิวตรงๆ ข้อดีข้อเสีย (Honest Review)</option>
+                                <option value="story">📖 เล่าเรื่องสั้นใช้เองจริง (Storytelling)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ป้ายตะกร้าเป้าหมาย</label>
+                            <select id="aiBasketTarget" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                                <option value="yellow">🟡 ตะกร้าสีเหลือง (TikTok)</option>
+                                <option value="orange">🟠 ตะกร้าสีส้ม (Shopee)</option>
+                                <option value="both">🟡/🟠 สองตะกร้าคู่</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="generateAIScript()" id="aiGenerateBtn" class="w-full py-3 bg-gradient-to-r from-rose-500 via-purple-500 to-amber-500 hover:opacity-95 text-white font-medium text-sm rounded-xl shadow-lg shadow-rose-500/20 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>สร้างสคริปต์วิดีโอทันที</span>
+                    </button>
+
+                    <div class="text-[11px] text-slate-400 dark:text-slate-500 text-center">
+                        *หากไม่ได้ระบุ Gemini API Key ระบบจะใช้ AI Template Generator ภายในแอปแบบออฟไลน์
+                    </div>
+                </div>
+
+                <!-- Right Preview & Script Result Panel -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm min-h-[450px] flex flex-col justify-between">
+                        
+                        <div>
+                            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+                                <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-scroll text-rose-500"></i>
+                                    สคริปต์วิดีโอ & แคปชั่นสำหรับนำไปถ่ายทำ
+                                </h3>
+                                <button onclick="copyGeneratedScript()" class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i>
+                                    <span>คัดลอกทั้งหมด</span>
+                                </button>
+                            </div>
+
+                            <!-- Script Output Container -->
+                            <div id="aiScriptOutput" class="space-y-3 text-xs sm:text-sm">
+                                <div class="p-8 text-center text-slate-400 dark:text-slate-500">
+                                    <i class="fa-solid fa-clapperboard text-4xl mb-3 opacity-40"></i>
+                                    <p>กรอกข้อมูลสินค้าทางซ้ายมือแล้วกด "สร้างสคริปต์วิดีโอทันที"</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attach To Product Action -->
+                        <div id="aiAttachBox" class="hidden pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                            <button onclick="saveAIScriptToNewProduct()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-medium transition-all shadow-md shadow-emerald-600/20 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-plus"></i>
+                                <span>บันทึกเป็นคอนเทนต์ใหม่</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 3: VISUAL REEL / COVER STUDIO -->
+        <section id="tab-visualStudio" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left Design Controls -->
+                <div class="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <i class="fa-solid fa-sliders text-sky-500"></i>
+                        สตูดิโอแต่งหน้าปก/รูปสไลด์โปรโมต
+                    </h2>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ข้อความพาดหัวหลัก (Headline)</label>
+                        <input type="text" id="studioHeadline" value="แก้วเก็บความเย็น 24 ชั่วโมง!" oninput="updateCanvasStudio()"
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">คำบรรยายรอง (Subheadline)</label>
+                        <input type="text" id="studioSubheadline" value="น้ำแข็งอยู่ครบ ไม่ไอน้ำเกาะโต๊ะ พิกัดในตะกร้า" oninput="updateCanvasStudio()"
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ป้ายราคา / โปรโมชัน</label>
+                            <input type="text" id="studioPriceBadge" value="ลดพิเศษ 199.-" oninput="updateCanvasStudio()"
+                                   class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ประเภทป้ายตะกร้า</label>
+                            <select id="studioBasketBadge" onchange="updateCanvasStudio()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white">
+                                <option value="tiktok">🟡 ตะกร้าเหลือง TikTok Shop</option>
+                                <option value="shopee">🟠 ตะกร้าส้ม Shopee</option>
+                                <option value="both">🟡/🟠 ตะกร้าเหลือง & ส้ม</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">โทนสีพื้นหลัง (Gradient Theme)</label>
+                        <div class="flex gap-2">
+                            <button onclick="setStudioTheme('sunset')" class="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-amber-400 border-2 border-white dark:border-slate-700 shadow-sm"></button>
+                            <button onclick="setStudioTheme('ocean')" class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 border-2 border-white dark:border-slate-700 shadow-sm"></button>
+                            <button onclick="setStudioTheme('emerald')" class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-700 border-2 border-white dark:border-slate-700 shadow-sm"></button>
+                            <button onclick="setStudioTheme('dark')" class="w-8 h-8 rounded-full bg-gradient-to-tr from-slate-900 to-purple-950 border-2 border-white dark:border-slate-700 shadow-sm"></button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">รูปสินค้า (Upload Product Image)</label>
+                        <input type="file" id="studioImageInput" accept="image/*" onchange="handleStudioImageUpload(event)"
+                               class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-950 dark:file:text-sky-300 hover:file:bg-sky-100">
+                    </div>
+
+                    <button onclick="downloadCanvasImage()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-sky-600/20 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i>
+                        <span>ดาวน์โหลดรูปหน้าปก (PNG)</span>
+                    </button>
+                </div>
+
+                <!-- Right Video Mobile Frame Preview -->
+                <div class="lg:col-span-7 flex justify-center items-center">
+                    <div class="relative w-full max-w-[320px] phone-frame bg-slate-900 rounded-[36px] p-3 border-4 border-slate-800 shadow-2xl overflow-hidden flex flex-col justify-between">
+                        
+                        <!-- Top Phone Overlay Header -->
+                        <div class="flex items-center justify-between text-white text-[10px] px-2 pt-1 z-10 opacity-80">
+                            <span class="font-bold">10:00</span>
+                            <div class="flex items-center gap-1">
+                                <i class="fa-solid fa-wifi"></i>
+                                <i class="fa-solid fa-battery-full"></i>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Render Surface -->
+                        <div class="absolute inset-0 z-0">
+                            <canvas id="studioCanvas" width="540" height="960" class="w-full h-full object-cover rounded-[28px]"></canvas>
+                        </div>
+
+                        <!-- Bottom Interactive Overlay Elements (Overlay Simulating TikTok UI) -->
+                        <div class="relative z-10 mt-auto p-3 text-white space-y-2 pointer-events-none">
+                            
+                            <!-- Sound wave & account mockup -->
+                            <div class="flex items-end justify-between">
+                                <div>
+                                    <p class="text-xs font-bold shadow-text">@AffiliateCreator</p>
+                                    <p class="text-[10px] opacity-90 line-clamp-1 shadow-text">📌 แปะพิกัดตะกร้าให้แล้วในคลิปนี้ กดสั่งได้เลย!</p>
+                                </div>
+                                <div class="flex items-center gap-1 h-5 px-1 bg-black/40 backdrop-blur-sm rounded-full">
+                                    <div class="w-1 bg-rose-400 wave-bar rounded-full"></div>
+                                    <div class="w-1 bg-amber-400 wave-bar rounded-full"></div>
+                                    <div class="w-1 bg-cyan-400 wave-bar rounded-full"></div>
+                                    <div class="w-1 bg-emerald-400 wave-bar rounded-full"></div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 4: AUTO-POST (n8n WORKFLOW) -->
+        <section id="tab-autopost" class="hidden space-y-6">
+
+            <!-- Connection Settings -->
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-plug-circle-bolt text-violet-500"></i>
+                    เชื่อมต่อ Automation (n8n)
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">n8n Webhook Base URL</label>
+                        <input type="url" id="apBaseUrlInput" placeholder="https://your-n8n-domain.com/webhook"
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Secret Key</label>
+                        <input type="password" id="apSecretInput" placeholder="ต้องตรงกับค่า SECRET ในโหนด Config"
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="saveAutoPostConfig()" class="px-5 py-2.5 bg-slate-900 hover:bg-black dark:bg-violet-600 dark:hover:bg-violet-700 text-white text-xs font-medium rounded-xl transition-colors">
+                        บันทึกการตั้งค่า
+                    </button>
+                </div>
+                <p class="text-[11px] text-slate-400">Base URL คือ URL ของ webhook ใน n8n ที่ Import workflow "Affiliate Auto-Post" ไว้ เช่น <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">https://your-domain.com/webhook</code> (ไม่ต้องใส่ /affiliate-post ต่อท้าย)</p>
+            </div>
+
+            <!-- Content Picker & Target Selection -->
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-rocket text-rose-500"></i>
+                    ส่งโพสต์อัตโนมัติ
+                </h2>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">เลือกคอนเทนต์</label>
+                    <select id="apItemSelect" onchange="renderAutoPostPreview()" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    </select>
+                </div>
+
+                <div id="apPreview" class="hidden bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs space-y-1"></div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">แพลตฟอร์มปลายทาง</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <label class="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs cursor-pointer">
+                            <input type="checkbox" id="apTargetFacebook" class="rounded" checked> <i class="fa-brands fa-facebook text-blue-600"></i> Facebook Reels
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs cursor-pointer">
+                            <input type="checkbox" id="apTargetInstagram" class="rounded" checked> <i class="fa-brands fa-instagram text-pink-500"></i> Instagram Reels
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs cursor-pointer">
+                            <input type="checkbox" id="apTargetTiktok" class="rounded" checked> <i class="fa-brands fa-tiktok"></i> TikTok
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs cursor-pointer">
+                            <input type="checkbox" id="apTargetShopee" class="rounded" checked> <i class="fa-solid fa-bag-shopping text-shopee"></i> Shopee Video
+                        </label>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1.5">* Shopee ไม่มี API โพสต์อัตโนมัติ ระบบจะส่งข้อมูลให้ทาง Telegram เพื่อโพสต์เอง / TikTok จะโพสต์แบบส่วนตัวจนกว่าแอปจะผ่าน audit</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ตั้งเวลาโพสต์ (ไม่บังคับ)</label>
+                        <input type="datetime-local" id="apScheduleInput"
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="sendAutoPost()" id="apSendBtn" class="w-full px-5 py-2.5 bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white text-sm font-medium rounded-xl shadow-md shadow-rose-500/20 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> ส่งโพสต์เลย
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div id="view-script" class="view-section hide fade-in">
-                <div class="max-w-4xl mx-auto">
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
-                        <h2 class="text-lg font-semibold mb-4">Generate Thai Viral Script</h2>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Select Product</label>
-                            <select id="script-product-select" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
-                                <option value="">-- Choose a product --</option>
-                            </select>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Additional Instructions (Optional)</label>
-                            <input type="text" id="script-context" placeholder="e.g. Focus on the discount, make it funny, target teenagers..." class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
-                        </div>
-                        <button onclick="generateScript()" id="btn-generate-script" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 rounded-lg transition shadow flex items-center justify-center">
-                            <i class="fa-solid fa-sparkles mr-2"></i> Generate with Gemini API
-                        </button>
+            <!-- Result Log -->
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-emerald-500"></i>
+                    ผลการโพสต์ล่าสุด
+                </h2>
+                <div id="apResultLog" class="space-y-2 text-xs text-slate-500 dark:text-slate-400">
+                    ยังไม่มีการส่งโพสต์ในเซสชันนี้
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: SETTINGS & GEMINI API KEY -->
+        <section id="tab-settings" class="hidden space-y-6">
+            <div class="max-w-2xl mx-auto bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <i class="fa-solid fa-sliders text-slate-600 dark:text-slate-400"></i>
+                    การตั้งค่าระบบ & Gemini API
+                </h2>
+
+                <div class="space-y-3">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Google Gemini API Key (สำหรับเจนสคริปต์ขั้นสูง)
+                    </label>
+                    <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." 
+                           class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        *หากระบุ API Key แอปจะเรียกใช้งานโมเดล <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded text-rose-500">gemini-3-flash-preview</code> เพื่อสร้างสคริปต์วิดีโอที่วิเคราะห์เชิงลึกตามโจทย์สินค้าโดยตรง
+                    </p>
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button onclick="saveApiKey()" class="px-5 py-2.5 bg-slate-900 hover:bg-black dark:bg-rose-600 dark:hover:bg-rose-700 text-white text-xs font-medium rounded-xl transition-colors">
+                        บันทึก API Key
+                    </button>
+                    <button onclick="importDataJSONPrompt()" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium rounded-xl transition-colors">
+                        นำเข้าข้อมูล (Import JSON)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- CREATE/EDIT PRODUCT MODAL -->
+    <div id="productModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-base text-slate-900 dark:text-white" id="modalTitle">เพิ่มข้อมูลสินค้า & สคริปต์ปักตะกร้า</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="productForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="editItemId">
+
+                <!-- Title & Category -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ชื่อสินค้า / คลิป <span class="text-rose-500">*</span></label>
+                        <input type="text" id="modalTitleInput" required placeholder="เช่น รีวิวแก้วเก็บความเย็น 900ml" 
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ราคา (บาท)</label>
+                        <input type="text" id="modalPriceInput" placeholder="เช่น 199" 
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+
+                <!-- Platform & Workflow Status -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">แพลตฟอร์ม</label>
+                        <select id="modalPlatformInput" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white">
+                            <option value="both">🟡/🟠 ทั้งสอง (TikTok & Shopee)</option>
+                            <option value="tiktok">🟡 TikTok Shop เท่านั้น</option>
+                            <option value="shopee">🟠 Shopee Affiliate เท่านั้น</option>
+                        </select>
                     </div>
 
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-md font-semibold">Generated Script</h3>
-                            <button onclick="copyScript()" class="text-slate-500 hover:text-brand-600 text-sm flex items-center"><i class="fa-regular fa-copy mr-1"></i> Copy</button>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">สถานะงาน (Status)</label>
+                        <select id="modalStatusInput" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white">
+                            <option value="draft">📝 ฉบับร่าง (Draft)</option>
+                            <option value="scripted">📜 เขียนสคริปต์แล้ว</option>
+                            <option value="filmed">🎬 ถ่ายทำ/ตัดต่อแล้ว</option>
+                            <option value="posted">✅ โพสต์ปักตะกร้าแล้ว</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Video URL for Auto-Post -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        <i class="fa-solid fa-film text-violet-500 mr-1"></i> ลิงก์ไฟล์วิดีโอ (.mp4 สาธารณะ) — สำหรับ Auto-Post
+                    </label>
+                    <input type="url" id="modalVideoUrlInput" placeholder="https://.../video.mp4"
+                           class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    <p class="text-[11px] text-slate-400 mt-1">ต้องเป็นลิงก์ตรงถึงไฟล์ mp4 ที่เข้าถึงได้จากอินเทอร์เน็ต (เช่น Google Drive แบบแชร์สาธารณะ, S3) จึงจะใช้ปุ่มโพสต์อัตโนมัติในแท็บ Auto-Post ได้</p>
+                </div>
+
+                <!-- TikTok & Shopee Links -->
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            <i class="fa-brands fa-tiktok text-black dark:text-white mr-1"></i> ลิงก์ปักตะกร้า TikTok Affiliate
+                        </label>
+                        <input type="url" id="modalTiktokLink" placeholder="https://vt.tiktok.com/..." 
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            <i class="fa-solid fa-bag-shopping text-shopee mr-1"></i> ลิงก์ปักตะกร้า Shopee Affiliate
+                        </label>
+                        <input type="url" id="modalShopeeLink" placeholder="https://s.shopee.co.th/..." 
+                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+
+                <!-- Script Body & Caption -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">สคริปต์คลิปวิดีโอ / คำพูดช่วงปักตะกร้า</label>
+                    <textarea id="modalScriptInput" rows="3" placeholder="สคริปต์การพูดช่วง 0-30 วินาที พร้อมเน้นย้ำปักตะกร้าด้านล่าง..." 
+                              class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">แคปชั่น + แฮชแท็ก (#)</label>
+                    <textarea id="modalCaptionInput" rows="2" placeholder="พิกัดสินค้าในตะกร้าเหลือง/ส้มเลยน้า #นายหน้าtiktok #รีวิวของดี..." 
+                              class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 resize-none"></textarea>
+                </div>
+
+                <!-- Form Submit Action Buttons -->
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-medium">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-medium shadow-md shadow-rose-500/20">
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        /* ==================== STATE MANAGEMENT ==================== */
+        const STORAGE_KEY = 'affiliate_studio_items_v2';
+        const API_KEY_STORAGE = 'affiliate_studio_gemini_key';
+
+        let items = [];
+        let studioTheme = 'sunset';
+        let studioUploadedImg = null;
+        let generatedAiScriptCache = null;
+
+        // Sample Default Data
+        const sampleItems = [
+            {
+                id: '1',
+                title: 'แก้วเก็บความเย็น 900ml ไม่ไอน้ำเกาะ',
+                price: '189',
+                platform: 'both',
+                status: 'scripted',
+                tiktokLink: 'https://vt.tiktok.com/ZS123456/',
+                shopeeLink: 'https://s.shopee.co.th/78910/',
+                script: 'Hook (0-3s): ใครที่กินน้ำเย็นแล้วไอน้ำเกาะเลอะโต๊ะทำงาน ห้ามเลื่อนผ่านคลิปนี้!\nBody (3-15s): ตัวนี้คือแก้วสแตนเลส 304 เก็บความเย็นได้ข้ามวัน ใส่ใส่น้ำแข็งตั้งแต่เช้า เย็นมายังมีน้ำแข็งอยู่เลย\nCTA (15-30s): กดสั่งช่วงนี้มีส่วนลดพิเศษ แตะที่ตะกร้าสีเหลืองซ้ายล่างได้เลยครับ!',
+                caption: 'แก้วเก็บความเย็นในตำนาน เก็บน้ำแข็งข้ามวัน! 🧊✨\nพิกัดกดที่ตะกร้าเหลือง/ส้มได้เลยครับ\n#แก้วเก็บความเย็น #ของดีบอกต่อ #นายหน้าtiktokshop #ShopeeTH',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: '2',
+                title: 'ขาตั้งกล้องมือถือบลูทูธ หมุนได้ 360 องศา',
+                price: '259',
+                platform: 'tiktok',
+                status: 'posted',
+                tiktokLink: 'https://vt.tiktok.com/ZS987654/',
+                shopeeLink: '',
+                script: ' Hook: ขาตั้งกล้องที่สายถ่ายคลิปพกติดกระเป๋าตลอด!\n CTA: แปะตะกร้าเหลืองไว้ให้แล้ว สั่งเลย',
+                caption: 'สายคอนเทนต์ต้องมี ขาตั้งกล้องพกพาง่ายมากๆ 📸📱\n#ขาตั้งกล้อง #สายรีวิว #TikTokShop',
+                createdAt: new Date(Date.now() - 86400000).toISOString()
+            }
+        ];
+
+        /* ==================== INITIALIZATION ==================== */
+        window.addEventListener('DOMContentLoaded', () => {
+            loadItems();
+            loadApiKey();
+            loadAutoPostConfig();
+            renderApp();
+            initCanvasStudio();
+            initTheme();
+        });
+
+        function loadItems() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    items = JSON.parse(stored);
+                } catch (e) {
+                    items = sampleItems;
+                }
+            } else {
+                items = sampleItems;
+                saveItems();
+            }
+        }
+
+        function saveItems() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        }
+
+        function loadApiKey() {
+            const key = localStorage.getItem(API_KEY_STORAGE);
+            if (key) {
+                document.getElementById('geminiApiKeyInput').value = key;
+            }
+        }
+
+        function saveApiKey() {
+            const val = document.getElementById('geminiApiKeyInput').value.trim();
+            localStorage.setItem(API_KEY_STORAGE, val);
+            showToast('บันทึก Gemini API Key เรียบร้อยแล้ว', 'success');
+        }
+
+        /* ==================== UI TAB SWITCHING ==================== */
+        function switchTab(tabId) {
+            const tabs = ['dashboard', 'aiStudio', 'visualStudio', 'autopost', 'settings'];
+            tabs.forEach(id => {
+                const sec = document.getElementById(`tab-${id}`);
+                const btn = document.getElementById(`tabBtn-${id}`);
+                if (id === tabId) {
+                    sec.classList.remove('hidden');
+                    btn.classList.add('bg-rose-50', 'dark:bg-rose-950/50', 'text-rose-600', 'dark:text-rose-400', 'border', 'border-rose-200', 'dark:border-rose-800/50');
+                    btn.classList.remove('text-slate-600', 'dark:text-slate-400');
+                } else {
+                    sec.classList.add('hidden');
+                    btn.classList.remove('bg-rose-50', 'dark:bg-rose-950/50', 'text-rose-600', 'dark:text-rose-400', 'border', 'border-rose-200', 'dark:border-rose-800/50');
+                    btn.classList.add('text-slate-600', 'dark:text-slate-400');
+                }
+            });
+
+            if (tabId === 'visualStudio') {
+                updateCanvasStudio();
+            }
+            if (tabId === 'autopost') {
+                renderAutoPostItemSelect();
+            }
+        }
+
+        function initTheme() {
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        /* ==================== DASHBOARD & CARD RENDERER ==================== */
+        function renderApp() {
+            const grid = document.getElementById('productGrid');
+            const empty = document.getElementById('emptyState');
+            
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const platformFilter = document.getElementById('filterPlatform').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+
+            // Filter
+            const filtered = items.filter(item => {
+                const matchSearch = item.title.toLowerCase().includes(search) || 
+                                    (item.caption && item.caption.toLowerCase().includes(search));
+                const matchPlatform = platformFilter === 'all' || item.platform === platformFilter || item.platform === 'both';
+                const matchStatus = statusFilter === 'all' || item.status === statusFilter;
+                return matchSearch && matchPlatform && matchStatus;
+            });
+
+            // Update Statistics
+            document.getElementById('statTotal').innerText = items.length;
+            document.getElementById('statPending').innerText = items.filter(i => i.status !== 'posted').length;
+            document.getElementById('statPosted').innerText = items.filter(i => i.status === 'posted').length;
+            document.getElementById('badgeCountTotal').innerText = items.length;
+
+            grid.innerHTML = '';
+
+            if (filtered.length === 0) {
+                empty.classList.remove('hidden');
+                empty.classList.add('flex');
+                return;
+            } else {
+                empty.classList.add('hidden');
+                empty.classList.remove('flex');
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between';
+
+                // Status configuration
+                let statusBg = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+                let statusLabel = 'ฉบับร่าง';
+                if (item.status === 'scripted') { statusBg = 'bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300'; statusLabel = 'เขียนสคริปต์แล้ว'; }
+                if (item.status === 'filmed') { statusBg = 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300'; statusLabel = 'ถ่ายทำแล้ว'; }
+                if (item.status === 'posted') { statusBg = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300'; statusLabel = 'โพสต์ปักตะกร้าแล้ว'; }
+
+                card.innerHTML = `
+                    <div class="p-4 space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${statusBg}">${statusLabel}</span>
+                                <h3 class="font-bold text-slate-900 dark:text-white text-sm mt-1.5 line-clamp-2">${escapeHtml(item.title)}</h3>
+                            </div>
+                            ${item.price ? `<span class="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/50 px-2 py-1 rounded-lg">฿${escapeHtml(item.price)}</span>` : ''}
                         </div>
-                        <textarea id="script-output" rows="10" class="w-full border border-slate-200 rounded-lg p-4 text-sm text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="Your script will appear here..."></textarea>
-                        <div class="mt-4 flex justify-end">
-                            <button onclick="saveScriptToProduct()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
-                                Save to Product
+
+                        ${item.script ? `
+                        <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl text-xs space-y-1 border border-slate-100 dark:border-slate-800">
+                            <span class="text-[10px] font-bold text-slate-400 block"><i class="fa-solid fa-align-left mr-1"></i> สคริปต์สั้น:</span>
+                            <p class="text-slate-600 dark:text-slate-300 line-clamp-2 italic">${escapeHtml(item.script)}</p>
+                        </div>
+                        ` : ''}
+
+                        ${item.caption ? `
+                        <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 px-2.5 py-1.5 rounded-xl text-xs">
+                            <span class="text-slate-500 dark:text-slate-400 text-[11px] truncate max-w-[200px]">${escapeHtml(item.caption)}</span>
+                            <button onclick="copyToClipboard('${escapeJsString(item.caption)}')" class="text-rose-500 hover:text-rose-600 text-xs font-medium ml-2 flex-shrink-0">
+                                <i class="fa-regular fa-copy"></i> คัดลอก
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Bottom Action Links -->
+                    <div class="p-3 bg-slate-50/80 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            ${item.tiktokLink ? `
+                            <a href="${item.tiktokLink}" target="_blank" class="px-2.5 py-1.5 bg-black hover:bg-slate-800 text-white rounded-lg text-xs font-medium flex items-center gap-1 shadow-sm">
+                                <i class="fa-brands fa-tiktok text-xs"></i> <span>TikTok</span>
+                            </a>
+                            ` : ''}
+
+                            ${item.shopeeLink ? `
+                            <a href="${item.shopeeLink}" target="_blank" class="px-2.5 py-1.5 bg-shopee hover:bg-shopeeOrange text-white rounded-lg text-xs font-medium flex items-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-bag-shopping text-xs"></i> <span>Shopee</span>
+                            </a>
+                            ` : ''}
+                        </div>
+
+                        <div class="flex items-center gap-1">
+                            <button onclick="openEditModal('${item.id}')" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteItem('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg">
+                                <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
+                `;
 
-            <div id="view-studio" class="view-section hide fade-in">
-                <div class="flex flex-col lg:flex-row gap-8">
-                    <!-- Controls -->
-                    <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-6 h-fit">
-                        <h2 class="text-lg font-semibold mb-6">Video Generator</h2>
-                        
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Select Product for Video</label>
-                            <select id="studio-product-select" onchange="loadStudioPreview()" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
-                                <option value="">-- Choose a product --</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Available Assets</label>
-                            <div id="studio-assets" class="grid grid-cols-3 gap-2 p-4 bg-slate-50 rounded-lg border border-slate-200 min-h-[100px] flex items-center justify-center text-sm text-slate-400">
-                                Select a product to view images
-                            </div>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Overlay Text (Hook)</label>
-                            <input type="text" id="studio-text" placeholder="e.g. ไอเท็มลับที่ต้องมี! (Must-have secret item!)" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
-                        </div>
-
-                        <button onclick="generateVideo()" id="btn-generate-video" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition shadow-md flex items-center justify-center">
-                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Generate Reel / TikTok
-                        </button>
-                        
-                        <div id="video-progress" class="mt-4 hidden">
-                            <div class="flex justify-between text-xs text-slate-500 mb-1">
-                                <span>Rendering frames...</span>
-                                <span id="video-percent">0%</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2">
-                                <div id="video-bar" class="bg-indigo-600 h-2 rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Preview Simulator -->
-                    <div class="w-full lg:w-auto flex flex-col items-center justify-center">
-                        <p class="text-sm text-slate-500 font-medium mb-4">Output Preview</p>
-                        <div class="phone-mockup" id="phone-screen">
-                            <!-- Placeholder -->
-                            <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 p-6 text-center" id="phone-placeholder">
-                                <i class="fa-solid fa-mobile-screen text-4xl mb-3 text-slate-700"></i>
-                                <p class="text-sm">Click Generate to create your promotional video</p>
-                            </div>
-                            
-                            <!-- Video Simulator -->
-                            <div id="video-player" class="hidden absolute inset-0 bg-black">
-                                <div id="slideshow-container" class="w-full h-full relative">
-                                    <!-- Images injected here -->
-                                </div>
-                                <div class="video-overlay flex flex-col">
-                                    <span id="overlay-hook-text" class="font-bold text-lg mb-2 text-shadow drop-shadow-md"></span>
-                                    <div class="flex items-center text-xs opacity-80 mb-1">
-                                        <i class="fa-solid fa-music mr-2"></i> Trending Sound - Viral
-                                    </div>
-                                    <div class="flex items-center text-sm font-semibold bg-brand-600 text-white w-max px-3 py-1 rounded-full mt-2 cursor-pointer shadow-lg">
-                                        <i class="fa-solid fa-cart-shopping mr-2"></i> Shop Now
-                                    </div>
-                                </div>
-                                <!-- Fake UI elements -->
-                                <div class="absolute right-3 bottom-24 flex flex-col items-center space-y-4 text-white drop-shadow-md">
-                                    <div class="flex flex-col items-center"><i class="fa-solid fa-heart text-2xl"></i><span class="text-xs mt-1">12K</span></div>
-                                    <div class="flex flex-col items-center"><i class="fa-solid fa-comment-dots text-2xl"></i><span class="text-xs mt-1">45</span></div>
-                                    <div class="flex flex-col items-center"><i class="fa-solid fa-share text-2xl"></i><span class="text-xs mt-1">Share</span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-publish" class="view-section hide fade-in">
-                <div class="max-w-3xl mx-auto">
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
-                        <h2 class="text-xl font-bold mb-2">Multi-Platform Publisher</h2>
-                        <p class="text-slate-500 text-sm mb-6">Select a generated video and push it to multiple networks simultaneously.</p>
-                        
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Select Video</label>
-                            <select id="publish-product-select" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
-                                <option value="">-- Choose a ready product --</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-slate-700 mb-3">Target Platforms</label>
-                            
-                            <div class="space-y-3">
-                                <!-- TikTok -->
-                                <label class="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center text-xl mr-4 shadow-sm">
-                                            <i class="fa-brands fa-tiktok"></i>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-slate-800">TikTok</p>
-                                            <p class="text-xs text-slate-500">Post directly to feed with cart link</p>
-                                        </div>
-                                    </div>
-                                    <input type="checkbox" id="plat-tiktok" class="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" checked>
-                                </label>
-                                
-                                <!-- Shopee Video -->
-                                <label class="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xl mr-4 shadow-sm">
-                                            <i class="fa-solid fa-bag-shopping"></i>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-slate-800">Shopee Video</p>
-                                            <p class="text-xs text-slate-500">Attach affiliate product automatically</p>
-                                        </div>
-                                    </div>
-                                    <input type="checkbox" id="plat-shopee" class="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" checked>
-                                </label>
-
-                                <!-- IG Reels -->
-                                <label class="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white rounded-lg flex items-center justify-center text-xl mr-4 shadow-sm">
-                                            <i class="fa-brands fa-instagram"></i>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-slate-800">Instagram Reels</p>
-                                            <p class="text-xs text-slate-500">Post reel with bio link prompt</p>
-                                        </div>
-                                    </div>
-                                    <input type="checkbox" id="plat-ig" class="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" checked>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Caption override (Optional)</label>
-                            <textarea id="publish-caption" rows="3" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="Leave blank to use generated script..."></textarea>
-                        </div>
-
-                        <button onclick="startPublishPipeline()" id="btn-publish" class="w-full bg-slate-900 hover:bg-black text-white font-medium py-4 rounded-xl transition shadow-lg flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-rocket mr-2"></i> Blast to Networks
-                        </button>
-                    </div>
-
-                    <!-- Pipeline status -->
-                    <div id="publish-pipeline" class="bg-slate-900 text-green-400 font-mono text-sm p-4 rounded-xl shadow-lg hidden">
-                        <div class="flex justify-between items-center mb-2 border-b border-slate-700 pb-2">
-                            <span class="text-slate-300 flex items-center"><i class="fa-solid fa-terminal mr-2"></i> Deployment Console</span>
-                            <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">Live</span>
-                        </div>
-                        <div id="pipeline-logs" class="space-y-1 h-32 overflow-y-auto pt-2">
-                            <!-- Logs injected here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-settings" class="view-section hide fade-in">
-                <div class="max-w-2xl mx-auto bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                    <h2 class="text-lg font-semibold mb-6 border-b pb-4">Configuration</h2>
-                    
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Google Gemini API Key</label>
-                        <p class="text-xs text-slate-500 mb-2">Required for generating Thai scripts. Get it from Google AI Studio.</p>
-                        <div class="flex gap-2">
-                            <input type="password" id="settings-gemini-key" placeholder="AIzaSy..." class="flex-1 border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition font-mono">
-                            <button onclick="saveSettings()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">Save</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mt-8 text-sm text-yellow-800">
-                        <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Privacy Note</p>
-                        <p>API keys are saved locally in your browser's <code>localStorage</code>. They are never sent to any server other than directly to Google's API during script generation.</p>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- Add Product Modal -->
-    <div id="modal-product" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 transform scale-95 transition-transform" id="modal-product-content">
-            <div class="flex justify-between items-center p-6 border-b border-slate-200">
-                <h3 class="text-lg font-bold text-slate-800">Add New Product</h3>
-                <button onclick="toggleProductModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Product Name</label>
-                    <input type="text" id="prod-name" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. Matte Lipstick No. 5">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Affiliate Link</label>
-                    <input type="text" id="prod-link" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="https://shope.ee/...">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Image URLs (Comma separated)</label>
-                    <textarea id="prod-images" rows="3" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"></textarea>
-                    <p class="text-xs text-slate-500 mt-1">These will be used to generate the video.</p>
-                </div>
-            </div>
-            <div class="p-6 border-t border-slate-200 bg-slate-50 flex justify-end gap-3 rounded-b-xl">
-                <button onclick="toggleProductModal(false)" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button>
-                <button onclick="saveProduct()" class="px-4 py-2 text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition shadow-sm">Save Product</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- State Management ---
-        let state = {
-            products: [],
-            activities: [],
-            stats: { videos: 0, posts: 0 }
-        };
-
-        let geminiKey = localStorage.getItem('gemini_api_key') || '';
-        let slideInterval;
-
-        // Initialization
-        function init() {
-            // Load state from local storage
-            const savedState = localStorage.getItem('affiliate_state');
-            if (savedState) {
-                state = JSON.parse(savedState);
-            } else {
-                // Mock initial data if empty
-                state.products.push({
-                    id: Date.now().toString(),
-                    name: 'Sample Whitening Serum',
-                    link: 'https://shopee.co.th/sample',
-                    images: [
-                        'https://placehold.co/400x700/fdf2f8/db2777?text=Serum+Shot+1',
-                        'https://placehold.co/400x700/fce7f3/be185d?text=Texture+Close-up',
-                        'https://placehold.co/400x700/fbcfe8/9d174d?text=Before+%26+After'
-                    ],
-                    script: '',
-                    hasVideo: false
-                });
-                logActivity('System initialized with sample data');
-                saveState();
-            }
-
-            if (geminiKey) {
-                document.getElementById('settings-gemini-key').value = geminiKey;
-            }
-
-            updateDashboard();
-            populateSelects();
-        }
-
-        function saveState() {
-            localStorage.setItem('affiliate_state', JSON.stringify(state));
-        }
-
-        // --- Navigation ---
-        function switchTab(tabId) {
-            // Update Title
-            const titles = {
-                'dashboard': 'Dashboard',
-                'products': 'Manage Products',
-                'script': 'AI Script Generator',
-                'studio': 'Video Studio',
-                'publish': 'Auto-Publish',
-                'settings': 'Settings'
-            };
-            document.getElementById('pageTitle').textContent = titles[tabId];
-
-            // Hide all views
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hide'));
-            // Reset active nav states
-            document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.remove('bg-brand-50', 'text-brand-600', 'border-r-4', 'border-brand-600');
+                grid.appendChild(card);
             });
+        }
 
-            // Show target view
-            document.getElementById(`view-${tabId}`).classList.remove('hide');
-            
-            // Set active nav
-            const nav = document.getElementById(`nav-${tabId}`);
-            if(nav) {
-                nav.classList.add('bg-brand-50', 'text-brand-600', 'border-r-4', 'border-brand-600');
+        /* ==================== AI SCRIPT GENERATOR LOGIC ==================== */
+        async function generateAIScript() {
+            const name = document.getElementById('aiProductName').value.trim();
+            const features = document.getElementById('aiProductFeatures').value.trim();
+            const angle = document.getElementById('aiHookAngle').value;
+            const target = document.getElementById('aiBasketTarget').value;
+
+            if (!name) {
+                showToast('กรุณากรอกชื่อสินค้าก่อนกดสร้างสคริปต์', 'error');
+                return;
             }
 
-            // Specific Tab Triggers
-            if (tabId === 'products') renderProductsTable();
-            if (tabId === 'dashboard') updateDashboard();
-            if (tabId === 'script' || tabId === 'studio' || tabId === 'publish') populateSelects();
+            const btn = document.getElementById('aiGenerateBtn');
+            const output = document.getElementById('aiScriptOutput');
+            const apiKey = localStorage.getItem(API_KEY_STORAGE);
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังสร้างสคริปต์ด้วย AI...`;
+
+            let basketText = 'ตะกร้าสีเหลืองด้านล่างซ้ายมือ';
+            if (target === 'orange') basketText = 'ตะกร้าสีส้มด้านล่างมุมซ้าย';
+            if (target === 'both') basketText = 'ตะกร้าสีเหลืองใน TikTok หรือตะกร้าสีส้มใน Shopee';
+
+            let resultScript = '';
+
+            // 1. Try Gemini API if Key Available
+            if (apiKey) {
+                try {
+                    const promptText = `คุณเป็นผู้เชี่ยวชาญการทำคลิปวิดีโอปักตะกร้าทำนายหน้า TikTok Affiliate และ Shopee Affiliate ในประเทศไทย
+โปรดเขียนสคริปต์คลิปสั้นสำหรับสินค้า: "${name}" 
+จุดขายสินค้า: "${features}"
+มุมการเสนอ: "${angle}" 
+ป้ายตะกร้าที่ต้องการเน้น: "${basketText}"
+
+โปรดตอบกลับเป็นภาษาไทย ในรูปแบบโครงสร้างต่อไปนี้:
+1. **Hook (0-3 วินาที)**: คำพูดดึงดูดสายตาหยุดคนดู
+2. **Body (3-15 วินาที)**: ชี้ปัญหาและเสนอวิธีแก้ด้วยสินค้า
+3. **Showcase (15-25 วินาที)**: เน้นย้ำจุดขายหลัก
+4. **Call To Action / ปักตะกร้า (25-30 วินาที)**: คำพูดตอกย้ำให้กดปุ่มสั่งซื้อที่ ${basketText}
+5. **แคปชั่นคลิป + แฮชแท็กติดเทรนด์**: แคปชั่นสั้นๆ พร้อม #แฮชแท็ก`;
+
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptText }] }]
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                        resultScript = data.candidates[0].content.parts[0].text;
+                    }
+                } catch (e) {
+                    console.warn("Gemini API call failed, switching to offline engine", e);
+                }
+            }
+
+            // 2. Client Template Fallback Generator
+            if (!resultScript) {
+                resultScript = generateOfflineScriptTemplate(name, features, angle, basketText);
+            }
+
+            generatedAiScriptCache = {
+                title: name,
+                script: resultScript,
+                basketTarget: target
+            };
+
+            // Render Output
+            output.innerHTML = `
+                <div class="bg-rose-50/50 dark:bg-rose-950/30 p-4 rounded-xl border border-rose-100 dark:border-rose-900/50 text-slate-800 dark:text-slate-100 whitespace-pre-line leading-relaxed font-sans">
+                    ${escapeHtml(resultScript)}
+                </div>
+            `;
+
+            document.getElementById('aiAttachBox').classList.remove('hidden');
+
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-bolt"></i> สร้างสคริปต์วิดีโอใหม่`;
+            showToast('สร้างสคริปต์สำเร็จแล้ว!', 'success');
+        }
+
+        function generateOfflineScriptTemplate(name, features, angle, basketText) {
+            const featText = features || 'ใช้งานง่าย คุณภาพดี คุ้มราคา';
+            return `🎬 **สคริปต์ปักตะกร้า: ${name}**
+
+📌 **1. Hook (0-3s)**: 
+"หยุดดูก่อน! ใครกำลังมองหา ${name} ที่คุ้มที่สุด บอกเลยว่าคลิปนี้มีคำตอบ!"
+
+📦 **2. Body & Problem (3-15s)**: 
+"เมื่อก่อนเคยเจอไหมใช้งานแล้วไม่ได้ดังใจ แต่ตัวนี้แก้ปัญหาได้ตรงจุดมาก เด่นเรื่อง ${featText}"
+
+✨ **3. Showcase (15-25s)**: 
+"ดูความพรีเมียมตรงนี้สิ ใช้งานจริงสะดวกมาก วัสดุดีเกินราคาไปเยอะ!"
+
+🛒 **4. Call To Action (25-30s)**: 
+"ใครสนใจ รีบกดที่ ${basketText} ได้เลยตอนนี้ มีโปรส่วนลดพร้อมส่งครับ!"
+
+📝 **แคปชั่นคลิป**:
+พิกัด ${name} กดที่ตะกร้าด้านล่างซ้ายมือได้เลยครับ ✨🛒
+#${name.replace(/\s+/g, '')} #ของดีบอกต่อ #นายหน้าtiktokshop #ShopeeTH #ปักตะกร้า`;
+        }
+
+        function copyGeneratedScript() {
+            if (!generatedAiScriptCache) return;
+            copyToClipboard(generatedAiScriptCache.script);
+        }
+
+        function saveAIScriptToNewProduct() {
+            if (!generatedAiScriptCache) return;
             
-            // Stop video preview if leaving studio
-            if (tabId !== 'studio' && slideInterval) {
-                clearInterval(slideInterval);
-                document.getElementById('video-player').classList.add('hidden');
-                document.getElementById('phone-placeholder').classList.remove('hidden');
+            openNewModal();
+            document.getElementById('modalTitleInput').value = generatedAiScriptCache.title;
+            document.getElementById('modalScriptInput').value = generatedAiScriptCache.script;
+            document.getElementById('modalStatusInput').value = 'scripted';
+            
+            switchTab('dashboard');
+            showToast('ดึงสคริปต์ลงในฟอร์มแล้ว กรอกข้อมูลเพิ่มเติมเพื่อบันทึก', 'info');
+        }
+
+        /* ==================== VISUAL CANVA STUDIO STUDIO ==================== */
+        let canvasCtx = null;
+
+        function initCanvasStudio() {
+            const canvas = document.getElementById('studioCanvas');
+            if (canvas) {
+                canvasCtx = canvas.getContext('2d');
+                updateCanvasStudio();
             }
         }
 
-        // --- Utils ---
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            const icon = document.getElementById('toastIcon');
-            const msgEl = document.getElementById('toastMsg');
-            
-            msgEl.textContent = msg;
-            
-            if(isError) {
-                toast.classList.replace('bg-slate-800', 'bg-red-600');
-                icon.className = 'fa-solid fa-triangle-exclamation text-white';
+        function setStudioTheme(theme) {
+            studioTheme = theme;
+            updateCanvasStudio();
+        }
+
+        function handleStudioImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        studioUploadedImg = img;
+                        updateCanvasStudio();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateCanvasStudio() {
+            const canvas = document.getElementById('studioCanvas');
+            if (!canvas || !canvasCtx) return;
+
+            const w = canvas.width;
+            const h = canvas.height;
+
+            // Clear
+            canvasCtx.clearRect(0, 0, w, h);
+
+            // Draw Gradient Background
+            let grad = canvasCtx.createLinearGradient(0, 0, w, h);
+            if (studioTheme === 'sunset') {
+                grad.addColorStop(0, '#f43f5e');
+                grad.addColorStop(1, '#f59e0b');
+            } else if (studioTheme === 'ocean') {
+                grad.addColorStop(0, '#0284c7');
+                grad.addColorStop(1, '#4f46e5');
+            } else if (studioTheme === 'emerald') {
+                grad.addColorStop(0, '#10b981');
+                grad.addColorStop(1, '#0f766e');
             } else {
-                toast.classList.replace('bg-red-600', 'bg-slate-800');
-                icon.className = 'fa-solid fa-circle-check text-green-400';
+                grad.addColorStop(0, '#0f172a');
+                grad.addColorStop(1, '#3b0764');
+            }
+            canvasCtx.fillStyle = grad;
+            canvasCtx.fillRect(0, 0, w, h);
+
+            // Draw Uploaded Image or Product Illustration Placeholder
+            if (studioUploadedImg) {
+                const aspect = studioUploadedImg.width / studioUploadedImg.height;
+                const imgW = 380;
+                const imgH = imgW / aspect;
+                canvasCtx.drawImage(studioUploadedImg, (w - imgW)/2, (h - imgH)/2 - 20, imgW, imgH);
+            } else {
+                // Circle Backdrop
+                canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                canvasCtx.beginPath();
+                canvasCtx.arc(w/2, h/2 - 30, 160, 0, Math.PI * 2);
+                canvasCtx.fill();
+
+                canvasCtx.fillStyle = '#ffffff';
+                canvasCtx.font = 'bold 80px Prompt';
+                canvasCtx.textAlign = 'center';
+                canvasCtx.fillText('📦', w/2, h/2 - 10);
             }
 
-            toast.classList.remove('translate-x-full', 'opacity-0');
+            // Draw Top Badge
+            const priceText = document.getElementById('studioPriceBadge').value || 'ลดพิเศษ';
+            canvasCtx.fillStyle = '#fe2c55';
+            roundRect(canvasCtx, w/2 - 120, 80, 240, 50, 25, true);
+            canvasCtx.fillStyle = '#ffffff';
+            canvasCtx.font = 'bold 24px Prompt';
+            canvasCtx.textAlign = 'center';
+            canvasCtx.fillText(priceText, w/2, 114);
+
+            // Draw Main Headline
+            const headline = document.getElementById('studioHeadline').value || 'หัวข้อโปรโมตสินค้า';
+            canvasCtx.fillStyle = '#ffffff';
+            canvasCtx.font = 'bold 36px Prompt';
+            canvasCtx.textAlign = 'center';
+            canvasCtx.shadowColor = 'rgba(0,0,0,0.5)';
+            canvasCtx.shadowBlur = 10;
+            canvasCtx.fillText(headline, w/2, h - 220);
+
+            // Subheadline
+            const sub = document.getElementById('studioSubheadline').value || 'รายละเอียดสั้นๆ';
+            canvasCtx.font = '20px Prompt';
+            canvasCtx.fillText(sub, w/2, h - 170);
+            canvasCtx.shadowBlur = 0;
+
+            // Draw Basket Callout Tag at bottom
+            const basketType = document.getElementById('studioBasketBadge').value;
+            let basketLabel = '🛒 กดสั่งซื้อที่ตะกร้าสีเหลืองซ้ายล่าง';
+            let basketBg = '#f59e0b';
+
+            if (basketType === 'shopee') {
+                basketLabel = '🛒 กดสั่งซื้อที่ตะกร้าสีส้มด้านล่าง';
+                basketBg = '#ee4d2d';
+            } else if (basketType === 'both') {
+                basketLabel = '🛒 ตะกร้าเหลือง (TikTok) / ตะกร้าส้ม (Shopee)';
+                basketBg = '#fe2c55';
+            }
+
+            canvasCtx.fillStyle = basketBg;
+            roundRect(canvasCtx, 30, h - 120, w - 60, 60, 15, true);
+            canvasCtx.fillStyle = '#ffffff';
+            canvasCtx.font = 'bold 22px Prompt';
+            canvasCtx.fillText(basketLabel, w/2, h - 82);
+        }
+
+        function downloadCanvasImage() {
+            const canvas = document.getElementById('studioCanvas');
+            if (!canvas) return;
+            
+            const link = document.createElement('a');
+            link.download = 'affiliate-cover-promo.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('ดาวน์โหลดรูปภาพสำเร็จแล้ว!', 'success');
+        }
+
+        function roundRect(ctx, x, y, width, height, radius, fill) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            if (fill) ctx.fill();
+        }
+
+        /* ==================== FORM MODAL HANDLERS ==================== */
+        function openNewModal() {
+            document.getElementById('editItemId').value = '';
+            document.getElementById('modalTitle').innerText = 'เพิ่มสินค้า & สคริปต์ปักตะกร้าใหม่';
+            document.getElementById('productForm').reset();
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const item = items.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('editItemId').value = item.id;
+            document.getElementById('modalTitle').innerText = 'แก้ไขข้อมูลสินค้า';
+            document.getElementById('modalTitleInput').value = item.title;
+            document.getElementById('modalPriceInput').value = item.price || '';
+            document.getElementById('modalPlatformInput').value = item.platform || 'both';
+            document.getElementById('modalStatusInput').value = item.status || 'draft';
+            document.getElementById('modalTiktokLink').value = item.tiktokLink || '';
+            document.getElementById('modalShopeeLink').value = item.shopeeLink || '';
+            document.getElementById('modalVideoUrlInput').value = item.videoUrl || '';
+            document.getElementById('modalScriptInput').value = item.script || '';
+            document.getElementById('modalCaptionInput').value = item.caption || '';
+
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const editId = document.getElementById('editItemId').value;
+            const title = document.getElementById('modalTitleInput').value.trim();
+            const price = document.getElementById('modalPriceInput').value.trim();
+            const platform = document.getElementById('modalPlatformInput').value;
+            const status = document.getElementById('modalStatusInput').value;
+            const tiktokLink = document.getElementById('modalTiktokLink').value.trim();
+            const shopeeLink = document.getElementById('modalShopeeLink').value.trim();
+            const script = document.getElementById('modalScriptInput').value.trim();
+            const caption = document.getElementById('modalCaptionInput').value.trim();
+            const videoUrl = document.getElementById('modalVideoUrlInput').value.trim();
+
+            if (editId) {
+                // Update
+                const item = items.find(i => i.id === editId);
+                if (item) {
+                    item.title = title;
+                    item.price = price;
+                    item.platform = platform;
+                    item.status = status;
+                    item.tiktokLink = tiktokLink;
+                    item.shopeeLink = shopeeLink;
+                    item.script = script;
+                    item.caption = caption;
+                    item.videoUrl = videoUrl;
+                }
+                showToast('อัปเดตข้อมูลสินค้าเรียบร้อย', 'success');
+            } else {
+                // Create New
+                const newItem = {
+                    id: Date.now().toString(),
+                    title,
+                    price,
+                    platform,
+                    status,
+                    tiktokLink,
+                    shopeeLink,
+                    script,
+                    caption,
+                    videoUrl,
+                    createdAt: new Date().toISOString()
+                };
+                items.unshift(newItem);
+                showToast('เพิ่มรายการสินค้าใหม่แล้ว', 'success');
+            }
+
+            saveItems();
+            renderApp();
+            closeModal();
+        }
+
+        function deleteItem(id) {
+            if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+                items = items.filter(i => i.id !== id);
+                saveItems();
+                renderApp();
+                showToast('ลบรายการเรียบร้อยแล้ว', 'info');
+            }
+        }
+
+        /* ==================== UTILITY FUNCTIONS ==================== */
+        function copyToClipboard(text) {
+            if (!text) return;
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('คัดลอกข้อความลง คลิปบอร์ด แล้ว!', 'success');
+            } catch (err) {
+                showToast('ไม่สามารถคัดลอกได้', 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            let icon = 'fa-circle-info text-sky-400';
+            if (type === 'success') icon = 'fa-circle-check text-emerald-400';
+            if (type === 'error') icon = 'fa-triangle-exclamation text-rose-400';
+
+            toast.className = `toast-enter pointer-events-auto flex items-center gap-3 bg-slate-900 text-white text-xs sm:text-sm px-4 py-3 rounded-xl shadow-xl border border-slate-800 max-w-sm`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${msg}</span>`;
+
+            container.appendChild(toast);
+
             setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 200);
             }, 3000);
         }
 
-        function logActivity(msg) {
-            state.activities.unshift({ time: new Date().toLocaleTimeString(), msg });
-            if(state.activities.length > 5) state.activities.pop();
-            saveState();
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "affiliate_studio_backup.json");
+            dl.click();
         }
 
-        // --- Dashboard ---
-        function updateDashboard() {
-            document.getElementById('stat-products').textContent = state.products.length;
-            document.getElementById('stat-videos').textContent = state.stats.videos;
-            document.getElementById('stat-posts').textContent = state.stats.posts;
+        function importDataJSONPrompt() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const parsed = JSON.parse(event.target.result);
+                        if (Array.isArray(parsed)) {
+                            items = parsed;
+                            saveItems();
+                            renderApp();
+                            showToast('นำเข้าข้อมูลสำเร็จแล้ว!', 'success');
+                        }
+                    } catch (err) {
+                        showToast('ไฟล์ JSON ไม่ถูกต้อง', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
 
-            const list = document.getElementById('activity-list');
-            if (state.activities.length === 0) {
-                list.innerHTML = '<li class="text-slate-500 text-sm italic">No recent activity.</li>';
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function escapeJsString(str) {
+            if (!str) return '';
+            return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+        }
+
+        /* ==================== AUTO-POST (n8n WORKFLOW) ==================== */
+        const AP_BASEURL_KEY = 'affiliate_studio_ap_baseurl';
+        const AP_SECRET_KEY = 'affiliate_studio_ap_secret';
+
+        function loadAutoPostConfig() {
+            document.getElementById('apBaseUrlInput').value = localStorage.getItem(AP_BASEURL_KEY) || '';
+            document.getElementById('apSecretInput').value = localStorage.getItem(AP_SECRET_KEY) || '';
+        }
+
+        function saveAutoPostConfig() {
+            const base = document.getElementById('apBaseUrlInput').value.trim().replace(/\/+$/, '');
+            const secret = document.getElementById('apSecretInput').value.trim();
+            localStorage.setItem(AP_BASEURL_KEY, base);
+            localStorage.setItem(AP_SECRET_KEY, secret);
+            showToast('บันทึกการตั้งค่า Auto-Post แล้ว', 'success');
+        }
+
+        function renderAutoPostItemSelect() {
+            const sel = document.getElementById('apItemSelect');
+            const prevValue = sel.value;
+            sel.innerHTML = '';
+            if (items.length === 0) {
+                sel.innerHTML = '<option value="">-- ยังไม่มีรายการคอนเทนต์ --</option>';
             } else {
-                list.innerHTML = state.activities.map(act => `
-                    <li class="flex justify-between items-center text-sm border-b border-slate-100 pb-2 last:border-0">
-                        <span class="text-slate-700">${act.msg}</span>
-                        <span class="text-slate-400 text-xs">${act.time}</span>
-                    </li>
-                `).join('');
+                items.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = (item.videoUrl ? '🎬 ' : '⚠️ ยังไม่มีวิดีโอ — ') + item.title;
+                    sel.appendChild(opt);
+                });
+                if (items.some(i => i.id === prevValue)) sel.value = prevValue;
             }
+            renderAutoPostPreview();
         }
 
-        // --- STREAMING_CHUNK:Products Management ---
-        function toggleProductModal(show) {
-            const modal = document.getElementById('modal-product');
-            const content = document.getElementById('modal-product-content');
-            
-            if(show) {
-                // Clear fields
-                document.getElementById('prod-name').value = '';
-                document.getElementById('prod-link').value = '';
-                document.getElementById('prod-images').value = '';
-                
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    content.classList.remove('scale-95');
-                }, 10);
-            } else {
-                modal.classList.add('opacity-0');
-                content.classList.add('scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
-            }
+        function renderAutoPostPreview() {
+            const id = document.getElementById('apItemSelect').value;
+            const box = document.getElementById('apPreview');
+            const item = items.find(i => i.id === id);
+            if (!item) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+            box.classList.remove('hidden');
+            box.innerHTML = `
+                <p><span class="font-semibold text-slate-500 dark:text-slate-400">วิดีโอ:</span> ${item.videoUrl ? escapeHtml(item.videoUrl) : '<span class="text-rose-500">ยังไม่ได้ใส่ลิงก์วิดีโอ — แก้ไขรายการนี้ในแท็บจัดการสินค้าก่อน</span>'}</p>
+                <p><span class="font-semibold text-slate-500 dark:text-slate-400">แคปชั่น:</span> ${item.caption ? escapeHtml(item.caption) : '<span class="text-slate-400">(ไม่มี)</span>'}</p>
+                <p><span class="font-semibold text-slate-500 dark:text-slate-400">ลิงก์ Shopee:</span> ${item.shopeeLink ? escapeHtml(item.shopeeLink) : '<span class="text-slate-400">(ไม่มี)</span>'}</p>
+            `;
         }
 
-        function saveProduct() {
-            const name = document.getElementById('prod-name').value.trim();
-            const link = document.getElementById('prod-link').value.trim();
-            const imgsRaw = document.getElementById('prod-images').value.trim();
-            
-            if(!name || !link || !imgsRaw) {
-                showToast('Please fill all fields', true);
-                return;
-            }
-
-            const images = imgsRaw.split(',').map(url => url.trim()).filter(url => url);
-
-            state.products.push({
-                id: Date.now().toString(),
-                name,
-                link,
-                images,
-                script: '',
-                hasVideo: false
-            });
-
-            saveState();
-            logActivity(`Added new product: ${name}`);
-            toggleProductModal(false);
-            renderProductsTable();
-            showToast('Product added successfully');
+        function apGetTargets() {
+            const map = { apTargetFacebook: 'facebook', apTargetInstagram: 'instagram', apTargetTiktok: 'tiktok', apTargetShopee: 'shopee' };
+            return Object.keys(map).filter(id => document.getElementById(id).checked).map(id => map[id]);
         }
 
-        function renderProductsTable() {
-            const tbody = document.getElementById('product-table-body');
-            const empty = document.getElementById('empty-products');
-            
-            if (state.products.length === 0) {
-                tbody.innerHTML = '';
-                empty.classList.remove('hidden');
-            } else {
-                empty.classList.add('hidden');
-                tbody.innerHTML = state.products.map(p => `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                        <td class="p-4 font-medium text-slate-800">${p.name}</td>
-                        <td class="p-4"><a href="${p.link}" target="_blank" class="text-brand-500 hover:underline text-sm break-all"><i class="fa-solid fa-link mr-1"></i>Link</a></td>
-                        <td class="p-4 text-center text-sm text-slate-500">${p.images.length} images</td>
-                        <td class="p-4 text-right">
-                            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded transition"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-        }
+        async function sendAutoPost() {
+            const base = localStorage.getItem(AP_BASEURL_KEY) || '';
+            const secret = localStorage.getItem(AP_SECRET_KEY) || '';
+            if (!base || !secret) { showToast('กรุณาตั้งค่า n8n Base URL และ Secret Key ก่อน', 'error'); return; }
 
-        function deleteProduct(id) {
-            state.products = state.products.filter(p => p.id !== id);
-            saveState();
-            logActivity('Deleted a product');
-            renderProductsTable();
-            showToast('Product deleted');
-        }
+            const id = document.getElementById('apItemSelect').value;
+            const item = items.find(i => i.id === id);
+            if (!item) { showToast('กรุณาเลือกคอนเทนต์ที่จะโพสต์', 'error'); return; }
+            if (!item.videoUrl) { showToast('รายการนี้ยังไม่มีลิงก์วิดีโอ กรุณาแก้ไขก่อน', 'error'); return; }
 
-        function populateSelects() {
-            const selects = ['script-product-select', 'studio-product-select', 'publish-product-select'];
-            selects.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) {
-                    const currentVal = el.value;
-                    let options = '<option value="">-- Choose a product --</option>';
-                    
-                    state.products.forEach(p => {
-                        // For publish, only show products with generated videos
-                        if(id === 'publish-product-select' && !p.hasVideo) return;
-                        options += `<option value="${p.id}">${p.name}</option>`;
-                    });
-                    
-                    el.innerHTML = options;
-                    if(state.products.find(p => p.id === currentVal)) el.value = currentVal;
-                }
-            });
-        }
+            const targets = apGetTargets();
+            if (targets.length === 0) { showToast('กรุณาเลือกแพลตฟอร์มปลายทางอย่างน้อย 1 แห่ง', 'error'); return; }
 
-        // --- STREAMING_CHUNK:AI Script Generation ---
-        async function generateScript() {
-            if(!geminiKey) {
-                showToast('Please set Gemini API Key in Settings first', true);
-                switchTab('settings');
-                return;
-            }
+            const scheduleVal = document.getElementById('apScheduleInput').value;
+            const payload = {
+                key: secret,
+                id: item.id + '-' + Date.now(),
+                title: item.title,
+                videoUrl: item.videoUrl,
+                caption: item.caption || '',
+                tiktokLink: item.tiktokLink || '',
+                shopeeLink: item.shopeeLink || '',
+                targets,
+                scheduledAt: scheduleVal ? new Date(scheduleVal).toISOString() : ''
+            };
 
-            const prodId = document.getElementById('script-product-select').value;
-            if(!prodId) {
-                showToast('Please select a product', true);
-                return;
-            }
-
-            const product = state.products.find(p => p.id === prodId);
-            const context = document.getElementById('script-context').value;
-            const btn = document.getElementById('btn-generate-script');
-            const output = document.getElementById('script-output');
-
+            const btn = document.getElementById('apSendBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Generating...';
-            output.value = 'AI is thinking...';
-
-            const prompt = `You are an expert affiliate marketer for TikTok and Shopee in Thailand. Write a short, highly engaging, and viral video script (under 60 seconds) in Thai to promote this product: "${product.name}". 
-            Additional context: ${context}
-            Make it catchy, use trendy slang if appropriate, and include a strong Call to Action (CTA) pointing to the shopping cart link. Format it clearly (e.g. [Hook], [Body], [CTA]). Do not include english translation.`;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่ง...';
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`, {
+                const res = await fetch(base + '/affiliate-post', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
+                    body: JSON.stringify(payload)
                 });
-
-                if(!response.ok) throw new Error('API Request Failed');
-                
-                const data = await response.json();
-                const text = data.candidates[0].content.parts[0].text;
-                
-                output.value = text;
-                logActivity(`Generated script for ${product.name}`);
-                showToast('Script generated successfully');
-            } catch (error) {
-                output.value = '';
-                showToast('Error generating script. Check API key.', true);
-                console.error(error);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                showToast('ส่งคำขอโพสต์แล้ว กำลังติดตามผล...', 'success');
+                apLogAdd(item, data.id, targets);
+                apPollStatus(base, secret, data.id, targets);
+            } catch (err) {
+                showToast('ส่งคำขอไม่สำเร็จ: ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-sparkles mr-2"></i> Generate with Gemini API';
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งโพสต์เลย';
             }
         }
 
-        function copyScript() {
-            const output = document.getElementById('script-output');
-            output.select();
-            document.execCommand('copy');
-            showToast('Script copied to clipboard');
+        function apLogAdd(item, requestId, targets) {
+            const log = document.getElementById('apResultLog');
+            if (log.dataset.empty !== 'false') { log.innerHTML = ''; log.dataset.empty = 'false'; }
+
+            const row = document.createElement('div');
+            row.id = 'apLog-' + requestId;
+            row.className = 'p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800';
+            row.innerHTML = `
+                <p class="font-semibold text-slate-700 dark:text-slate-200 mb-1.5">${escapeHtml(item.title)}</p>
+                <div class="space-y-1">
+                    ${targets.map(t => `<div id="apStatus-${requestId}-${t}" class="flex items-center gap-1.5"><i class="fa-solid fa-spinner fa-spin text-slate-400"></i> <span class="capitalize">${t}</span>: <span class="text-slate-400">กำลังดำเนินการ...</span></div>`).join('')}
+                </div>
+            `;
+            log.prepend(row);
         }
 
-        function saveScriptToProduct() {
-            const prodId = document.getElementById('script-product-select').value;
-            const text = document.getElementById('script-output').value.trim();
-            if(!prodId || !text) {
-                showToast('Nothing to save', true);
-                return;
-            }
-            
-            const product = state.products.find(p => p.id === prodId);
-            product.script = text;
-            saveState();
-            showToast('Script saved to product');
-        }
-
-        // --- STREAMING_CHUNK:Video Studio Simulation ---
-        function loadStudioPreview() {
-            const prodId = document.getElementById('studio-product-select').value;
-            const assetsContainer = document.getElementById('studio-assets');
-            
-            if(!prodId) {
-                assetsContainer.innerHTML = 'Select a product to view images';
-                return;
-            }
-            
-            const product = state.products.find(p => p.id === prodId);
-            assetsContainer.innerHTML = product.images.map(img => 
-                `<div class="w-full h-20 rounded bg-cover bg-center shadow-sm" style="background-image: url('${img}')"></div>`
-            ).join('');
-        }
-
-        function generateVideo() {
-            const prodId = document.getElementById('studio-product-select').value;
-            if(!prodId) {
-                showToast('Please select a product', true);
-                return;
-            }
-
-            const product = state.products.find(p => p.id === prodId);
-            if(!product.images || product.images.length === 0) {
-                showToast('Product has no images', true);
-                return;
-            }
-
-            const btn = document.getElementById('btn-generate-video');
-            const progressArea = document.getElementById('video-progress');
-            const bar = document.getElementById('video-bar');
-            const percentTxt = document.getElementById('video-percent');
-            
-            btn.disabled = true;
-            progressArea.classList.remove('hidden');
-            
-            // Hide preview initially
-            document.getElementById('video-player').classList.add('hidden');
-            document.getElementById('phone-placeholder').classList.remove('hidden');
-
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if(progress > 100) progress = 100;
-                
-                bar.style.width = `${progress}%`;
-                percentTxt.textContent = `${Math.floor(progress)}%`;
-
-                if(progress === 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        progressArea.classList.add('hidden');
-                        btn.disabled = false;
-                        
-                        // Mark as having video
-                        product.hasVideo = true;
-                        state.stats.videos++;
-                        saveState();
-                        
-                        logActivity(`Generated video for ${product.name}`);
-                        showToast('Video Generated Successfully!');
-                        playSimulatedVideo(product);
-                    }, 500);
-                }
-            }, 300);
-        }
-
-        function playSimulatedVideo(product) {
-            const placeholder = document.getElementById('phone-placeholder');
-            const player = document.getElementById('video-player');
-            const container = document.getElementById('slideshow-container');
-            const hookText = document.getElementById('overlay-hook-text');
-            const inputHook = document.getElementById('studio-text').value;
-
-            placeholder.classList.add('hidden');
-            player.classList.remove('hidden');
-
-            hookText.textContent = inputHook || product.name;
-
-            // Setup slides
-            container.innerHTML = product.images.map((img, idx) => 
-                `<img src="${img}" class="slide-image ${idx === 0 ? 'active' : ''}" alt="slide">`
-            ).join('');
-
-            const slides = container.querySelectorAll('.slide-image');
-            let currentIdx = 0;
-
-            if(slideInterval) clearInterval(slideInterval);
-
-            if(slides.length > 1) {
-                slideInterval = setInterval(() => {
-                    slides[currentIdx].classList.remove('active');
-                    currentIdx = (currentIdx + 1) % slides.length;
-                    slides[currentIdx].classList.add('active');
-                }, 2000);
-            }
-        }
-
-        // --- STREAMING_CHUNK:Multi-Platform Publishing ---
-        function startPublishPipeline() {
-            const prodId = document.getElementById('publish-product-select').value;
-            if(!prodId) {
-                showToast('Please select a video', true);
-                return;
-            }
-
-            const doTiktok = document.getElementById('plat-tiktok').checked;
-            const doShopee = document.getElementById('plat-shopee').checked;
-            const doIg = document.getElementById('plat-ig').checked;
-
-            if(!doTiktok && !doShopee && !doIg) {
-                showToast('Select at least one platform', true);
-                return;
-            }
-
-            const btn = document.getElementById('btn-publish');
-            const pipeline = document.getElementById('publish-pipeline');
-            const logs = document.getElementById('pipeline-logs');
-            
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-            pipeline.classList.remove('hidden');
-            logs.innerHTML = '';
-
-            const addLog = (text, type = 'info') => {
-                const color = type === 'error' ? 'text-red-400' : (type === 'success' ? 'text-green-400' : 'text-slate-300');
-                const p = document.createElement('p');
-                p.className = `${color} mb-1`;
-                p.innerHTML = `> ${text}`;
-                logs.appendChild(p);
-                logs.scrollTop = logs.scrollHeight;
+        function apUpdateStatusLine(requestId, target, status, detail) {
+            const el = document.getElementById(`apStatus-${requestId}-${target}`);
+            if (!el) return;
+            const icons = {
+                done: '<i class="fa-solid fa-circle-check text-emerald-500"></i>',
+                manual: '<i class="fa-solid fa-circle-info text-amber-500"></i>',
+                scheduled: '<i class="fa-solid fa-clock text-sky-500"></i>',
+                queued: '<i class="fa-solid fa-spinner fa-spin text-slate-400"></i>',
+                failed: '<i class="fa-solid fa-circle-xmark text-rose-500"></i>'
             };
+            el.innerHTML = `${icons[status] || icons.queued} <span class="capitalize">${target}</span>: <span class="text-slate-600 dark:text-slate-300">${escapeHtml(detail || status)}</span>`;
+        }
 
-            const tasks = [];
-            addLog('Initializing Auto-Post Pipeline...', 'info');
-
-            if(doTiktok) {
-                tasks.push(
-                    () => addLog('Authenticating with TikTok API...'),
-                    () => addLog('Uploading media to TikTok: [======    ] 60%'),
-                    () => addLog('Uploading media to TikTok: [==========] 100%'),
-                    () => addLog('Attaching affiliate link to TikTok post...'),
-                    () => addLog('TikTok Publishing SUCCESS!', 'success')
-                );
-            }
-            if(doShopee) {
-                tasks.push(
-                    () => addLog('Connecting to Shopee Open API...'),
-                    () => addLog('Uploading video to Shopee Video server...'),
-                    () => addLog('Linking product ID to video...'),
-                    () => addLog('Shopee Video Publishing SUCCESS!', 'success')
-                );
-            }
-            if(doIg) {
-                tasks.push(
-                    () => addLog('Connecting to Instagram Graph API...'),
-                    () => addLog('Creating Reels container...'),
-                    () => addLog('Publishing Reel...'),
-                    () => addLog('Instagram Reels Publishing SUCCESS!', 'success')
-                );
-            }
-
-            tasks.push(() => {
-                addLog('-------------------------');
-                addLog('PIPELINE COMPLETE.', 'success');
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
-                
-                const platformCount = [doTiktok, doShopee, doIg].filter(Boolean).length;
-                state.stats.posts += platformCount;
-                saveState();
-                updateDashboard();
-                
-                const product = state.products.find(p => p.id === prodId);
-                logActivity(`Published ${product.name} to ${platformCount} platform(s)`);
-                showToast(`Successfully published to ${platformCount} platform(s)`);
-            });
-
-            // Run tasks sequentially with fake delay
-            let i = 0;
-            const runNext = () => {
-                if (i < tasks.length) {
-                    tasks[i]();
-                    i++;
-                    setTimeout(runNext, 600 + Math.random() * 800); // 0.6s - 1.4s delay per step
+        async function apPollStatus(base, secret, requestId, targets) {
+            const maxTries = 40;
+            let tries = 0;
+            const timer = setInterval(async () => {
+                tries++;
+                try {
+                    const res = await fetch(base + '/affiliate-status?id=' + encodeURIComponent(requestId) + '&key=' + encodeURIComponent(secret));
+                    const data = await res.json();
+                    const platforms = (data.result && data.result.platforms) || {};
+                    let allDone = true;
+                    targets.forEach(t => {
+                        const p = platforms[t];
+                        if (p) {
+                            apUpdateStatusLine(requestId, t, p.status, p.detail);
+                            if (p.status === 'queued' || p.status === 'scheduled') allDone = false;
+                        } else {
+                            allDone = false;
+                        }
+                    });
+                    if (allDone || tries >= maxTries) {
+                        clearInterval(timer);
+                        if (!allDone) showToast('หยุดติดตามผลอัตโนมัติ (เกินเวลารอ) ตรวจสอบผลได้ที่ Telegram หรือ n8n', 'info');
+                    }
+                } catch (err) {
+                    if (tries >= maxTries) clearInterval(timer);
                 }
-            };
-            
-            setTimeout(runNext, 500);
+            }, 6000);
         }
-
-        // --- Settings ---
-        function saveSettings() {
-            const key = document.getElementById('settings-gemini-key').value.trim();
-            localStorage.setItem('gemini_api_key', key);
-            geminiKey = key;
-            showToast('Settings saved successfully');
-        }
-
-        // Start App
-        window.onload = init;
     </script>
 </body>
 </html>
