@@ -355,10 +355,16 @@
                                     <i class="fa-solid fa-scroll text-rose-500"></i>
                                     สคริปต์วิดีโอ & แคปชั่นสำหรับนำไปถ่ายทำ
                                 </h3>
-                                <button onclick="copyGeneratedScript()" class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
-                                    <i class="fa-regular fa-copy"></i>
-                                    <span>คัดลอกทั้งหมด</span>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="genVideoFromScript()" id="genVideoBtn" disabled class="text-xs bg-gradient-to-r from-rose-500 to-amber-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+                                        <i class="fa-solid fa-film"></i>
+                                        <span>Gen วิดีโอ (AI)</span>
+                                    </button>
+                                    <button onclick="copyGeneratedScript()" class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span>คัดลอกทั้งหมด</span>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Script Output Container -->
@@ -367,6 +373,15 @@
                                     <i class="fa-solid fa-clapperboard text-4xl mb-3 opacity-40"></i>
                                     <p>กรอกข้อมูลสินค้าทางซ้ายมือแล้วกด "สร้างสคริปต์วิดีโอทันที"</p>
                                 </div>
+                            </div>
+
+                            <!-- AI Video Generation Result -->
+                            <div id="genVideoBox" class="hidden mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-clapperboard text-rose-500"></i> วิดีโอที่ AI สร้างจากสคริปต์
+                                </p>
+                                <div id="genVideoStatus" class="text-xs text-slate-500 dark:text-slate-400"></div>
+                                <div id="genVideoResult"></div>
                             </div>
                         </div>
 
@@ -665,9 +680,17 @@
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                         <i class="fa-solid fa-film text-violet-500 mr-1"></i> ลิงก์ไฟล์วิดีโอ (.mp4 สาธารณะ) — สำหรับ Auto-Post
                     </label>
-                    <input type="url" id="modalVideoUrlInput" placeholder="https://.../video.mp4"
-                           class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
-                    <p class="text-[11px] text-slate-400 mt-1">ต้องเป็นลิงก์ตรงถึงไฟล์ mp4 ที่เข้าถึงได้จากอินเทอร์เน็ต (เช่น Google Drive แบบแชร์สาธารณะ, S3) จึงจะใช้ปุ่มโพสต์อัตโนมัติในแท็บ Auto-Post ได้</p>
+                    <div class="flex gap-2">
+                        <input type="url" id="modalVideoUrlInput" placeholder="https://.../video.mp4"
+                               class="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
+                        <button type="button" onclick="document.getElementById('modalVideoFilePicker').click()"
+                                class="shrink-0 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-video"></i> เพิ่มวิดีโอ
+                        </button>
+                        <input type="file" id="modalVideoFilePicker" accept="video/*" class="hidden" onchange="previewLocalVideoFile(event)">
+                    </div>
+                    <div id="modalVideoLocalPreview" class="hidden mt-2 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800"></div>
+                    <p class="text-[11px] text-slate-400 mt-1">ปุ่ม "เพิ่มวิดีโอ" ใช้ดูตัวอย่าง/เช็คไฟล์จากเครื่องเท่านั้น <b>ไม่ได้อัปโหลดขึ้นเน็ต</b> — ต้องใส่ลิงก์สาธารณะในช่องด้านบนเองก่อนใช้ Auto-Post</p>
                 </div>
 
                 <!-- TikTok & Shopee Links -->
@@ -952,6 +975,10 @@
             const output = document.getElementById('aiScriptOutput');
             const apiKey = localStorage.getItem(API_KEY_STORAGE);
 
+            document.getElementById('genVideoBox').classList.add('hidden');
+            document.getElementById('genVideoResult').innerHTML = '';
+            document.getElementById('genVideoStatus').innerHTML = '';
+
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังสร้างสคริปต์ด้วย AI...`;
 
@@ -1013,6 +1040,7 @@
             `;
 
             document.getElementById('aiAttachBox').classList.remove('hidden');
+            document.getElementById('genVideoBtn').disabled = false;
 
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-bolt"></i> สร้างสคริปต์วิดีโอใหม่`;
@@ -1043,6 +1071,88 @@
         function copyGeneratedScript() {
             if (!generatedAiScriptCache) return;
             copyToClipboard(generatedAiScriptCache.script);
+        }
+
+        async function genVideoFromScript() {
+            if (!generatedAiScriptCache) return;
+            const apiKey = localStorage.getItem(API_KEY_STORAGE);
+            if (!apiKey) {
+                showToast('ต้องตั้งค่า Gemini API Key ในแท็บตั้งค่าก่อนถึงจะสร้างวิดีโอด้วย AI ได้', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('genVideoBtn');
+            const box = document.getElementById('genVideoBox');
+            const statusEl = document.getElementById('genVideoStatus');
+            const resultEl = document.getElementById('genVideoResult');
+
+            box.classList.remove('hidden');
+            resultEl.innerHTML = '';
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังส่งคำขอ...';
+            statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังส่งคำขอสร้างวิดีโอไปยัง Gemini (Veo)...';
+
+            const promptText = `สร้างวิดีโอโฆษณาสินค้าแนวตั้งสั้น ความยาวประมาณ 8 วินาที จากสคริปต์นี้:
+
+${generatedAiScriptCache.script}
+
+สไตล์: คลิปรีวิวสินค้าที่ใช้โพสต์ TikTok/Instagram Reels ของไทย แสงสว่าง สดใส เคลื่อนกล้องเรียบง่าย ไม่มีข้อความซ้อนทับ`;
+
+            const BASE = 'https://generativelanguage.googleapis.com/v1beta';
+            const MODEL = 'veo-3.0-generate-001';
+
+            try {
+                const startRes = await fetch(`${BASE}/models/${MODEL}:predictLongRunning?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instances: [{ prompt: promptText }],
+                        parameters: { aspectRatio: '9:16' }
+                    })
+                });
+                const startData = await startRes.json();
+                if (!startRes.ok || !startData.name) {
+                    throw new Error((startData.error && startData.error.message) || 'ไม่สามารถเริ่มสร้างวิดีโอได้ (บัญชีนี้อาจยังไม่เปิดสิทธิ์ใช้งานโมเดล Veo)');
+                }
+
+                let done = false, tries = 0, opData = null;
+                while (!done && tries < 30) {
+                    await new Promise(r => setTimeout(r, 10000));
+                    tries++;
+                    statusEl.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังสร้างวิดีโอ... (${tries * 10} วินาที ปกติใช้เวลา 1-3 นาที)`;
+                    const pollRes = await fetch(`${BASE}/${startData.name}?key=${apiKey}`);
+                    opData = await pollRes.json();
+                    done = !!opData.done;
+                }
+
+                if (!done) throw new Error('รอผลนานเกินไป ลองกดสร้างใหม่อีกครั้ง');
+                if (opData.error) throw new Error(opData.error.message || 'สร้างวิดีโอไม่สำเร็จ');
+
+                const sample = opData.response && opData.response.generateVideoResponse && opData.response.generateVideoResponse.generatedSamples && opData.response.generateVideoResponse.generatedSamples[0];
+                const videoUri = sample && sample.video && sample.video.uri;
+                if (!videoUri) throw new Error('ไม่พบวิดีโอในผลลัพธ์ (โมเดลอาจปฏิเสธคำขอเนื่องจากเนื้อหา)');
+
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังดาวน์โหลดไฟล์วิดีโอ...';
+                const videoRes = await fetch(videoUri, { headers: { 'x-goog-api-key': apiKey } });
+                if (!videoRes.ok) throw new Error('ดาวน์โหลดไฟล์วิดีโอไม่สำเร็จ');
+                const blob = await videoRes.blob();
+                const objUrl = URL.createObjectURL(blob);
+
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i> สร้างวิดีโอสำเร็จแล้ว';
+                resultEl.innerHTML = `
+                    <video src="${objUrl}" controls class="w-full max-h-64 rounded-lg bg-black mb-2"></video>
+                    <a href="${objUrl}" download="ai-video-${Date.now()}.mp4" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-black dark:bg-violet-600 text-white text-xs font-medium rounded-lg">
+                        <i class="fa-solid fa-download"></i> บันทึกไฟล์ลงเครื่อง
+                    </a>
+                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-2">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> ไฟล์นี้อยู่ในเครื่องคุณเท่านั้น ต้องอัปโหลดขึ้นที่เก็บไฟล์สาธารณะ (เช่น Google Drive แบบแชร์ลิงก์) แล้วนำลิงก์นั้นไปวางในช่อง "ลิงก์ไฟล์วิดีโอ" ของสินค้า ก่อนถึงจะใช้ปุ่ม Auto-Post ได้
+                    </p>`;
+            } catch (err) {
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-500"></i> สร้างวิดีโอไม่สำเร็จ: ${escapeHtml(err.message)}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-film"></i> Gen วิดีโอ (AI)';
+            }
         }
 
         function saveAIScriptToNewProduct() {
@@ -1206,11 +1316,36 @@
             if (fill) ctx.fill();
         }
 
+        function resetVideoLocalPreview() {
+            const box = document.getElementById('modalVideoLocalPreview');
+            const oldVideo = box.querySelector('video');
+            if (oldVideo && oldVideo.src) URL.revokeObjectURL(oldVideo.src);
+            box.innerHTML = '';
+            box.classList.add('hidden');
+            document.getElementById('modalVideoFilePicker').value = '';
+        }
+
+        function previewLocalVideoFile(e) {
+            const file = e.target.files && e.target.files[0];
+            resetVideoLocalPreview();
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+            const box = document.getElementById('modalVideoLocalPreview');
+            box.classList.remove('hidden');
+            box.innerHTML = `
+                <video src="${url}" controls class="w-full max-h-56 rounded-lg bg-black"></video>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
+                    <i class="fa-solid fa-circle-info mr-1"></i> ${escapeHtml(file.name)} — ${sizeMb} MB (ดูตัวอย่างจากเครื่องเท่านั้น ยังไม่ได้อัปโหลด)
+                </p>`;
+        }
+
         /* ==================== FORM MODAL HANDLERS ==================== */
         function openNewModal() {
             document.getElementById('editItemId').value = '';
             document.getElementById('modalTitle').innerText = 'เพิ่มสินค้า & สคริปต์ปักตะกร้าใหม่';
             document.getElementById('productForm').reset();
+            resetVideoLocalPreview();
             document.getElementById('productModal').classList.remove('hidden');
         }
 
@@ -1229,11 +1364,13 @@
             document.getElementById('modalVideoUrlInput').value = item.videoUrl || '';
             document.getElementById('modalScriptInput').value = item.script || '';
             document.getElementById('modalCaptionInput').value = item.caption || '';
+            resetVideoLocalPreview();
 
             document.getElementById('productModal').classList.remove('hidden');
         }
 
         function closeModal() {
+            resetVideoLocalPreview();
             document.getElementById('productModal').classList.add('hidden');
         }
 
