@@ -1099,20 +1099,37 @@ ${generatedAiScriptCache.script}
 สไตล์: คลิปรีวิวสินค้าที่ใช้โพสต์ TikTok/Instagram Reels ของไทย แสงสว่าง สดใส เคลื่อนกล้องเรียบง่าย ไม่มีข้อความซ้อนทับ`;
 
             const BASE = 'https://generativelanguage.googleapis.com/v1beta';
-            const MODEL = 'veo-3.0-generate-001';
+            const MODEL_CANDIDATES = [
+                'veo-3.1-fast-generate-preview',
+                'veo-3.1-generate-preview',
+                'veo-3.0-fast-generate-001',
+                'veo-3.0-generate-001'
+            ];
 
+            let startData = null, usedModel = null, firstError = null;
             try {
-                const startRes = await fetch(`${BASE}/models/${MODEL}:predictLongRunning?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        instances: [{ prompt: promptText }],
-                        parameters: { aspectRatio: '9:16' }
-                    })
-                });
-                const startData = await startRes.json();
-                if (!startRes.ok || !startData.name) {
-                    throw new Error((startData.error && startData.error.message) || 'ไม่สามารถเริ่มสร้างวิดีโอได้ (บัญชีนี้อาจยังไม่เปิดสิทธิ์ใช้งานโมเดล Veo)');
+                for (const MODEL of MODEL_CANDIDATES) {
+                    statusEl.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังเรียกโมเดล ${MODEL}...`;
+                    const startRes = await fetch(`${BASE}/models/${MODEL}:predictLongRunning`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+                        body: JSON.stringify({
+                            instances: [{ prompt: promptText }],
+                            parameters: { aspectRatio: '9:16' }
+                        })
+                    });
+                    const data = await startRes.json();
+                    if (startRes.ok && data.name) {
+                        startData = data;
+                        usedModel = MODEL;
+                        break;
+                    }
+                    const msg = (data.error && data.error.message) || ('HTTP ' + startRes.status);
+                    if (!firstError) firstError = `${MODEL}: ${msg}`;
+                    console.warn(`Veo model ${MODEL} not available:`, msg);
+                }
+                if (!startData) {
+                    throw new Error(`เริ่มสร้างวิดีโอไม่สำเร็จ — API Key ของคุณไม่มีสิทธิ์ใช้งานโมเดล Veo ใดๆ (${firstError})\nวิธีแก้: เปิดใช้งาน "Gemini API" (ชำระเงิน/Billing) ใน Google AI Studio หรือใช้แอป Gemini / Flow สร้างวิดีโอแล้วอัปโหลดไฟล์เอง`);
                 }
 
                 let done = false, tries = 0, opData = null;
@@ -1120,7 +1137,7 @@ ${generatedAiScriptCache.script}
                     await new Promise(r => setTimeout(r, 10000));
                     tries++;
                     statusEl.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังสร้างวิดีโอ... (${tries * 10} วินาที ปกติใช้เวลา 1-3 นาที)`;
-                    const pollRes = await fetch(`${BASE}/${startData.name}?key=${apiKey}`);
+                    const pollRes = await fetch(`${BASE}/${startData.name}`, { headers: { 'x-goog-api-key': apiKey } });
                     opData = await pollRes.json();
                     done = !!opData.done;
                 }
@@ -1128,9 +1145,37 @@ ${generatedAiScriptCache.script}
                 if (!done) throw new Error('รอผลนานเกินไป ลองกดสร้างใหม่อีกครั้ง');
                 if (opData.error) throw new Error(opData.error.message || 'สร้างวิดีโอไม่สำเร็จ');
 
-                const sample = opData.response && opData.response.generateVideoResponse && opData.response.generateVideoResponse.generatedSamples && opData.response.generateVideoResponse.generatedSamples[0];
-                const videoUri = sample && sample.video && sample.video.uri;
-                if (!videoUri) throw new Error('ไม่พบวิดีโอในผลลัพธ์ (โมเดลอาจปฏิเสธคำขอเนื่องจากเนื้อหา)');
+                const resp = opData.response || {};
+                let videoUri = null;
+                // Newer format: response.generateVideoResponse.generatedVideos[0].video.uri
+                if (resp.generateVideoResponse && resp.generateVideoResponse.generatedVideos && resp.generateVideoResponse.generatedVideos[0] && resp.generateVideoResponse.generatedVideos[0].video) {
+                    videoUri = resp.generateVideoResponse.generatedVideos[0].video.uri;
+                }
+                // Alternate: response.generatedVideos[0].video.uri
+                if (!videoUri && resp.generatedVideos && resp.generatedVideos[0] && resp.generatedVideos[0].video) {
+                    videoUri = resp.generatedVideos[0].video.uri;
+                }
+                // Older format: response.generateVideoResponse.generatedSamples[0].video.uri
+                if (!videoUri && resp.generateVideoResponse && resp.generateVideoResponse.generatedSamples && resp.generateVideoResponse.generatedSamples[0] && resp.generateVideoResponse.generatedSamples[0].video) {
+                    videoUri = resp.generateVideoResponse.generatedSamples[0].video.uri;
+                }
+                // Fallback: deep search for any .video.uri in the response
+                if (!videoUri) {
+                    const findUri = (obj) => {
+                        if (!obj || typeof obj !== 'object') return null;
+                        if (obj.video && obj.video.uri) return obj.video.uri;
+                        for (const k of Object.keys(obj)) {
+                            const found = findUri(obj[k]);
+                            if (found) return found;
+                        }
+                        return null;
+                    };
+                    videoUri = findUri(resp);
+                }
+                if (!videoUri) {
+                    console.error('Veo response:', JSON.stringify(opData));
+                    throw new Error('ไม่พบวิดีโอในผลลัพธ์ (โมเดลอาจปฏิเสธคำขอเนื่องจากเนื้อหา) ดู console สำหรับรายละเอียด');
+                }
 
                 statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังดาวน์โหลดไฟล์วิดีโอ...';
                 const videoRes = await fetch(videoUri, { headers: { 'x-goog-api-key': apiKey } });
