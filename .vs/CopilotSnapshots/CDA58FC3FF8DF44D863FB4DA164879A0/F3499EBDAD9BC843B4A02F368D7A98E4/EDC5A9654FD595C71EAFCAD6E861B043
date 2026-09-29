@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -360,16 +360,13 @@
 
     function fileToBase64(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); }); }
 
-    const photoInputEl = document.getElementById('photoInput');
-    if (photoInputEl) photoInputEl.addEventListener('change', async e=>{
+    document.getElementById('photoInput').addEventListener('change', async e=>{
         for(const f of [...e.target.files]){ row2Photos.push(await fileToBase64(f)); }
         renderPhotos(); renderThumbs();
     });
 
-    const photosPerRowEl = document.getElementById('photosPerRow');
-    if (photosPerRowEl) photosPerRowEl.addEventListener('change',function(){photosPerRow=+this.value;renderPhotos();});
-    const pageTextEl = document.getElementById('pageText');
-    if (pageTextEl) pageTextEl.addEventListener('input',renderPhotos);
+    document.getElementById('photosPerRow').addEventListener('change',function(){photosPerRow=+this.value;renderPhotos();});
+    document.getElementById('pageText').addEventListener('input',renderPhotos);
 
     function clickRow1(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async e=>{if(e.target.files[0])loadRow1(e.target.files[0]);};i.click();}
     async function loadRow1(file){ row1Photo = await fileToBase64(file); renderPhotos(); renderRow1Thumb(); }
@@ -455,8 +452,7 @@
         updatePreview();
         document.getElementById('labelModal').classList.add('open');
     }
-    const mReceiverEl = document.getElementById('mReceiver');
-    if (mReceiverEl) mReceiverEl.addEventListener('input',updatePreview);
+    document.getElementById('mReceiver').addEventListener('input',updatePreview);
 
     function printLabel(){
         const rv=document.getElementById('mReceiver').value;
