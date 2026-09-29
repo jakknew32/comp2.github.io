@@ -690,7 +690,7 @@
                         <input type="file" id="modalVideoFilePicker" accept="video/*" class="hidden" onchange="previewLocalVideoFile(event)">
                     </div>
                     <div id="modalVideoLocalPreview" class="hidden mt-2 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800"></div>
-                    <p class="text-[11px] text-slate-400 mt-1">ปุ่ม "เพิ่มวิดีโอ" ใช้ดูตัวอย่าง/เช็คไฟล์จากเครื่องเท่านั้น <b>ไม่ได้อัปโหลดขึ้นเน็ต</b> — ต้องใส่ลิงก์สาธารณะในช่องด้านบนเองก่อนใช้ Auto-Post</p>
+                    <p class="text-[11px] text-slate-400 mt-1">ปุ่ม "เพิ่มวิดีโอ" จะแนบไฟล์วิดีโอไว้ในเครื่องนี้ (IndexedDB) สำหรับดู/บันทึกซ้ำ — ถ้าจะใช้ Auto-Post ต้องใส่ลิงก์สาธารณะในช่องด้านบนด้วย</p>
                 </div>
 
                 <!-- TikTok & Shopee Links -->
@@ -699,7 +699,7 @@
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                             <i class="fa-brands fa-tiktok text-black dark:text-white mr-1"></i> ลิงก์ปักตะกร้า TikTok Affiliate
                         </label>
-                        <input type="url" id="modalTiktokLink" placeholder="https://vt.tiktok.com/..." 
+                        <input type="url" id="modalTiktokLink" placeholder="https://vt.tiktok.com/..."
                                class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
                     </div>
 
@@ -707,7 +707,7 @@
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                             <i class="fa-solid fa-bag-shopping text-shopee mr-1"></i> ลิงก์ปักตะกร้า Shopee Affiliate
                         </label>
-                        <input type="url" id="modalShopeeLink" placeholder="https://s.shopee.co.th/..." 
+                        <input type="url" id="modalShopeeLink" placeholder="https://s.shopee.co.th/..."
                                class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500">
                     </div>
                 </div>
@@ -715,13 +715,13 @@
                 <!-- Script Body & Caption -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">สคริปต์คลิปวิดีโอ / คำพูดช่วงปักตะกร้า</label>
-                    <textarea id="modalScriptInput" rows="3" placeholder="สคริปต์การพูดช่วง 0-30 วินาที พร้อมเน้นย้ำปักตะกร้าด้านล่าง..." 
+                    <textarea id="modalScriptInput" rows="3" placeholder="สคริปต์การพูดช่วง 0-30 วินาที พร้อมเน้นย้ำปักตะกร้าด้านล่าง..."
                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 resize-none"></textarea>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">แคปชั่น + แฮชแท็ก (#)</label>
-                    <textarea id="modalCaptionInput" rows="2" placeholder="พิกัดสินค้าในตะกร้าเหลือง/ส้มเลยน้า #นายหน้าtiktok #รีวิวของดี..." 
+                    <textarea id="modalCaptionInput" rows="2" placeholder="พิกัดสินค้าในตะกร้าเหลือง/ส้มเลยน้า #นายหน้าtiktok #รีวิวของดี..."
                               class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 resize-none"></textarea>
                 </div>
 
@@ -741,6 +741,17 @@
     <!-- TOAST CONTAINER -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+    <!-- VIDEO VIEWER OVERLAY -->
+    <div id="videoViewOverlay" onclick="if(event.target===this)closeVideoView()" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-lg w-full p-4 space-y-2">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-sm text-slate-900 dark:text-white"><i class="fa-solid fa-film text-violet-500 mr-1"></i> วิดีโอที่แนบไว้</h3>
+                <button onclick="closeVideoView()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="videoViewContent" class="text-center"></div>
+        </div>
+    </div>
+
     <script>
         /* ==================== STATE MANAGEMENT ==================== */
         const STORAGE_KEY = 'affiliate_studio_items_v2';
@@ -750,6 +761,74 @@
         let studioTheme = 'sunset';
         let studioUploadedImg = null;
         let generatedAiScriptCache = null;
+        let pendingVideoFile = null; // ไฟล์วิดีโอที่แนบในฟอร์ม (รอบันทึกลง IndexedDB)
+
+        /* ==================== VIDEO FILE STORAGE (IndexedDB) ==================== */
+        const FILE_DB_NAME = 'affiliate_studio_files';
+        const FILE_STORE = 'videos';
+
+        function openFileDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(FILE_DB_NAME, 1);
+                req.onupgradeneeded = () => {
+                    const db = req.result;
+                    if (!db.objectStoreNames.contains(FILE_STORE)) {
+                        db.createObjectStore(FILE_STORE);
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function saveVideoFile(id, file) {
+            const db = await openFileDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(FILE_STORE, 'readwrite');
+                tx.objectStore(FILE_STORE).put(file, id);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function getVideoFile(id) {
+            const db = await openFileDB();
+            return new Promise((resolve, reject) => {
+                const req = db.transaction(FILE_STORE, 'readonly').objectStore(FILE_STORE).get(id);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function deleteVideoFile(id) {
+            const db = await openFileDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(FILE_STORE, 'readwrite');
+                tx.objectStore(FILE_STORE).delete(id);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function viewAttachedVideo(id) {
+            const file = await getVideoFile(id);
+            if (!file) { showToast('ไม่พบไฟล์วิดีโอที่แนบไว้', 'error'); return; }
+            const url = URL.createObjectURL(file);
+            const overlay = document.getElementById('videoViewOverlay');
+            document.getElementById('videoViewContent').innerHTML = `
+                <video src="${url}" controls autoplay class="w-full max-h-[65vh] rounded-lg bg-black"></video>
+                <a href="${url}" download="${(file.name || 'video').replace(/["<>]/g,'')}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-violet-600 text-white text-xs font-medium rounded-lg mt-2">
+                    <i class="fa-solid fa-download"></i> บันทึกไฟล์ลงเครื่อง
+                </a>`;
+            overlay.classList.remove('hidden');
+        }
+
+        function closeVideoView() {
+            document.getElementById('videoViewOverlay').classList.add('hidden');
+            const box = document.getElementById('videoViewContent');
+            box.querySelectorAll('video').forEach(v => { if (v.src) URL.revokeObjectURL(v.src); v.pause(); });
+            box.innerHTML = '';
+        }
 
         // Sample Default Data
         const sampleItems = [
@@ -859,14 +938,14 @@
         function renderApp() {
             const grid = document.getElementById('productGrid');
             const empty = document.getElementById('emptyState');
-            
+
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const platformFilter = document.getElementById('filterPlatform').value;
             const statusFilter = document.getElementById('filterStatus').value;
 
             // Filter
             const filtered = items.filter(item => {
-                const matchSearch = item.title.toLowerCase().includes(search) || 
+                const matchSearch = item.title.toLowerCase().includes(search) ||
                                     (item.caption && item.caption.toLowerCase().includes(search));
                 const matchPlatform = platformFilter === 'all' || item.platform === platformFilter || item.platform === 'both';
                 const matchStatus = statusFilter === 'all' || item.status === statusFilter;
@@ -945,6 +1024,9 @@
                         </div>
 
                         <div class="flex items-center gap-1">
+                            <button onclick="viewAttachedVideo('${item.id}')" class="p-1.5 text-violet-500 hover:text-violet-600 rounded-lg" title="ดูวิดีโอที่แนบไว้">
+                                <i class="fa-solid fa-film"></i>
+                            </button>
                             <button onclick="openEditModal('${item.id}')" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
@@ -992,9 +1074,9 @@
             if (apiKey) {
                 try {
                     const promptText = `คุณเป็นผู้เชี่ยวชาญการทำคลิปวิดีโอปักตะกร้าทำนายหน้า TikTok Affiliate และ Shopee Affiliate ในประเทศไทย
-โปรดเขียนสคริปต์คลิปสั้นสำหรับสินค้า: "${name}" 
+โปรดเขียนสคริปต์คลิปสั้นสำหรับสินค้า: "${name}"
 จุดขายสินค้า: "${features}"
-มุมการเสนอ: "${angle}" 
+มุมการเสนอ: "${angle}"
 ป้ายตะกร้าที่ต้องการเน้น: "${basketText}"
 
 โปรดตอบกลับเป็นภาษาไทย ในรูปแบบโครงสร้างต่อไปนี้:
@@ -1051,16 +1133,16 @@
             const featText = features || 'ใช้งานง่าย คุณภาพดี คุ้มราคา';
             return `🎬 **สคริปต์ปักตะกร้า: ${name}**
 
-📌 **1. Hook (0-3s)**: 
+📌 **1. Hook (0-3s)**:
 "หยุดดูก่อน! ใครกำลังมองหา ${name} ที่คุ้มที่สุด บอกเลยว่าคลิปนี้มีคำตอบ!"
 
-📦 **2. Body & Problem (3-15s)**: 
+📦 **2. Body & Problem (3-15s)**:
 "เมื่อก่อนเคยเจอไหมใช้งานแล้วไม่ได้ดังใจ แต่ตัวนี้แก้ปัญหาได้ตรงจุดมาก เด่นเรื่อง ${featText}"
 
-✨ **3. Showcase (15-25s)**: 
+✨ **3. Showcase (15-25s)**:
 "ดูความพรีเมียมตรงนี้สิ ใช้งานจริงสะดวกมาก วัสดุดีเกินราคาไปเยอะ!"
 
-🛒 **4. Call To Action (25-30s)**: 
+🛒 **4. Call To Action (25-30s)**:
 "ใครสนใจ รีบกดที่ ${basketText} ได้เลยตอนนี้ มีโปรส่วนลดพร้อมส่งครับ!"
 
 📝 **แคปชั่นคลิป**:
@@ -1202,12 +1284,12 @@ ${generatedAiScriptCache.script}
 
         function saveAIScriptToNewProduct() {
             if (!generatedAiScriptCache) return;
-            
+
             openNewModal();
             document.getElementById('modalTitleInput').value = generatedAiScriptCache.title;
             document.getElementById('modalScriptInput').value = generatedAiScriptCache.script;
             document.getElementById('modalStatusInput').value = 'scripted';
-            
+
             switchTab('dashboard');
             showToast('ดึงสคริปต์ลงในฟอร์มแล้ว กรอกข้อมูลเพิ่มเติมเพื่อบันทึก', 'info');
         }
@@ -1338,7 +1420,7 @@ ${generatedAiScriptCache.script}
         function downloadCanvasImage() {
             const canvas = document.getElementById('studioCanvas');
             if (!canvas) return;
-            
+
             const link = document.createElement('a');
             link.download = 'affiliate-cover-promo.png';
             link.href = canvas.toDataURL('image/png');
@@ -1368,20 +1450,26 @@ ${generatedAiScriptCache.script}
             box.innerHTML = '';
             box.classList.add('hidden');
             document.getElementById('modalVideoFilePicker').value = '';
+            pendingVideoFile = null;
         }
 
         function previewLocalVideoFile(e) {
             const file = e.target.files && e.target.files[0];
             resetVideoLocalPreview();
             if (!file) return;
+            if (file.size > 180 * 1024 * 1024) {
+                showToast('ไฟล์วิดีโอใหญ่เกิน 180 MB — แนะนำให้ลดขนาดไฟล์หรือใช้ลิงก์สาธารณะแทน', 'error');
+                return;
+            }
+            pendingVideoFile = file;
             const url = URL.createObjectURL(file);
             const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
             const box = document.getElementById('modalVideoLocalPreview');
             box.classList.remove('hidden');
             box.innerHTML = `
                 <video src="${url}" controls class="w-full max-h-56 rounded-lg bg-black"></video>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
-                    <i class="fa-solid fa-circle-info mr-1"></i> ${escapeHtml(file.name)} — ${sizeMb} MB (ดูตัวอย่างจากเครื่องเท่านั้น ยังไม่ได้อัปโหลด)
+                <p class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1.5">
+                    <i class="fa-solid fa-circle-check mr-1"></i> แนบไฟล์แล้ว: ${escapeHtml(file.name)} — ${sizeMb} MB (จะเก็บไว้ในเครื่องนี้เมื่อกดบันทึกข้อมูล)
                 </p>`;
         }
 
@@ -1421,7 +1509,7 @@ ${generatedAiScriptCache.script}
 
         function handleFormSubmit(e) {
             e.preventDefault();
-            
+
             const editId = document.getElementById('editItemId').value;
             const title = document.getElementById('modalTitleInput').value.trim();
             const price = document.getElementById('modalPriceInput').value.trim();
@@ -1446,6 +1534,10 @@ ${generatedAiScriptCache.script}
                     item.script = script;
                     item.caption = caption;
                     item.videoUrl = videoUrl;
+                    if (pendingVideoFile) {
+                        saveVideoFile(item.id, pendingVideoFile).then(() => showToast('แนบไฟล์วิดีโอเรียบร้อยแล้ว', 'success'));
+                        item.hasVideoFile = true;
+                    }
                 }
                 showToast('อัปเดตข้อมูลสินค้าเรียบร้อย', 'success');
             } else {
@@ -1463,6 +1555,10 @@ ${generatedAiScriptCache.script}
                     videoUrl,
                     createdAt: new Date().toISOString()
                 };
+                if (pendingVideoFile) {
+                    saveVideoFile(newItem.id, pendingVideoFile).then(() => showToast('แนบไฟล์วิดีโอเรียบร้อยแล้ว', 'success'));
+                    newItem.hasVideoFile = true;
+                }
                 items.unshift(newItem);
                 showToast('เพิ่มรายการสินค้าใหม่แล้ว', 'success');
             }
@@ -1475,6 +1571,7 @@ ${generatedAiScriptCache.script}
         function deleteItem(id) {
             if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
                 items = items.filter(i => i.id !== id);
+                deleteVideoFile(id);
                 saveItems();
                 renderApp();
                 showToast('ลบรายการเรียบร้อยแล้ว', 'info');
