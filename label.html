@@ -15,7 +15,7 @@
   const app=initializeApp(cfg),db=getDatabase(app);
   window._fbSavePrintHistory=async(list)=>{
     try{
-      await Promise.all(list.map(lb=>push(ref(db,"printHistory"),{name:lb.name||"",phone:lb.phone||"",addr:lb.addr||"",order:lb.order||"",note:lb.note||"",printedAt:new Date().toISOString()})));
+      await Promise.all(list.map(lb=>push(ref(db,"printHistory"),{name:lb.name||"",phone:lb.phone||"",addr:lb.addr||"",order:lb.order||"",note:lb.note||"",remark:lb.remark||"",printedAt:new Date().toISOString()})));
       return true;
     }catch(e){console.error(e);return false;}
   };
@@ -155,37 +155,6 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 }
 .search-box:focus{outline:none;border-color:var(--amber)}
 
-/* ── LABEL CARDS ── */
-.label-list{flex:1;overflow-y:auto;padding:0 0 8px}
-.label-list::-webkit-scrollbar{width:4px}
-.label-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
-.lcard{
-  border:1.5px solid var(--border);border-radius:var(--r-md);
-  margin-bottom:6px;padding:10px 12px;cursor:pointer;
-  transition:all .15s;position:relative;background:var(--surface);
-  display:flex;gap:10px;align-items:flex-start;
-}
-.lcard:hover{border-color:var(--amber);box-shadow:var(--sh-sm)}
-.lcard.is-selected{border-color:var(--amber);background:var(--amber-bg)}
-.lcard-cb{padding-top:2px;flex-shrink:0}
-.lcard-cb input{width:15px;height:15px;accent-color:var(--amber);cursor:pointer}
-.lcard-body{flex:1;min-width:0}
-.lcard-top{display:flex;align-items:center;gap:6px;margin-bottom:3px}
-.lcard-num{
-  font-size:10px;font-weight:700;font-family:var(--font-mono);
-  background:var(--ink);color:white;padding:1px 6px;border-radius:3px;
-}
-.lcard-name{font-size:13px;font-weight:600;color:var(--ink);flex:1;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lcard-order{font-size:10px;font-family:var(--font-mono);color:var(--amber);font-weight:600;background:var(--amber-bg);border:1px solid var(--amber-border);padding:1px 6px;border-radius:3px;white-space:nowrap}
-.lcard-phone{font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-bottom:2px}
-.lcard-addr{font-size:11px;color:var(--ink-soft);line-height:1.4;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.lcard-note{font-size:10px;color:var(--amber);font-weight:600;margin-top:3px;
-  display:flex;align-items:center;gap:4px}
-.lcard-actions{display:flex;gap:4px;flex-shrink:0;flex-direction:column}
-
 /* ── PRINT ACTIONS ── */
 .print-actions{
   padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);
@@ -225,6 +194,39 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   display:flex;align-items:center;justify-content:center;font-size:32px;
 }
 .empty-pane p{font-size:13px;text-align:center;line-height:1.7}
+
+/* ── LABEL CARDS ── */
+.label-list{flex:1;overflow-y:auto;padding:0 0 8px}
+.label-list::-webkit-scrollbar{width:4px}
+.label-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.lcard{
+  border:1.5px solid var(--border);border-radius:var(--r-md);
+  margin-bottom:6px;padding:10px 12px;cursor:pointer;
+  transition:all .15s;position:relative;background:var(--surface);
+  display:flex;gap:10px;align-items:flex-start;
+}
+.lcard:hover{border-color:var(--amber);box-shadow:var(--sh-sm)}
+.lcard.is-selected{border-color:var(--amber);background:var(--amber-bg)}
+.lcard-cb{padding-top:2px;flex-shrink:0}
+.lcard-cb input{width:15px;height:15px;accent-color:var(--amber);cursor:pointer}
+.lcard-body{flex:1;min-width:0}
+.lcard-top{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.lcard-num{
+  font-size:10px;font-weight:700;font-family:var(--font-mono);
+  background:var(--ink);color:white;padding:1px 6px;border-radius:3px;
+}
+.lcard-name{font-size:13px;font-weight:600;color:var(--ink);flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lcard-order{font-size:10px;font-family:var(--font-mono);color:var(--amber);font-weight:600;background:var(--amber-bg);border:1px solid var(--amber-border);padding:1px 6px;border-radius:3px;white-space:nowrap}
+.lcard-phone{font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-bottom:2px}
+.lcard-addr{font-size:11px;color:var(--ink-soft);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lcard-note{font-size:10px;color:var(--amber);font-weight:600;margin-top:3px;
+  display:flex;align-items:center;gap:4px}
+.lcard-remark{font-size:10px;color:#1E3A8A;font-weight:600;margin-top:3px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lcard-actions{display:flex;gap:4px;flex-shrink:0;flex-direction:column}
 
 /* ── SHIPPING LABEL ── */
 .shipping-label{
@@ -287,6 +289,16 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   font-size:11px;font-weight:600;color:#7C4A00;
   font-family:'IBM Plex Mono','Courier New',monospace;
   text-align:center;
+}
+/* ── หมายเหตุ (คอลัมน์ AZ) ── */
+.sl-remark-box{
+  margin:0 4mm 4px;padding:4px 8px;
+  background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:4px;
+  font-size:10.5px;font-weight:600;color:#1E3A8A;line-height:1.45;
+  text-align:center;word-break:break-word;
+  max-height:15mm;overflow:hidden;
+  white-space:pre-line;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
 .sl-footer{
   margin-top:auto;border-top:1.5px solid #DDE3EC;
@@ -366,6 +378,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 .hcard-addr{font-size:11px;color:var(--ink-soft);line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hcard-note{font-size:10px;color:var(--amber);font-weight:600;margin-top:3px}
+.hcard-remark{font-size:10px;color:#1E3A8A;font-weight:600;margin-top:3px;line-height:1.4}
 .hcard-time{font-size:10px;font-family:var(--font-mono);color:var(--muted);margin-top:5px}
 .hcard-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
 
@@ -411,7 +424,6 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 </style>
 </head>
 <body>
-
 <div id="toast"></div>
 <div id="printFrame" style="display:none"></div>
 
@@ -427,6 +439,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
     <div class="form-group"><label>ที่อยู่เต็ม *</label><textarea id="f_addr" rows="4" placeholder="บ้านเลขที่ / ตำบล / อำเภอ / จังหวัด รหัสไปรษณีย์"></textarea></div>
     <div class="form-group"><label>เลขออเดอร์</label><input type="text" id="f_order" placeholder="เลขออเดอร์ (ถ้ามี)"></div>
     <div class="form-group"><label>ชนิดนม</label><input type="text" id="f_note" placeholder="ระบุชนิดนม (ถ้ามี)"></div>
+    <div class="form-group"><label>หมายเหตุ (AZ)</label><textarea id="f_remark" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"></textarea></div>
     <div style="display:flex;gap:10px;margin-top:6px">
       <button class="btn btn-amber" style="flex:1;justify-content:center" onclick="saveLabel()">💾 บันทึก</button>
       <button class="btn btn-outline" onclick="closeModal('editModal')">ยกเลิก</button>
@@ -448,7 +461,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
         <div class="import-zone-icon">📁</div>
         <strong>คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่</strong>
         <p>รองรับ .xlsx, .xls, .csv</p>
-        <p style="margin-top:6px;font-size:11px">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=ชนิดนม, Y=จำนวน, AX=ชื่อ, AY=เบอร์, BA=ที่อยู่</p>
+        <p style="margin-top:6px;font-size:11px">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=ชนิดนม, Y=จำนวน, AX=ชื่อ, AY=เบอร์, AZ=หมายเหตุ, BA=ที่อยู่</p>
         <p style="margin-top:4px;font-size:11px;color:var(--amber);font-weight:600">📑 ไฟล์ .xlsx/.xls จะอ่านเฉพาะ Sheet "ออเดอร์ต่างจังหวัด" เท่านั้น</p>
         <p style="margin-top:4px;font-size:11px;color:var(--amber);font-weight:600">🔎 ดึงเฉพาะแถวที่คอลัมน์ A ว่าง หรือมีค่า "ค้างจัดส่ง" เท่านั้น</p>
       </div>
@@ -456,9 +469,9 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
       <div style="background:var(--ground);border-radius:var(--r-md);padding:14px;margin-top:14px">
         <p style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">คอลัมน์ที่อ่าน</p>
         <table class="import-table">
-          <thead><tr><th>C - เลขออเดอร์</th><th>S - ชนิดนม</th><th>Y - จำนวน</th><th>AX - ชื่อ</th><th>AY - เบอร์</th><th>BA - ที่อยู่</th></tr></thead>
+          <thead><tr><th>C - เลขออเดอร์</th><th>S - ชนิดนม</th><th>Y - จำนวน</th><th>AX - ชื่อ</th><th>AY - เบอร์</th><th>AZ - หมายเหตุ</th><th>BA - ที่อยู่</th></tr></thead>
           <tbody>
-            <tr><td>ORD001</td><td>ด่วน</td><td>2</td><td>สมชาย ใจดี</td><td>0891234567</td><td>123/4 สารภี เชียงใหม่</td></tr>
+            <tr><td>ORD001</td><td>ด่วน</td><td>2</td><td>สมชาย ใจดี</td><td>0891234567</td><td>ฝากวางหน้าบ้าน</td><td>123/4 สารภี เชียงใหม่</td></tr>
           </tbody>
         </table>
       </div>
@@ -608,7 +621,6 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   </div>
 
 </div>
-
 <script>
 const SENDER = 'เชียงใหม่เฟรชมิลค์ 57/1 ม.6 ต.ท่าวังตาล สารภี จ.เชียงใหม่ โทร.097-920-7044';
 let labels = JSON.parse(localStorage.getItem('cfm_labels') || '[]');
@@ -637,7 +649,7 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 function openAdd(){
   editingId=null;
   document.getElementById('editModalTitle').textContent='➕ เพิ่มฉลากใหม่';
-  ['f_name','f_phone','f_addr','f_order','f_note'].forEach(id=>document.getElementById(id).value='');
+  ['f_name','f_phone','f_addr','f_order','f_note','f_remark'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('editModal').classList.add('open');
   setTimeout(()=>document.getElementById('f_name').focus(),100);
 }
@@ -651,24 +663,27 @@ function openEdit(id){
   document.getElementById('f_addr').value=lb.addr||'';
   document.getElementById('f_order').value=lb.order||'';
   document.getElementById('f_note').value=lb.note||'';
+  document.getElementById('f_remark').value=lb.remark||'';
   document.getElementById('editModal').classList.add('open');
 }
 
 function saveLabel(){
   const name=document.getElementById('f_name').value.trim();
   const addr=document.getElementById('f_addr').value.trim();
+  const remark=document.getElementById('f_remark').value.trim();
   if(!name){ showToast('⚠️ กรุณากรอกชื่อผู้รับ','#d97706'); return; }
   if(!addr){ showToast('⚠️ กรุณากรอกที่อยู่','#d97706'); return; }
   if(editingId){
     const idx=labels.findIndex(l=>l.id===editingId);
     if(idx>=0){
       labels[idx]={...labels[idx], name, phone:normalizePhone(document.getElementById('f_phone').value),
-        addr, order:document.getElementById('f_order').value.trim(), note:document.getElementById('f_note').value.trim()};
+        addr, order:document.getElementById('f_order').value.trim(), note:document.getElementById('f_note').value.trim(), remark};
     }
     showToast('✅ แก้ไขฉลากแล้ว');
   } else {
     labels.push({id:uid(), name, phone:normalizePhone(document.getElementById('f_phone').value),
-      addr, order:document.getElementById('f_order').value.trim(), note:document.getElementById('f_note').value.trim(), selected:false, createdAt:new Date().toISOString()});
+      addr, order:document.getElementById('f_order').value.trim(), note:document.getElementById('f_note').value.trim(),
+      remark, selected:false, createdAt:new Date().toISOString()});
     showToast('✅ เพิ่มฉลากแล้ว');
   }
   save(); closeModal('editModal'); renderList(); renderPreview();
@@ -711,7 +726,6 @@ function updateSelectUI(){
   document.getElementById('printCount').textContent=sel;
   document.getElementById('statSelNum').textContent=sel;
   document.getElementById('statTotalNum').textContent=labels.length;
-  // badge removed in new design
   document.getElementById('deleteSelBtn').style.display=sel>0?'':'none';
   const all=getFiltered();
   document.getElementById('selectAllCb').checked=all.length>0 && all.every(l=>l.selected);
@@ -722,7 +736,7 @@ function updateSelectUI(){
 function getFiltered(){
   if(!searchQ) return labels;
   const q=searchQ.toLowerCase();
-  return labels.filter(l=>(l.name||'').toLowerCase().includes(q)||(l.addr||'').toLowerCase().includes(q)||(l.phone||'').includes(q));
+  return labels.filter(l=>(l.name||'').toLowerCase().includes(q)||(l.addr||'').toLowerCase().includes(q)||(l.phone||'').includes(q)||(l.order||'').toLowerCase().includes(q));
 }
 
 function searchLabels(q){ searchQ=q; renderList(); }
@@ -752,6 +766,7 @@ function renderList(){
         ${lb.phone?`<div class="lcard-phone">📞 ${esc(lb.phone)}</div>`:''}
         <div class="lcard-addr">${esc(lb.addr||'ไม่มีที่อยู่')}</div>
         ${lb.note||lb.qty?`<div class="lcard-note">📝 ${esc(noteWithQty(lb))}</div>`:''}
+        ${lb.remark?`<div class="lcard-remark">📌 หมายเหตุ: ${esc(lb.remark)}</div>`:''}
       </div>
       <div class="lcard-actions">
         <button class="btn btn-outline btn-xs" onclick="openEdit('${lb.id}');event.stopPropagation()">✏️</button>
@@ -764,6 +779,13 @@ function renderList(){
 }
 
 // ===== RENDER PREVIEW =====
+//_box หมายเหตุ (คอลัมน์ AZ): แสดงเฉพาะเมื่อมีข้อมูล
+function remarkPreviewHTML(lb){
+  const rm = String(lb.remark||'').trim();
+  if(!rm) return '';
+  return `<div class="sl-z sl-remark-box">📌 หมายเหตุ: ${esc(rm).replace(/\n/g,'<br>')}</div>`;
+}
+
 function makeLabelHTML(lb, num){
   const theme=document.getElementById('labelTheme').value;
   const fs=document.getElementById('fontSizePref').value;
@@ -784,6 +806,7 @@ function makeLabelHTML(lb, num){
     </div>
     <div class="sl-z sl-recv-text" style="font-size:${fs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
     ${noteHTML}
+    ${remarkPreviewHTML(lb)}
     <div class="sl-z sl-footer">
       <img src="https://i.postimg.cc/xN5GcPtL/ddt.png" onerror="this.style.display='none'">
     </div>
@@ -795,9 +818,8 @@ function renderPreview(){
   const container=document.getElementById('previewContainer');
   const mode=document.getElementById('previewMode').value;
   const toShow = labels.filter(l=>l.selected);
-  
+
   if(!toShow.length){
-    const allSel = labels.filter(l=>l.selected);
     if(labels.length===0){
       container.innerHTML=`<div class="empty-pane"><div class="empty-pane-icon">📦</div><p>เพิ่มฉลากเพื่อดูตัวอย่าง</p></div>`;
     } else {
@@ -818,11 +840,14 @@ function buildPrintDoc(list){
   const theme=document.getElementById('labelTheme').value;
   const fs=document.getElementById('fontSizePref').value;
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
-  
+
   const labels_html = list.map((lb,i)=>{
     const fullAddr = lb.addr||'';
     const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}`:fullAddr;
-    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / ชนิดนม: '+esc(noteWithQty(lb)):''}`:(lb.note||lb.qty)?`ชนิดนม: ${esc(noteWithQty(lb))}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;font-family:'Kanit','Sarabun',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
+    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / ชนิดนม: '+esc(noteWithQty(lb)):''}`:(lb.note||lb.qty)?`ชนิดนม: ${esc(noteWithQty(lb))}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
+    // หมายเหตุ (AZ) — พิมพ์เมื่อมีข้อมูล
+    const rm = String(lb.remark||'').trim();
+    const remarkPrint = rm ? `<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:6px;font-size:11.5px;font-weight:700;color:#1E3A8A;line-height:1.4;white-space:pre-line;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📌 หมายเหตุ: ${esc(rm).replace(/\n/g,'<br>')}</div>` : '';
     const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
     return `<div class="shipping-label" style="${pageBreak}">
       <div style="position:relative;z-index:1;text-align:center;padding:5px 4mm 3px;background:#0D1B2A;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><h2 style="font-size:18px;font-weight:700;margin:0;color:#F59E0B;letter-spacing:.3px;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
@@ -834,6 +859,7 @@ function buildPrintDoc(list){
       </div>
       <div style="position:relative;z-index:1;text-align:center;font-size:${fs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${esc(displayText).replace(/\n/g,'<br>')}</div>
       ${notePrint}
+      ${remarkPrint}
       <div style="position:relative;z-index:1;margin-top:auto;border-top:1.5px solid #333;text-align:center;">
         <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" style="width:100%;height:auto;display:block;" onerror="this.style.display='none'">
       </div>
@@ -878,7 +904,6 @@ function doPrint(list){
     });
   }
 }
-
 
 // ===== SAVE PDF (direct, no print dialog) =====
 function savePDFSelected(){
@@ -934,7 +959,7 @@ async function doSavePDF(list){
   for(let i=0; i<list.length; i++){
     const lb = list[i];
 
-    // สร้าง label HTML แล้วแทนที่รูปด้วย base64
+    // สร้าง label HTML แล้วแทนที่รูปด้วย base64 (มีกล่องหมายเหตุ AZ อยู่แล้วจาก makeLabelHTML)
     let labelHTML = makeLabelHTML(lb, i+1);
 
     // แทนที่ footer img ด้วย base64
@@ -951,8 +976,8 @@ async function doSavePDF(list){
       );
     }
 
-    // ลบ sl-wm img ที่โหลดไม่ได้ (ใช้ CSS แทนอยู่แล้ว)
-    labelHTML = labelHTML.replace(/<img[^>]*img2\.pic\.in\.th[^>]*>/g, '');
+    // ลบ รูปใน header ที่โหลดไม่ได้ (ใช้ CSS แทนอยู่แล้ว)
+    labelHTML = labelHTML.replace(/<img[^>]*i\.postimg\.cc[^>]*>/g, '');
 
     const labelWrap = idoc.createElement('div');
     labelWrap.style.cssText = 'width:378px;height:567px;overflow:hidden;';
@@ -1030,14 +1055,11 @@ async function fetchFromGoogleSheet(){
   btn.innerHTML='⏳ กำลังดึงข้อมูล...';
   showToast('⏳ กำลังดึงข้อมูลจาก Google Sheet...','#0d9488',15000);
   try{
-    // เดิมดึงเป็น CSV (gviz) ซึ่งไม่มีข้อมูล merge cell ติดมาด้วยเลย ทำให้เดาไม่ได้แน่นอนว่า
-    // เซลล์ว่างเพราะไม่มีข้อมูลจริง หรือเพราะถูก merge ไว้ -> เปลี่ยนมาดึงเป็นไฟล์ .xlsx แทน
-    // ซึ่งมีข้อมูล merge ติดมาด้วยจริง ใช้ fillMergedCells() กู้คืนค่าได้แม่นยำเหมือนไฟล์อัปโหลด
+    // ดึงเป็น .xlsx (ไม่ใช่ CSV/gviz) เพราะมีข้อมูล merge cell ติดมาด้วย ใช้ fillMergedCells() กู้ค่าได้แม่นยำ
     const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/export?format=xlsx`;
     const res=await fetch(url,{cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const buf=await res.arrayBuffer();
-    // อ่านแค่รายชื่อชีตก่อน (เร็ว ไม่แปลงข้อมูล) เพื่อหาชื่อชีตที่ต้องใช้
     const wbNames=XLSX.read(buf,{type:'array',bookSheets:true});
     let sheetName=wbNames.SheetNames.find(n=>n.trim()===GSHEET_TAB);
     if(!sheetName) sheetName=wbNames.SheetNames.find(n=>n.includes(GSHEET_TAB));
@@ -1045,7 +1067,6 @@ async function fetchFromGoogleSheet(){
       showToast(`❌ ไม่พบ Sheet "${GSHEET_TAB}" ในไฟล์`,'#dc2626',3500);
       return;
     }
-    // ค่อยแปลงข้อมูลเฉพาะชีตที่ต้องใช้ (เร็วกว่าแปลงทั้ง workbook ที่มีหลายสิบชีตมาก)
     const wb=XLSX.read(buf,{type:'array',sheets:[sheetName]});
     const ws=wb.Sheets[sheetName];
     fillMergedCells(ws);
@@ -1061,11 +1082,28 @@ async function fetchFromGoogleSheet(){
   }
 }
 
-// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, AX=49, AY=50, BA=52
-const COL_ORDER=2, COL_NOTE=18, COL_NAME=49, COL_PHONE=50, COL_ADDR=52, COL_STATUS=0, COL_QTY=24;
+// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, Y=24, AX=49, AY=50, AZ=51, BA=52
+const COL_ORDER=2, COL_NOTE=18, COL_QTY=24, COL_NAME=49, COL_PHONE=50, COL_REMARK=51, COL_ADDR=52, COL_STATUS=0;
 const STATUS_PENDING='ค้างจัดส่ง';
 const GSHEET_ID='1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44';
 const GSHEET_TAB='ออเดอร์ต่างจังหวัด';
+
+// ตัดบรรทัดว่างท้ายเซลล์ออก (เซลล์ที่ถูก merge บางไฟล์เก็บ "ขึ้นบรรทัดใหม่" เปล่าๆ ท้าย cell ไว้
+// ถ้าไม่ตัดออก เมื่อเติมค่าจาก merge ลงทุกแถวแล้วนำมารวมกัน จะกลายเป็นบรรทัดว่างซ้อนกันหลายชั้น)
+function trimEmptyLines(s){
+  const lines=String(s==null?'':s).split(/\r\n|\r|\n/);
+  while(lines.length && !lines[lines.length-1].trim()) lines.pop();
+  while(lines.length && !lines[0].trim()) lines.shift();
+  return lines.join('\n').trim();
+}
+
+// รวม "หมายเหตุ"หลายแถวของออเดอร์เดียวกัน: ตัดบรรทัดว่างทิ้ง + กันซ้ำ (กรณี merge cell ทำให้ค่าเดิมซ้ำทุกแถว)
+function mergeRemark(existing, incoming){
+  const toLines = v => String(v==null?'':v).split(/\r\n|\r|\n/).map(x=>x.trim()).filter(Boolean);
+  const out=[];
+  toLines(existing).concat(toLines(incoming)).forEach(l=>{ if(!out.includes(l)) out.push(l); });
+  return out.join('\n');
+}
 
 function normalizePhone(p){
   p=String(p||'').trim();
@@ -1093,8 +1131,7 @@ function noteWithQty(lb){
 }
 
 // เซลล์ที่ถูก merge ใน Excel จะมีค่าอยู่แค่เซลล์แรก(บนซ้าย)ของช่วงที่ merge เท่านั้น
-// แถวอื่นในช่วง merge เดียวกันจะว่างเปล่า -> ทำให้ AY (เบอร์) อ่านไม่ได้เฉพาะบางแถว
-// ฟังก์ชันนี้ก็อปปี้ค่าจากเซลล์แรกไปเติมให้ทุกเซลล์ในช่วง merge ก่อนแปลงเป็น array
+// แถวอื่นในช่วง merge เดียวกันจะว่างเปล่า -> ฟังก์ชันนี้ก็คัดลอกค่าจากเซลล์แรกไปเติมให้ทุกเซลล์ในช่วง merge ก่อนแปลงเป็น array
 function fillMergedCells(ws){
   if(!ws['!merges']) return;
   ws['!merges'].forEach(range=>{
@@ -1129,7 +1166,6 @@ function processFile(file){
       }
       const ws=wb.Sheets[sheetName];
       fillMergedCells(ws); // เติมค่าที่หายไปจากเซลล์ merge ก่อนอ่าน
-      // อ่านเป็น array of arrays เริ่มแถว 2 (index 1)
       const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       parseRowsFixed(data.slice(1)); // ข้ามแถว 1 (header)
     };
@@ -1137,17 +1173,14 @@ function processFile(file){
   }
 }
 
-// เดิมพาร์สแบบ split('\n') ก่อนตัดคอลัมน์ทีหลัง ซึ่งพังถ้าเซลล์ไหนมีขึ้นบรรทัดใหม่ในตัวเอง
-// (เช่น ที่อยู่/หมายเหตุที่กด Alt+Enter ขึ้นบรรทัดใหม่ในเซลล์เดียว) เพราะจะตัดแถวผิดตำแหน่ง
-// ทำให้คอลัมน์ทั้งหมดเลื่อนตั้งแต่แถวนั้นเป็นต้นไป -> AY (เบอร์) หลุดไปตกคอลัมน์ที่ไม่มีข้อมูล
-// เปลี่ยนมาอ่านทีละตัวอักษรทั้งไฟล์แทน ให้เคารพเครื่องหมายคำพูดอย่างถูกต้องตามมาตรฐาน CSV
+// พาร์ส CSV แบบเคารพเครื่องหมายคำพูด (เซลล์ที่มีขึ้นบรรทัดใหม่ในตัวเองจะไม่ทำให้คอลัมน์เลื่อน)
 function csvToRows(text){
   const rows=[]; let row=[]; let cur=''; let inQ=false;
   for(let i=0;i<text.length;i++){
     const c=text[i];
     if(inQ){
       if(c==='"'){
-        if(text[i+1]==='"'){ cur+='"'; i++; } // "" ภายในเครื่องหมายคำพูด = อักขระ " ตัวเดียว
+        if(text[i+1]==='"'){ cur+='"'; i++; }
         else inQ=false;
       } else cur+=c;
     } else {
@@ -1165,14 +1198,11 @@ function csvToRows(text){
 function parseCSVFixed(text){
   const rows=csvToRows(text);
   if(rows.length<2) return;
-  // ข้ามแถวแรก (header) เริ่มจากแถวที่ 2
   parseRowsFixed(rows.slice(1));
 }
 
-// Google Sheet export เป็น CSV จะไม่มีข้อมูล merge cell ติดมาเลย (ต่างจากไฟล์ .xlsx ที่ยังกู้ merge ได้)
-// เลยต้องเดาแทน: จะเติมค่าจากแถวบนให้ก็ต่อเมื่อ "ทั้งชุด" (ออเดอร์+ชื่อ+เบอร์+ที่อยู่) ว่างพร้อมกันหมดเท่านั้น
-// (ต้องเข้มขนาดนี้ ไม่งั้นถ้าออเดอร์ใหม่มีชื่อ/ที่อยู่แล้วแต่ลูกค้าไม่ได้กรอกเบอร์ไว้ โค้ดจะไปหยิบเบอร์ของ
-//  ออเดอร์ก่อนหน้ามาใส่ให้แทน กลายเป็นเบอร์ผิดคน)
+// Google Sheet export เป็น CSV จะไม่มีข้อมูล merge cell ติดมาเลย -> ต้องเดา bằng forward fill
+// เติมค่าจากแถวบนก็ต่อเมื่อ "ทั้งชุด" (ออเดอร์+ชื่อ+เบอร์+ที่อยู่) ว่างพร้อมกันหมดเท่านั้น
 function forwardFillMerged(rows){
   let last={};
   return rows.map(r=>{
@@ -1182,14 +1212,14 @@ function forwardFillMerged(rows){
     const phone=String(r[COL_PHONE]||'').trim();
     const addr=String(r[COL_ADDR]||'').trim();
     const allBlank=!order&&!name&&!phone&&!addr;
-    const hasOtherData=String(r[COL_NOTE]||'').trim()||String(r[COL_QTY]||'').trim()||String(r[COL_STATUS]||'').trim();
+    const hasOtherData=String(r[COL_NOTE]||'').trim()||String(r[COL_QTY]||'').trim()||String(r[COL_STATUS]||'').trim()||String(r[COL_REMARK]||'').trim();
 
     if(allBlank && hasOtherData){
-      [COL_ORDER,COL_NAME,COL_PHONE,COL_ADDR].forEach(ci=>{
+      [COL_ORDER,COL_NAME,COL_PHONE,COL_REMARK,COL_ADDR].forEach(ci=>{
         if(last[ci]!==undefined) row[ci]=last[ci];
       });
     } else {
-      [COL_ORDER,COL_NAME,COL_PHONE,COL_ADDR].forEach(ci=>{
+      [COL_ORDER,COL_NAME,COL_PHONE,COL_REMARK,COL_ADDR].forEach(ci=>{
         const v=String(r[ci]||'').trim();
         if(v) last[ci]=r[ci];
       });
@@ -1201,8 +1231,6 @@ function forwardFillMerged(rows){
 let skippedData=[];
 
 // รวมแถวที่มี "เลขออเดอร์" ซ้ำกันให้เหลือฉลากเดียวต่อออเดอร์
-// โดยเอาชนิดนม+จำนวนของแต่ละแถวมาต่อกันเป็น "นมสด x2, นมช็อกโกแลต x1"
-// แถวที่ไม่มีเลขออเดอร์ (ว่าง) จะไม่ถูกรวมกับแถวอื่น เพราะไม่รู้ว่าเป็นออเดอร์เดียวกันจริงหรือไม่
 function typeEntry(row){
   const n=String(row.note||'').trim();
   const q=String(row.qty||'').trim();
@@ -1218,13 +1246,14 @@ function groupByOrder(rows){
     const key = r.order ? r.order : ('__single_'+r.id);
     if(!map.has(key)){
       const entry=typeEntry(r);
-      map.set(key, {...r, note: entry, _entries: entry?[entry]:[]});
+      map.set(key, {...r, note: entry, _entries: entry?[entry]:[], remark: String(r.remark||'').trim()});
       orderKeys.push(key);
     } else {
       const g=map.get(key);
       const entry=typeEntry(r);
       if(entry) g._entries.push(entry);
       g.note=g._entries.join(', ');
+      g.remark=mergeRemark(g.remark, r.remark);   // รวมหมายเหตุ (AZ) ของทุกแถวในออเดอร์เดียวกัน
       if(!g.phone && r.phone) g.phone=r.phone;
       if(!g._rawPhone && r._rawPhone) g._rawPhone=r._rawPhone;
       if(!g.addr && r.addr) g.addr=r.addr;
@@ -1246,12 +1275,12 @@ function parseRowsFixed(rows){
     const name=String(r[COL_NAME]||'').trim();
     const addr=String(r[COL_ADDR]||'').trim();
     const order=String(r[COL_ORDER]||'').trim();
-    const hasAnyContent=name||addr||order||String(r[COL_NOTE]||'').trim();
-    if(!hasAnyContent) return; // แถวว่างสนิทจริงๆ ข้ามเงียบๆ ไม่นับเป็นแถวที่ถูกข้าม
+    const remark=trimEmptyLines(r[COL_REMARK]);   // AZ = หมายเหตุ (เก็บขึ้นบรรทัดใหม่ในเซลล์ไว้ตามที่พิมพ์จริง)
+    const hasAnyContent=name||addr||order||String(r[COL_NOTE]||'').trim()||remark;
+    if(!hasAnyContent) return; // แถวว่างสนิทจริงๆ ข้ามเงียบๆ
 
     const statusOk=st===''||st===STATUS_PENDING;
     if(!statusOk){
-      // แสดงค่าดิบเป็น JSON เผื่อมีช่องว่าง/อักขระที่มองไม่เห็นแฝงอยู่ (เช่น "\u00A0")
       skippedData.push({order,name,reason:`คอลัมน์ A = ${JSON.stringify(st)} (ไม่ตรงกับค่าว่าง หรือ "${STATUS_PENDING}")`});
       return;
     }
@@ -1268,6 +1297,7 @@ function parseRowsFixed(rows){
       order,
       note:String(r[COL_NOTE]||'').trim(),
       qty:String(r[COL_QTY]||'').trim(),
+      remark,
       selected:true,
       createdAt:new Date().toISOString()
     });
@@ -1282,18 +1312,26 @@ function parseRowsFixed(rows){
   document.getElementById('importPreview').innerHTML=`
     ${importData.length?`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
       <span style="font-size:20px">✅</span>
-      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้า</span></div>
+      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้า (หมายเหตุ จากคอลัมน์ AZ จะพิมพ์ขึ้นฉลากด้วยถ้ามี)</span></div>
     </div>`:`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:12px">
       <strong style="font-size:14px;color:#991b1b">⚠️ ไม่มีแถวไหนผ่านเกณฑ์นำเข้าเลย</strong>
     </div>`}
     ${importData.length?`<div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
-      <table class="import-table">        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>เบอร์ดิบ (AY)</th><th>ชนิดนม</th><th>จำนวน (Y)</th></tr></thead>
+      <table class="import-table">
+        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>เบอร์ดิบ (AY)</th><th>ชนิดนม</th><th>จำนวน (Y)</th><th>หมายเหตุ (AZ)</th></tr></thead>
         <tbody>${importData.map((r,i)=>{
           const rawStr=JSON.stringify(r._rawPhone===undefined?'':r._rawPhone);
           const mismatch=!r.phone && r._rawPhone!==undefined && r._rawPhone!==null && String(r._rawPhone).trim()!=='';
-          return `<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td${mismatch?' style="background:#fef2f2;color:#991b1b;font-weight:700"':''}>${esc(r.phone)||'(ว่าง)'}</td><td style="font-family:var(--font-mono);font-size:11px">${esc(rawStr)}</td><td>${esc(r.note)}</td><td>${esc(r.qty)}</td></tr>`;
+          return `<tr><td>${i+1}</td><td>${esc(r.order)}</td><td>${esc(r.name)}</td><td${mismatch?' style="background:#fef2f2;color:#991b1b;font-weight:700"':''}>${esc(r.phone)||'(ว่าง)'}</td><td style="font-family:var(--font-mono);font-size:11px">${esc(rawStr)}</td><td>${esc(r.note)}</td><td>${esc(r.qty)}</td><td style="color:#1E3A8A;font-weight:600">${esc(r.remark).replace(/\n/g,'<br>')||'-'}</td></tr>`;
         }).join('')}</tbody>
       </table>
+    </div>`:''}
+    ${skippedData.length?`<div style="margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px">
+      <strong style="font-size:13px;color:#92400e">⚠️ ข้าม ${skippedData.length} แถว</strong>
+      <div style="max-height:160px;overflow-y:auto;margin-top:8px">
+        <table class="import-table"><thead><tr><th>ออเดอร์</th><th>ชื่อ</th><th>เหตุผลที่ข้าม</th></tr></thead>
+        <tbody>${skippedData.map(s=>`<tr><td>${esc(s.order)||'-'}</td><td>${esc(s.name)||'-'}</td><td style="color:#92400e">${esc(s.reason)}</td></tr>`).join('')}</tbody></table>
+      </div>
     </div>`:''}`;
 }
 
@@ -1309,7 +1347,6 @@ function confirmImport(){
 function esc(str){
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
 
 // ===== FIREBASE HISTORY =====
 let _historyCache = [];
@@ -1343,6 +1380,7 @@ function renderHistoryList(items){
         ${r.phone?`<div class="hcard-phone">📞 ${esc(r.phone)}</div>`:''}
         <div class="hcard-addr">${esc(r.addr||'-')}</div>
         ${r.note?`<div class="hcard-note">📝 ${esc(r.note)}</div>`:''}
+        ${r.remark?`<div class="hcard-remark">📌 หมายเหตุ: ${esc(r.remark).replace(/\n/g,'<br>')}</div>`:''}
         <div class="hcard-time">🕐 ${formatThaiDate(r.printedAt)}</div>
       </div>
       <div class="hcard-actions">
@@ -1361,7 +1399,8 @@ function filterHistory(){
     (r.name||'').toLowerCase().includes(q)||
     (r.order||'').toLowerCase().includes(q)||
     (r.phone||'').includes(q)||
-    (r.addr||'').toLowerCase().includes(q)
+    (r.addr||'').toLowerCase().includes(q)||
+    (r.remark||'').toLowerCase().includes(q)
   ));
 }
 
@@ -1379,13 +1418,13 @@ async function openHistory(){
 }
 
 function reprintFromHistory(r){
-  const lb={id:uid(),name:r.name||'',phone:r.phone||'',addr:r.addr||'',order:r.order||'',note:r.note||''};
+  const lb={id:uid(),name:r.name||'',phone:r.phone||'',addr:r.addr||'',order:r.order||'',note:r.note||'',remark:r.remark||''};
   doPrint([lb]);
 }
 
 function loadFromHistory(r){
   // โหลดเข้ารายการปัจจุบันเพื่อแก้ไข/ปริ้น
-  const lb={id:uid(),name:r.name||'',phone:r.phone||'',addr:r.addr||'',order:r.order||'',note:r.note||'',selected:true,createdAt:new Date().toISOString()};
+  const lb={id:uid(),name:r.name||'',phone:r.phone||'',addr:r.addr||'',order:r.order||'',note:r.note||'',remark:r.remark||'',selected:true,createdAt:new Date().toISOString()};
   labels.push(lb);
   save(); renderList(); renderPreview();
   closeModal('historyModal');
@@ -1432,7 +1471,6 @@ async function openExport(){
   document.getElementById('exportPreviewInfo').style.display='none';
   try{
     _exportCache = await window._fbGetHistory();
-    // สร้าง list เดือนที่มีข้อมูล
     const months = {};
     _exportCache.forEach(r=>{
       const d = new Date(r.printedAt);
@@ -1488,7 +1526,6 @@ function doExport(){
     filename = `CFM_ประวัติปริ้น_${thMonth[mo-1]}${yr+543}.xlsx`;
   }
 
-  // สร้าง worksheet
   const rows = data.map((r,i)=>{
     const d = new Date(r.printedAt);
     const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
@@ -1499,14 +1536,14 @@ function doExport(){
       'ชื่อผู้รับ': r.name||'',
       'เบอร์โทร': r.phone||'',
       'ที่อยู่': r.addr||'',
-      'ชนิดนม': r.note||''
+      'ชนิดนม': r.note||'',
+      'หมายเหตุ': r.remark||''
     };
   });
 
   const ws = XLSX.utils.json_to_sheet(rows);
-  // ปรับความกว้างคอลัมน์
   ws['!cols'] = [
-    {wch:5},{wch:22},{wch:20},{wch:22},{wch:14},{wch:50},{wch:20}
+    {wch:5},{wch:22},{wch:20},{wch:22},{wch:14},{wch:50},{wch:20},{wch:40}
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'ประวัติปริ้น');
