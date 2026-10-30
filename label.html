@@ -284,6 +284,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   /* min-height:0 จำเป็นมากสำหรับ flex:1 — ถ้าไม่ใส่ เนื้อที่ยาวกว่าช่องจะดัน
      barcode + เวลา ให้หลุดออกนอกฉลาก 150mm ตอนพิมพ์ = ข้อความด้านล่างขาดหาย */
   flex:1 1 auto;min-height:0;height:auto;overflow:hidden;
+  padding:1mm 5mm 1.5mm;      /* เว้น breathing room ก่อนถึงกล่องชนิดนม/หมายเหตุ (นับรวมตอนวัดด้วย) */
 }
 .sl-note-box{
   flex-shrink:0;
@@ -306,13 +307,11 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 .sl-hdr,.sl-sender,.sl-recv-box,.sl-line,.sl-line-dash,.sl-ts{flex-shrink:0}
 .sl-footer{
   margin-top:auto;flex-shrink:0;
-  min-height:14mm;display:flex;align-items:flex-end;   /* จองพื้นที่ขั้นต่ำ กันแถบ barcode ยุบตอนรูปยังโหลดไม่เสร็จ */
   border-top:1.5px solid #DDE3EC;
 }
-.sl-footer img{width:100%;height:auto;display:block;max-height:24mm;object-fit:contain;flex-shrink:0}
+.sl-footer img{display:block;width:100%;height:auto}   /* เหมือนโค้ดเดิม: ไม่บังคับสูงสุด/ไม่ contain */
 .sl-ts{
   font-size:9px;color:#9CA3AF;text-align:left;
-  margin-bottom:1.5mm;
   padding:3px 4mm;background:white;
   font-family:'IBM Plex Mono','Courier New',monospace;
 }
@@ -806,10 +805,20 @@ function renderList(){
 // ส่วนที่เกินกรอบถูก clip หายไปตอนพิมพ์โดยไม่มีสัญญาณเตือน
 // วิธีแก้: วัด "พื้นที่เหลือจริง" ของฉลากด้วย element จริง (ไม่ใช่ประมาณเลข)
 // แล้วย่อ ขนาดฟอนต์ของที่อยู่/หมายเหตุ ลงทีละขั้นจนข้อความทั้งหมดใส่ได้พอดี
+// ▸ รูปแถบล่างฉลาก (DDT) — ใช้ไฟล์เดียวกันทั้ง preview, หน้าพิมพ์ และ PDF
+//   (เดิม preview ใช้ i.postimg.cc แต่หน้าพิมพ์/PDF ไปใช้อีกไฟล์ คนละรูปกัน + สัดส่วนไม่ตรงกัน
+//    เป็นเหตุให้คำนวณพื้นที่เพี้ยนและข้อความขาดหาย — ถ้าจะเปลี่ยนรูป แก้ที่นี่ที่เดียว)
 const FOOTER_IMG='https://i.postimg.cc/xN5GcPtL/ddt.png';
 const ADDR_FS_MIN=9, REMARK_FS_MIN=7, REMARK_FS_BASE=10.5;
 const _fitCache=new Map();
-let _probeEl=null, _probeWarm=false;
+let _probeEl=null, _probeWarm=false, _footerPx=0, _footerKnown=false;   // _footerPx = ความสูงจริงของรูป DDT เมื่อกว้างเต็ม 100mm
+
+function mmTmp(){ /* ความกว้างฉลาก 100mm เป็น px (วัดจริงจาก DOM ครั้งเดียว) */
+  if(mmTmp.v) return mmTmp.v;
+  const d=document.createElement('div');
+  d.style.cssText='position:absolute;left:-9999px;top:0;width:100mm;height:1px;visibility:hidden';
+  document.body.appendChild(d); mmTmp.v=d.offsetWidth/100; document.body.removeChild(d); return mmTmp.v;
+}
 
 function autoFitOn(){ const cb=document.getElementById('autoFitCb'); return !cb || cb.checked!==false; }
 function prefAddrFs(){ return parseFloat((document.getElementById('fontSizePref')||{value:'17'}).value)||17; }
@@ -832,10 +841,11 @@ function warmProbe(){
   const fonts=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
   const img=new Promise(res=>{
     const im=new Image();
-    im.onload=im.onerror=()=>res(true);
+    im.onload=()=>{ _footerPx=im.naturalWidth?Math.round(mmTmp()*100*im.naturalHeight/im.naturalWidth*10)/10:0; _footerKnown=true; res(true); };
+    im.onerror=()=>{ _footerPx=0; _footerKnown=true; res(true); };
     im.src=FOOTER_IMG;
   });
-  const timeout=new Promise(res=>setTimeout(()=>res(true),3500));
+  const timeout=new Promise(res=>setTimeout(()=>res(true),12000));
   return Promise.race([Promise.all([fonts,img]),timeout]).then(()=>{
     _probeWarm=true; _fitCache.clear();
     try{ renderList(); }catch(e){}
@@ -874,6 +884,10 @@ function fitLabel(lb){
   const p=ensureProbe();
   const setup=(aH,rH,af,rf)=>{
     p.innerHTML=makeLabelHTML(lb,1,{addrFs:af,remarkFs:rf,addr:aH,remark:rH,orderLine:t.orderLine});
+    // ใน probe เท่านั้น: บังคับความสูงรูปเท่ากับของจริง (กันรูปโหลดไม่ทันตอนวัด)
+    // ฉลากที่จะพิมพ์จริง/PDF ยังใช้ width:100%;height:auto ตามสัดส่วนเดิมของรูป ไม่ถูกย่อแต่อย่างใด
+    const im=p.querySelector('.sl-footer img');
+    if(im && _footerKnown){ if(_footerPx>0) im.style.height=_footerPx+'px'; else im.style.display='none'; }
     return [p.querySelector('.sl-recv-text'), p.querySelector('.sl-remark-box')];
   };
   const okWith=(addrEl,rmkEl,af,rf)=>{
@@ -974,7 +988,7 @@ function labelSig(lb){
 }
 const _badgeMap=new Map();      // labelSig -> สถานะย่อ (ให้ renderList อ่าน WITHOUT วัดซ้ำ)
 function getFit(lb){
-  const key=labelSig(lb)+'\u0002'+prefAddrFs()+'\u0002'+(autoFitOn()?'A':'O')+'\u0002'+(_probeWarm?'W':'N');
+  const key=labelSig(lb)+'\u0002'+prefAddrFs()+'\u0002'+(autoFitOn()?'A':'O')+'\u0002'+(_probeWarm?('W'+(_footerKnown?_footerPx:'?')):'N');
   let f=_fitCache.get(key);
   if(!f){ f=fitLabel(lb); _fitCache.set(key,f); }
   _badgeMap.set(labelSig(lb), f);
@@ -1005,7 +1019,7 @@ function makeLabelHTML(lb, num, fit){
     ${noteHTML}
     ${remarkHTML}
     <div class="sl-z sl-footer">
-      <img src="${FOOTER_IMG}" onerror="this.style.height='14mm'">
+      <img src="${FOOTER_IMG}" onerror="this.style.display='none'">
     </div>
     <div class="sl-z sl-ts">${ts()}</div>
   </div>`;
@@ -1052,7 +1066,7 @@ function renderPreview(){
   draw();
   if(!_probeWarm){
     const sel=labels.filter(l=>l.selected);
-    prepareFits(sel.length?sel:labels).then(()=>{ if(seq===_previewSeq) draw(); });
+    prepareFits(sel.length?sel:labels).then(()=>{ if(seq===_previewSeq){ draw(); try{renderList();}catch(e){} } });
   }
 }
 
@@ -1205,9 +1219,8 @@ async function doSavePDF(list){
     if(ddt64){
       labelHTML = labelHTML.split(FOOTER_IMG).join(ddt64);
     } else {
-      // โหลดรูปไม่ได้: ใส่ img โปร่งใสที่จองพื้นที่ 14mm เท่ากัน -> layout ตรงกับตอนวัด/ตอนพิมพ์
-      const ph='<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="height:14mm;visibility:hidden">';
-      labelHTML = labelHTML.replace(/<img src="[^"]*" onerror="this\.style\.height='14mm'">/, ph);
+      // โหลดรูปไม่ได้จริง ๆ: เอา img ออกจาก PDF (ตรงกับ preview/พิมพ์ที่ img จะ display:none)
+      labelHTML = labelHTML.replace(/<img src="[^"]*" onerror="this\.style\.display='none'">/g, '');
     }
 
     const labelWrap = idoc.createElement('div');
