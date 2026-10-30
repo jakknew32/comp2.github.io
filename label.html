@@ -250,7 +250,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   );
   pointer-events:none;z-index:0;
 }
-.sl-z{position:relative;z-index:1}
+.sl-z{position:relative;z-index:1;min-height:0}
 .sl-hdr{
   text-align:center;padding:0 4mm 3px 4mm;
   background:var(--ink);
@@ -281,9 +281,12 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 .sl-recv-text{
   text-align:center;font-size:17px;line-height:1.65;font-weight:600;
   color:#0D1B2A;white-space:pre-line;word-wrap:break-word;
-  flex:1;padding:6px 5mm 2px;overflow:hidden;
+  /* min-height:0 จำเป็นมากสำหรับ flex:1 — ถ้าไม่ใส่ เนื้อที่ยาวกว่าช่องจะดัน
+     barcode + เวลา ให้หลุดออกนอกฉลาก 150mm ตอนพิมพ์ = ข้อความด้านล่างขาดหาย */
+  flex:1 1 auto;min-height:0;height:auto;overflow:hidden;
 }
 .sl-note-box{
+  flex-shrink:0;
   margin:0 4mm 4px;padding:4px 8px;
   background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:4px;
   font-size:11px;font-weight:600;color:#7C4A00;
@@ -292,20 +295,24 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 }
 /* ── หมายเหตุ (คอลัมน์ AZ) ── */
 .sl-remark-box{
+  flex-shrink:0;overflow:hidden;
   margin:0 4mm 4px;padding:4px 8px;
   background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:4px;
   font-size:10.5px;font-weight:600;color:#1E3A8A;line-height:1.45;
   text-align:center;word-break:break-word;
-  max-height:15mm;overflow:hidden;
   white-space:pre-line;
   -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
+.sl-hdr,.sl-sender,.sl-recv-box,.sl-line,.sl-line-dash,.sl-ts{flex-shrink:0}
 .sl-footer{
-  margin-top:auto;border-top:1.5px solid #DDE3EC;
+  margin-top:auto;flex-shrink:0;
+  min-height:14mm;display:flex;align-items:flex-end;   /* จองพื้นที่ขั้นต่ำ กันแถบ barcode ยุบตอนรูปยังโหลดไม่เสร็จ */
+  border-top:1.5px solid #DDE3EC;
 }
-.sl-footer img{width:100%;height:auto;display:block}
+.sl-footer img{width:100%;height:auto;display:block;max-height:24mm;object-fit:contain;flex-shrink:0}
 .sl-ts{
   font-size:9px;color:#9CA3AF;text-align:left;
+  margin-bottom:1.5mm;
   padding:3px 4mm;background:white;
   font-family:'IBM Plex Mono','Courier New',monospace;
 }
@@ -564,7 +571,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
         <button class="btn btn-red btn-xs" id="deleteSelBtn" onclick="deleteSelected()" style="display:none">🗑️ ลบ</button>
       </div>
 
-      <input type="text" class="search-box" placeholder="ค้นหาชื่อ ที่อยู่ ออเดอร์..." oninput="searchLabels(this.value)">
+      <input type="text" class="search-box" placeholder="ค้นหาชื่อ ที่อยู่ ออเดอร์ หมายเหตุ..." oninput="searchLabels(this.value)">
 
       <div class="label-list" id="labelList">
         <div class="empty-state"><div class="ei">📪</div><p>ยังไม่มีฉลาก<br>กด <b>เพิ่มฉลาก</b> หรือ<br>นำเข้าจาก Excel/CSV</p></div>
@@ -583,7 +590,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
       <div style="display:flex;gap:8px">
         <div style="flex:1">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:700">สีหัว</div>
-          <select id="labelTheme" onchange="renderPreview()" class="preview-select" style="width:100%">
+          <select id="labelTheme" onchange="onPrefChange()" class="preview-select" style="width:100%">
             <option value="default">⚫ ดำ</option>
             <option value="red">🔴 แดง</option>
             <option value="blue">🔵 น้ำเงิน</option>
@@ -591,7 +598,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
         </div>
         <div style="flex:1">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:700">ขนาดข้อความ</div>
-          <select id="fontSizePref" onchange="renderPreview()" class="preview-select" style="width:100%">
+          <select id="fontSizePref" onchange="onPrefChange()" class="preview-select" style="width:100%">
             <option value="17">ปกติ</option>
             <option value="15">เล็ก</option>
             <option value="19">ใหญ่</option>
@@ -606,10 +613,14 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   <div class="preview-pane">
     <div class="preview-bar">
       <span class="preview-bar-label">ตัวอย่างฉลาก</span>
-      <select id="previewMode" onchange="renderPreview()" class="preview-select">
+      <select id="previewMode" onchange="onPrefChange()" class="preview-select">
         <option value="grid">แบบกริด</option>
         <option value="single">ทีละใบ</option>
       </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer">
+        <input type="checkbox" id="autoFitCb" checked onchange="onAutoFitToggle()" style="width:14px;height:14px;accent-color:var(--amber);cursor:pointer">
+        ย่ออักษรอัตโนมัติ
+      </label>
       <span id="previewInfo" style="margin-left:auto;font-size:11px;font-family:var(--font-mono);color:var(--muted)"></span>
     </div>
     <div class="preview-area" id="previewContainer">
@@ -628,7 +639,7 @@ let editingId = null;
 let importData = [];
 let searchQ = '';
 
-function save(){ localStorage.setItem('cfm_labels', JSON.stringify(labels)); }
+function save(){ localStorage.setItem('cfm_labels', JSON.stringify(labels)); clearFitCache(); }
 
 function ts(){
   const n=new Date();
@@ -736,10 +747,21 @@ function updateSelectUI(){
 function getFiltered(){
   if(!searchQ) return labels;
   const q=searchQ.toLowerCase();
-  return labels.filter(l=>(l.name||'').toLowerCase().includes(q)||(l.addr||'').toLowerCase().includes(q)||(l.phone||'').includes(q)||(l.order||'').toLowerCase().includes(q));
+  return labels.filter(l=>(l.name||'').toLowerCase().includes(q)||(l.addr||'').toLowerCase().includes(q)||(l.phone||'').includes(q)
+    ||(l.order||'').toLowerCase().includes(q)||(l.remark||'').toLowerCase().includes(q));
 }
 
 function searchLabels(q){ searchQ=q; renderList(); }
+
+// ป้ายบอกสถานะการย่ออัตโนมัติบนรายการด้านซ้าย
+function fitTag(lb){
+  const f=_badgeMap.get(labelSig(lb));
+  if(!f) return '';                        // ยังไม่ได้วัด (เช่นไม่ได้เลือก) -> ไม่ใส่ป้าย
+  if(!autoFitOn()) return f.clipped?`<span class="tag" style="background:var(--red-bg);color:#991b1b;border:1px solid #fecaca" title="ปิดโหมดย่ออัตโนมัติ ข้อความส่วนเกินจะถูกตัดหาย">⚠ ปิดย่ออัตโนมัติ</span>`:'';
+  if(f.clipped) return `<span class="tag" style="background:var(--red-bg);color:#991b1b;border:1px solid #fecaca" title="ย่อเล็กสุดแล้วยังไม่พอ ข้อความส่วนเกินจะถูกตัดหาย">⚠ เกินพื้นที่</span>`;
+  if(f.trimmed) return `<span class="tag tag-amber" title="ข้อความยาวเกินพื้นที่ → ย่ออัตโนมัติ + ตัดท้าย (มี … บนฉลาก)">✂ ย่อ/ตัดท้าย</span>`;
+  return f.addrFs<(prefAddrFs()) ? `<span class="tag tag-green" title="ย่อตัวอักษรอัตโนมัติให้พอดีพื้นที่">↕ ย่อเป็น ${f.addrFs}px</span>` : '';
+}
 
 // ===== RENDER LIST =====
 function renderList(){
@@ -762,6 +784,7 @@ function renderList(){
           <span class="lcard-num">#${idx+1}</span>
           <span class="lcard-name">${esc(lb.name||'ไม่ระบุชื่อ')}</span>
           ${lb.order?`<span class="lcard-order">${esc(lb.order)}</span>`:''}
+          ${fitTag(lb)}
         </div>
         ${lb.phone?`<div class="lcard-phone">📞 ${esc(lb.phone)}</div>`:''}
         <div class="lcard-addr">${esc(lb.addr||'ไม่มีที่อยู่')}</div>
@@ -778,22 +801,196 @@ function renderList(){
   });
 }
 
-// ===== RENDER PREVIEW =====
-//_box หมายเหตุ (คอลัมน์ AZ): แสดงเฉพาะเมื่อมีข้อมูล
-function remarkPreviewHTML(lb){
-  const rm = String(lb.remark||'').trim();
-  if(!rm) return '';
-  return `<div class="sl-z sl-remark-box">📌 หมายเหตุ: ${esc(rm).replace(/\n/g,'<br>')}</div>`;
+// ===== AUTO-FIT: ย่อตัวอักษรอัตโนมัติเมื่อข้อความยาวเกินพื้นที่ฉลาก =====
+// ปัญหาเดิม: ที่อยู่/หมายเหตุ ยาวเกิน 150mm -> flex ดัน barcode+เวลา หลุดออกนอกฉลาก และ
+// ส่วนที่เกินกรอบถูก clip หายไปตอนพิมพ์โดยไม่มีสัญญาณเตือน
+// วิธีแก้: วัด "พื้นที่เหลือจริง" ของฉลากด้วย element จริง (ไม่ใช่ประมาณเลข)
+// แล้วย่อ ขนาดฟอนต์ของที่อยู่/หมายเหตุ ลงทีละขั้นจนข้อความทั้งหมดใส่ได้พอดี
+const FOOTER_IMG='https://i.postimg.cc/xN5GcPtL/ddt.png';
+const ADDR_FS_MIN=9, REMARK_FS_MIN=7, REMARK_FS_BASE=10.5;
+const _fitCache=new Map();
+let _probeEl=null, _probeWarm=false;
+
+function autoFitOn(){ const cb=document.getElementById('autoFitCb'); return !cb || cb.checked!==false; }
+function prefAddrFs(){ return parseFloat((document.getElementById('fontSizePref')||{value:'17'}).value)||17; }
+
+// probe = ฉลากจำลองขนาดเท่าของจริง (100x150mm) ซ่อนไว้นอกจอ ใช้วัดพื้นที่เหลือ
+function ensureProbe(){
+  if(_probeEl && document.body.contains(_probeEl)) return _probeEl;
+  const box=document.createElement('div');
+  box.id='fitBox';
+  box.style.cssText='position:absolute;left:-10000px;top:0;width:100mm;height:150mm;visibility:hidden;pointer-events:none';
+  box.innerHTML='<div class="shipping-label" style="box-shadow:none;border-radius:0"></div>';
+  document.body.appendChild(box);
+  _probeEl=box.firstElementChild;
+  return _probeEl;
 }
 
-function makeLabelHTML(lb, num){
-  const theme=document.getElementById('labelTheme').value;
-  const fs=document.getElementById('fontSizePref').value;
+// ต้องรอ font + รูป footer โหลดก่อน ไม่งั้นวัดสูงผิด (ครั้งแรกครั้งเดียว)
+function warmProbe(){
+  if(_probeWarm) return Promise.resolve(true);
+  const fonts=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+  const img=new Promise(res=>{
+    const im=new Image();
+    im.onload=im.onerror=()=>res(true);
+    im.src=FOOTER_IMG;
+  });
+  const timeout=new Promise(res=>setTimeout(()=>res(true),3500));
+  return Promise.race([Promise.all([fonts,img]),timeout]).then(()=>{
+    _probeWarm=true; _fitCache.clear();
+    try{ renderList(); }catch(e){}
+    return true;
+  });
+}
+
+// ข้อความบนฉลาก (esc แล้ว, ขึ้นบรรทัดใหม่ -> <br>)
+// addrArr = บรรทัดต่างๆ ของผู้รับ (บรรทัดแรก=ชื่อ, บรรทัดท้าย=โทรศัพท์) เพื่อใช้ตัดทีละบรรทัดตอนพื้นที่ไม่พอ
+function labelTexts(lb){
+  const displayText = lb.name ? `คุณ ${lb.name}\n${lb.addr||''}${lb.phone?'\nโทร. '+lb.phone:''}` : (lb.addr||'');
+  const orderLine = lb.order
+    ? `เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / ชนิดนม: '+esc(noteWithQty(lb)):''}`
+    : ((lb.note||lb.qty)?`ชนิดนม: ${esc(noteWithQty(lb))}`:'');
+  const rm=String(lb.remark||'').trim();
+  const addrLines=displayText.split('\n').map(x=>esc(x));
+  return {
+    addrLines,
+    addr: addrLines.join('<br>'),
+    addrPlain: displayText,
+    orderLine,
+    remark: rm ? '📌 หมายเหตุ: '+esc(rm).replace(/\n/g,'<br>') : '',
+    remarkPlain: rm,
+    hasPhone: addrLines.length>1 && /^โทร\./.test(addrLines[addrLines.length-1].replace(/&quot;/g,'"'))
+  };
+}
+
+function fitLabel(lb){
+  const t=labelTexts(lb), base=prefAddrFs();
+  // trimmed = มีข้อความบางส่วนถูกตัดท้าย (ใส่ … บนฉลากให้เห็น) | clipped = ย่อ+ตัดสุดทางแล้วยังไม่พอ
+  const out=(af,rf,addr,remark,trimmed,clipped)=>({addrFs:af,remarkFs:rf,addr,remark,orderLine:t.orderLine,trimmed:!!trimmed,clipped:!!clipped});
+
+  if(typeof document==='undefined'||!document.querySelector||!document.createElement)
+    return out(base,REMARK_FS_BASE,t.addr,t.remark,false,false);
+
+  const p=ensureProbe();
+  const setup=(aH,rH,af,rf)=>{
+    p.innerHTML=makeLabelHTML(lb,1,{addrFs:af,remarkFs:rf,addr:aH,remark:rH,orderLine:t.orderLine});
+    return [p.querySelector('.sl-recv-text'), p.querySelector('.sl-remark-box')];
+  };
+  const okWith=(addrEl,rmkEl,af,rf)=>{
+    addrEl.style.fontSize=af+'px';
+    if(rmkEl) rmkEl.style.fontSize=rf+'px';
+    const a=addrEl.scrollHeight<=addrEl.clientHeight+1;
+    const r=!rmkEl||rmkEl.scrollHeight<=rmkEl.clientHeight+1;
+    return a&&r;
+  };
+  try{
+    // ปิด "ย่ออัตโนมัติ": ใช้ขนาดที่ผู้ใช้เลือกเหมือน behavior เดิม (แค่ตรวจว่าเกินพื้นที่ไหมเพื่อเตือน)
+    if(!autoFitOn()){
+      const [a0,r0]=setup(t.addr,t.remark,base,REMARK_FS_BASE);
+      return out(base,REMARK_FS_BASE,t.addr,t.remark,false,!okWith(a0,r0,base,REMARK_FS_BASE));
+    }
+
+    let [addrEl,rmkEl]=setup(t.addr,t.remark,base,REMARK_FS_BASE);
+    const ok=(af,rf)=>okWith(addrEl,rmkEl,af,rf);
+    const fits=()=>out(base,REMARK_FS_BASE,t.addr,t.remark,false,false);
+    if(ok(base,REMARK_FS_BASE)) return fits();
+
+    // 1) ย่อที่อยู่: ค่าที่ผู้ใช้เลือก -> 11px
+    for(let af=base-0.5; af>=11; af-=0.5)
+      if(ok(+af.toFixed(2),REMARK_FS_BASE)) return out(+af.toFixed(2),REMARK_FS_BASE,t.addr,t.remark,false,false);
+    // 2) ย่อหมายเหตุ 10.5 -> 8 (รักษาขนาดที่อยู่ไว้ก่อน เพราะสำคัญกว่า)
+    for(let rf=REMARK_FS_BASE-0.25; rf>=8; rf-=0.25)
+      if(ok(11,+rf.toFixed(2))) return out(11,+rf.toFixed(2),t.addr,t.remark,false,false);
+    // 3) ย่อที่อยู่ต่อ 11 -> ขั้นต่ำ (9px)
+    for(let af=10.5; af>=ADDR_FS_MIN; af-=0.5)
+      if(ok(+af.toFixed(2),8)) return out(+af.toFixed(2),8,t.addr,t.remark,false,false);
+    // 4) ย่อหมายเหตุถึงขั้นต่ำ 7 แล้วหาขนาดที่อยู่ใหญ่สุดที่พอดี
+    for(let rf=7.75; rf>=REMARK_FS_MIN; rf-=0.25){
+      const rf4=+rf.toFixed(2);
+      for(let af=11.5; af>=ADDR_FS_MIN; af-=0.5)
+        if(ok(+af.toFixed(2),rf4)) return out(+af.toFixed(2),rf4,t.addr,t.remark,false,false);
+    }
+
+    // 5) พื้นที่ก็ยังใส่ไม่ครบ -> ตัดข้อความ (จำใจ) (จำใจ) ตามลำดับความสำคัญ:
+    //    เบอร์โทร (ยังมีในรายการ/ประวัติ/ไฟล์ Excel) < หมายเหตุ (AZ) < ที่อยู่อย่าง
+    //    ใช้ binary search หาจำนวนตัวอักษร "มากที่สุด" ที่ยังพอดีพื้นที่ เพื่อเสียน้อยที่สุด
+    const both=(ah,rh)=>{ addrEl.innerHTML=ah; if(rmkEl) rmkEl.innerHTML=rh; return ok(ADDR_FS_MIN,REMARK_FS_MIN); };
+    let curA=t.addr, curR=t.remark, trimmed=false;
+    if(both(curA,curR)) return out(ADDR_FS_MIN,REMARK_FS_MIN,curA,curR,false,false);
+
+    const linesAll=t.addrPlain.split('\n');
+    const lastIsPhone=/^โทร\./.test(linesAll[linesAll.length-1]||'');
+    if(lastIsPhone && linesAll.length>2){        // ทดลองตัดบรรทัดเบอร์โทร. ทิ้งก่อน
+      curA=linesAll.slice(0,-1).map(x=>esc(x)).join('<br>');
+      addrEl.innerHTML=curA;
+      for(const rf2 of [REMARK_FS_BASE,9.5,8,REMARK_FS_MIN])
+        for(const af2 of [12,11,10,ADDR_FS_MIN])
+          if(ok(af2,rf2)) return out(af2,rf2,curA,t.remark,true,false);
+      if(both(curA,curR)) return out(ADDR_FS_MIN,REMARK_FS_MIN,curA,curR,true,false);
+      trimmed=true;
+    }
+
+    if(t.remarkPlain){                           // ก) หดหมายเหตุเท่าที่พื้นที่จะอำนวย
+      const full=t.remarkPlain.replace(/\s+/g,' ').trim();
+      const mkRmk=k=> '📌 หมายเหตุ: '+esc(k>0?full.slice(0,k):'')+(k<full.length?' …':'');
+      let lo=0,hi=full.length,best=-1;
+      while(lo<=hi){
+        const mid=(lo+hi)>>1;
+        if(both(curA,mkRmk(mid))){ best=mid; lo=mid+1; } else hi=mid-1;
+      }
+      if(best>=0){
+        curR=(best>=full.length)? t.remark : mkRmk(best);
+        trimmed=trimmed||best<full.length;
+        if(both(curA,curR)) return out(ADDR_FS_MIN,REMARK_FS_MIN,curA,curR,trimmed,false);
+      }
+    }
+
+    {                                            // ข) หดที่อยู่ (คงบรรทัดแรก=ชื่อผู้รับไว้เสมอ)
+      const keep=(lastIsPhone? linesAll.slice(0,-1) : linesAll.slice());
+      const firstLine=keep.shift()||'';
+      const restText=keep.join(' ').replace(/\s+/g,' ').trim();
+      const mkAddr=k=> esc(firstLine)+(k>0?'<br>'+esc(restText.slice(0,k)):'')+(k<restText.length?' …':'');
+      let lo=0,hi=restText.length,best=-1;
+      while(lo<=hi){
+        const mid=(lo+hi)>>1;
+        if(both(mkAddr(mid),curR)){ best=mid; lo=mid+1; } else hi=mid-1;
+      }
+      if(best>=0){
+        curA=mkAddr(best);
+        trimmed=trimmed||best<restText.length;
+        return out(ADDR_FS_MIN,REMARK_FS_MIN,curA,curR,trimmed,false);
+      }
+    }
+    // ค) ไม่มีทางพอจริง ๆ (ชื่อผู้รับยาวผิดปกติ) -> คงข้อความเต็ม แล้ว flag clipped ไว้เตือนผู้ใช้
+    return out(ADDR_FS_MIN,REMARK_FS_MIN,t.addr,t.remark,trimmed,true);
+  }catch(e){
+    console.warn('fitLabel fail',e);
+    return out(base,REMARK_FS_BASE,t.addr,t.remark,false,false);
+  }
+}
+
+function labelSig(lb){
+  return [lb.name||'',lb.addr||'',lb.order||'',noteWithQty(lb),lb.remark||'',lb.phone||''].join('\u0001');
+}
+const _badgeMap=new Map();      // labelSig -> สถานะย่อ (ให้ renderList อ่าน WITHOUT วัดซ้ำ)
+function getFit(lb){
+  const key=labelSig(lb)+'\u0002'+prefAddrFs()+'\u0002'+(autoFitOn()?'A':'O')+'\u0002'+(_probeWarm?'W':'N');
+  let f=_fitCache.get(key);
+  if(!f){ f=fitLabel(lb); _fitCache.set(key,f); }
+  _badgeMap.set(labelSig(lb), f);
+  return f;
+}
+function clearFitCache(){ _fitCache.clear(); _badgeMap.clear(); }
+function onPrefChange(){ clearFitCache(); renderPreview(); }
+function onAutoFitToggle(){ clearFitCache(); renderPreview(); }
+
+// ===== RENDER PREVIEW =====
+function makeLabelHTML(lb, num, fit){
+  const theme=(document.getElementById('labelTheme')||{value:'default'}).value;
   const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
-  const fullAddr = lb.addr || '';
-  const displayText = lb.name ? `คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}` : fullAddr;
-  const orderLine = lb.order ? `เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / ชนิดนม: '+esc(noteWithQty(lb)):''}` : ((lb.note||lb.qty)?`ชนิดนม: ${esc(noteWithQty(lb))}`:'');
-  const noteHTML = orderLine ? `<div class="sl-z sl-note-box">📝 ${orderLine}</div>` : '';
+  if(!fit) fit=getFit(lb);
+  const noteHTML = fit.orderLine ? `<div class="sl-z sl-note-box">📝 ${fit.orderLine}</div>` : '';
+  const remarkHTML = fit.remark ? `<div class="sl-z sl-remark-box" style="font-size:${fit.remarkFs}px">${fit.remark}</div>` : '';
 
   return `<div class="shipping-label">
     <div class="sl-wm"></div>
@@ -804,79 +1001,104 @@ function makeLabelHTML(lb, num){
     <div class="sl-z sl-recv-box" style="background:${recvBg}!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <span class="sl-recv-title">ผู้รับ (TO):</span>
     </div>
-    <div class="sl-z sl-recv-text" style="font-size:${fs}px">${esc(displayText).replace(/\n/g,'<br>')}</div>
+    <div class="sl-z sl-recv-text" style="font-size:${fit.addrFs}px">${fit.addr}</div>
     ${noteHTML}
-    ${remarkPreviewHTML(lb)}
+    ${remarkHTML}
     <div class="sl-z sl-footer">
-      <img src="https://i.postimg.cc/xN5GcPtL/ddt.png" onerror="this.style.display='none'">
+      <img src="${FOOTER_IMG}" onerror="this.style.height='14mm'">
     </div>
     <div class="sl-z sl-ts">${ts()}</div>
   </div>`;
 }
 
+// เตรียม cache ของทุกใบ (รอ font + รูป barcode โหลดครั้งแรกครั้งเดียว) แล้วค่อยวัด
+function prepareFits(list){
+  return warmProbe().then(()=>{ list.forEach(getFit); return list; });
+}
+
+let _previewSeq=0;
 function renderPreview(){
-  const container=document.getElementById('previewContainer');
-  const mode=document.getElementById('previewMode').value;
-  const toShow = labels.filter(l=>l.selected);
-
-  if(!toShow.length){
-    if(labels.length===0){
-      container.innerHTML=`<div class="empty-pane"><div class="empty-pane-icon">📦</div><p>เพิ่มฉลากเพื่อดูตัวอย่าง</p></div>`;
-    } else {
-      container.innerHTML=`<div class="empty-pane"><div class="empty-pane-icon">☑️</div><p>เลือกฉลากเพื่อดูตัวอย่าง<br><span style="font-size:11px;color:var(--muted)">ติ๊กช่องหน้ารายการ</span></p></div>`;
+  const seq=++_previewSeq;
+  updateSelectUI();                     // อัปเดตตัวเลขเลือก/จำนวนทันที ไม่ต้องรอวัดพื้นที่เสร็จ
+  const paint=(html)=>{ const c=document.getElementById('previewContainer'); if(c) c.innerHTML=html; };
+  const draw=()=>{
+    const mode=(document.getElementById('previewMode')||{value:'grid'}).value;
+    const toShow=labels.filter(l=>l.selected);
+    if(!toShow.length){
+      if(!labels.length) paint(`<div class="empty-pane"><div class="empty-pane-icon">📦</div><p>เพิ่มฉลากเพื่อดูตัวอย่าง</p></div>`);
+      else paint(`<div class="empty-pane"><div class="empty-pane-icon">☑️</div><p>เลือกฉลากเพื่อดูตัวอย่าง<br><span style="font-size:11px;color:var(--muted)">ติ๊กช่องหน้ารายการ</span></p></div>`);
+      updateSelectUI();
+      return;
     }
-    return;
-  }
-
-  if(mode==='grid'){
-    container.innerHTML=toShow.map((lb,i)=>makeLabelHTML(lb,i+1)).join('');
-  } else {
-    container.innerHTML=toShow.map((lb,i)=>`<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%"><p style="font-size:10px;font-family:var(--font-mono);color:var(--muted)">${i+1} / ${toShow.length}</p>${makeLabelHTML(lb,i+1)}</div>`).join('');
+    let clipped=0, clippedOrTrim=0;
+    const items=toShow.map((lb,i)=>{
+      const f=getFit(lb);
+      if(f.clipped) clipped++;
+      if(f.clipped||f.trimmed) clippedOrTrim++;
+      const one=makeLabelHTML(lb,i+1,f);
+      const tag=f.clipped?' <span style="color:#dc2626">⚠ ยังเกินพื้นที่ (ส่วนเกินถูกตัด)</span>'
+               : (f.trimmed?' <span style="color:#b45309">✂ ตัดท้ายอัตโนมัติ (…)</span>':'');
+      return mode==='single'
+        ? `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%"><p style="font-size:10px;font-family:var(--font-mono);color:var(--muted)">${i+1} / ${toShow.length} · ที่อยู่ ${f.addrFs}px${f.remark?' / หมายเหตุ '+f.remarkFs+'px':''}${tag}</p>${one}</div>`
+        : one;
+    }).join('');
+    paint(clippedOrTrim
+      ? `<div style="width:100%;text-align:center"><span class="tag tag-amber">⚠ ${clippedOrTrim} ใบข้อความยาวเกินพื้นที่ → ย่ออัตโนมัติถึง ${ADDR_FS_MIN}px แล้ว${clipped?` และ ${clipped} ใบยังเกินพื้นที่ (ส่วนเกินจะถูกตัดหาย — โปรดย่อที่อยู่ก่อนพิมพ์)`:''}</span></div>`+items
+      : items);
+    updateSelectUI();
+  };
+  // วาดทันที (ครั้งแรก font/รูปอาจยังโหลดไม่เสร็จ ค่าที่วัดได้อาจคลาดเคลื่อนบ้าง)
+  // แล้ววาดซ้ำอีกทีเมื่อ warmProbe เสร็จ เพื่อให้ค่าที่ได้จากการวัดแม่นยำ
+  draw();
+  if(!_probeWarm){
+    const sel=labels.filter(l=>l.selected);
+    prepareFits(sel.length?sel:labels).then(()=>{ if(seq===_previewSeq) draw(); });
   }
 }
+
 
 // ===== PRINT =====
-function buildPrintDoc(list){
-  const theme=document.getElementById('labelTheme').value;
-  const fs=document.getElementById('fontSizePref').value;
-  const recvBg = theme==='red'?'#c0392b':theme==='blue'?'#1a5276':'#000';
-
-  const labels_html = list.map((lb,i)=>{
-    const fullAddr = lb.addr||'';
-    const displayText = lb.name?`คุณ ${lb.name}\n${fullAddr}${lb.phone?'\nโทร. '+lb.phone:''}`:fullAddr;
-    const notePrint = (()=>{ const ol=lb.order?`เลขออเดอร์: ${esc(lb.order)}${(lb.note||lb.qty)?' / ชนิดนม: '+esc(noteWithQty(lb)):''}`:(lb.note||lb.qty)?`ชนิดนม: ${esc(noteWithQty(lb))}`:''; return ol?`<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#fff3cd;border:1.5px dashed #e6a817;border-radius:6px;font-size:12px;font-weight:700;color:#7a4f00;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📝 ${ol}</div>`:''; })();
-    // หมายเหตุ (AZ) — พิมพ์เมื่อมีข้อมูล
-    const rm = String(lb.remark||'').trim();
-    const remarkPrint = rm ? `<div style="position:relative;z-index:1;text-align:center;margin:4px 5mm 0;padding:4px 8px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:6px;font-size:11.5px;font-weight:700;color:#1E3A8A;line-height:1.4;white-space:pre-line;-webkit-print-color-adjust:exact;print-color-adjust:exact;">📌 หมายเหตุ: ${esc(rm).replace(/\n/g,'<br>')}</div>` : '';
-    const pageBreak = i < list.length-1 ? 'page-break-after:always;' : '';
-    return `<div class="shipping-label" style="${pageBreak}">
-      <div style="position:relative;z-index:1;text-align:center;padding:5px 4mm 3px;background:#0D1B2A;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><h2 style="font-size:18px;font-weight:700;margin:0;color:#F59E0B;letter-spacing:.3px;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;">Chiangmai Freshmilk</h2></div>
-      <div style="position:relative;z-index:1;border-top:1.5px solid #333;margin:0"></div>
-      <div style="position:relative;z-index:1;text-align:center;font-size:10px;line-height:1.3;color:#444;padding:3px 4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(SENDER)}</div>
-      <div style="position:relative;z-index:1;border-top:1.5px dashed #999;margin:0 0 6px 0;"></div>
-      <div style="position:relative;z-index:1;background:${recvBg} !important;text-align:center;padding:7px;margin-bottom:8px;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
-        <span style="font-weight:800;font-size:15px;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ผู้รับ (TO):</span>
-      </div>
-      <div style="position:relative;z-index:1;text-align:center;font-size:${fs}px;line-height:1.6;font-weight:600;color:#000;white-space:pre-line;word-wrap:break-word;flex:1;padding:0 5mm;overflow:hidden;">${esc(displayText).replace(/\n/g,'<br>')}</div>
-      ${notePrint}
-      ${remarkPrint}
-      <div style="position:relative;z-index:1;margin-top:auto;border-top:1.5px solid #333;text-align:center;">
-        <img src="https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true" style="width:100%;height:auto;display:block;" onerror="this.style.display='none'">
-      </div>
-      <div style="position:relative;z-index:1;font-size:10px;color:#666;text-align:left;padding:4px 5mm;background:white;">${ts()}</div>
-    </div>`;
-  }).join('');
-
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-    *{margin:0;padding:0;box-sizing:border-box}
+// ใช้ renderer ตัวเดียวกับหน้าจอ preview (makeLabelHTML) + ยัด <style>/<link> ของแอปเข้าไปในหน้าต่างพิมพ์
+// เพื่อให้ "ขนาดฟอนต์ที่คำนวณไว้ (fit)" ตรงกับที่เห็นบนหน้าจอ 100% — แก้ปัญหาข้อความขาดหายตอนพิมพ์
+function pageBreakStyle(){ return `
+  <style>
     @page{size:100mm 150mm;margin:0}
-    html,body{margin:0;padding:0;background:white;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif}
-    .shipping-label{width:100mm;height:150mm;border:none;background:white;padding:3mm 0 0 0;display:flex;flex-direction:column;font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;box-sizing:border-box;position:relative;overflow:hidden;}
-    </style>
-    </head><body>${labels_html}</body></html>`;
+    html,body{margin:0!important;padding:0!important;background:#fff!important}
+    .shipping-label{float:none!important;clear:none!important;margin:0!important}
+    .pg-break{page-break-after:always;break-after:page}
+    .pg-last{page-break-after:auto;break-after:auto}
+    @media print{ .shipping-label{box-shadow:none!important;border-radius:0!important} }
+  </style>`;
 }
+
+function buildPrintDoc(list){
+  const styles=[...document.querySelectorAll('style,link[rel="stylesheet"]')].map(el=>el.outerHTML).join('\n');
+  const body=list.map((lb,i)=>{
+    const wrap=document.createElement('div');
+    wrap.innerHTML=makeLabelHTML(lb, i+1, getFit(lb));
+    const el=wrap.firstElementChild;
+    el.classList.add(i===list.length-1?'pg-last':'pg-break');
+    return el.outerHTML;
+  }).join('\n');
+  return `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    ${styles}${pageBreakStyle()}
+    </head><body>${body}</body></html>`;
+}
+
+// เตือนก่อนพิมพ์: clipped = อันตรายจริง (ข้อความยังไม่พอที่จะพิมพ์) / trimmed = ตัดท้ายออกอัตโนมัติ (มี …บนฉลาก)
+function printWarnClipped(list){
+  const clipped=list.filter(lb=>getFit(lb).clipped).length;
+  const trimmed=list.filter(lb=>{ const f=getFit(lb); return f.trimmed&&!f.clipped; }).length;
+  if(clipped){
+    // มีข้อความที่หายไปจริง — ยืนยันอีกครั้งก่อนพิมพ์
+    if(!confirm(`⚠️ ${clipped} ใบมีข้อความยาวเกินพื้นที่ฉลาก แม้ย่อเล็กสุดแล้ว\n\nส่วนที่เกินจะถูกตัดหายจากฉลาก (ที่อยู่/หมายเหตุ)\n\nต้องการพิมพ์ต่อหรือไม่?`)) return false;
+  } else if(trimmed){
+    showToast(`ℹ️ ${trimmed} ใบ: ข้อความยาวเกินพื้นที่ → ย่ออัตโนมัติ + ตัดท้าย (มีเครื่องหมาย … บนฉลาก)`, '#0d9488', 6000);
+  }
+  return true;
+}
+
 
 function printSelected(){
   const sel=labels.filter(l=>l.selected);
@@ -890,19 +1112,33 @@ function printAll(){
 }
 
 function doPrint(list){
-  const html=buildPrintDoc(list);
-  const w=window.open('','_blank','width=800,height=600');
-  if(!w){ showToast('❌ ไม่สามารถเปิดหน้าพิมพ์ได้','#dc2626'); return; }
-  w.document.write(html);
-  w.document.close();
-  w.onload=()=>{ setTimeout(()=>{ w.focus(); w.print(); w.close(); },400); };
-  showToast(`🖨️ เปิดหน้าพิมพ์ ${list.length} ใบ`);
-  // บันทึกลง Firebase
-  if(window._fbSavePrintHistory){
-    window._fbSavePrintHistory(list).then(ok=>{
-      if(ok) showToast(`💾 บันทึกประวัติ ${list.length} รายการแล้ว`,'#0d9488',2500);
-    });
-  }
+  showToast('⏳ กำลังคำนวณขนาดตัวอักษรให้อัตโนมัติ...','#0d9488',8000);
+  prepareFits(list).then(()=>{               // วัดพื้นที่จริงบนฉลากก่อน (ครั้งแรกต้องรอ font+รูป)
+    if(printWarnClipped(list)===false){ showToast('🛑 ยกเลิกการพิมพ์','#d97706',3500); return; }
+    const html=buildPrintDoc(list);
+    const w=window.open('','_blank','width=800,height=600');
+    if(!w){ showToast('❌ ไม่สามารถเปิดหน้าพิมพ์ได้ (โปรดอนุญาต Pop-up)','#dc2626',5000); return; }
+    w.document.write(html);
+    w.document.close();
+    const fire=()=>{ try{ w.focus(); w.print(); }catch(e){} };
+    // รอแบบฟอร์ม + รูป footer ในหน้าต่างพิมพ์โหลดก่อน ไม่งั้น Chrome อาจพิมพ์ก่อนที่ layout จะเสร็จ
+    const waitAssets=(cb)=>{
+      const imgs=[...w.document.images];
+      let left=imgs.length;
+      if(!left) return cb();
+      const done=()=>{ if(--left<=0){ clearTimeout(to); setTimeout(cb,120); } };
+      const to=setTimeout(cb,4000);
+      imgs.forEach(im=>{ if(im.complete) done(); else { im.addEventListener('load',done); im.addEventListener('error',done); } });
+    };
+    const go=()=>waitAssets(()=>setTimeout(fire,350));
+    if(w.document.readyState==='complete') go(); else w.onload=go;
+    showToast(`🖨️ เปิดหน้าพิมพ์ ${list.length} ใบ`);
+    if(window._fbSavePrintHistory){
+      window._fbSavePrintHistory(list).then(ok=>{
+        if(ok) showToast(`💾 บันทึกประวัติ ${list.length} รายการแล้ว`,'#0d9488',2500);
+      });
+    }
+  });
 }
 
 // ===== SAVE PDF (direct, no print dialog) =====
@@ -929,10 +1165,13 @@ async function imgToBase64(url){
 }
 
 async function doSavePDF(list){
+  showToast(`⏳ กำลังคำนวณขนาดตัวอักษรให้อัตโนมัติ...`,'#0d9488',60000);
+  await prepareFits(list);       // วัดพื้นที่จริงบนฉลากก่อน (ครั้งแรกต้องรอ font + รูป)
+  if(printWarnClipped(list)===false) return;
   showToast(`⏳ กำลังโหลดรูป...`,'#0d9488',60000);
 
   // pre-fetch รูปทั้งหมดเป็น base64
-  const DDT_URL = 'https://github.com/jakknew32/comp2.github.io/blob/main/ddt.png?raw=true';
+  const DDT_URL = FOOTER_IMG;
   const [ddt64] = await Promise.all([imgToBase64(DDT_URL)]);
 
   showToast(`⏳ กำลังสร้าง PDF ${list.length} ใบ...`,'#0d9488',60000);
@@ -959,25 +1198,17 @@ async function doSavePDF(list){
   for(let i=0; i<list.length; i++){
     const lb = list[i];
 
-    // สร้าง label HTML แล้วแทนที่รูปด้วย base64 (มีกล่องหมายเหตุ AZ อยู่แล้วจาก makeLabelHTML)
-    let labelHTML = makeLabelHTML(lb, i+1);
+    // สร้าง label HTML ด้วยขนาดฟอนต์ที่คำนวณไว้ พร้อมแทนที่รูปด้วย base64
+    let labelHTML = makeLabelHTML(lb, i+1, getFit(lb));
 
-    // แทนที่ footer img ด้วย base64
+    // แทนที่ footer img ด้วย base64 (กัน canvas ดึงรูปข้ามโดเมนไม่ได้)
     if(ddt64){
-      labelHTML = labelHTML.replace(
-        /src="https:\/\/github\.com\/jakknew32[^"]*"/g,
-        `src="${ddt64}"`
-      );
+      labelHTML = labelHTML.split(FOOTER_IMG).join(ddt64);
     } else {
-      // ถ้าโหลดไม่ได้ ซ่อนรูปไปเลย
-      labelHTML = labelHTML.replace(
-        /<img[^>]*jakknew32[^>]*>/g,
-        '<div style="height:8mm;background:#f0f0f0;"></div>'
-      );
+      // โหลดรูปไม่ได้: ใส่ img โปร่งใสที่จองพื้นที่ 14mm เท่ากัน -> layout ตรงกับตอนวัด/ตอนพิมพ์
+      const ph='<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="height:14mm;visibility:hidden">';
+      labelHTML = labelHTML.replace(/<img src="[^"]*" onerror="this\.style\.height='14mm'">/, ph);
     }
-
-    // ลบ รูปใน header ที่โหลดไม่ได้ (ใช้ CSS แทนอยู่แล้ว)
-    labelHTML = labelHTML.replace(/<img[^>]*i\.postimg\.cc[^>]*>/g, '');
 
     const labelWrap = idoc.createElement('div');
     labelWrap.style.cssText = 'width:378px;height:567px;overflow:hidden;';
