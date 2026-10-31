@@ -84,7 +84,9 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 .topbar-brand{font-size:15px;font-weight:700;letter-spacing:.2px}
 .topbar-brand small{display:block;font-size:10px;font-weight:400;color:rgba(255,255,255,.5);letter-spacing:.5px;text-transform:uppercase}
 .topbar-sep{width:1px;height:28px;background:rgba(255,255,255,.12);margin:0 4px}
-.topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:1180px){ .topbar{padding:0 12px;gap:8px} .topbar-actions{gap:6px} .btn-sm{padding:6px 9px;font-size:11px} }
+@media (max-width:900px){ .btntext{display:none} .topbar-brand small{display:none} .topbar{height:auto;min-height:56px;padding:6px 12px} }
 
 /* ── BUTTONS ── */
 .btn{
@@ -309,7 +311,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   margin-top:auto;flex-shrink:0;
   border-top:1.5px solid #DDE3EC;
 }
-.sl-footer img{display:block;width:100%;height:auto}   /* เหมือนโค้ดเดิม: ไม่บังคับสูงสุด/ไม่ contain */
+.sl-footer img{display:block;width:100%;height:auto}   /* เหมือนโค้ดเดิม: ไม่บังคับสูงสุด/ไม่ contain (ใช้ความละเอียดไฟล์จริง) */
 .sl-ts{
   font-size:9px;color:#9CA3AF;text-align:left;
   padding:3px 4mm;background:white;
@@ -541,10 +543,11 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   </div>
   <div class="topbar-sep"></div>
   <div class="topbar-actions">
-    <button class="btn btn-ghost btn-sm" onclick="openImport()">📊 นำเข้า Excel</button>
-    <button class="btn btn-ghost btn-sm" onclick="openHistory()">🕐 ประวัติ</button>
-    <button class="btn btn-ghost btn-sm" onclick="openExport()">📥 Export</button>
-    <button class="btn btn-amber" onclick="openAdd()">➕ เพิ่มฉลาก</button>
+    <button class="btn btn-green btn-sm" id="quickSheetBtn" onclick="quickFetchSheet()" title="ดึงเฉพาะรายการค้างจัดส่งจาก Google Sheet มาเข้ารายการทันที ไม่ต้องผ่านหน้าต่างตรวจทาน (คลิกซ้ำได้ ไม่สร้างรายการซ้ำ)">📡 <span class="btntext">ดึงจาก Google Sheet</span></button>
+    <button class="btn btn-ghost btn-sm" onclick="openImport()" title="นำเข้าจากไฟล์ Excel / CSV (มีหน้าต่างตรวจทานก่อน)">📊 <span class="btntext">นำเข้า Excel</span></button>
+    <button class="btn btn-ghost btn-sm" onclick="openHistory()" title="ประวัติการปริ้น">🕐 <span class="btntext">ประวัติ</span></button>
+    <button class="btn btn-ghost btn-sm" onclick="openExport()" title="Export ประวัติเป็น Excel">📥 <span class="btntext">Export</span></button>
+    <button class="btn btn-amber" onclick="openAdd()" title="เพิ่มฉลากใหม่ด้วยตนเอง">➕ <span class="btntext">เพิ่มฉลาก</span></button>
   </div>
 </div>
 
@@ -812,7 +815,7 @@ function renderList(){
 const FOOTER_IMG='https://raw.githubusercontent.com/jakknew32/comp2.github.io/main/ddt.png';
 const ADDR_FS_MIN=9, REMARK_FS_MIN=7, REMARK_FS_BASE=10.5;
 const _fitCache=new Map();
-let _probeEl=null, _probeWarm=false, _footerPx=0, _footerKnown=false;   // _footerPx = ความสูงจริงของรูป DDT เมื่อกว้างเต็ม 100mm
+let _probeEl=null, _probeWarm=false, _footerPx=0, _footerKnown=false, _ddt64cache;   // _footerPx = ความสูงจริงของรูป DDT เมื่อกว้างเต็ม 100mm
 
 function mmTmp(){ /* ความกว้างฉลาก 100mm เป็น px (วัดจริงจาก DOM ครั้งเดียว) */
   if(mmTmp.v) return mmTmp.v;
@@ -1183,11 +1186,13 @@ async function doSavePDF(list){
   showToast(`⏳ กำลังคำนวณขนาดตัวอักษรให้อัตโนมัติ...`,'#0d9488',60000);
   await prepareFits(list);       // วัดพื้นที่จริงบนฉลากก่อน (ครั้งแรกต้องรอ font + รูป)
   if(printWarnClipped(list)===false) return;
-  showToast(`⏳ กำลังโหลดรูป...`,'#0d9488',60000);
-
-  // pre-fetch รูปทั้งหมดเป็น base64
-  const DDT_URL = FOOTER_IMG;
-  const [ddt64] = await Promise.all([imgToBase64(DDT_URL)]);
+  // pre-fetch รูปเป็น base64 (เก็บไว้ในหน่วยความจำข้ามรอบ ไม่ต้องโหลด 1.3MB ซ้ำทุกครั้งที่กดปุ่ม)
+  let ddt64=_ddt64cache;
+  if(ddt64===undefined){
+    showToast(`⏳ กำลังโหลดรูป...`,'#0d9488',60000);
+    ddt64=await imgToBase64(FOOTER_IMG);
+    _ddt64cache=ddt64;
+  }
 
   showToast(`⏳ กำลังสร้าง PDF ${list.length} ใบ...`,'#0d9488',60000);
 
@@ -1293,6 +1298,72 @@ function handleDrop(e){
 }
 function handleFile(e){ const file=e.target.files[0]; if(file) processFile(file); }
 
+// ดึง Google Sheet เป็น .xlsx (มีข้อมูล merge cell ติดมาด้วย กู้ค่าด้วย fillMergedCells ได้ตรงกว่า CSV/gviz)
+async function pullSheetRows(){
+  const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/export?format=xlsx`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const buf=await res.arrayBuffer();
+  const wbNames=XLSX.read(buf,{type:'array',bookSheets:true});
+  let sheetName=wbNames.SheetNames.find(n=>n.trim()===GSHEET_TAB);
+  if(!sheetName) sheetName=wbNames.SheetNames.find(n=>n.includes(GSHEET_TAB));
+  if(!sheetName){ const e=new Error('ไม่พบ Sheet "'+GSHEET_TAB+'"'); e.code='NO_TAB'; throw e; }
+  const wb=XLSX.read(buf,{type:'array',sheets:[sheetName]});
+  const ws=wb.Sheets[sheetName];
+  fillMergedCells(ws);
+  return XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).slice(1);   // ข้ามแถว header
+}
+
+// ปุ่มบนเมนูบาร์: ดึง + แปลง + เข้ารายการทันที (ไม่ต้องเปิดหน้าต่างตรวจทานซ้ำให้เสียเวลา)
+async function quickFetchSheet(){
+  const btn=document.getElementById('quickSheetBtn'), orig=btn.innerHTML;
+  if(btn.dataset.busy) return;
+  btn.dataset.busy='1'; btn.disabled=true; btn.innerHTML='⏳ <span class="btntext">กำลังดึง...</span>';
+  try{
+    const rows=await pullSheetRows();
+    parseRowsFixed(rows,false);                 // ไม่ render หน้าต่าง preview
+    if(!importData.length){
+      showToast(`❌ ไม่พบรายการที่ต้องนำเข้า (ข้าม ${skippedData.length} แถวที่ไม่ผ่านเกณฑ์)`,'#dc2626',4500);
+      return;
+    }
+    const st=syncSheetIntoList(importData);     // สมานตามเลขออเดอร์: ของเดิมที่ไม่ใช่จาก Sheet ไม่หาย ไม่สร้างซ้ำ
+    save(); renderList(); renderPreview();
+    if(document.getElementById('importModal').classList.contains('open')) closeModal('importModal');
+    showToast(`📡 Sheet: ใหม่ ${st.added} · แก้ไข ${st.updated} · เท่าเดิม ${st.same}`
+      +`${skippedData.length?` · ข้าม ${skippedData.length} แถว (สถานะอื่น/ไม่มีชื่อ-ที่อยู่)`:''}`,'#059669',5000);
+    importData=[];
+  }catch(err){
+    console.error(err);
+    showToast(err.code==='NO_TAB'?`❌ ไม่พบ Sheet "${GSHEET_TAB}" ในไฟล์`
+      :'❌ ดึงไม่สำเร็จ — ตรวจสอบว่า Sheet เปิดสิทธิ์ "ทุกคนที่มีลิงก์ดูได้"','#dc2626',5000);
+  }finally{
+    delete btn.dataset.busy; btn.disabled=false; btn.innerHTML=orig;
+  }
+}
+
+// สมานรายการที่ดึงจาก Sheet เข้ากับ list ปัจจุบัน โดยไม่สร้างของซ้ำและไม่แตะที่กดเพิ่มเอง
+//   key = เลขออเดอร์ (ถ้าไม่มีใช้เป็น ชื่อ+ที่อยู่+เบอร์) -> มีอยู่แล้ว = อัปเดตให้ตรงกับ Sheet, ไม่มี = เพิ่มใหม่
+function syncSheetIntoList(fresh){
+  const keyOf=l=>String(l.order||'').trim() ? 'O:'+String(l.order).trim() : 'A:'+[l.name,l.addr,l.phone].join('\u0001');
+  const idx=new Map();
+  labels.forEach(l=>{ const k=keyOf(l); if(!idx.has(k)) idx.set(k,l); });
+  let added=0, updated=0, same=0;
+  fresh.forEach(lb=>{
+    const k=keyOf(lb), ex=idx.get(k);
+    if(ex){
+      const changed=[['name',lb.name],['addr',lb.addr],['phone',lb.phone],['note',lb.note],['qty',lb.qty],['remark',lb.remark]]
+        .some(([f,v])=>String(ex[f]||'')!==String(v||''));
+      ['name','addr','phone','note','qty','remark'].forEach(f=>ex[f]=lb[f]||'');
+      ex.selected=true;
+      changed?updated++:same++;
+    }else{
+      const nl={...lb, selected:true};
+      labels.push(nl); idx.set(k,nl); added++;
+    }
+  });
+  return {added,updated,same};
+}
+
 async function fetchFromGoogleSheet(){
   const btn=document.getElementById('fetchSheetBtn');
   const orig=btn.innerHTML;
@@ -1300,27 +1371,12 @@ async function fetchFromGoogleSheet(){
   btn.innerHTML='⏳ กำลังดึงข้อมูล...';
   showToast('⏳ กำลังดึงข้อมูลจาก Google Sheet...','#0d9488',15000);
   try{
-    // ดึงเป็น .xlsx (ไม่ใช่ CSV/gviz) เพราะมีข้อมูล merge cell ติดมาด้วย ใช้ fillMergedCells() กู้ค่าได้แม่นยำ
-    const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/export?format=xlsx`;
-    const res=await fetch(url,{cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const buf=await res.arrayBuffer();
-    const wbNames=XLSX.read(buf,{type:'array',bookSheets:true});
-    let sheetName=wbNames.SheetNames.find(n=>n.trim()===GSHEET_TAB);
-    if(!sheetName) sheetName=wbNames.SheetNames.find(n=>n.includes(GSHEET_TAB));
-    if(!sheetName){
-      showToast(`❌ ไม่พบ Sheet "${GSHEET_TAB}" ในไฟล์`,'#dc2626',3500);
-      return;
-    }
-    const wb=XLSX.read(buf,{type:'array',sheets:[sheetName]});
-    const ws=wb.Sheets[sheetName];
-    fillMergedCells(ws);
-    const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    parseRowsFixed(data.slice(1));
+    parseRowsFixed(await pullSheetRows());       // แสดงในหน้าต่างตรวจทาน (path เดิม)
     showToast(`✅ ดึงข้อมูลจาก Sheet "${GSHEET_TAB}" สำเร็จ (รองรับ merge cell แล้ว)`,'#059669');
   }catch(err){
     console.error(err);
-    showToast('❌ ดึงข้อมูลไม่สำเร็จ ตรวจสอบว่า Sheet เปิดสิทธิ์ "ทุกคนที่มีลิงก์ดูได้" แล้วหรือยัง','#dc2626',5000);
+    showToast(err.code==='NO_TAB'?`❌ ไม่พบ Sheet "${GSHEET_TAB}" ในไฟล์`
+      :'❌ ดึงข้อมูลไม่สำเร็จ ตรวจสอบว่า Sheet เปิดสิทธิ์ "ทุกคนที่มีลิงก์ดูได้" แล้วหรือยัง','#dc2626',5000);
   }finally{
     btn.disabled=false;
     btn.innerHTML=orig;
@@ -1509,7 +1565,7 @@ function groupByOrder(rows){
   return orderKeys.map(k=>{ const g=map.get(k); delete g._entries; g.qty=''; return g; });
 }
 
-function parseRowsFixed(rows){
+function parseRowsFixed(rows, showPreview=true){
   rows=forwardFillMerged(rows);
   const parsed=[];
   skippedData=[];
@@ -1551,6 +1607,7 @@ function parseRowsFixed(rows){
   importData=groupByOrder(parsed);
 
   if(!importData.length && !skippedData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
+  if(showPreview===false) return;                // quickFetchSheet: ไม่ต้องวาดหน้าต่างตรวจทาน
 
   document.getElementById('importStep1').style.display='none';
   document.getElementById('importStep2').style.display='';
