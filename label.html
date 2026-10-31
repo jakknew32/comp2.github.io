@@ -805,10 +805,11 @@ function renderList(){
 // ส่วนที่เกินกรอบถูก clip หายไปตอนพิมพ์โดยไม่มีสัญญาณเตือน
 // วิธีแก้: วัด "พื้นที่เหลือจริง" ของฉลากด้วย element จริง (ไม่ใช่ประมาณเลข)
 // แล้วย่อ ขนาดฟอนต์ของที่อยู่/หมายเหตุ ลงทีละขั้นจนข้อความทั้งหมดใส่ได้พอดี
-// ▸ รูปแถบล่างฉลาก (DDT) — ใช้ไฟล์เดียวกันทั้ง preview, หน้าพิมพ์ และ PDF
-//   (เดิม preview ใช้ i.postimg.cc แต่หน้าพิมพ์/PDF ไปใช้อีกไฟล์ คนละรูปกัน + สัดส่วนไม่ตรงกัน
-//    เป็นเหตุให้คำนวณพื้นที่เพี้ยนและข้อความขาดหาย — ถ้าจะเปลี่ยนรูป แก้ที่นี่ที่เดียว)
-const FOOTER_IMG='https://i.postimg.cc/xN5GcPtL/ddt.png';
+// ▸ รูปแถบล่างฉลาก (DDT) — ใช้ไฟล์เดียวกันทั้ง preview / หน้าพิมพ์ / PDF และต้องเป็นไฟล์ความละเอียดสูง
+//   ห้ามใช้ thumbnail: i.postimg.cc/xN5GcPtL/ddt.png มีแค่ 180x108px
+//   พอ stretch เป็น 100mm จะได้ ~46dpi => ปริ้นแล้วเบลอดังที่เห็น
+//   ไฟล์นี้ 2666x1600px (~677dpi ที่ 100mm) สัดส่วนเท่าเดิม (=สูง 60mm บนฉลาก) => คมชัดเหมือนที่เคยพิมพ์
+const FOOTER_IMG='https://raw.githubusercontent.com/jakknew32/comp2.github.io/main/ddt.png';
 const ADDR_FS_MIN=9, REMARK_FS_MIN=7, REMARK_FS_BASE=10.5;
 const _fitCache=new Map();
 let _probeEl=null, _probeWarm=false, _footerPx=0, _footerKnown=false;   // _footerPx = ความสูงจริงของรูป DDT เมื่อกว้างเต็ม 100mm
