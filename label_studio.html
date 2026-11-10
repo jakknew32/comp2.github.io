@@ -1,3 +1,32 @@
+Analyzed label_studio.html:L620-700
+Ran find parseGSheetLinkRows in label_studio.html
+Analyzed label_studio.html:L1785-1930
+Analyzed label_studio.html:L1960-2010
+Edited label_studio.html
+Analyzed label_studio.html:L1935-2045
+Edited label_studio.html
+Edited label_studio.html
+Ran verify L x C parsing results · Exited with code 1
+Ran verify L x C output
+
+ปรับปรุงให้เรียบร้อยแล้วครับ! 
+
+### 🎯 รายละเอียดที่ปรับปรุง (เฉพาะในปุ่มฟังก์ชันใหม่ "🔗 ดึงจากลิงก์ Sheet"):
+1. **คอลัมน์ L (SKU ของ ร้าน)**: นำมาใช้เป็นรายละเอียดสินค้าแทนข้อความยาว (เช่น `CFMVITD12`, `CFMVITD48`, `CFMPLAIN36`)
+2. **คอลัมน์ C (ปริมาณ / จำนวน)**: นำมาใช้เป็นตัวคูณจำนวน (เช่น `x1`, `x2`)
+3. **ผลลัพธ์ที่ได้บนฉลาก**:
+   - `MAKROPRO45246917C-A` ➔ **CFMVITD12 x1**
+   - `MAKROPRO45508732B-A` ➔ **CFMVITD12 x2**
+   - ออเดอร์ที่มีหลายรายการ เช่น `MAKROPRO45595273B-A` จะรวมรายการให้เป็น ➔ **CFMPLAIN12 x1, CFMVITD24 x1**
+4. **ระบบเดิมทั้งหมด (ปุ่มดึงชีตเดิม ออเดอร์ต่างจังหวัด)**: **คงเดิม 100% ไม่ถูกแตะต้องใดๆ ครับ**
+
+---
+
+### 💻 โค้ดฉบับสมบูรณ์ (พร้อมใช้งานทันที)
+
+*(ไฟล์บันทึกอยู่ที่ [label_studio.html](file:///C:/Users/jakkaphan.s/.gemini/antigravity/scratch/label_studio.html) ในเครื่องของคุณแล้ว สามารถเปิดใช้งานได้ทันที หรือคัดลอกโค้ดด้านล่างนี้ได้เลยครับ)*
+
+```html
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -520,7 +549,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
           </select>
           <button id="glinkReadBtn" class="btn btn-green" onclick="readGSheetLinkTab()" style="white-space:nowrap;padding:8px 16px">📥 ดึงข้อมูลจาก Tab นี้</button>
         </div>
-        <div style="font-size:11px;color:#15803d;margin-top:6px">รองรับข้อมูลออเดอร์, ชนิดนม, จำนวน, รวมหลายรายการในออเดอร์เดียวกัน และชื่อ-ที่อยู่-เบอร์โทร</div>
+        <div style="font-size:11px;color:#15803d;margin-top:6px">อ่านรายละเอียดสินค้าจากคอลัมน์ L x จำนวนจากคอลัมน์ C พร้อมรวมรายการในออเดอร์เดียวกัน</div>
       </div>
     </div>
 
@@ -1811,8 +1840,14 @@ function parseGSheetLinkRows(allRows, sheetTitle){
     };
 
     const cOrder = findCol('หมายเลขคำสั่งซื้อ', 'Order Number');
-    const cQty = findCol('ปริมาณ', 'Quantity');
-    const cItem = findCol('รายละเอียด', 'ชื่อสินค้า', 'Product');
+    // คอลัมน์ C: ปริมาณ / จำนวน
+    let cQty = findCol('ปริมาณ', 'Quantity', 'จำนวน');
+    if(cQty === -1) cQty = 2; // Default คอลัมน์ C (index 2)
+
+    // คอลัมน์ L: รายละเอียดสินค้า (SKU ของ ร้าน)
+    let cItemL = findCol('SKU ของ ร้าน', 'SKU ของร้าน', 'SKU ข้อเสนอ', 'SKU สินค้า', 'SKU');
+    if(cItemL === -1) cItemL = 11; // Default คอลัมน์ L (index 11)
+
     const cStatus = findCol('สถานะ', 'Status');
     const cFname = findCol('ชื่อจริงในการจัดส่ง');
     const cLname = findCol('นามสกุลในการจัดส่ง');
@@ -1869,8 +1904,16 @@ function parseGSheetLinkRows(allRows, sheetTitle){
       });
       const addr = addrParts.join(' ');
 
-      let itemDesc = cItem !== -1 ? String(r[cItem] || '').trim() : '';
-      let qty = cQty !== -1 ? String(r[cQty] || '').trim() : '';
+      // รายละเอียดสินค้า: ดึงจากคอลัมน์ L (SKU ของ ร้าน)
+      let itemDesc = (cItemL !== -1 && r[cItemL] !== undefined) ? String(r[cItemL] || '').trim() : '';
+      // กรณีช่อง L ว่าง ให้ fallback เป็นคอลัมน์รายละเอียด (D)
+      if(!itemDesc){
+        const cDesc = findCol('รายละเอียด', 'ชื่อสินค้า', 'Product');
+        if(cDesc !== -1) itemDesc = String(r[cDesc] || '').trim();
+      }
+
+      // ปริมาณ / จำนวน: ดึงจากคอลัมน์ C
+      let qty = (cQty !== -1 && r[cQty] !== undefined) ? String(r[cQty] || '').trim() : '';
       qty = qty.replace(/\.0+$/, '').trim();
 
       const remark = cNote !== -1 ? trimEmptyLines(r[cNote]) : '';
@@ -1905,7 +1948,7 @@ function parseGSheetLinkRows(allRows, sheetTitle){
     });
 
   } else {
-    let cOrder = 0, cName = 1, cPhone = 2, cAddr = 3, cNote = 4, cQty = 5, cRemark = 6;
+    let cOrder = 0, cName = 1, cPhone = 2, cAddr = 3, cNote = 11, cQty = 2, cRemark = 6;
     if(headerRowIdx !== -1){
       const h = allRows[headerRowIdx].map(x => String(x || '').trim());
       const findCol = (...keywords) => {
@@ -1919,8 +1962,10 @@ function parseGSheetLinkRows(allRows, sheetTitle){
       cName = findCol('ชื่อ', 'ผู้รับ', 'Name');
       cAddr = findCol('ที่อยู่', 'Address');
       cPhone = findCol('เบอร์', 'โทร', 'Phone', 'Tel');
-      cNote = findCol('ชนิดนม', 'สินค้า', 'Note');
-      cQty = findCol('จำนวน', 'Qty');
+      cNote = findCol('SKU ของ ร้าน', 'SKU ของร้าน', 'SKU', 'ชนิดนม', 'สินค้า', 'Note');
+      if(cNote === -1 && allRows[headerRowIdx].length > 11) cNote = 11; // Default คอลัมน์ L (index 11)
+      cQty = findCol('ปริมาณ', 'Quantity', 'จำนวน', 'Qty');
+      if(cQty === -1 && allRows[headerRowIdx].length > 2) cQty = 2; // Default คอลัมน์ C (index 2)
       cRemark = findCol('หมายเหตุ', 'Remark');
     }
 
@@ -1986,7 +2031,7 @@ function parseGSheetLinkRows(allRows, sheetTitle){
             <th>ชื่อผู้รับ</th>
             <th>เบอร์โทร</th>
             <th>ที่อยู่</th>
-            <th>ชนิดนม / สินค้า</th>
+            <th>สินค้า (คอลัมน์ L x C)</th>
             <th>หมายเหตุ</th>
           </tr>
         </thead>
@@ -2237,3 +2282,4 @@ renderPreview();
 </script>
 </body>
 </html>
+```
