@@ -283,10 +283,8 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
 .sl-recv-text{
   text-align:center;font-size:17px;line-height:1.65;font-weight:600;
   color:#0D1B2A;white-space:pre-line;word-wrap:break-word;
-  /* min-height:0 จำเป็นมากสำหรับ flex:1 — ถ้าไม่ใส่ เนื้อที่ยาวกว่าช่องจะดัน
-     barcode + เวลา ให้หลุดออกนอกฉลาก 150mm ตอนพิมพ์ = ข้อความด้านล่างขาดหาย */
   flex:1 1 auto;min-height:0;height:auto;overflow:hidden;
-  padding:1mm 5mm 1.5mm;      /* เว้น breathing room ก่อนถึงกล่องชนิดนม/หมายเหตุ (นับรวมตอนวัดด้วย) */
+  padding:1mm 5mm 1.5mm;
 }
 .sl-note-box{
   flex-shrink:0;
@@ -311,7 +309,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   margin-top:auto;flex-shrink:0;
   border-top:1.5px solid #DDE3EC;
 }
-.sl-footer img{display:block;width:100%;height:auto}   /* เหมือนโค้ดเดิม: ไม่บังคับสูงสุด/ไม่ contain (ใช้ความละเอียดไฟล์จริง) */
+.sl-footer img{display:block;width:100%;height:auto}
 .sl-ts{
   font-size:9px;color:#9CA3AF;text-align:left;
   padding:3px 4mm;background:white;
@@ -455,7 +453,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   </div>
 </div>
 
-<!-- IMPORT MODAL -->
+<!-- IMPORT MODAL (ของเดิม 100%) -->
 <div id="importModal" class="modal-overlay">
   <div class="modal-box wide">
     <div class="modal-hdr">
@@ -489,6 +487,49 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
       <div style="display:flex;gap:10px;margin-top:14px">
         <button class="btn btn-green" style="flex:1;justify-content:center" onclick="confirmImport()">✅ นำเข้าทั้งหมด</button>
         <button class="btn btn-outline" onclick="resetImport()">↩️ เลือกใหม่</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✨ MODAL ใหม่: นำเข้าจากลิงก์ GOOGLE SHEETS & เลือก TAB วันที่ (แยกอิสระ ไม่กระทบของเดิม) -->
+<div id="gsheetLinkModal" class="modal-overlay">
+  <div class="modal-box wide">
+    <div class="modal-hdr">
+      <h2>🔗 นำเข้าจากลิงก์ Makro Pro (เลือก Tab วันที่)</h2>
+      <button class="btn btn-red btn-sm" onclick="closeModal('gsheetLinkModal')">✕</button>
+    </div>
+    
+    <div id="glinkStep1">
+      <div style="background:var(--ground);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:14px">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔗 วางลิงก์ Google Sheets</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="glinkInputUrl" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:var(--font-sans);color:var(--ink)" placeholder="https://docs.google.com/spreadsheets/d/.../edit" value="https://docs.google.com/spreadsheets/d/1SF2Zqv2nIps5pHCMI8IxsWtBdtsooeffbOotldQNdSI/edit?gid=143559163#gid=143559163">
+          <button id="glinkLoadTabsBtn" class="btn btn-blue" onclick="loadGSheetLinkTabs()" style="white-space:nowrap">🔍 โหลด Tab</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">
+          💡 ตัวอย่างลิงก์: สามารถวางลิงก์ Google Sheets ใดๆ ก็ได้ (ชีตต้องเปิดสิทธิ์ <i>"ทุกคนที่มีลิงก์ดูได้"</i>)
+        </div>
+      </div>
+
+      <!-- ส่วนแสดง Tab ให้เลือกเมื่อโหลดสำเร็จ -->
+      <div id="glinkTabBox" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:var(--r-md);padding:14px;margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:700;color:#166534;margin-bottom:6px">📅 เลือก Tab / วันที่ ที่ต้องการนำเข้า:</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="glinkTabSelect" style="flex:1;padding:8px 12px;border:1.5px solid #86efac;border-radius:var(--r-sm);font-size:13px;font-weight:600;font-family:var(--font-sans);background:white;color:var(--ink)">
+          </select>
+          <button id="glinkReadBtn" class="btn btn-green" onclick="readGSheetLinkTab()" style="white-space:nowrap;padding:8px 16px">📥 ดึงข้อมูลจาก Tab นี้</button>
+        </div>
+        <div style="font-size:11px;color:#15803d;margin-top:6px">รองรับข้อมูลออเดอร์, ชนิดนม, จำนวน, รวมหลายรายการในออเดอร์เดียวกัน และชื่อ-ที่อยู่-เบอร์โทร</div>
+      </div>
+    </div>
+
+    <!-- Step 2: ตรวจทานก่อนนำเข้า -->
+    <div id="glinkStep2" style="display:none">
+      <div id="glinkPreview"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn btn-green" style="flex:1;justify-content:center" onclick="confirmGSheetLinkImport()">✅ นำเข้าทั้งหมด</button>
+        <button class="btn btn-outline" onclick="resetGSheetLinkImport()">↩️ เลือกใหม่</button>
       </div>
     </div>
   </div>
@@ -543,7 +584,12 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   </div>
   <div class="topbar-sep"></div>
   <div class="topbar-actions">
+    <!-- ของเดิม: ดึงเฉพาะรายการค้างจัดส่งจาก Google Sheet เดิม (ออเดอร์ต่างจังหวัด) -->
     <button class="btn btn-green btn-sm" id="quickSheetBtn" onclick="quickFetchSheet()" title="ดึงเฉพาะรายการค้างจัดส่งจาก Google Sheet มาเข้ารายการทันที ไม่ต้องผ่านหน้าต่างตรวจทาน (คลิกซ้ำได้ ไม่สร้างรายการซ้ำ)">📡 <span class="btntext">ดึงจาก Google Sheet</span></button>
+    
+    <!-- ✨ ฟังก์ชันที่เพิ่มใหม่: ดึงจากลิงก์ Makro Pro และเลือก Tab วันที่ -->
+    <button class="btn btn-blue btn-sm" id="linkSheetBtn" onclick="openGSheetLinkModal()" title="นำเข้าจากลิงก์ Makro Pro (Google Sheets)">🔗 <span class="btntext">ดึงจากลิงก์ Makro Pro</span></button>
+    
     <button class="btn btn-ghost btn-sm" onclick="openImport()" title="นำเข้าจากไฟล์ Excel / CSV (มีหน้าต่างตรวจทานก่อน)">📊 <span class="btntext">นำเข้า Excel</span></button>
     <button class="btn btn-ghost btn-sm" onclick="openHistory()" title="ประวัติการปริ้น">🕐 <span class="btntext">ประวัติ</span></button>
     <button class="btn btn-ghost btn-sm" onclick="openExport()" title="Export ประวัติเป็น Excel">📥 <span class="btntext">Export</span></button>
@@ -758,7 +804,7 @@ function searchLabels(q){ searchQ=q; renderList(); }
 // ป้ายบอกสถานะการย่ออัตโนมัติบนรายการด้านซ้าย
 function fitTag(lb){
   const f=_badgeMap.get(labelSig(lb));
-  if(!f) return '';                        // ยังไม่ได้วัด (เช่นไม่ได้เลือก) -> ไม่ใส่ป้าย
+  if(!f) return '';
   if(!autoFitOn()) return f.clipped?`<span class="tag" style="background:var(--red-bg);color:#991b1b;border:1px solid #fecaca" title="ปิดโหมดย่ออัตโนมัติ ข้อความส่วนเกินจะถูกตัดหาย">⚠ ปิดย่ออัตโนมัติ</span>`:'';
   if(f.clipped) return `<span class="tag" style="background:var(--red-bg);color:#991b1b;border:1px solid #fecaca" title="ย่อเล็กสุดแล้วยังไม่พอ ข้อความส่วนเกินจะถูกตัดหาย">⚠ เกินพื้นที่</span>`;
   if(f.trimmed) return `<span class="tag tag-amber" title="ข้อความยาวเกินพื้นที่ → ย่ออัตโนมัติ + ตัดท้าย (มี … บนฉลาก)">✂ ย่อ/ตัดท้าย</span>`;
@@ -803,21 +849,13 @@ function renderList(){
   });
 }
 
-// ===== AUTO-FIT: ย่อตัวอักษรอัตโนมัติเมื่อข้อความยาวเกินพื้นที่ฉลาก =====
-// ปัญหาเดิม: ที่อยู่/หมายเหตุ ยาวเกิน 150mm -> flex ดัน barcode+เวลา หลุดออกนอกฉลาก และ
-// ส่วนที่เกินกรอบถูก clip หายไปตอนพิมพ์โดยไม่มีสัญญาณเตือน
-// วิธีแก้: วัด "พื้นที่เหลือจริง" ของฉลากด้วย element จริง (ไม่ใช่ประมาณเลข)
-// แล้วย่อ ขนาดฟอนต์ของที่อยู่/หมายเหตุ ลงทีละขั้นจนข้อความทั้งหมดใส่ได้พอดี
-// ▸ รูปแถบล่างฉลาก (DDT) — ใช้ไฟล์เดียวกันทั้ง preview / หน้าพิมพ์ / PDF และต้องเป็นไฟล์ความละเอียดสูง
-//   ห้ามใช้ thumbnail: i.postimg.cc/xN5GcPtL/ddt.png มีแค่ 180x108px
-//   พอ stretch เป็น 100mm จะได้ ~46dpi => ปริ้นแล้วเบลอดังที่เห็น
-//   ไฟล์นี้ 2666x1600px (~677dpi ที่ 100mm) สัดส่วนเท่าเดิม (=สูง 60mm บนฉลาก) => คมชัดเหมือนที่เคยพิมพ์
+// ===== AUTO-FIT =====
 const FOOTER_IMG='https://raw.githubusercontent.com/jakknew32/comp2.github.io/main/ddt.png';
 const ADDR_FS_MIN=9, REMARK_FS_MIN=7, REMARK_FS_BASE=10.5;
 const _fitCache=new Map();
-let _probeEl=null, _probeWarm=false, _footerPx=0, _footerKnown=false, _ddt64cache;   // _footerPx = ความสูงจริงของรูป DDT เมื่อกว้างเต็ม 100mm
+let _probeEl=null, _probeWarm=false, _footerPx=0, _footerKnown=false, _ddt64cache;
 
-function mmTmp(){ /* ความกว้างฉลาก 100mm เป็น px (วัดจริงจาก DOM ครั้งเดียว) */
+function mmTmp(){
   if(mmTmp.v) return mmTmp.v;
   const d=document.createElement('div');
   d.style.cssText='position:absolute;left:-9999px;top:0;width:100mm;height:1px;visibility:hidden';
@@ -827,7 +865,6 @@ function mmTmp(){ /* ความกว้างฉลาก 100mm เป็น 
 function autoFitOn(){ const cb=document.getElementById('autoFitCb'); return !cb || cb.checked!==false; }
 function prefAddrFs(){ return parseFloat((document.getElementById('fontSizePref')||{value:'17'}).value)||17; }
 
-// probe = ฉลากจำลองขนาดเท่าของจริง (100x150mm) ซ่อนไว้นอกจอ ใช้วัดพื้นที่เหลือ
 function ensureProbe(){
   if(_probeEl && document.body.contains(_probeEl)) return _probeEl;
   const box=document.createElement('div');
@@ -839,7 +876,6 @@ function ensureProbe(){
   return _probeEl;
 }
 
-// ต้องรอ font + รูป footer โหลดก่อน ไม่งั้นวัดสูงผิด (ครั้งแรกครั้งเดียว)
 function warmProbe(){
   if(_probeWarm) return Promise.resolve(true);
   const fonts=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
@@ -857,8 +893,6 @@ function warmProbe(){
   });
 }
 
-// ข้อความบนฉลาก (esc แล้ว, ขึ้นบรรทัดใหม่ -> <br>)
-// addrArr = บรรทัดต่างๆ ของผู้รับ (บรรทัดแรก=ชื่อ, บรรทัดท้าย=โทรศัพท์) เพื่อใช้ตัดทีละบรรทัดตอนพื้นที่ไม่พอ
 function labelTexts(lb){
   const displayText = lb.name ? `คุณ ${lb.name}\n${lb.addr||''}${lb.phone?'\nโทร. '+lb.phone:''}` : (lb.addr||'');
   const orderLine = lb.order
@@ -879,7 +913,6 @@ function labelTexts(lb){
 
 function fitLabel(lb){
   const t=labelTexts(lb), base=prefAddrFs();
-  // trimmed = มีข้อความบางส่วนถูกตัดท้าย (ใส่ … บนฉลากให้เห็น) | clipped = ย่อ+ตัดสุดทางแล้วยังไม่พอ
   const out=(af,rf,addr,remark,trimmed,clipped)=>({addrFs:af,remarkFs:rf,addr,remark,orderLine:t.orderLine,trimmed:!!trimmed,clipped:!!clipped});
 
   if(typeof document==='undefined'||!document.querySelector||!document.createElement)
@@ -888,8 +921,6 @@ function fitLabel(lb){
   const p=ensureProbe();
   const setup=(aH,rH,af,rf)=>{
     p.innerHTML=makeLabelHTML(lb,1,{addrFs:af,remarkFs:rf,addr:aH,remark:rH,orderLine:t.orderLine});
-    // ใน probe เท่านั้น: บังคับความสูงรูปเท่ากับของจริง (กันรูปโหลดไม่ทันตอนวัด)
-    // ฉลากที่จะพิมพ์จริง/PDF ยังใช้ width:100%;height:auto ตามสัดส่วนเดิมของรูป ไม่ถูกย่อแต่อย่างใด
     const im=p.querySelector('.sl-footer img');
     if(im && _footerKnown){ if(_footerPx>0) im.style.height=_footerPx+'px'; else im.style.display='none'; }
     return [p.querySelector('.sl-recv-text'), p.querySelector('.sl-remark-box')];
@@ -902,7 +933,6 @@ function fitLabel(lb){
     return a&&r;
   };
   try{
-    // ปิด "ย่ออัตโนมัติ": ใช้ขนาดที่ผู้ใช้เลือกเหมือน behavior เดิม (แค่ตรวจว่าเกินพื้นที่ไหมเพื่อเตือน)
     if(!autoFitOn()){
       const [a0,r0]=setup(t.addr,t.remark,base,REMARK_FS_BASE);
       return out(base,REMARK_FS_BASE,t.addr,t.remark,false,!okWith(a0,r0,base,REMARK_FS_BASE));
@@ -913,32 +943,25 @@ function fitLabel(lb){
     const fits=()=>out(base,REMARK_FS_BASE,t.addr,t.remark,false,false);
     if(ok(base,REMARK_FS_BASE)) return fits();
 
-    // 1) ย่อที่อยู่: ค่าที่ผู้ใช้เลือก -> 11px
     for(let af=base-0.5; af>=11; af-=0.5)
       if(ok(+af.toFixed(2),REMARK_FS_BASE)) return out(+af.toFixed(2),REMARK_FS_BASE,t.addr,t.remark,false,false);
-    // 2) ย่อหมายเหตุ 10.5 -> 8 (รักษาขนาดที่อยู่ไว้ก่อน เพราะสำคัญกว่า)
     for(let rf=REMARK_FS_BASE-0.25; rf>=8; rf-=0.25)
       if(ok(11,+rf.toFixed(2))) return out(11,+rf.toFixed(2),t.addr,t.remark,false,false);
-    // 3) ย่อที่อยู่ต่อ 11 -> ขั้นต่ำ (9px)
     for(let af=10.5; af>=ADDR_FS_MIN; af-=0.5)
       if(ok(+af.toFixed(2),8)) return out(+af.toFixed(2),8,t.addr,t.remark,false,false);
-    // 4) ย่อหมายเหตุถึงขั้นต่ำ 7 แล้วหาขนาดที่อยู่ใหญ่สุดที่พอดี
     for(let rf=7.75; rf>=REMARK_FS_MIN; rf-=0.25){
       const rf4=+rf.toFixed(2);
       for(let af=11.5; af>=ADDR_FS_MIN; af-=0.5)
         if(ok(+af.toFixed(2),rf4)) return out(+af.toFixed(2),rf4,t.addr,t.remark,false,false);
     }
 
-    // 5) พื้นที่ก็ยังใส่ไม่ครบ -> ตัดข้อความ (จำใจ) (จำใจ) ตามลำดับความสำคัญ:
-    //    เบอร์โทร (ยังมีในรายการ/ประวัติ/ไฟล์ Excel) < หมายเหตุ (AZ) < ที่อยู่อย่าง
-    //    ใช้ binary search หาจำนวนตัวอักษร "มากที่สุด" ที่ยังพอดีพื้นที่ เพื่อเสียน้อยที่สุด
     const both=(ah,rh)=>{ addrEl.innerHTML=ah; if(rmkEl) rmkEl.innerHTML=rh; return ok(ADDR_FS_MIN,REMARK_FS_MIN); };
     let curA=t.addr, curR=t.remark, trimmed=false;
     if(both(curA,curR)) return out(ADDR_FS_MIN,REMARK_FS_MIN,curA,curR,false,false);
 
     const linesAll=t.addrPlain.split('\n');
     const lastIsPhone=/^โทร\./.test(linesAll[linesAll.length-1]||'');
-    if(lastIsPhone && linesAll.length>2){        // ทดลองตัดบรรทัดเบอร์โทร. ทิ้งก่อน
+    if(lastIsPhone && linesAll.length>2){
       curA=linesAll.slice(0,-1).map(x=>esc(x)).join('<br>');
       addrEl.innerHTML=curA;
       for(const rf2 of [REMARK_FS_BASE,9.5,8,REMARK_FS_MIN])
@@ -948,7 +971,7 @@ function fitLabel(lb){
       trimmed=true;
     }
 
-    if(t.remarkPlain){                           // ก) หดหมายเหตุเท่าที่พื้นที่จะอำนวย
+    if(t.remarkPlain){
       const full=t.remarkPlain.replace(/\s+/g,' ').trim();
       const mkRmk=k=> '📌 หมายเหตุ: '+esc(k>0?full.slice(0,k):'')+(k<full.length?' …':'');
       let lo=0,hi=full.length,best=-1;
@@ -963,7 +986,7 @@ function fitLabel(lb){
       }
     }
 
-    {                                            // ข) หดที่อยู่ (คงบรรทัดแรก=ชื่อผู้รับไว้เสมอ)
+    {
       const keep=(lastIsPhone? linesAll.slice(0,-1) : linesAll.slice());
       const firstLine=keep.shift()||'';
       const restText=keep.join(' ').replace(/\s+/g,' ').trim();
@@ -979,7 +1002,6 @@ function fitLabel(lb){
         return out(ADDR_FS_MIN,REMARK_FS_MIN,curA,curR,trimmed,false);
       }
     }
-    // ค) ไม่มีทางพอจริง ๆ (ชื่อผู้รับยาวผิดปกติ) -> คงข้อความเต็ม แล้ว flag clipped ไว้เตือนผู้ใช้
     return out(ADDR_FS_MIN,REMARK_FS_MIN,t.addr,t.remark,trimmed,true);
   }catch(e){
     console.warn('fitLabel fail',e);
@@ -990,7 +1012,7 @@ function fitLabel(lb){
 function labelSig(lb){
   return [lb.name||'',lb.addr||'',lb.order||'',noteWithQty(lb),lb.remark||'',lb.phone||''].join('\u0001');
 }
-const _badgeMap=new Map();      // labelSig -> สถานะย่อ (ให้ renderList อ่าน WITHOUT วัดซ้ำ)
+const _badgeMap=new Map();
 function getFit(lb){
   const key=labelSig(lb)+'\u0002'+prefAddrFs()+'\u0002'+(autoFitOn()?'A':'O')+'\u0002'+(_probeWarm?('W'+(_footerKnown?_footerPx:'?')):'N');
   let f=_fitCache.get(key);
@@ -1029,7 +1051,6 @@ function makeLabelHTML(lb, num, fit){
   </div>`;
 }
 
-// เตรียม cache ของทุกใบ (รอ font + รูป barcode โหลดครั้งแรกครั้งเดียว) แล้วค่อยวัด
 function prepareFits(list){
   return warmProbe().then(()=>{ list.forEach(getFit); return list; });
 }
@@ -1037,7 +1058,7 @@ function prepareFits(list){
 let _previewSeq=0;
 function renderPreview(){
   const seq=++_previewSeq;
-  updateSelectUI();                     // อัปเดตตัวเลขเลือก/จำนวนทันที ไม่ต้องรอวัดพื้นที่เสร็จ
+  updateSelectUI();
   const paint=(html)=>{ const c=document.getElementById('previewContainer'); if(c) c.innerHTML=html; };
   const draw=()=>{
     const mode=(document.getElementById('previewMode')||{value:'grid'}).value;
@@ -1065,8 +1086,6 @@ function renderPreview(){
       : items);
     updateSelectUI();
   };
-  // วาดทันที (ครั้งแรก font/รูปอาจยังโหลดไม่เสร็จ ค่าที่วัดได้อาจคลาดเคลื่อนบ้าง)
-  // แล้ววาดซ้ำอีกทีเมื่อ warmProbe เสร็จ เพื่อให้ค่าที่ได้จากการวัดแม่นยำ
   draw();
   if(!_probeWarm){
     const sel=labels.filter(l=>l.selected);
@@ -1074,10 +1093,7 @@ function renderPreview(){
   }
 }
 
-
 // ===== PRINT =====
-// ใช้ renderer ตัวเดียวกับหน้าจอ preview (makeLabelHTML) + ยัด <style>/<link> ของแอปเข้าไปในหน้าต่างพิมพ์
-// เพื่อให้ "ขนาดฟอนต์ที่คำนวณไว้ (fit)" ตรงกับที่เห็นบนหน้าจอ 100% — แก้ปัญหาข้อความขาดหายตอนพิมพ์
 function pageBreakStyle(){ return `
   <style>
     @page{size:100mm 150mm;margin:0}
@@ -1104,19 +1120,16 @@ function buildPrintDoc(list){
     </head><body>${body}</body></html>`;
 }
 
-// เตือนก่อนพิมพ์: clipped = อันตรายจริง (ข้อความยังไม่พอที่จะพิมพ์) / trimmed = ตัดท้ายออกอัตโนมัติ (มี …บนฉลาก)
 function printWarnClipped(list){
   const clipped=list.filter(lb=>getFit(lb).clipped).length;
   const trimmed=list.filter(lb=>{ const f=getFit(lb); return f.trimmed&&!f.clipped; }).length;
   if(clipped){
-    // มีข้อความที่หายไปจริง — ยืนยันอีกครั้งก่อนพิมพ์
     if(!confirm(`⚠️ ${clipped} ใบมีข้อความยาวเกินพื้นที่ฉลาก แม้ย่อเล็กสุดแล้ว\n\nส่วนที่เกินจะถูกตัดหายจากฉลาก (ที่อยู่/หมายเหตุ)\n\nต้องการพิมพ์ต่อหรือไม่?`)) return false;
   } else if(trimmed){
     showToast(`ℹ️ ${trimmed} ใบ: ข้อความยาวเกินพื้นที่ → ย่ออัตโนมัติ + ตัดท้าย (มีเครื่องหมาย … บนฉลาก)`, '#0d9488', 6000);
   }
   return true;
 }
-
 
 function printSelected(){
   const sel=labels.filter(l=>l.selected);
@@ -1131,7 +1144,7 @@ function printAll(){
 
 function doPrint(list){
   showToast('⏳ กำลังคำนวณขนาดตัวอักษรให้อัตโนมัติ...','#0d9488',8000);
-  prepareFits(list).then(()=>{               // วัดพื้นที่จริงบนฉลากก่อน (ครั้งแรกต้องรอ font+รูป)
+  prepareFits(list).then(()=>{
     if(printWarnClipped(list)===false){ showToast('🛑 ยกเลิกการพิมพ์','#d97706',3500); return; }
     const html=buildPrintDoc(list);
     const w=window.open('','_blank','width=800,height=600');
@@ -1139,7 +1152,6 @@ function doPrint(list){
     w.document.write(html);
     w.document.close();
     const fire=()=>{ try{ w.focus(); w.print(); }catch(e){} };
-    // รอแบบฟอร์ม + รูป footer ในหน้าต่างพิมพ์โหลดก่อน ไม่งั้น Chrome อาจพิมพ์ก่อนที่ layout จะเสร็จ
     const waitAssets=(cb)=>{
       const imgs=[...w.document.images];
       let left=imgs.length;
@@ -1159,14 +1171,13 @@ function doPrint(list){
   });
 }
 
-// ===== SAVE PDF (direct, no print dialog) =====
+// ===== SAVE PDF =====
 function savePDFSelected(){
   const sel=labels.filter(l=>l.selected);
   if(!sel.length){ showToast('⚠️ กรุณาเลือกฉลากก่อน','#d97706'); return; }
   doSavePDF(sel);
 }
 
-// pre-fetch image to base64 (bypass CORS for html2canvas)
 async function imgToBase64(url){
   try {
     const res = await fetch(url, {mode:'cors'});
@@ -1178,15 +1189,15 @@ async function imgToBase64(url){
       r.readAsDataURL(blob);
     });
   } catch(e) {
-    return null; // ไม่มีรูปดีกว่า error
+    return null;
   }
 }
 
 async function doSavePDF(list){
   showToast(`⏳ กำลังคำนวณขนาดตัวอักษรให้อัตโนมัติ...`,'#0d9488',60000);
-  await prepareFits(list);       // วัดพื้นที่จริงบนฉลากก่อน (ครั้งแรกต้องรอ font + รูป)
+  await prepareFits(list);
   if(printWarnClipped(list)===false) return;
-  // pre-fetch รูปเป็น base64 (เก็บไว้ในหน่วยความจำข้ามรอบ ไม่ต้องโหลด 1.3MB ซ้ำทุกครั้งที่กดปุ่ม)
+
   let ddt64=_ddt64cache;
   if(ddt64===undefined){
     showToast(`⏳ กำลังโหลดรูป...`,'#0d9488',60000);
@@ -1199,15 +1210,13 @@ async function doSavePDF(list){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:[100,150] });
 
-  // สร้าง iframe ซ่อน inject CSS ทั้งหมด
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:378px;height:567px;border:none;';
   document.body.appendChild(iframe);
   await new Promise(res => { iframe.onload = res; iframe.src = 'about:blank'; });
 
   const idoc = iframe.contentDocument;
-  const styles = [...document.querySelectorAll('style,link[rel="stylesheet"]')]
-    .map(el => el.outerHTML).join('\n');
+  const styles = [...document.querySelectorAll('style,link[rel="stylesheet"]')].map(el => el.outerHTML).join('\n');
 
   idoc.open();
   idoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">${styles}</head>
@@ -1217,15 +1226,11 @@ async function doSavePDF(list){
 
   for(let i=0; i<list.length; i++){
     const lb = list[i];
-
-    // สร้าง label HTML ด้วยขนาดฟอนต์ที่คำนวณไว้ พร้อมแทนที่รูปด้วย base64
     let labelHTML = makeLabelHTML(lb, i+1, getFit(lb));
 
-    // แทนที่ footer img ด้วย base64 (กัน canvas ดึงรูปข้ามโดเมนไม่ได้)
     if(ddt64){
       labelHTML = labelHTML.split(FOOTER_IMG).join(ddt64);
     } else {
-      // โหลดรูปไม่ได้จริง ๆ: เอา img ออกจาก PDF (ตรงกับ preview/พิมพ์ที่ img จะ display:none)
       labelHTML = labelHTML.replace(/<img src="[^"]*" onerror="this\.style\.display='none'">/g, '');
     }
 
@@ -1245,9 +1250,7 @@ async function doSavePDF(list){
     idoc.body.innerHTML = '';
     idoc.body.appendChild(labelWrap);
 
-    // รอ img base64 render
     await new Promise(res => setTimeout(res, 200));
-
     showToast(`⏳ ${i+1}/${list.length} กำลัง render...`,'#0d9488',60000);
 
     const canvas = await html2canvas(labelWrap, {
@@ -1276,9 +1279,8 @@ async function doSavePDF(list){
   showToast(`✅ บันทึก PDF ${list.length} ใบ → ${fname}`,'#10B981',5000);
   if(window._fbSavePrintHistory) window._fbSavePrintHistory(list);
 }
-// ========================
 
-// ===== IMPORT =====
+// ===== IMPORT (ของเดิม 100%) =====
 function openImport(){
   resetImport();
   document.getElementById('importModal').classList.add('open');
@@ -1311,22 +1313,22 @@ async function pullSheetRows(){
   const wb=XLSX.read(buf,{type:'array',sheets:[sheetName]});
   const ws=wb.Sheets[sheetName];
   fillMergedCells(ws);
-  return XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).slice(1);   // ข้ามแถว header
+  return XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).slice(1);
 }
 
-// ปุ่มบนเมนูบาร์: ดึง + แปลง + เข้ารายการทันที (ไม่ต้องเปิดหน้าต่างตรวจทานซ้ำให้เสียเวลา)
+// ปุ่มบนเมนูบาร์เดิม: ดึงเฉพาะรายการค้างจัดส่งจาก Google Sheet เดิม (ออเดอร์ต่างจังหวัด)
 async function quickFetchSheet(){
   const btn=document.getElementById('quickSheetBtn'), orig=btn.innerHTML;
   if(btn.dataset.busy) return;
   btn.dataset.busy='1'; btn.disabled=true; btn.innerHTML='⏳ <span class="btntext">กำลังดึง...</span>';
   try{
     const rows=await pullSheetRows();
-    parseRowsFixed(rows,false);                 // ไม่ render หน้าต่าง preview
+    parseRowsFixed(rows,false);
     if(!importData.length){
       showToast(`❌ ไม่พบรายการที่ต้องนำเข้า (ข้าม ${skippedData.length} แถวที่ไม่ผ่านเกณฑ์)`,'#dc2626',4500);
       return;
     }
-    const st=syncSheetIntoList(importData);     // สมานตามเลขออเดอร์: ของเดิมที่ไม่ใช่จาก Sheet ไม่หาย ไม่สร้างซ้ำ
+    const st=syncSheetIntoList(importData);
     save(); renderList(); renderPreview();
     if(document.getElementById('importModal').classList.contains('open')) closeModal('importModal');
     showToast(`📡 Sheet: ใหม่ ${st.added} · แก้ไข ${st.updated} · เท่าเดิม ${st.same}`
@@ -1341,8 +1343,6 @@ async function quickFetchSheet(){
   }
 }
 
-// สมานรายการที่ดึงจาก Sheet เข้ากับ list ปัจจุบัน โดยไม่สร้างของซ้ำและไม่แตะที่กดเพิ่มเอง
-//   key = เลขออเดอร์ (ถ้าไม่มีใช้เป็น ชื่อ+ที่อยู่+เบอร์) -> มีอยู่แล้ว = อัปเดตให้ตรงกับ Sheet, ไม่มี = เพิ่มใหม่
 function syncSheetIntoList(fresh){
   const keyOf=l=>String(l.order||'').trim() ? 'O:'+String(l.order).trim() : 'A:'+[l.name,l.addr,l.phone].join('\u0001');
   const idx=new Map();
@@ -1371,7 +1371,7 @@ async function fetchFromGoogleSheet(){
   btn.innerHTML='⏳ กำลังดึงข้อมูล...';
   showToast('⏳ กำลังดึงข้อมูลจาก Google Sheet...','#0d9488',15000);
   try{
-    parseRowsFixed(await pullSheetRows());       // แสดงในหน้าต่างตรวจทาน (path เดิม)
+    parseRowsFixed(await pullSheetRows());
     showToast(`✅ ดึงข้อมูลจาก Sheet "${GSHEET_TAB}" สำเร็จ (รองรับ merge cell แล้ว)`,'#059669');
   }catch(err){
     console.error(err);
@@ -1383,14 +1383,12 @@ async function fetchFromGoogleSheet(){
   }
 }
 
-// คอลัมน์ที่ใช้ (index เริ่มจาก 0): C=2, S=18, Y=24, AX=49, AY=50, AZ=51, BA=52
+// คอลัมน์ที่ใช้ (เดิม): C=2, S=18, Y=24, AX=49, AY=50, AZ=51, BA=52
 const COL_ORDER=2, COL_NOTE=18, COL_QTY=24, COL_NAME=49, COL_PHONE=50, COL_REMARK=51, COL_ADDR=52, COL_STATUS=0;
 const STATUS_PENDING='ค้างจัดส่ง';
 const GSHEET_ID='1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44';
 const GSHEET_TAB='ออเดอร์ต่างจังหวัด';
 
-// ตัดบรรทัดว่างท้ายเซลล์ออก (เซลล์ที่ถูก merge บางไฟล์เก็บ "ขึ้นบรรทัดใหม่" เปล่าๆ ท้าย cell ไว้
-// ถ้าไม่ตัดออก เมื่อเติมค่าจาก merge ลงทุกแถวแล้วนำมารวมกัน จะกลายเป็นบรรทัดว่างซ้อนกันหลายชั้น)
 function trimEmptyLines(s){
   const lines=String(s==null?'':s).split(/\r\n|\r|\n/);
   while(lines.length && !lines[lines.length-1].trim()) lines.pop();
@@ -1398,7 +1396,6 @@ function trimEmptyLines(s){
   return lines.join('\n').trim();
 }
 
-// รวม "หมายเหตุ"หลายแถวของออเดอร์เดียวกัน: ตัดบรรทัดว่างทิ้ง + กันซ้ำ (กรณี merge cell ทำให้ค่าเดิมซ้ำทุกแถว)
 function mergeRemark(existing, incoming){
   const toLines = v => String(v==null?'':v).split(/\r\n|\r|\n/).map(x=>x.trim()).filter(Boolean);
   const out=[];
@@ -1409,17 +1406,13 @@ function mergeRemark(existing, incoming){
 function normalizePhone(p){
   p=String(p||'').trim();
   if(!p) return '';
-  // Excel เก็บเบอร์เป็นตัวเลขแล้วยาวเกินจะกลายเป็น scientific notation เช่น 8.91235E+9
   if(/e\+?\d+$/i.test(p)){
     const num=Number(p);
     if(!isNaN(num)) p=Math.round(num).toString();
   }
-  // ตัดอักขระอื่นที่ไม่ใช่ตัวเลข/เครื่องหมาย + ออก (ขีด, วงเล็บ, ช่องว่าง ฯลฯ)
   p=p.replace(/[^\d+]/g,'');
   if(p.startsWith('+66')) p='0'+p.slice(3);
   else if(p.startsWith('66')&&p.length>=11) p='0'+p.slice(2);
-  // Excel เก็บเบอร์เป็น "ตัวเลข" จะตัดเลข 0 นำหน้าออกไปเอง (0891234567 -> 891234567)
-  // เบอร์ไทยที่ไม่มีเลข 0 นำหน้าและเหลือ 8-9 หลัก ให้เติม 0 กลับคืน
   if(/^\d{8,9}$/.test(p)&&!p.startsWith('0')) p='0'+p;
   return p;
 }
@@ -1431,8 +1424,6 @@ function noteWithQty(lb){
   return n ? `${n} X${q}` : `X${q}`;
 }
 
-// เซลล์ที่ถูก merge ใน Excel จะมีค่าอยู่แค่เซลล์แรก(บนซ้าย)ของช่วงที่ merge เท่านั้น
-// แถวอื่นในช่วง merge เดียวกันจะว่างเปล่า -> ฟังก์ชันนี้ก็คัดลอกค่าจากเซลล์แรกไปเติมให้ทุกเซลล์ในช่วง merge ก่อนแปลงเป็น array
 function fillMergedCells(ws){
   if(!ws['!merges']) return;
   ws['!merges'].forEach(range=>{
@@ -1466,15 +1457,14 @@ function processFile(file){
         return;
       }
       const ws=wb.Sheets[sheetName];
-      fillMergedCells(ws); // เติมค่าที่หายไปจากเซลล์ merge ก่อนอ่าน
+      fillMergedCells(ws);
       const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      parseRowsFixed(data.slice(1)); // ข้ามแถว 1 (header)
+      parseRowsFixed(data.slice(1));
     };
     reader.readAsBinaryString(file);
   }
 }
 
-// พาร์ส CSV แบบเคารพเครื่องหมายคำพูด (เซลล์ที่มีขึ้นบรรทัดใหม่ในตัวเองจะไม่ทำให้คอลัมน์เลื่อน)
 function csvToRows(text){
   const rows=[]; let row=[]; let cur=''; let inQ=false;
   for(let i=0;i<text.length;i++){
@@ -1487,7 +1477,7 @@ function csvToRows(text){
     } else {
       if(c==='"') inQ=true;
       else if(c===',') { row.push(cur); cur=''; }
-      else if(c==='\r') { /* ข้าม ไปจับที่ \n */ }
+      else if(c==='\r') { }
       else if(c==='\n') { row.push(cur); cur=''; rows.push(row); row=[]; }
       else cur+=c;
     }
@@ -1502,8 +1492,6 @@ function parseCSVFixed(text){
   parseRowsFixed(rows.slice(1));
 }
 
-// Google Sheet export เป็น CSV จะไม่มีข้อมูล merge cell ติดมาเลย -> ต้องเดา bằng forward fill
-// เติมค่าจากแถวบนก็ต่อเมื่อ "ทั้งชุด" (ออเดอร์+ชื่อ+เบอร์+ที่อยู่) ว่างพร้อมกันหมดเท่านั้น
 function forwardFillMerged(rows){
   let last={};
   return rows.map(r=>{
@@ -1531,7 +1519,6 @@ function forwardFillMerged(rows){
 
 let skippedData=[];
 
-// รวมแถวที่มี "เลขออเดอร์" ซ้ำกันให้เหลือฉลากเดียวต่อออเดอร์
 function typeEntry(row){
   const n=String(row.note||'').trim();
   const q=String(row.qty||'').trim();
@@ -1554,12 +1541,12 @@ function groupByOrder(rows){
       const entry=typeEntry(r);
       if(entry) g._entries.push(entry);
       g.note=g._entries.join(', ');
-      g.remark=mergeRemark(g.remark, r.remark);   // รวมหมายเหตุ (AZ) ของทุกแถวในออเดอร์เดียวกัน
+      g.remark=mergeRemark(g.remark, r.remark);
       if(!g.phone && r.phone) g.phone=r.phone;
       if(!g._rawPhone && r._rawPhone) g._rawPhone=r._rawPhone;
       if(!g.addr && r.addr) g.addr=r.addr;
       if(!g.name && r.name) g.name=r.name;
-      g.qty=''; // จำนวนถูกรวมเข้าไปใน note แล้ว ไม่ต้องแสดงแยกอีก
+      g.qty='';
     }
   });
   return orderKeys.map(k=>{ const g=map.get(k); delete g._entries; g.qty=''; return g; });
@@ -1576,9 +1563,9 @@ function parseRowsFixed(rows, showPreview=true){
     const name=String(r[COL_NAME]||'').trim();
     const addr=String(r[COL_ADDR]||'').trim();
     const order=String(r[COL_ORDER]||'').trim();
-    const remark=trimEmptyLines(r[COL_REMARK]);   // AZ = หมายเหตุ (เก็บขึ้นบรรทัดใหม่ในเซลล์ไว้ตามที่พิมพ์จริง)
+    const remark=trimEmptyLines(r[COL_REMARK]);
     const hasAnyContent=name||addr||order||String(r[COL_NOTE]||'').trim()||remark;
-    if(!hasAnyContent) return; // แถวว่างสนิทจริงๆ ข้ามเงียบๆ
+    if(!hasAnyContent) return;
 
     const statusOk=st===''||st===STATUS_PENDING;
     if(!statusOk){
@@ -1607,7 +1594,7 @@ function parseRowsFixed(rows, showPreview=true){
   importData=groupByOrder(parsed);
 
   if(!importData.length && !skippedData.length){ showToast('❌ ไม่พบข้อมูลที่ถูกต้อง','#dc2626'); return; }
-  if(showPreview===false) return;                // quickFetchSheet: ไม่ต้องวาดหน้าต่างตรวจทาน
+  if(showPreview===false) return;
 
   document.getElementById('importStep1').style.display='none';
   document.getElementById('importStep2').style.display='';
@@ -1649,6 +1636,424 @@ function confirmImport(){
 function esc(str){
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// =====================================================================
+// ✨ ฟังก์ชันใหม่: จัดการนำเข้าจาก GOOGLE SHEETS LINK & เลือก TAB วันที่
+// (แยกเป็นโมดูลอิสระ ไม่แตะต้องโค้ดหรือการทำงานเดิม)
+// =====================================================================
+let _glinkWb = null;
+let _glinkCurrentId = '';
+let _glinkImportData = [];
+let _glinkSkipped = [];
+
+function openGSheetLinkModal(){
+  resetGSheetLinkImport();
+  document.getElementById('gsheetLinkModal').classList.add('open');
+}
+
+function resetGSheetLinkImport(){
+  _glinkImportData = [];
+  _glinkSkipped = [];
+  document.getElementById('glinkStep1').style.display = '';
+  document.getElementById('glinkStep2').style.display = 'none';
+}
+
+function parseGSheetUrlLink(url){
+  if(!url) return { id:'', gid:'' };
+  url = url.trim();
+  let id = '';
+  const matchId = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if(matchId){
+    id = matchId[1];
+  } else if(!url.includes('/') && url.length > 20){
+    id = url;
+  }
+  let gid = '';
+  const matchGid = url.match(/[?&#]gid=([0-9]+)/);
+  if(matchGid){
+    gid = matchGid[1];
+  }
+  return { id, gid };
+}
+
+async function loadGSheetLinkTabs(){
+  const urlInput = document.getElementById('glinkInputUrl').value.trim();
+  const { id } = parseGSheetUrlLink(urlInput);
+  if(!id){
+    showToast('⚠️ กรุณาระบุลิงก์ Google Sheets ให้ถูกต้อง', '#d97706', 4000);
+    return;
+  }
+
+  const btn = document.getElementById('glinkLoadTabsBtn');
+  const origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ กำลังอ่าน Tab...';
+  showToast('⏳ กำลังเชื่อมต่อ Google Sheet...', '#0d9488', 12000);
+
+  try{
+    const exportUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=xlsx`;
+    const res = await fetch(exportUrl, { cache: 'no-store' });
+    if(!res.ok){
+      throw new Error(`HTTP ${res.status} - โปรดตรวจสอบว่า Sheet เปิดสิทธิ์ "ทุกคนที่มีลิงก์ดูได้"`);
+    }
+    const buf = await res.arrayBuffer();
+    _glinkWb = XLSX.read(buf, { type: 'array', cellDates: true, cellFormula: true });
+    _glinkCurrentId = id;
+
+    const sheetNames = _glinkWb.SheetNames || [];
+    if(!sheetNames.length){
+      throw new Error('ไม่พบ Sheet ใดๆ ในไฟล์นี้');
+    }
+
+    const sel = document.getElementById('glinkTabSelect');
+    sel.innerHTML = '';
+
+    const todayDate = String(new Date().getDate()); // เช่น "10"
+    let selectedIdx = 0;
+
+    sheetNames.forEach((name, i) => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      const isDateLike = /^\d{1,2}$|^\d{1,2}[-\/.]\d{1,2}/.test(name.trim());
+      const icon = isDateLike ? '📅' : '📄';
+      opt.textContent = `${icon} Tab: ${name}`;
+
+      // เลือก Tab วันที่ตรงกับวันนี้ หรือ tab ที่มีตัวเลขเป็นค่าเริ่มต้น
+      if(name.trim() === todayDate){
+        selectedIdx = i;
+      }
+      sel.appendChild(opt);
+    });
+
+    sel.selectedIndex = selectedIdx;
+    document.getElementById('glinkTabBox').style.display = 'block';
+    showToast(`✅ พบ ${sheetNames.length} Tab พร้อมเลือกนำเข้า`, '#059669', 3500);
+
+  }catch(err){
+    console.error(err);
+    showToast('❌ ไม่สามารถอ่าน Google Sheet ได้: ' + (err.message || ''), '#dc2626', 6000);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = origText;
+  }
+}
+
+async function readGSheetLinkTab(){
+  const sel = document.getElementById('glinkTabSelect');
+  const sheetName = sel.value;
+  if(!sheetName){
+    showToast('⚠️ กรุณาเลือก Tab ที่ต้องการ', '#d97706');
+    return;
+  }
+
+  const btn = document.getElementById('glinkReadBtn');
+  const origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ กำลังดึง...';
+
+  try{
+    if(!_glinkWb){
+      await loadGSheetLinkTabs();
+    }
+    const ws = _glinkWb.Sheets[sheetName];
+    if(!ws) throw new Error(`ไม่พบ Tab "${sheetName}"`);
+
+    fillMergedCells(ws);
+
+    // แก้ไข formula ที่ขึ้น #ERROR! สำหรับเบอร์โทร
+    for(const addr in ws){
+      if(addr.startsWith('!')) continue;
+      const c = ws[addr];
+      if(c && (c.v === '#ERROR!' || String(c.w).includes('#ERROR!')) && c.f){
+        c.v = c.f.replace(/^\+/, '');
+        c.w = c.v;
+      }
+    }
+
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if(!rows.length) throw new Error('ไม่มีข้อมูลใน Tab นี้');
+
+    parseGSheetLinkRows(rows, sheetName);
+    showToast(`✅ ดึงข้อมูลจาก Tab "${sheetName}" สำเร็จ`, '#059669');
+
+  }catch(err){
+    console.error(err);
+    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, '#dc2626', 5000);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = origText;
+  }
+}
+
+function parseGSheetLinkRows(allRows, sheetTitle){
+  // หาแถว Header
+  let headerRowIdx = -1;
+  let isMakro = false;
+
+  for(let r = 0; r < Math.min(allRows.length, 5); r++){
+    const rowStr = allRows[r].map(c => String(c || '').trim()).join(' ');
+    if(rowStr.includes('หมายเลขคำสั่งซื้อ') && (rowStr.includes('ชื่อจริงในการจัดส่ง') || rowStr.includes('ที่อยู่ในการจัดส่ง') || rowStr.includes('รายละเอียด'))){
+      headerRowIdx = r;
+      isMakro = true;
+      break;
+    }
+    if(rowStr.includes('เลขออเดอร์') || (rowStr.includes('ชื่อ') && rowStr.includes('ที่อยู่'))){
+      headerRowIdx = r;
+      break;
+    }
+  }
+
+  let parsed = [];
+  _glinkSkipped = [];
+
+  if(isMakro && headerRowIdx !== -1){
+    // รูปแบบ Makro PRO / Mirakl
+    const h = allRows[headerRowIdx].map(x => String(x || '').trim());
+    const findCol = (...keywords) => {
+      for(const kw of keywords){
+        const idx = h.findIndex(colName => colName.toLowerCase().includes(kw.toLowerCase()));
+        if(idx !== -1) return idx;
+      }
+      return -1;
+    };
+
+    const cOrder = findCol('หมายเลขคำสั่งซื้อ', 'Order Number');
+    // คอลัมน์ C: ปริมาณ / จำนวน
+    let cQty = findCol('ปริมาณ', 'Quantity', 'จำนวน');
+    if(cQty === -1) cQty = 2; // Default คอลัมน์ C (index 2)
+
+    // คอลัมน์ L: รายละเอียดสินค้า (SKU ของ ร้าน)
+    let cItemL = findCol('SKU ของ ร้าน', 'SKU ของร้าน', 'SKU ข้อเสนอ', 'SKU สินค้า', 'SKU');
+    if(cItemL === -1) cItemL = 11; // Default คอลัมน์ L (index 11)
+
+    const cStatus = findCol('สถานะ', 'Status');
+    const cFname = findCol('ชื่อจริงในการจัดส่ง');
+    const cLname = findCol('นามสกุลในการจัดส่ง');
+    const cCompany = findCol('ชื่อบริษัทในการจัดส่ง');
+    const cPhone = findCol('เบอร์โทรศัพท์ในการจัดส่ง');
+    const cPhone2 = findCol('เบอร์โทรศัพท์ในการจัดส่ง 2');
+    const cAddr1 = findCol('ถนนที่อยู่ในการจัดส่ง 1');
+    const cAddr2 = findCol('ถนนที่อยู่ในการจัดส่ง 2');
+    const cSubdist = findCol('ตำบลของที่อยู่ในการจัดส่ง');
+    const cCity = findCol('เมืองของที่อยู่ในการจัดส่ง');
+    const cState = findCol('รัฐของที่อยู่ในการจัดส่ง');
+    const cZip = findCol('รหัสไปรษณีย์ของที่อยู่ในการจัดส่ง');
+    const cNote = findCol('ข้อมูลเพิ่มเติมเกี่ยวกับที่อยู่ในการจัดส่ง', 'ข้อมูลภายในเพิ่มเติมเกี่ยวกับที่อยู่ในการจัดส่ง');
+    const cEmail = findCol('อีเมลของที่อยู่ในการจัดส่ง', 'อีเมล');
+
+    const dataRows = allRows.slice(headerRowIdx + 1);
+
+    dataRows.forEach((r) => {
+      const order = String(r[cOrder] || '').trim();
+      const status = String(r[cStatus] || '').trim();
+
+      if(order === 'หมายเลขคำสั่งซื้อ' || order.toLowerCase() === 'order number') return;
+
+      const fname = String(r[cFname] || '').trim();
+      const lname = String(r[cLname] || '').trim();
+      const company = cCompany !== -1 ? String(r[cCompany] || '').trim() : '';
+      let name = [fname, lname].filter(Boolean).join(' ');
+      if(company && !name.includes(company)){
+        name = name ? `${name} (${company})` : company;
+      }
+
+      let rawPhone = r[cPhone];
+      if(!rawPhone && cPhone2 !== -1) rawPhone = r[cPhone2];
+      let phone = normalizePhone(rawPhone);
+      if(!phone && cEmail !== -1){
+        const emailVal = String(r[cEmail] || '');
+        const m = emailVal.match(/^(\d{9,12})@/);
+        if(m) phone = normalizePhone(m[1]);
+      }
+
+      const a1 = cAddr1 !== -1 ? String(r[cAddr1] || '').trim() : '';
+      const a2 = cAddr2 !== -1 ? String(r[cAddr2] || '').trim() : '';
+      const subdist = cSubdist !== -1 ? String(r[cSubdist] || '').trim() : '';
+      const city = cCity !== -1 ? String(r[cCity] || '').trim() : '';
+      const state = cState !== -1 ? String(r[cState] || '').trim() : '';
+      let zip = cZip !== -1 ? String(r[cZip] || '').trim() : '';
+      zip = zip.replace(/\.0+$/, '').trim();
+
+      const addrParts = [];
+      [a1, a2, subdist, city, state, zip].forEach(part => {
+        if(part && !addrParts.includes(part)){
+          addrParts.push(part);
+        }
+      });
+      const addr = addrParts.join(' ');
+
+      // รายละเอียดสินค้า: ดึงจากคอลัมน์ L (SKU ของ ร้าน)
+      let itemDesc = (cItemL !== -1 && r[cItemL] !== undefined) ? String(r[cItemL] || '').trim() : '';
+      // กรณีช่อง L ว่าง ให้ fallback เป็นคอลัมน์รายละเอียด (D)
+      if(!itemDesc){
+        const cDesc = findCol('รายละเอียด', 'ชื่อสินค้า', 'Product');
+        if(cDesc !== -1) itemDesc = String(r[cDesc] || '').trim();
+      }
+
+      // ปริมาณ / จำนวน: ดึงจากคอลัมน์ C
+      let qty = (cQty !== -1 && r[cQty] !== undefined) ? String(r[cQty] || '').trim() : '';
+      qty = qty.replace(/\.0+$/, '').trim();
+
+      const remark = cNote !== -1 ? trimEmptyLines(r[cNote]) : '';
+
+      const hasContent = order || name || addr || itemDesc;
+      if(!hasContent) return;
+
+      const isStatusOk = !status || status.includes('รอการจัดส่ง') || status.includes('ค้างจัดส่ง') || status === 'ใหม่';
+      if(!isStatusOk){
+        _glinkSkipped.push({ order, name, reason: `สถานะคือ "${status}" (ไม่ใช่ "รอการจัดส่ง")` });
+        return;
+      }
+
+      if(!name && !addr){
+        _glinkSkipped.push({ order, name, reason: 'ไม่มีทั้งชื่อและที่อยู่จัดส่ง' });
+        return;
+      }
+
+      parsed.push({
+        id: uid(),
+        name,
+        phone,
+        _rawPhone: rawPhone,
+        addr,
+        order,
+        note: itemDesc,
+        qty,
+        remark,
+        selected: true,
+        createdAt: new Date().toISOString()
+      });
+    });
+
+  } else {
+    // รูปแบบตารางทั่วไป
+    let cOrder = 0, cName = 1, cPhone = 2, cAddr = 3, cNote = 4, cQty = 5, cRemark = 6;
+    if(headerRowIdx !== -1){
+      const h = allRows[headerRowIdx].map(x => String(x || '').trim());
+      const findCol = (...keywords) => {
+        for(const kw of keywords){
+          const idx = h.findIndex(colName => colName.includes(kw));
+          if(idx !== -1) return idx;
+        }
+        return -1;
+      };
+      cOrder = findCol('เลขออเดอร์', 'ออเดอร์', 'Order');
+      cName = findCol('ชื่อ', 'ผู้รับ', 'Name');
+      cAddr = findCol('ที่อยู่', 'Address');
+      cPhone = findCol('เบอร์', 'โทร', 'Phone', 'Tel');
+      cNote = findCol('SKU ของ ร้าน', 'SKU ของร้าน', 'SKU', 'ชนิดนม', 'สินค้า', 'Note');
+      if(cNote === -1 && allRows[headerRowIdx].length > 11) cNote = 11; // Default คอลัมน์ L (index 11)
+      cQty = findCol('ปริมาณ', 'Quantity', 'จำนวน', 'Qty');
+      if(cQty === -1 && allRows[headerRowIdx].length > 2) cQty = 2; // Default คอลัมน์ C (index 2)
+      cRemark = findCol('หมายเหตุ', 'Remark');
+    }
+
+    const dataRows = allRows.slice(headerRowIdx !== -1 ? headerRowIdx + 1 : 1);
+    dataRows.forEach(r => {
+      const order = cOrder !== -1 ? String(r[cOrder] || '').trim() : '';
+      const name = cName !== -1 ? String(r[cName] || '').trim() : '';
+      const addr = cAddr !== -1 ? String(r[cAddr] || '').trim() : '';
+      const phone = cPhone !== -1 ? normalizePhone(r[cPhone]) : '';
+      const note = cNote !== -1 ? String(r[cNote] || '').trim() : '';
+      let qty = cQty !== -1 ? String(r[cQty] || '').trim() : '';
+      qty = qty.replace(/\.0+$/, '').trim();
+      const remark = cRemark !== -1 ? trimEmptyLines(r[cRemark]) : '';
+
+      if(!name && !addr && !order) return;
+      if(!name && !addr){
+        _glinkSkipped.push({ order, name, reason: 'ไม่มีทั้งชื่อและที่อยู่' });
+        return;
+      }
+
+      parsed.push({
+        id: uid(),
+        name,
+        phone,
+        _rawPhone: cPhone !== -1 ? r[cPhone] : '',
+        addr,
+        order,
+        note,
+        qty,
+        remark,
+        selected: true,
+        createdAt: new Date().toISOString()
+      });
+    });
+  }
+
+  _glinkImportData = groupByOrder(parsed);
+
+  if(!_glinkImportData.length && !_glinkSkipped.length){
+    showToast('❌ ไม่พบข้อมูลที่ถูกต้องในแท็บนี้', '#dc2626', 4000);
+    return;
+  }
+
+  // แสดงผลหน้าตรวจทาน Step 2
+  document.getElementById('glinkStep1').style.display = 'none';
+  document.getElementById('glinkStep2').style.display = '';
+  document.getElementById('glinkPreview').innerHTML = `
+    ${_glinkImportData.length ? `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:24px">✅</span>
+      <div>
+        <strong style="font-size:14px;color:#166534">พบข้อมูลพร้อมนำเข้า ${_glinkImportData.length} รายการ</strong>
+        <span style="font-size:12px;color:#15803d"> (จาก Tab: <b>${esc(sheetTitle)}</b>)</span>
+        <div style="font-size:11px;color:#15803d;margin-top:2px">ตรวจสอบข้อมูลก่อนกดยืนยันนำเข้ารายการ</div>
+      </div>
+    </div>` : `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:12px">
+      <strong style="font-size:14px;color:#991b1b">⚠️ ไม่มีแถวไหนผ่านเกณฑ์นำเข้าเลย</strong>
+    </div>`}
+    ${_glinkImportData.length ? `<div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <table class="import-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>ออเดอร์</th>
+            <th>ชื่อผู้รับ</th>
+            <th>เบอร์โทร</th>
+            <th>ที่อยู่</th>
+            <th>สินค้า (คอลัมน์ L x C)</th>
+            <th>หมายเหตุ</th>
+          </tr>
+        </thead>
+        <tbody>${_glinkImportData.map((r,i) => `
+          <tr>
+            <td>${i+1}</td>
+            <td><strong>${esc(r.order)}</strong></td>
+            <td>${esc(r.name)}</td>
+            <td style="font-family:var(--font-mono)">${esc(r.phone) || '<span style="color:#ef4444">(ไม่มี)</span>'}</td>
+            <td style="max-width:200px;font-size:11px">${esc(r.addr)}</td>
+            <td>${esc(r.note)}</td>
+            <td style="color:#1E3A8A;font-weight:600">${esc(r.remark).replace(/\n/g,'<br>') || '-'}</td>
+          </tr>
+        `).join('')}</tbody>
+      </table>
+    </div>` : ''}
+    ${_glinkSkipped.length ? `<div style="margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px">
+      <strong style="font-size:13px;color:#92400e">⚠️ ข้าม ${_glinkSkipped.length} แถวที่ไม่ผ่านเกณฑ์</strong>
+      <div style="max-height:140px;overflow-y:auto;margin-top:8px">
+        <table class="import-table">
+          <thead><tr><th>ออเดอร์</th><th>ชื่อ</th><th>เหตุผลที่ข้าม</th></tr></thead>
+          <tbody>${_glinkSkipped.map(s => `
+            <tr>
+              <td>${esc(s.order) || '-'}</td>
+              <td>${esc(s.name) || '-'}</td>
+              <td style="color:#92400e">${esc(s.reason)}</td>
+            </tr>
+          `).join('')}</tbody>
+        </table>
+      </div>
+    </div>` : ''}`;
+}
+
+function confirmGSheetLinkImport(){
+  if(!_glinkImportData.length) return;
+  labels = [...labels, ..._glinkImportData];
+  save(); renderList(); renderPreview();
+  closeModal('gsheetLinkModal');
+  showToast(`✅ นำเข้า ${_glinkImportData.length} ฉลากแล้ว`);
+  _glinkImportData = [];
+}
+// =====================================================================
 
 // ===== FIREBASE HISTORY =====
 let _historyCache = [];
@@ -1725,7 +2130,6 @@ function reprintFromHistory(r){
 }
 
 function loadFromHistory(r){
-  // โหลดเข้ารายการปัจจุบันเพื่อแก้ไข/ปริ้น
   const lb={id:uid(),name:r.name||'',phone:r.phone||'',addr:r.addr||'',order:r.order||'',note:r.note||'',remark:r.remark||'',selected:true,createdAt:new Date().toISOString()};
   labels.push(lb);
   save(); renderList(); renderPreview();
@@ -1760,8 +2164,6 @@ async function clearAllHistory(){
     showToast('❌ ลบไม่สำเร็จ','#dc2626');
   }
 }
-// ============================
-
 
 // ===== EXPORT EXCEL =====
 let _exportCache = [];
@@ -1853,7 +2255,6 @@ function doExport(){
   showToast(`✅ Export ${data.length} รายการแล้ว`,'#059669');
   closeModal('exportModal');
 }
-// ============================
 
 // ===== INIT =====
 renderList();
