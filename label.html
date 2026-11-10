@@ -294,7 +294,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
   font-family:'IBM Plex Mono','Courier New',monospace;
   text-align:center;
 }
-/* ── หมายเหตุ (คอลัมน์ AZ) ── */
+/* ── หมายเหตุ (คอลัมน์ BB) ── */
 .sl-remark-box{
   flex-shrink:0;overflow:hidden;
   margin:0 4mm 4px;padding:4px 8px;
@@ -445,7 +445,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
     <div class="form-group"><label>ที่อยู่เต็ม *</label><textarea id="f_addr" rows="4" placeholder="บ้านเลขที่ / ตำบล / อำเภอ / จังหวัด รหัสไปรษณีย์"></textarea></div>
     <div class="form-group"><label>เลขออเดอร์</label><input type="text" id="f_order" placeholder="เลขออเดอร์ (ถ้ามี)"></div>
     <div class="form-group"><label>ชนิดนม</label><input type="text" id="f_note" placeholder="ระบุชนิดนม (ถ้ามี)"></div>
-    <div class="form-group"><label>หมายเหตุ (AZ)</label><textarea id="f_remark" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"></textarea></div>
+    <div class="form-group"><label>หมายเหตุ (BB)</label><textarea id="f_remark" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"></textarea></div>
     <div style="display:flex;gap:10px;margin-top:6px">
       <button class="btn btn-amber" style="flex:1;justify-content:center" onclick="saveLabel()">💾 บันทึก</button>
       <button class="btn btn-outline" onclick="closeModal('editModal')">ยกเลิก</button>
@@ -467,7 +467,7 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
         <div class="import-zone-icon">📁</div>
         <strong>คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่</strong>
         <p>รองรับ .xlsx, .xls, .csv</p>
-        <p style="margin-top:6px;font-size:11px">เริ่มอ่านจากแถวที่ 2 | C=เลขออเดอร์, S=ชนิดนม, Y=จำนวน, AX=ชื่อ, AY=เบอร์, AZ=หมายเหตุ, BA=ที่อยู่</p>
+        <p style="margin-top:6px;font-size:11px">เริ่มอ่านจากแถวที่ 2 | A=สถานะ, D=เลขออเดอร์, T=ชนิดนม, Z=จำนวน, AY=ชื่อ, AZ=เบอร์, BB=หมายเหตุ, BC=ที่อยู่</p>
         <p style="margin-top:4px;font-size:11px;color:var(--amber);font-weight:600">📑 ไฟล์ .xlsx/.xls จะอ่านเฉพาะ Sheet "ออเดอร์ต่างจังหวัด" เท่านั้น</p>
         <p style="margin-top:4px;font-size:11px;color:var(--amber);font-weight:600">🔎 ดึงเฉพาะแถวที่คอลัมน์ A ว่าง หรือมีค่า "ค้างจัดส่ง" เท่านั้น</p>
       </div>
@@ -475,9 +475,9 @@ body{font-family:var(--font-sans);background:var(--ground);color:var(--ink);min-
       <div style="background:var(--ground);border-radius:var(--r-md);padding:14px;margin-top:14px">
         <p style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">คอลัมน์ที่อ่าน</p>
         <table class="import-table">
-          <thead><tr><th>C - เลขออเดอร์</th><th>S - ชนิดนม</th><th>Y - จำนวน</th><th>AX - ชื่อ</th><th>AY - เบอร์</th><th>AZ - หมายเหตุ</th><th>BA - ที่อยู่</th></tr></thead>
+          <thead><tr><th>A - สถานะ</th><th>D - เลขออเดอร์</th><th>T - ชนิดนม</th><th>Z - จำนวน</th><th>AY - ชื่อ</th><th>AZ - เบอร์</th><th>BB - หมายเหตุ</th><th>BC - ที่อยู่</th></tr></thead>
           <tbody>
-            <tr><td>ORD001</td><td>ด่วน</td><td>2</td><td>สมชาย ใจดี</td><td>0891234567</td><td>ฝากวางหน้าบ้าน</td><td>123/4 สารภี เชียงใหม่</td></tr>
+            <tr><td style="color:#059669">(ว่าง = ยังไม่ได้ส่ง)</td><td>ORD001</td><td>ด่วน</td><td>2</td><td>สมชาย ใจดี</td><td>0891234567</td><td>ฝากวางหน้าบ้าน</td><td>123/4 สารภี เชียงใหม่</td></tr>
           </tbody>
         </table>
       </div>
@@ -1383,8 +1383,9 @@ async function fetchFromGoogleSheet(){
   }
 }
 
-// คอลัมน์ที่ใช้ (เดิม): C=2, S=18, Y=24, AX=49, AY=50, AZ=51, BA=52
-const COL_ORDER=2, COL_NOTE=18, COL_QTY=24, COL_NAME=49, COL_PHONE=50, COL_REMARK=51, COL_ADDR=52, COL_STATUS=0;
+// คอลัมน์ที่ใช้ (เพิ่มคอลัมน์ A=สถานะ ใหม่ ข้อมูลขยับไป 1 คอลัมน์): D=3, T=19, Z=25, AY=50, AZ=51, BB=52, BC=53
+// A=สถานะ: ว่าง = ยังไม่ได้ส่ง (ดึงข้อมูลได้) | มีข้อความ = ส่งแล้ว/ข้าม (ยกเว้น "ค้างจัดส่ง")
+const COL_ORDER=3, COL_NOTE=19, COL_QTY=25, COL_NAME=50, COL_PHONE=51, COL_REMARK=52, COL_ADDR=53, COL_STATUS=0;
 const STATUS_PENDING='ค้างจัดส่ง';
 const GSHEET_ID='1nwcWVrH4kHdRuCiVT4fQUSWU8UCbiNbQECKD_NhXq44';
 const GSHEET_TAB='ออเดอร์ต่างจังหวัด';
@@ -1573,7 +1574,7 @@ function parseRowsFixed(rows, showPreview=true){
       return;
     }
     if(!name && !addr){
-      skippedData.push({order,name,reason:'ไม่มีทั้งชื่อ (AX) และที่อยู่ (BA)'});
+      skippedData.push({order,name,reason:'ไม่มีทั้งชื่อ (AY) และที่อยู่ (BC)'});
       return;
     }
     parsed.push({
@@ -1601,13 +1602,13 @@ function parseRowsFixed(rows, showPreview=true){
   document.getElementById('importPreview').innerHTML=`
     ${importData.length?`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
       <span style="font-size:20px">✅</span>
-      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้า (หมายเหตุ จากคอลัมน์ AZ จะพิมพ์ขึ้นฉลากด้วยถ้ามี)</span></div>
+      <div><strong style="font-size:14px;color:#166534">พบข้อมูล ${importData.length} รายการ</strong><br><span style="font-size:12px;color:#15803d">พร้อมนำเข้า (หมายเหตุ จากคอลัมน์ BB จะพิมพ์ขึ้นฉลากด้วยถ้ามี)</span></div>
     </div>`:`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:12px">
       <strong style="font-size:14px;color:#991b1b">⚠️ ไม่มีแถวไหนผ่านเกณฑ์นำเข้าเลย</strong>
     </div>`}
     ${importData.length?`<div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table class="import-table">
-        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>เบอร์ดิบ (AY)</th><th>ชนิดนม</th><th>จำนวน (Y)</th><th>หมายเหตุ (AZ)</th></tr></thead>
+        <thead><tr><th>#</th><th>ออเดอร์</th><th>ชื่อ</th><th>เบอร์</th><th>เบอร์ดิบ (AZ)</th><th>ชนิดนม</th><th>จำนวน (Z)</th><th>หมายเหตุ (BB)</th></tr></thead>
         <tbody>${importData.map((r,i)=>{
           const rawStr=JSON.stringify(r._rawPhone===undefined?'':r._rawPhone);
           const mismatch=!r.phone && r._rawPhone!==undefined && r._rawPhone!==null && String(r._rawPhone).trim()!=='';
